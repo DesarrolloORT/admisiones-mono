@@ -8,6 +8,7 @@ using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Utilities;
 using AppLogic.Contracts.Constants;
+using Microsoft.Extensions.Configuration;
 using ModBandejaAppLogic.DevartDTOs;
 
 namespace AppLogic.Enrollments.Rules;
@@ -17,6 +18,14 @@ internal static class PreEnrollmentConfirmationRules
     /// <summary>Niveles de producto terciario/universitario (ver vistas *3y4* en Devart); únicos habilitados para inscripción corporativa.</summary>
     private const long NivelProducto3 = 3;
     private const long NivelProducto4 = 4;
+
+    /// <summary>
+    /// Sin fallback a propósito: un id de estado de proceso equivocado no falla, deja filas de bandeja
+    /// apuntando a un estado de otro ambiente.
+    /// </summary>
+    private static long RequiredId(IConfiguration configuration, string key) =>
+        configuration.GetValue<long?>(key)
+        ?? throw new InvalidOperationException($"Falta la clave de configuracion '{key}'.");
 
     /// <summary>Validación hoja: solo mira el request, sin tocar la base.</summary>
     public static PreEnrollmentRejection ValidateRequest(ConfirmPreEnrollmentRequest request)
@@ -203,7 +212,9 @@ internal static class PreEnrollmentConfirmationRules
         };
     }
 
-    public static IEnumerable<DtoBandejaDevartModBandeja> CreateCorporateInboxes(string usuarioIngreso)
+    public static IEnumerable<DtoBandejaDevartModBandeja> CreateCorporateInboxes(
+        IConfiguration configuration,
+        string usuarioIngreso)
     {
         var ahora = DateTime.Now;
         var hora = ahora.ToString(SchemaConstants.LegacyTimeFormat);
@@ -213,7 +224,7 @@ internal static class PreEnrollmentConfirmationRules
             // Paso 1 (inicio de tramite): se auto-completa al instante para avanzar al paso real, igual que OrdenWF==1 en legacy (proceso 75).
             new DtoBandejaDevartModBandeja
             {
-                IdEstadoProceso = EnrollmentConstants.CorporateInbox.IdEstadoProcesoInicio,
+                IdEstadoProceso = RequiredId(configuration, EnrollmentConstants.CorporateInbox.ConfigKeys.IdEstadoProcesoInicio),
                 IdGrupoResponsable = EnrollmentConstants.CorporateInbox.IdGrupoResponsable,
                 FechaIngresoBandeja = ahora,
                 FechaTomadoBandeja = ahora,
@@ -229,7 +240,7 @@ internal static class PreEnrollmentConfirmationRules
             // Paso 2 (solicitud): queda pendiente de verdad para el grupo responsable.
             new DtoBandejaDevartModBandeja
             {
-                IdEstadoProceso = EnrollmentConstants.CorporateInbox.IdEstadoProcesoSolicitud,
+                IdEstadoProceso = RequiredId(configuration, EnrollmentConstants.CorporateInbox.ConfigKeys.IdEstadoProcesoSolicitud),
                 IdGrupoResponsable = EnrollmentConstants.CorporateInbox.IdGrupoResponsable,
                 FechaIngresoBandeja = ahora,
                 FechaTomadoBandeja = DateTime.MinValue,

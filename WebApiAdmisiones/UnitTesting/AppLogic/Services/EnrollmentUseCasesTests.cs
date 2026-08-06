@@ -16,6 +16,7 @@ using AppLogic.Integrations.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModBandejaAppLogic.DevartDTOs;
@@ -354,11 +355,12 @@ namespace UnitTesting.AppLogic.Services
             Assert.NotNull(dtosBandeja);
             var bandejas = dtosBandeja!.ToList();
             Assert.Equal(2, bandejas.Count);
-            var inicio = Assert.Single(bandejas, b => b.IdEstadoProceso == 59643);
+            // Ids de estado de proceso configurados por ambiente: los de CorporateInboxConfiguration.
+            var inicio = Assert.Single(bandejas, b => b.IdEstadoProceso == 11111);
             Assert.Equal(48, inicio.IdGrupoResponsable);
             Assert.NotNull(inicio.FechaTomadoBandeja);
             Assert.Equal("SIGUIENTE", inicio.AccionMenu);
-            var request = Assert.Single(bandejas, b => b.IdEstadoProceso == 59644);
+            var request = Assert.Single(bandejas, b => b.IdEstadoProceso == 22222);
             Assert.Equal(48, request.IdGrupoResponsable);
             Assert.Equal(DateTime.MinValue, request.FechaTomadoBandeja);
             _bandejaServiceMock.Verify(
@@ -2748,13 +2750,23 @@ namespace UnitTesting.AppLogic.Services
             IGetEnrollmentDetails Details,
             IGetStudentRegulationsAcceptance Regulations);
 
+        /// <summary>Ids distintos a los de cualquier ambiente real: si el codigo volviera a hardcodearlos, los asserts fallan.</summary>
+        private static IConfiguration CorporateInboxConfiguration() =>
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["CorporateInbox:IdEstadoProcesoInicio"] = "11111",
+                    ["CorporateInbox:IdEstadoProcesoSolicitud"] = "22222"
+                })
+                .Build();
+
         private EnrollmentUseCases CrearCasosDeUso(EnrollmentsAndPaymentsApiClient apiClient)
         {
             var confirm = new ConfirmPreEnrollment(
                 _uowFactoryMock.Object,
                 _dbConnectionContextMock.Object,
                 apiClient,
-                new ConfirmCorporatePreEnrollment(_bandejaServiceScopeFactoryMock.Object));
+                new ConfirmCorporatePreEnrollment(_bandejaServiceScopeFactoryMock.Object, CorporateInboxConfiguration()));
 
             return new EnrollmentUseCases(
                 new RegisterProductInterest(

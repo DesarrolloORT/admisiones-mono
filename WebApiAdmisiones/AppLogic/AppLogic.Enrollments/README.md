@@ -45,9 +45,11 @@ Los tres devuelven el mismo `StartPaymentResponse`; lo que cambia es el campo `R
 la API de Inscripciones y Pagos, crea un **trámite en la bandeja** (`Core/ModBandeja`) con instancia
 de workflow, para que alguien lo procese a mano.
 
-Los identificadores están fijos en `EnrollmentConstants.CorporateInbox` (`IdProceso = 89`,
-`IdEstadoProcesoInicio = 59643`, `IdEstadoProcesoSolicitud = 59644`, `IdGrupoResponsable = 48`). Son
-valores del esquema, no configuración.
+`IdProceso = 89` e `IdGrupoResponsable = 48` están fijos en `EnrollmentConstants.CorporateInbox`: son
+valores del esquema. Los ids de estado de proceso **sí** cambian por ambiente (desa 59643/59644,
+testing 69993/69994), así que salen de `appsettings` bajo `CorporateInbox:IdEstadoProcesoInicio` y
+`CorporateInbox:IdEstadoProcesoSolicitud`. No tienen fallback: si falta la clave, la confirmación
+corporativa tira `InvalidOperationException` en vez de crear bandejas con el estado de otro ambiente.
 
 Se registra como clase concreta (`services.AddScoped<ConfirmCorporatePreEnrollment>()`) porque solo
 lo usa `ConfirmPreEnrollment`, no el controller.

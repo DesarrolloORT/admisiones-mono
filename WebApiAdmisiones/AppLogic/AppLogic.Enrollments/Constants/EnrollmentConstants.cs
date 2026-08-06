@@ -35,9 +35,17 @@ public static class EnrollmentConstants
     public static class CorporateInbox
     {
         public const long IdProceso = 89;
-        public const long IdEstadoProcesoInicio = 59643;
-        public const long IdEstadoProcesoSolicitud = 59644;
         public const long IdGrupoResponsable = 48;
         public const string UsuarioSistema = "ADMISIONES";
+
+        /// <summary>
+        /// Los ids de estado de proceso cambian por ambiente (desa 59643/59644, testing 69993/69994),
+        /// asi que salen de <c>appsettings</c> y no de una constante.
+        /// </summary>
+        public static class ConfigKeys
+        {
+            public const string IdEstadoProcesoInicio = "CorporateInbox:IdEstadoProcesoInicio";
+            public const string IdEstadoProcesoSolicitud = "CorporateInbox:IdEstadoProcesoSolicitud";
+        }
     }
 }

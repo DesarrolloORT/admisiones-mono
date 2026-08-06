@@ -4,6 +4,7 @@ using AppLogic.Enrollments.Dtos;
 using AppLogic.Enrollments.Rules;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModBandejaAppLogic.Interfaces;
 using Utilities;
@@ -15,9 +16,10 @@ namespace AppLogic.Enrollments.UseCases;
 /// T_INST_WORKFLOW_INSCRIPCION por oferta. Recibe el uow del caso de uso que la invoca
 /// porque comparte su transacción.
 /// </summary>
-public class ConfirmCorporatePreEnrollment(IServiceScopeFactory serviceScopeFactory)
+public class ConfirmCorporatePreEnrollment(IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
 {
     private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+    private readonly IConfiguration _configuration = configuration;
 
     internal OperationResult<ConfirmPreEnrollmentResponse> Execute(
         IUnitOfWork uow,
@@ -38,7 +40,8 @@ public class ConfirmCorporatePreEnrollment(IServiceScopeFactory serviceScopeFact
                 var xml = PreEnrollmentConfirmationRules.BuildCorporateInstanceXml(offering, person);
                 var dtoTramite = PreEnrollmentConfirmationRules.CreateCorporateCase(personId);
                 var dtoInstancia = PreEnrollmentConfirmationRules.CreateCorporateInstance(offering, personId, xml);
-                var dtosBandeja = PreEnrollmentConfirmationRules.CreateCorporateInboxes(EnrollmentConstants.CorporateInbox.UsuarioSistema);
+                var dtosBandeja = PreEnrollmentConfirmationRules.CreateCorporateInboxes(
+                    _configuration, EnrollmentConstants.CorporateInbox.UsuarioSistema);
 
                 // El IBandejaService del modulo Bandeja (Core) dispone su DbContext al terminar cada
                 // llamada, aunque ese contexto es compartido (scoped) por DI. Con varias ofertas este
