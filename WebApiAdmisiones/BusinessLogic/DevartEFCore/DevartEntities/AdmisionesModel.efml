@@ -5254,116 +5254,122 @@
       <column name="ID_OFERTA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
   </class>
-  <class name="VdInscripcionesFresco3y4" entity-set="VdInscripcionesFresco3y4s" table="VD_INSCRIPCIONES_FRESCO_3Y4" schema="CREADOR" query-type="True" p1:Guid="bccca70d-2d90-4c74-916f-7242cf911639">
-    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="73c5bd8c-b6e7-4ab1-a678-c3223147e8da">
+  <class name="VdInscripcionesFresco1y2" entity-set="VdInscripcionesFresco1y2s" table="VD_INSCRIPCIONES_FRESCO_1Y2" schema="CREADOR" query-type="True" p1:Guid="0c4c703d-58e3-450c-bf8e-a64b0cc1285d">
+    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1a4b0252-83df-4271-b45a-41cdb0c26eaf">
       <column name="CODIGO_PERSONA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ae56dd4f-59bb-4eb9-85b4-b22c74c2d02a">
+    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="17bf1bb9-0957-4b69-b370-33d147b13122">
       <column name="FECHA_INSCRIPCION" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="29e3ed16-adec-4812-bdcf-b491e160da4a">
+    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="e7c5f715-e98a-4669-9ebe-ee67810c7d9b">
       <column name="USUARIO_INSCRIPCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="4fadac65-ac3a-4839-a061-d3cd95be498c">
+    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="fa5522e4-35cc-43f1-ae15-7a7e57eae59e">
       <column name="ID_TURNO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0686a278-3113-49d8-afa9-83abad805833">
+    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="edfb2eda-cf4a-4b17-a98d-0a49fdf38a46">
       <column name="ID_PRODUCTO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e28dfbb7-1d5d-419b-a588-68d4c40d62de">
+    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="35b75da0-9745-47ad-8a96-87c09f57c3eb">
       <column name="ID_COMIENZO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="ba3e2eb2-b15d-4c1e-86fc-d149e78b0719">
+    <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="3b0e3d00-b829-4d2f-8b14-9691449bb061">
       <column name="FECHA_INICIO_COMIENZO" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="NombreExtensoProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="967aa739-b0c7-483a-bae1-e749c8892dd3">
+    <property name="NombreExtensoProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="a52be3e0-410f-4d06-9fa4-8e391ee55e9d">
       <column name="NOMBRE_EXTENSO_PRODUCTO" not-null="False" length="90" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="0a00977a-5441-43e3-a957-436894a55995">
+    <property name="IdNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="14432851-8c48-466e-a737-4e2de480918a">
       <column name="ID_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="NombreComienzo" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="445ac6f3-416a-4148-8440-c8e61bc6e420">
+    <property name="NombreComienzo" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="20620229-f10a-4b1d-9377-3ff4ffb80a29">
       <column name="NOMBRE_COMIENZO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="NombreTurno" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="d8e4be72-3f4e-44a1-a590-44b87572f1ff">
+    <property name="NombreTurno" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="39b1dbfc-2ea0-437e-8fcc-7404cd2d5dc9">
       <column name="NOMBRE_TURNO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="beb66763-c7a3-4218-8957-f920ab913349">
+    <property name="IdProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="06687e4b-9f3a-41cc-aa65-6fe28e85e085">
       <column name="ID_PROCESO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaReferencia" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="4d8fcc33-26bd-4770-aad1-d17565972f6b">
+    <property name="FechaReferencia" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="26594af8-c26b-4113-a3e9-b7b8c396e55a">
       <column name="FECHA_REFERENCIA" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="IdInscripto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="3b2afc2e-5d99-406d-ad30-454d512fb5c5">
+    <property name="IdInscripto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="7bb436bb-d544-44dd-a46c-bae1a7216630">
       <column name="ID_INSCRIPTO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="6f187663-3886-4406-a01b-739f372aad59">
+    <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="6fd4d857-68dd-47cf-8900-550e1b972d68">
       <column name="ESTADO_INSCRIPCION" not-null="False" length="14" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="adbe9f8a-1bcb-407c-8473-7ece23d853bb">
-      <column name="VENGO_DE" not-null="False" length="61" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="63" p1:ValidateRequired="false" p1:Guid="91ebe24b-f5ea-4e93-80f1-3cd51acccf4e">
+      <column name="VENGO_DE" not-null="False" length="63" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdOferta" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5443f934-96b4-4460-bd2b-7e2f538f14eb">
+    <property name="IdOferta" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="07434107-f952-412c-b4d6-80f38491c4fb">
       <column name="ID_OFERTA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="DescripcionOferta" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="aa906ecb-5ebe-4677-a96e-5f716edf5687">
-      <column name="DESCRIPCION_OFERTA" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
-    </property>
-    <property name="ProgConSeminariosProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="46a66023-db56-4c3b-9dcd-e84e33dfda51">
-      <column name="PROG_CON_SEMINARIOS_PRODUCTO" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="FechaVtoInscr" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e1bea5c2-1a8d-4051-b655-392ac0b5c824">
+      <column name="FECHA_VTO_INSCR" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
   </class>
-  <class name="VdInscripcionesFresco1y2" entity-set="VdInscripcionesFresco1y2s" table="VD_INSCRIPCIONES_FRESCO_1Y2" schema="CREADOR" query-type="True" p1:Guid="a3616462-503e-48ef-8ed4-2ceec1516d8c">
-    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e15d9e9a-4376-4a81-af8f-e72c50fd152b">
+  <class name="VdInscripcionesFresco3y4" entity-set="VdInscripcionesFresco3y4s" table="VD_INSCRIPCIONES_FRESCO_3Y4" schema="CREADOR" query-type="True" p1:Guid="3061fc0f-bffc-438d-8df9-546118468bfd">
+    <property name="CodigoPersona" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="a921ac90-556d-46e8-a0d8-59d843ccf6b7">
       <column name="CODIGO_PERSONA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="3733e795-dd23-4dc0-97de-abfff0856165">
+    <property name="FechaInscripcion" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="06a44735-9274-41bf-8ef6-3a0e4802832b">
       <column name="FECHA_INSCRIPCION" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="4989855f-2807-4d4b-a020-4b2130395297">
+    <property name="UsuarioInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="33823655-2719-4553-a661-75f43c9f8956">
       <column name="USUARIO_INSCRIPCION" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="161bf40f-1f1b-4bb3-8b7e-df86d40033a8">
+    <property name="IdTurno" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="7975548d-9fce-4ee4-bbb5-55cb072eb34f">
       <column name="ID_TURNO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="1d9981d7-bc72-423d-a315-4ce9d513efd3">
+    <property name="IdProducto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b8b044e3-c067-409c-add6-e6904b6399fe">
       <column name="ID_PRODUCTO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="d995cada-5680-4e55-a999-397c4e6a75d4">
+    <property name="IdComienzo" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="e7d52e84-8199-43c5-8a0f-3dd9ca810ad7">
       <column name="ID_COMIENZO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="34a6739d-e9b7-45ee-9eba-31f0364f8151">
+    <property name="FechaInicioComienzo" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="060fed20-d483-455a-a6a2-f992663d50af">
       <column name="FECHA_INICIO_COMIENZO" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="NombreExtensoProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="63322102-d0ae-441b-b300-77e98275347d">
+    <property name="NombreExtensoProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="90" p1:ValidateRequired="false" p1:Guid="c9bd6bf4-f343-47a7-a580-3cceff3fd698">
       <column name="NOMBRE_EXTENSO_PRODUCTO" not-null="False" length="90" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="5fc6b366-294b-4d1b-b6b8-a9557ccc34f5">
+    <property name="IdNivelProducto" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="9db92335-4841-4f3f-b74d-054142dc114e">
       <column name="ID_NIVEL_PRODUCTO" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="NombreComienzo" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="e208df82-d671-4fb7-82f9-acc3fcdb833a">
+    <property name="NombreComienzo" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="510816ac-3083-45d2-90f0-1725cead5ac1">
       <column name="NOMBRE_COMIENZO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="NombreTurno" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="e7e4d5e0-6a59-4068-b093-6761b37c0cad">
+    <property name="NombreTurno" type="String" p1:nullable="True" p1:ValidateMaxLength="30" p1:ValidateRequired="false" p1:Guid="40dd6f5e-8cba-4d3d-b930-48c089ff8197">
       <column name="NOMBRE_TURNO" not-null="False" length="30" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="6ca66333-3b68-4573-838d-0f9683596976">
+    <property name="IdProceso" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="73c7fe43-c343-4ebf-a5ee-1b6ca6c3dc1f">
       <column name="ID_PROCESO" not-null="False" precision="22" scale="0" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="FechaReferencia" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="84158a7f-024f-445c-96b0-8a668e6b0dd9">
+    <property name="FechaReferencia" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="bbd4b66e-e2fb-4572-b7bb-951c3828c268">
       <column name="FECHA_REFERENCIA" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
-    <property name="IdInscripto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="9e582f9a-6d45-4d2a-9632-edbf3148679f">
+    <property name="IdInscripto" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="fbc7fcfd-6d50-449a-b649-5fedb02405b0">
       <column name="ID_INSCRIPTO" not-null="False" sql-type="NUMBER" p1:unicode="False" />
     </property>
-    <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="791bef65-faa5-4645-aef9-f71cf02bc498">
+    <property name="EstadoInscripcion" type="String" p1:nullable="True" p1:ValidateMaxLength="14" p1:ValidateRequired="false" p1:Guid="8138b890-d0c0-46f1-8814-700c5628b30e">
       <column name="ESTADO_INSCRIPCION" not-null="False" length="14" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="61" p1:ValidateRequired="false" p1:Guid="48a222b2-7bdc-4b0c-94c0-1239927832bf">
-      <column name="VENGO_DE" not-null="False" length="61" sql-type="VARCHAR2" p1:unicode="False" />
+    <property name="VengoDe" type="String" p1:nullable="True" p1:ValidateMaxLength="63" p1:ValidateRequired="false" p1:Guid="4c08214d-e40f-4c03-9c32-7983150eb614">
+      <column name="VENGO_DE" not-null="False" length="63" sql-type="VARCHAR2" p1:unicode="False" />
     </property>
-    <property name="IdOferta" type="Decimal" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="86e2e20d-908d-486e-80a5-6c8279411802">
-      <column name="ID_OFERTA" not-null="False" sql-type="NUMBER" p1:unicode="False" />
+    <property name="IdOferta" type="Int64" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="b50553a7-6868-4c0b-9613-a10710c4c63a">
+      <column name="ID_OFERTA" not-null="False" precision="18" scale="0" sql-type="NUMBER" p1:unicode="False" />
+    </property>
+    <property name="DescripcionOferta" type="String" p1:nullable="True" p1:ValidateMaxLength="1000" p1:ValidateRequired="false" p1:Guid="70a0ca37-231f-470e-8f3b-bf70bd200c53">
+      <column name="DESCRIPCION_OFERTA" not-null="False" length="1000" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="ProgConSeminariosProducto" type="String" p1:nullable="True" p1:ValidateMaxLength="2" p1:ValidateRequired="false" p1:Guid="3727101b-1667-484e-950f-de7847cd7369">
+      <column name="PROG_CON_SEMINARIOS_PRODUCTO" not-null="False" length="2" sql-type="VARCHAR2" p1:unicode="False" />
+    </property>
+    <property name="FechaVtoInscr" type="DateTime" p1:nullable="True" p1:ValidateRequired="false" p1:Guid="650cad6a-c056-49b1-80bf-484f27c786e3">
+      <column name="FECHA_VTO_INSCR" not-null="False" sql-type="DATE" p1:unicode="False" />
     </property>
   </class>
   <associations>

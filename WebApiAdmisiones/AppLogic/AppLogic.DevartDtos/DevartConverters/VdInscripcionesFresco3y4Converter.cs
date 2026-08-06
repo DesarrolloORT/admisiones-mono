@@ -53,6 +53,7 @@ namespace AppLogic.DevartDTOs
             target.IdOferta = source.IdOferta;
             target.DescripcionOferta = source.DescripcionOferta;
             target.ProgConSeminariosProducto = source.ProgConSeminariosProducto;
+            target.FechaVtoInscr = source.FechaVtoInscr;
 
             // User-defined partial method
             OnDtoCreating(source, target);
@@ -87,6 +88,7 @@ namespace AppLogic.DevartDTOs
             target.IdOferta = source.IdOferta;
             target.DescripcionOferta = source.DescripcionOferta;
             target.ProgConSeminariosProducto = source.ProgConSeminariosProducto;
+            target.FechaVtoInscr = source.FechaVtoInscr;
 
             // User-defined partial method
             OnEntityCreating(source, target);

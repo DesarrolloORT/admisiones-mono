@@ -58,10 +58,12 @@ namespace AppLogic.DevartDTOs
         [StringLength(14)]
         public string? EstadoInscripcion { get; set; }
 
-        [StringLength(61)]
+        [StringLength(63)]
         public string? VengoDe { get; set; }
 
-        public decimal? IdOferta { get; set; }
+        public long? IdOferta { get; set; }
+
+        public DateTime? FechaVtoInscr { get; set; }
 
         #endregion
     }
