@@ -37,8 +37,16 @@ La dirección es Catalogs → Enrollments, nunca al revés.
 
 `GetShifts` decide por el nivel del producto:
 
-- **Niveles 3 y 4** (actualización profesional) → vista Devart `VdOfertasDisponibles3y4`.
+- **Niveles 3 y 4** (actualización profesional) → vista Devart `VdOfertasDisponibles3y4`, por la
+  sobrecarga `GetOfertasDisponibles(idProducto, codigoPersona)`, que **excluye las ofertas en las que
+  la persona ya tiene una inscripción fresca vigente** (no se ofrece de nuevo lo ya inscripto). La
+  sobrecarga de un solo parámetro no excluye nada y existe para resolver descripciones de ofertas ya
+  elegidas: la usa `ConfirmPreEnrollment`, donde filtrar por inscripciones frescas dejaría afuera
+  justo las ofertas que se acaban de confirmar.
 - **Niveles 1 y 2** (grado y tecnicatura) → API de Inscripciones y Pagos.
+
+`personId` sale del token en el controller, no de la query string: la ruta `catalogs/shifts` no cambia
+para el front.
 
 `Mapping/OfferingMapper` tiene una sobrecarga por fuente y las unifica en `OfferingResponse`, así el
 front ve una sola forma. Cualquier otro nivel devuelve `CAT_TURNOS_04`.

@@ -132,7 +132,7 @@ namespace UnitTesting.Controllers
             var loggerMock = new Mock<ILogger<CatalogsController>>();
             var controller = new CatalogsController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
-            serviceMock.Setup(s => s.GetShifts(10, 20))
+            serviceMock.Setup(s => s.GetShifts(It.IsAny<long>(), 10, 20))
                 .ReturnsAsync(OperationResult<List<OfferingResponse>>.Ok(
                     [
                         new OfferingResponse

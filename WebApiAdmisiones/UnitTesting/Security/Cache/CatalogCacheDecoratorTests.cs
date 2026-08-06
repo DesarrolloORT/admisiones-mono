@@ -303,16 +303,16 @@ namespace UnitTesting.Security.Cache
         public async Task ObtenerTurnos_DelegatesToInnerService()
         {
             _innerMock
-                .Setup(s => s.GetShifts(10, 20))
+                .Setup(s => s.GetShifts(99, 10, 20))
                 .ReturnsAsync(OperationResult<List<OfferingResponse>>.Ok(
                     [],
                     nameof(ICatalogService.GetShifts)));
             var decorator = CrearDecorator(24);
 
-            var result = await decorator.GetShifts(10, 20);
+            var result = await decorator.GetShifts(99, 10, 20);
 
             Assert.True(result.Success);
-            _innerMock.Verify(s => s.GetShifts(10, 20), Times.Once);
+            _innerMock.Verify(s => s.GetShifts(99, 10, 20), Times.Once);
         }
 
         [Fact]

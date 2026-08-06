@@ -397,7 +397,7 @@ namespace UnitTesting.AppLogic.Services
                 """));
             var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
 
-            var result = await service.GetShifts(10, 20);
+            var result = await service.GetShifts(99, 10, 20);
 
             Assert.True(result.Success);
             var offering = Assert.Single(result.Data!);
@@ -425,7 +425,7 @@ namespace UnitTesting.AppLogic.Services
 
             var ofertasRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
             ofertasRepo
-                .Setup(r => r.GetOfertasDisponibles(10))
+                .Setup(r => r.GetOfertasDisponibles(10, 99))
                 .Returns(
                 [
                     new VdOfertasDisponibles3y4 { IdProducto = 10, IdComienzo = 30, IdOferta = 100, IdTurno = 1, IdMateria = 1 },
@@ -447,7 +447,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
             var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
 
-            var result = await service.GetShifts(10, 20);
+            var result = await service.GetShifts(99, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal(2, result.Data!.Count);
@@ -472,7 +472,7 @@ namespace UnitTesting.AppLogic.Services
             var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
             var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
 
-            var result = await service.GetShifts(99, 20);
+            var result = await service.GetShifts(99, 99, 20);
 
             Assert.False(result.Success);
             Assert.Equal("CAT_TURNOS_02", result.ErrorCode);

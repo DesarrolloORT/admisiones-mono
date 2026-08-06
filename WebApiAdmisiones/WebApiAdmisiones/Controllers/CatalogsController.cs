@@ -95,7 +95,8 @@ namespace WebApiAdmisiones.Controllers
         /// Lista las ofertas disponibles para una carrera y proceso.
         /// </summary>
         /// <remarks>
-        /// Endpoint para obtener las ofertas disponibles en Inscripciones y Pagos.
+        /// Endpoint para obtener las ofertas disponibles en Inscripciones y Pagos. En niveles 3 y 4 se
+        /// excluyen las ofertas en las que la persona autenticada ya tiene una inscripcion vigente.
         /// </remarks>
         /// <param name="degreeProgramId">Identificador de la carrera/producto seleccionado.</param>
         /// <param name="admissionProcessId">Identificador del proceso/comienzo seleccionado.</param>
@@ -107,7 +108,7 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<List<OfferingResponse>>), 400)]
         public async Task<IActionResult> GetShifts([FromQuery] long degreeProgramId, [FromQuery] long admissionProcessId)
         {
-            var result = await catalogosService.GetShifts(degreeProgramId, admissionProcessId);
+            var result = await catalogosService.GetShifts(_currentUser.GetUserId(), degreeProgramId, admissionProcessId);
             return ValidateResponse(result);
         }
 

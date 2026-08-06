@@ -87,7 +87,7 @@ public class CatalogService(
             nameof(GetIntakes));
     }
 
-    public async Task<OperationResult<List<OfferingResponse>>> GetShifts(long degreeProgramId, long admissionProcessId)
+    public async Task<OperationResult<List<OfferingResponse>>> GetShifts(long personId, long degreeProgramId, long admissionProcessId)
     {
         using var uow = _uowFactory.Create();
         var product = uow.Productos.GetByKey(degreeProgramId);
@@ -105,7 +105,7 @@ public class CatalogService(
         if (IsProductLevel3Or4(product.IdNivelProducto))
         {
             var offerings = uow.VdOfertasDisponibles3y4s
-                .GetOfertasDisponibles(degreeProgramId)
+                .GetOfertasDisponibles(degreeProgramId, personId)
                 .GroupBy(o => new { o.IdOferta, o.IdTurno })
                 .Select(g => g.First())
                 .OrderBy(o => o.IdTurno)
