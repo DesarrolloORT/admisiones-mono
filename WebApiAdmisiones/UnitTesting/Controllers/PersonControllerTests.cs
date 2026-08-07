@@ -2,8 +2,10 @@ using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
 using AppLogic.Scholarships.Dtos;
 using AppLogic.People.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Utilities;
@@ -61,6 +63,21 @@ namespace UnitTesting.Controllers
                     HttpContext = new DefaultHttpContext()
                 }
             };
+        }
+
+        [Fact]
+        public void ValidatePhoneNumber_IsAnonymousAndRateLimited()
+        {
+            var method = typeof(PersonController).GetMethod(nameof(PersonController.ValidatePhoneNumber));
+
+            Assert.NotNull(method);
+            Assert.Contains(
+                method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true),
+                attribute => attribute is AllowAnonymousAttribute);
+            Assert.Contains(
+                method.GetCustomAttributes(typeof(EnableRateLimitingAttribute), inherit: true),
+                attribute => attribute is EnableRateLimitingAttribute rateLimit &&
+                             rateLimit.PolicyName == "PhoneValidation");
         }
 
         [Fact]

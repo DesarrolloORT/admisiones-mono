@@ -5,6 +5,7 @@ using AppLogic.People.Dtos;
 using AppLogic.People.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Models;
 using WebApiAdmisiones.Security.Authentication;
@@ -65,15 +66,20 @@ namespace WebApiAdmisiones.Controllers
 
         /// <summary>
         /// Valida un telefono informado por el front para los datos de la persona.
+        /// Publico: el flujo de registro lo necesita antes de que exista un token.
         /// </summary>
         /// <param name="phoneNumber">Telefono normalizado o ingresado por el usuario.</param>
         /// <param name="isPrimaryPhone">Indica si se valida como telefono principal.</param>
         /// <returns><c>true</c> si el telefono es valido para guardar.</returns>
         /// <response code="200">Telefono validado correctamente.</response>
         /// <response code="400">Telefono invalido o solicitud incompleta.</response>
+        /// <response code="429">Se supero el limite de validaciones por minuto.</response>
+        [AllowAnonymous]
+        [EnableRateLimiting("PhoneValidation")]
         [HttpPost("validate-phone-number")]
         [ProducesResponseType(typeof(OperationResult<bool>), 200)]
         [ProducesResponseType(typeof(OperationResult<bool>), 400)]
+        [ProducesResponseType(typeof(OperationResult<bool>), 429)]
         public IActionResult ValidatePhoneNumber(PhoneNumber phoneNumber, [FromQuery] bool isPrimaryPhone)
         {
             var result = validatePhoneNumber.Execute(phoneNumber, isPrimaryPhone);

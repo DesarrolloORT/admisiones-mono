@@ -88,6 +88,7 @@ builder.Services.AddRedisRateLimiting();
 // 8. Rate Limiting (políticas específicas por endpoint)
 // --------------------------------------------------------------------------
 builder.Services.AddDocumentRecognitionRateLimiting(builder.Configuration);
+builder.Services.AddPhoneValidationRateLimiting(builder.Configuration);
 builder.Services.AddLoginRateLimiting(builder.Configuration);
 
 // --------------------------------------------------------------------------
