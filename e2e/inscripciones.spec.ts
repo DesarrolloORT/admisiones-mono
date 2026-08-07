@@ -10,6 +10,14 @@ test.describe('Inscripción inicial', () => {
     await addAuthenticatedSession(page);
     await page.goto('/inicio');
 
+    // Una sola inscripción pendiente: el alert informa la fecha y la tarjeta la repite.
+    // El detalle del alert está duplicado por breakpoint (span inline / supporting text), así que
+    // se busca el que esté visible en el viewport actual.
+    await expect(
+      page.getByText(/Realizá el pago antes del 15\/03\/2027/).filter({ visible: true })
+    ).toBeVisible();
+    await expect(page.getByText('Fecha límite: 15/03/2027')).toBeVisible();
+
     const detailRequest = page.waitForRequest(request => {
       const url = new URL(request.url());
       return (

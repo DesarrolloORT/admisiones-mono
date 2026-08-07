@@ -20,7 +20,11 @@ import { DashboardActionCard } from '../../components/dashboard-action-card/dash
 import { DashboardCareersSection } from '../../components/dashboard-careers-section/dashboard-careers-section';
 import { DashboardScholarshipsSection } from '../../components/dashboard-scholarships-section/dashboard-scholarships-section';
 import { MiBeca } from '../../models/mi-beca';
-import { MiInscripcion } from '../../models/mi-inscripcion';
+import {
+  buildPendingPaymentDetail,
+  MiInscripcion,
+  PENDING_PAYMENT_STATUS,
+} from '../../models/mi-inscripcion';
 
 @Component({
   selector: 'app-dashboard',
@@ -51,7 +55,10 @@ export class Dashboard implements AfterViewInit, OnDestroy {
     return name ? `¡Hola ${name}!` : '¡Hola!';
   });
   protected readonly hasPendingPayment = computed(() =>
-    this.inscripciones().some(i => i.estado === 'Pago pendiente')
+    this.inscripciones().some(i => i.estado === PENDING_PAYMENT_STATUS)
+  );
+  protected readonly pendingPaymentDetail = computed(() =>
+    buildPendingPaymentDetail(this.inscripciones())
   );
 
   protected readonly singleRow = computed(

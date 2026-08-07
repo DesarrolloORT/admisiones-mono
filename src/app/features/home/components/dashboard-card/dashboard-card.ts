@@ -2,7 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { OrtIconModule } from '@desarrolloort/components';
 
 import { MiBeca } from '../../models/mi-beca';
-import { MiInscripcion } from '../../models/mi-inscripcion';
+import {
+  formatFechaVencimientoPago,
+  MiInscripcion,
+  PENDING_PAYMENT_STATUS,
+} from '../../models/mi-inscripcion';
 import { DashboardCardSummary } from '../dashboard-card-summary/dashboard-card-summary';
 import { DashboardCareerStatusChip } from '../dashboard-career-status-chip/dashboard-career-status-chip';
 import { DashboardQuickActions } from '../dashboard-quick-actions/dashboard-quick-actions';
@@ -50,6 +54,13 @@ export class DashboardCard {
   protected readonly showActions = computed(() => {
     if (this.variant() === 'careers') return true;
     return this.estado() !== 'Aceptada';
+  });
+
+  // Solo las tarjetas de carrera con pago pendiente y fecha informada muestran la fecha limite.
+  protected readonly paymentDeadline = computed(() => {
+    if (this.variant() !== 'careers' || this.estado() !== PENDING_PAYMENT_STATUS) return '';
+
+    return formatFechaVencimientoPago(this.inscripcion()?.fechaVencimientoPago);
   });
 
   protected readonly esPaquete = computed(

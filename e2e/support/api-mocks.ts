@@ -220,6 +220,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
                 idProceso: 200,
                 idNivelProducto: 1,
                 estadoInscripcion: 'Pago pendiente',
+                fechaVencimientoPago: '2027-03-15',
                 progConSeminariosProducto: 'N',
                 inscripciones: [
                   {

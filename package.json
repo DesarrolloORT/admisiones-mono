@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./scripts/environment.js start",
     "build": "node ./scripts/environment.js build",
-    "env:sync": "node ./scripts/environment.js sync",
+    "env": "node ./scripts/environment.js sync",
     "lint": "prettier --write . && stylelint --fix **/*.scss && eslint --fix .",
     "lint:check": "prettier --check . && npm run check-disable-comments && stylelint **/*.scss && eslint . && npm run check-api-contracts && npm run check:knowledge",
     "test": "ng test --no-watch",

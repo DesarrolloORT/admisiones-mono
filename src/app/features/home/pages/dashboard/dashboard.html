@@ -6,10 +6,10 @@
   [hideStatusIcon]="hideStatusIcon()">
   <ort-alert-title>
     Inscripción pendiente de pago.
-    <span class="alert-detail--inline">Consultá el detalle desde Mis carreras.</span>
+    <span class="alert-detail--inline">{{ pendingPaymentDetail() }}</span>
   </ort-alert-title>
   <ort-alert-supporting-text class="alert-detail--block">
-    Consultá el detalle desde Mis carreras.
+    {{ pendingPaymentDetail() }}
   </ort-alert-supporting-text>
 </ort-alert>
 }

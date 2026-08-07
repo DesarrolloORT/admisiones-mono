@@ -75,6 +75,7 @@ describe('DashboardCareersSection', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      fechaVencimientoPago: null,
       seminarios: [],
     };
   }

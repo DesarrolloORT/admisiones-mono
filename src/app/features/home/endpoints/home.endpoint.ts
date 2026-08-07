@@ -56,6 +56,7 @@ export class HomeEndpoint {
           nombreComienzo: primero?.intakeName ?? '',
           nombreTurno: primero?.shiftName ?? '',
           estado,
+          fechaVencimientoPago: readFechaVencimientoPago(group),
           seminarios: items.map((item): MiInscripcionSeminario => ({
             idInscripto: item.enrollmentId ?? 0,
             idOferta: item.offeringId ?? 0,
@@ -82,6 +83,7 @@ export class HomeEndpoint {
           nombreComienzo: '',
           nombreTurno: '',
           estado,
+          fechaVencimientoPago: readFechaVencimientoPago(group),
           seminarios: [],
         },
       ];
@@ -98,6 +100,7 @@ export class HomeEndpoint {
       nombreComienzo: item.intakeName ?? '',
       nombreTurno: item.shiftName ?? '',
       estado,
+      fechaVencimientoPago: readFechaVencimientoPago(group),
       seminarios: [],
     }));
   }
@@ -146,4 +149,8 @@ export class HomeEndpoint {
 
 function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function readFechaVencimientoPago(group: MyEnrollmentsResponse): string | null {
+  return group.paymentDueDate ?? null;
 }

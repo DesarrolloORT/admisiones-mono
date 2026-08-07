@@ -1,7 +1,11 @@
 <section aria-label="Verificación de identidad" class="auth-form-grid" [formGroup]="form()">
-  <p class="auth-field--wide auth-verification-hint">
-    Confirmá tus datos para continuar acceder al sitio.
-  </p>
+  <ort-alert class="auth-field--wide" purpose="informative" [layout]="alertLayout()">
+    <ort-alert-title>Necesitamos verificar tus datos</ort-alert-title>
+    <ort-alert-supporting-text>
+      Encontramos un registro anterior asociado a tu documento. Completá la información solicitada
+      para continuar.
+    </ort-alert-supporting-text>
+  </ort-alert>
 
   <ort-form-field
     class="auth-field--wide"
