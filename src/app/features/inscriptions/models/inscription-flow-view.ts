@@ -21,13 +21,22 @@ export function buildSummaryItems(context: {
   startOptions: readonly OpcionInscripcion[];
   turnoOptions: readonly OpcionInscripcion[];
   isProfessionalUpdate: boolean;
+  seminarios: readonly ItemSeminarioResumen[];
 }): ItemResumenInscripcion[] {
   const carreraValue =
     context.response?.resumen?.carrera ??
     getOptionLabel(context.careerOptions, context.selectedCareer, 'Sin seleccionar');
 
   if (context.isProfessionalUpdate) {
-    return [{ icon: 'school', label: 'Programa', value: carreraValue }];
+    const programa = { icon: 'school', label: 'Programa', value: carreraValue };
+    // Un solo seminario: se lee como los niveles 1/2, con su comienzo como fila del
+    // resumen en lugar del bloque "Seminarios" (mismo criterio que DashboardCard).
+    if (context.seminarios.length !== 1) return [programa];
+
+    return [
+      programa,
+      { icon: 'calendar_today', label: 'Comienzo', value: context.seminarios[0].comienzo },
+    ];
   }
 
   return [

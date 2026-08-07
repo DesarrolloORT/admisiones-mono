@@ -131,6 +131,9 @@ export class InscripcionPaymentFacade {
   public readonly isProfessionalUpdate = computed(() =>
     this.proposal.selection.isProfessionalUpdate()
   );
+  private readonly seminariosSeleccionados = computed(() =>
+    this.isProfessionalUpdate() ? this.buildProfessionalUpdateSummary() : []
+  );
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
@@ -141,11 +144,14 @@ export class InscripcionPaymentFacade {
       startOptions: this.proposal.startOptions(),
       turnoOptions: this.proposal.turnoOptions(),
       isProfessionalUpdate: this.isProfessionalUpdate(),
+      seminarios: this.seminariosSeleccionados(),
     })
   );
-  public readonly seminariosResumen = computed(() =>
-    this.isProfessionalUpdate() ? this.buildProfessionalUpdateSummary() : []
-  );
+  // Con un solo seminario el comienzo ya va como fila del resumen: no se lista el bloque.
+  public readonly seminariosResumen = computed(() => {
+    const seminarios = this.seminariosSeleccionados();
+    return seminarios.length > 1 ? seminarios : [];
+  });
   public readonly paymentDeadline = computed(() =>
     formatPaymentDeadline(this.process.preEnrollmentResponse()?.fechaVencimientoPago)
   );

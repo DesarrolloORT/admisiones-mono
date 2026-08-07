@@ -398,14 +398,23 @@ En la pantalla de pago (`inscription-confirmation-step`), el "Resumen de inscrip
 usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
 
 - **Niveles 1 y 2:** las 3 filas de siempre (Carrera, Comienzo, Turno), sin cambios.
-- **Niveles 3 y 4 (AP):** una sola fila **Programa** (mismo ícono e ídem fallback de
-  `Carrera`) seguida de una sección **Seminarios** con una fila por elemento de
-  `seminarios[]` (nombre, comienzo, turno). Si la confirmación omite ese array, se usan
-  como fallback las ofertas seleccionadas del catálogo de seminarios. Esta lista vive
-  fuera de `summaryItems()` para no romper `inscription-success-step.html`, que usa
-  `summaryItems()[0]` como título y `summaryItems().slice(1)` para el resto.
-- El diálogo "Confirmar inscripción" (mismo paso) todavía no muestra los seminarios:
-  para AP solo pinta la fila Programa. Pendiente de decisión de UX.
+- **Niveles 3 y 4 (AP) con 2+ seminarios:** una sola fila **Programa** (mismo ícono e
+  ídem fallback de `Carrera`) seguida de una sección **Seminarios** con una fila por
+  elemento de `seminarios[]` (nombre, comienzo, turno). Si la confirmación omite ese
+  array, se usan como fallback las ofertas seleccionadas del catálogo de seminarios.
+  Esta lista vive fuera de `summaryItems()` para no romper
+  `inscription-success-step.html`, que usa `summaryItems()[0]` como título y
+  `summaryItems().slice(1)` para el resto.
+- **Niveles 3 y 4 (AP) con un solo seminario:** no hay nada que desglosar, así que el
+  resumen se lee como los niveles 1/2: filas **Programa** + **Comienzo** (el `comienzo`
+  del único seminario) y **sin** sección Seminarios. La decisión es por conteo
+  (`seminarios.length === 1`), no por `tieneSeminario`, igual que
+  `DashboardCard.enrollmentsCount()` en el panel (ver línea ~255). En el facade,
+  `seminariosSeleccionados()` es la fuente única: alimenta `summaryItems()` y
+  `seminariosResumen()` solo devuelve filas con 2+.
+- El diálogo "Confirmar inscripción" (mismo paso) no muestra el desglose de seminarios:
+  en AP multi-seminario solo pinta la fila Programa (pendiente de decisión de UX); con
+  un solo seminario sí muestra Programa + Comienzo, porque salen de `summaryItems()`.
 
 ### Pendientes de backend
 
