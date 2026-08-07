@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { OrtButtonModule, type OrtErrorItem, OrtFormFieldModule } from '@desarrolloort/components';
+import { filter, firstValueFrom } from 'rxjs';
 import {
   buildFormErrorSummary,
   focusFieldById,
@@ -115,9 +116,14 @@ export class RegisterPersonalStep {
     );
   }
 
-  public onSubmit(): void {
+  public async onSubmit(): Promise<void> {
     this.submitted.set(true);
     this.form().markAllAsTouched();
+
+    if (this.form().pending) {
+      await firstValueFrom(this.form().statusChanges.pipe(filter(status => status !== 'PENDING')));
+    }
+
     this.refreshErrorSummary();
 
     if (this.hasSubmittedInvalidFields()) {

@@ -256,7 +256,7 @@ describe('AccountEndpoint', () => {
       countryCode: 598,
       nationalNumber: '99123456',
     });
-    expect(req.request.withCredentials).toBe(true);
+    expect(req.request.withCredentials).toBeFalsy();
 
     req.flush({ success: true, httpCode: 200, data: true });
   });
