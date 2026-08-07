@@ -45,7 +45,7 @@ namespace WebApiAdmisiones.Security.Observability
         {
             var context = _httpContextAccessor.HttpContext;
             var correlationId = LoggingHelper.EnsureCorrelationId(context);
-            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
 
             var errorData = new
             {
@@ -58,7 +58,7 @@ namespace WebApiAdmisiones.Security.Observability
             var logMessage = LoggingHelper.FormatError(
                 context,
                 nameof(EfCoreLoggingInterceptor),
-                codigoPersona,
+                personId,
                 errorData,
                 correlationId);
 

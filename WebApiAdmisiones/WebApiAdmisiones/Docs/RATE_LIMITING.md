@@ -139,7 +139,7 @@ usuario11@ort.edu.uy + leaked_pass_11  → 429 AUTH_RL_01 ❌
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ HTTP Request → /Auth/Login                                   │
+│ HTTP Request → /auth/login                                   │
 └─────────────────────────────────────────────────────────────┘
 						 │
 						 ▼
@@ -321,7 +321,7 @@ await redisRateLimiter.ClearAsync("login-ip:192.168.1.1");
 # Probar la misma cuenta desde la misma IP
 for i in {1..7}; do
   echo "=== Intento $i ==="
-  curl -v -X POST http://localhost:5000/Auth/Login \
+  curl -v -X POST http://localhost:5000/auth/login \
 	-H "Content-Type: application/json" \
 	-d '{"tipoDocumento":"CI","documento":"12345678","password":"wrongpass"}'
   echo ""
@@ -345,7 +345,7 @@ done
 # Simular 11 usuarios diferentes desde la misma IP
 for i in {1..11}; do
   echo "=== Usuario $i ==="
-  curl -v -X POST http://localhost:5000/Auth/Login \
+  curl -v -X POST http://localhost:5000/auth/login \
 	-H "Content-Type: application/json" \
 	-d "{\"tipoDocumento\":\"CI\",\"documento\":\"user$i\",\"password\":\"wrong\"}"
   echo ""
@@ -363,35 +363,35 @@ done
 
 ```bash
 # Usuario 1: 2 intentos
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"11111111","password":"wrong"}' # Intento 1 (Total IP: 1)
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"11111111","password":"wrong2"}' # Intento 2 (Total IP: 2)
 
 # Usuario 2: 3 intentos
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"22222222","password":"wrong"}' # Total IP: 3
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"22222222","password":"wrong2"}' # Total IP: 4
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"22222222","password":"wrong3"}' # Total IP: 5
 
 # Usuario 3: 2 intentos
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"33333333","password":"wrong"}' # Total IP: 6
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"33333333","password":"wrong2"}' # Total IP: 7
 
 # Usuario 4: 3 intentos
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"44444444","password":"wrong"}' # Total IP: 8
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"44444444","password":"wrong2"}' # Total IP: 9
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"44444444","password":"wrong3"}' # Total IP: 10
 
 # Usuario 5: 1 intento (excede límite de IP)
-curl -X POST http://localhost:5000/Auth/Login -H "Content-Type: application/json" \
+curl -X POST http://localhost:5000/auth/login -H "Content-Type: application/json" \
   -d '{"tipoDocumento":"CI","documento":"55555555","password":"wrong"}' # Total IP: 11 → 429 AUTH_RL_01
 
 # Esperado:

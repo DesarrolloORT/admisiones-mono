@@ -28,6 +28,14 @@ namespace DataAccess.DevartRepositories
                     && ((x.IdNivelProducto == 3 && x.FechaReferencia >= fechaLimiteNivel3)
                         || (x.IdNivelProducto == 4 && x.FechaReferencia >= fechaLimiteNivel4)
                         || (x.IdNivelProducto != 3 && x.IdNivelProducto != 4 && x.FechaReferencia >= fechaLimiteDefault)))
+                // El ORDER BY va en la base para que el desempate use la collation de Oracle;
+                // GroupBy respeta el orden de llegada, así que First() es la fila con rn = 1.
+                .OrderBy(x => x.VengoDe)
+                .ToList()
+                // Una fila por oferta: la vista puede traer la misma oferta por más de un origen
+                // (ROW_NUMBER() OVER (PARTITION BY ID_OFERTA ORDER BY VENGO_DE) = 1).
+                .GroupBy(x => x.IdOferta)
+                .Select(g => g.First())
                 .ToList();
         }
 
@@ -48,6 +56,11 @@ namespace DataAccess.DevartRepositories
                     && ((x.IdNivelProducto == 3 && x.FechaReferencia >= fechaLimiteNivel3)
                         || (x.IdNivelProducto == 4 && x.FechaReferencia >= fechaLimiteNivel4)
                         || (x.IdNivelProducto != 3 && x.IdNivelProducto != 4 && x.FechaReferencia >= fechaLimiteDefault)))
+                .OrderBy(x => x.VengoDe)
+                .ToList()
+                // Idem: una fila por oferta, quedándose con la primera por VENGO_DE.
+                .GroupBy(x => x.IdOferta)
+                .Select(g => g.First())
                 .ToList();
         }
     }

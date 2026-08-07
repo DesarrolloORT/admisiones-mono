@@ -28,15 +28,19 @@ namespace WebApiAdmisiones.Security.Captcha
         }
     }
 
+    /// <summary>
+    /// Los VALORES son contrato con el front: viajan a reCAPTCHA y tienen que coincidir con la
+    /// action que el front dispara. Se renombraron los identificadores, no los literales.
+    /// </summary>
     public static class CaptchaActions
     {
         public const string Login = "login";
-        public const string RecuperarPassword = "RecuperarPassword";
-        public const string EvaluarDocumento = "EvaluarDocumento";
-        public const string VerificarIdentidad = "VerificarIdentidad";
-        public const string AnalizarAdjunto = "AnalizarAdjunto";
-        public const string ConfirmarNuevaPersona = "ConfirmarNuevaPersona";
-        public const string ConfirmarSolicitudAlta = "ConfirmarSolicitudAlta";
+        public const string RecoverPassword = "RecoverPassword";
+        public const string EvaluateDocument = "EvaluateDocument";
+        public const string VerifyIdentity = "VerifyIdentity";
+        public const string AnalyzeAttachment = "AnalyzeAttachment";
+        public const string ConfirmNewPerson = "ConfirmNewPerson";
+        public const string ConfirmRegistrationRequest = "ConfirmRegistrationRequest";
     }
 
     public sealed class RequireCaptchaFilter : IAsyncActionFilter

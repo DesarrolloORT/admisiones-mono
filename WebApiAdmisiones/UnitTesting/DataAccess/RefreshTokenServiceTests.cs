@@ -30,13 +30,13 @@ namespace UnitTesting.DataAccess
             DateTime expiresAt,
             string isActive = "SI",
             DateTime? revokedAt = null,
-            long codigoPersona = CodigoPersona,
+            long personId = CodigoPersona,
             string sistema = Sistema)
         {
             using var ctx = CreateContext(dbName);
             ctx.RefreshTokens.Add(new RefreshToken
             {
-                CodigoPersona = codigoPersona,
+                CodigoPersona = personId,
                 Sistema = sistema,
                 TokenHash = tokenHash,
                 ExpiresAt = expiresAt,

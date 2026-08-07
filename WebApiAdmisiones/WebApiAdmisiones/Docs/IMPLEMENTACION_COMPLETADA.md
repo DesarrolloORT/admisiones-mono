@@ -203,7 +203,7 @@ Cookie: X-Access-Token=eyJhbGc...
 
 3. **Hacer Login:**
    ```
-   POST /Auth/Login
+   POST /auth/login
    {
      "codigoPersona": 123456,
      "password": "tu_password"

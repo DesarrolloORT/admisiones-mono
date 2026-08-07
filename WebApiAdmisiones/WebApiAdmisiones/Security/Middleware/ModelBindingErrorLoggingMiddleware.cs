@@ -39,9 +39,9 @@ namespace WebApiAdmisiones.Security.Middleware
                 await _next(context);
 
                 memStream.Seek(0, SeekOrigin.Begin);
-                var (codigoPersona, entradaLoggedByFilter) = EnsureEntradaLogged(context, correlationId);
+                var (personId, entradaLoggedByFilter) = EnsureEntradaLogged(context, correlationId);
 
-                if (await TryHandleBadRequestAsync(memStream, context, originalBody, codigoPersona, correlationId)) return;
+                if (await TryHandleBadRequestAsync(memStream, context, originalBody, personId, correlationId)) return;
 
                 // No copiar contenido para respuestas que no permiten body (204 No Content, 304 Not Modified, etc.)
                 if (!IsBodylessStatusCode(context.Response.StatusCode))
@@ -60,7 +60,7 @@ namespace WebApiAdmisiones.Security.Middleware
                     var logSalida = LoggingHelper.FormatSalida(
                         context,
                         nameof(ModelBindingErrorLoggingMiddleware),
-                        codigoPersona,
+                        personId,
                         $"Response StatusCode: {context.Response.StatusCode}",
                         correlationId);
                     _logger.LogInformation(LogMessageTemplate, logSalida);
@@ -68,7 +68,7 @@ namespace WebApiAdmisiones.Security.Middleware
             }
             catch (Exception ex)
             {
-                var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+                var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
                 
                 // Si no se logueó entrada, loguear entrada aquí antes del error
                 if (!context.Items.ContainsKey(LoggingHelper.EntradaLoggedKey))
@@ -78,7 +78,7 @@ namespace WebApiAdmisiones.Security.Middleware
                     var logEntrada = LoggingHelper.FormatEntrada(
                         context,
                         nameof(ModelBindingErrorLoggingMiddleware),
-                        codigoPersona,
+                        personId,
                         "Request con excepción",
                         correlationId);
                     _logger.LogInformation(ex, LogMessageTemplate, logEntrada);
@@ -93,9 +93,9 @@ namespace WebApiAdmisiones.Security.Middleware
 #pragma warning restore S2139
         }
 
-        private (string? codigoPersona, bool entradaLoggedByFilter) EnsureEntradaLogged(HttpContext context, Guid correlationId)
+        private (string? personId, bool entradaLoggedByFilter) EnsureEntradaLogged(HttpContext context, Guid correlationId)
         {
-            var codigoPersona = LoggingHelper.GetCodigoPersonaFromContext(context);
+            var personId = LoggingHelper.GetCodigoPersonaFromContext(context);
             var entradaLoggedByFilter = context.Items.ContainsKey(LoggingHelper.EntradaLoggedKey);
 
             if (!entradaLoggedByFilter)
@@ -105,7 +105,7 @@ namespace WebApiAdmisiones.Security.Middleware
                 var logEntrada = LoggingHelper.FormatEntrada(
                     context,
                     nameof(ModelBindingErrorLoggingMiddleware),
-                    codigoPersona,
+                    personId,
                     "Request procesado por middleware (no llegó al filtro)",
                     correlationId);
                 _logger.LogInformation(LogMessageTemplate, logEntrada);
@@ -113,14 +113,14 @@ namespace WebApiAdmisiones.Security.Middleware
                 context.Items[LoggingHelper.EntradaLoggedKey] = true;
             }
 
-            return (codigoPersona, entradaLoggedByFilter);
+            return (personId, entradaLoggedByFilter);
         }
 
         private async Task<bool> TryHandleBadRequestAsync(
             MemoryStream memStream,
             HttpContext context,
             Stream originalBody,
-            string? codigoPersona,
+            string? personId,
             Guid correlationId)
         {
             if (context.Response.StatusCode != StatusCodes.Status400BadRequest) return false;
@@ -133,7 +133,7 @@ namespace WebApiAdmisiones.Security.Middleware
                 var logMessage = LoggingHelper.FormatSalida(
                     context,
                     nameof(ModelBindingErrorLoggingMiddleware),
-                    codigoPersona,
+                    personId,
                     $"DataAnnotation error response: {responseBody}",
                     correlationId);
 

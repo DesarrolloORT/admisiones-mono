@@ -72,7 +72,7 @@ jobs:
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" ^
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" ^
             /d:sonar.scm.disabled=true ^
-            /d:sonar.exclusions="**/bin/**,**/obj/**,**/Properties/**,**/WebApiAdmisiones/AppLogic/DevartDTOs/**,**/WebApiAdmisiones/BusinessLogic/DevartEFCore/**,**/WebApiAdmisiones/DataAccess/DevartDataAccess/**,**/Core/**" ^
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/Properties/**,**/WebApiAdmisiones/AppLogic/AppLogic.DevartDtos/**,**/WebApiAdmisiones/BusinessLogic/DevartEFCore/**,**/WebApiAdmisiones/DataAccess/DevartDataAccess/**,**/Core/**" ^
             /d:"sonar.inclusions=**/*.cs" ^
             /d:sonar.cs.opencover.reportsPaths=TestResults/**/coverage.opencover.xml ^
             /d:sonar.coverage.exclusions=**/Program.cs ^

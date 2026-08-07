@@ -8,7 +8,7 @@ Sistema de **cache distribuido** implementado con **Redis** para optimizar perfo
 
 ## 🎯 Endpoints Cacheados
 
-### ✅ `GET /Catalogos/PaisesEstadosCiudades`
+### ✅ `GET /catalogs/countries-states-cities`
 
 **Endpoint público** para poblar combos de ubicación en formularios de admisión.
 
@@ -30,7 +30,7 @@ Sistema de **cache distribuido** implementado con **Redis** para optimizar perfo
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ HTTP Request → GET /Catalogos/PaisesEstadosCiudades          │
+│ HTTP Request → GET /catalogs/countries-states-cities          │
 └──────────────────────────────────────────────────────────────┘
 						 │
 						 ▼
@@ -343,14 +343,14 @@ histogram_quantile(0.95, rate(redis_cache_latency_seconds_bucket[5m])) * 1000
 
 # Primera llamada (Cache MISS)
 Measure-Command {
-	Invoke-WebRequest -Uri "http://localhost:5000/Catalogos/PaisesEstadosCiudades"
+	Invoke-WebRequest -Uri "http://localhost:5000/catalogs/countries-states-cities"
 } | Select-Object TotalMilliseconds
 
 # Output esperado: ~200-500ms
 
 # Segunda llamada (Cache HIT)
 Measure-Command {
-	Invoke-WebRequest -Uri "http://localhost:5000/Catalogos/PaisesEstadosCiudades"
+	Invoke-WebRequest -Uri "http://localhost:5000/catalogs/countries-states-cities"
 } | Select-Object TotalMilliseconds
 
 # Output esperado: ~5-20ms ✅ 10-40x más rápido
@@ -360,7 +360,7 @@ Measure-Command {
 
 ```bash
 # Apache Bench: 100 requests, 10 concurrentes
-ab -n 100 -c 10 http://localhost:5000/Catalogos/PaisesEstadosCiudades
+ab -n 100 -c 10 http://localhost:5000/catalogs/countries-states-cities
 
 # Resultados esperados:
 # Requests per second: ~500-1000 rps (con cache)
@@ -409,7 +409,7 @@ ab -n 100 -c 10 http://localhost:5000/Catalogos/PaisesEstadosCiudades
 
 ```
 Estudiante abre formulario de registro:
-1. Frontend llama GET /Catalogos/PaisesEstadosCiudades
+1. Frontend llama GET /catalogs/countries-states-cities
 2. Backend: Cache HIT → 5ms ✅
 3. Combos poblados instantáneamente
 4. UX mejorada, menor frustración

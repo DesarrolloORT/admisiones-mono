@@ -5,54 +5,54 @@
     "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio esta en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla."
   },
   "types": {
-    "DtoCarrerasPorEscuelaResponse": {
-      "desc": "La forma depende de 'propuestaAcademica': para CarreraUniversitaria/Tecnicatura viene 'productos' (sin 'seminarios'); para ActualizacionProfesional viene 'seminarios' (sin 'productos'). El campo ausente no aparece en el JSON (omitEmpty).",
+    "DegreeProgramsBySchoolResponse": {
+      "desc": "La forma depende de 'academicOffer': para UniversityDegree/TechnicalDegree viene 'productos' (sin 'seminarios'); para ProfessionalUpdate viene 'seminarios' (sin 'productos'). El campo ausente no aparece en el JSON (omitEmpty).",
       "fields": {
-        "idEscuela": { "type": "long" },
-        "nombreEscuela": { "type": "string|null" },
-        "productos": { "type": "DtoCarreraResponse[]", "omitEmpty": true, "desc": "Solo CarreraUniversitaria/Tecnicatura: productos directos de la escuela, sin concepto de seminario." },
-        "seminarios": { "type": "DtoCarrerasPorSeminarioResponse[]", "omitEmpty": true, "desc": "Solo ActualizacionProfesional: como maximo 2 entradas (tieneSeminario true y/o false)." }
+        "schoolId": { "type": "long" },
+        "schoolName": { "type": "string|null" },
+        "products": { "type": "DegreeProgramResponse[]", "omitEmpty": true, "desc": "Solo UniversityDegree/TechnicalDegree: productos directos de la escuela, sin concepto de seminario." },
+        "seminars": { "type": "DegreeProgramsBySeminarResponse[]", "omitEmpty": true, "desc": "Solo ProfessionalUpdate: como maximo 2 entradas (hasSeminar true y/o false)." }
       }
     },
-    "DtoCarrerasPorSeminarioResponse": {
-      "desc": "Un grupo de productos de la escuela que comparten el mismo valor de tieneSeminario. Solo aparece para ActualizacionProfesional.",
+    "DegreeProgramsBySeminarResponse": {
+      "desc": "Un grupo de productos de la escuela que comparten el mismo valor de tieneSeminario. Solo aparece para ProfessionalUpdate.",
       "fields": {
-        "tieneSeminario": { "type": "boolean" },
-        "productos": { "type": "DtoCarreraResponse[]" }
+        "hasSeminar": { "type": "boolean" },
+        "products": { "type": "DegreeProgramResponse[]" }
       }
     },
-    "DtoCarreraResponse": {
+    "DegreeProgramResponse": {
       "fields": {
-        "idProducto": { "type": "long" },
-        "nombreProducto": { "type": "string|null" },
-        "idProceso": { "type": "long|null", "omitEmpty": true, "desc": "Solo poblado para nivel 3/4." }
+        "productId": { "type": "long" },
+        "productName": { "type": "string|null" },
+        "admissionProcessId": { "type": "long|null", "omitEmpty": true, "desc": "Solo poblado para nivel 3/4." }
       }
     }
   },
   "endpoints": {
     "obtenerCarreras": {
       "method": "GET",
-      "route": "Catalogos/Carreras",
+      "route": "catalogs/degree-programs",
       "query": {
-        "propuestaAcademica": {
+        "academicOffer": {
           "type": "enum",
           "required": true,
           "desc": "Opcion elegida en la pantalla 'Propuesta academica'. Acepta el nombre o el numero del enum.",
           "allowedOptions": [
-            { "value": 1, "name": "CarreraUniversitaria", "label": "Carrera universitaria" },
-            { "value": 2, "name": "Tecnicatura", "label": "Tecnicatura" },
-            { "value": 3, "name": "ActualizacionProfesional", "label": "Actualizacion profesional" }
+            { "value": 1, "name": "UniversityDegree", "label": "Carrera universitaria" },
+            { "value": 2, "name": "TechnicalDegree", "label": "TechnicalDegree" },
+            { "value": 3, "name": "ProfessionalUpdate", "label": "Actualizacion profesional" }
           ]
         }
       },
-      "dataDto": "IEnumerable<DtoCarrerasPorNivelResponse>",
+      "dataDto": "IEnumerable<DegreeProgramsByLevelResponse>",
       "data": {
-        "idNivelProducto": { "type": "long", "desc": "Nivel de producto real de la BD (1, 2, 3 o 4)." },
-        "nombreNivelProducto": { "type": "string|null" },
-        "escuelas": { "type": "DtoCarrerasPorEscuelaResponse[]" }
+        "productLevelId": { "type": "long", "desc": "Nivel de producto real de la BD (1, 2, 3 o 4)." },
+        "productLevelName": { "type": "string|null" },
+        "schools": { "type": "DegreeProgramsBySchoolResponse[]" }
       },
-      "frontHint": "Para 'ActualizacionProfesional' la respuesta puede traer DOS entradas en el array externo (nivel 3 y nivel 4 reales de la BD) - el front debe iterar todo el array y mostrarlas juntas bajo esa misma opcion de UI, nunca asumir una sola entrada. Para 'CarreraUniversitaria'/'Tecnicatura' siempre viene a lo sumo una entrada. Ademas, dentro de cada escuela, la forma cambia segun 'propuestaAcademica': ver DtoCarrerasPorEscuelaResponse en 'types'.",
-      "mainErrors": ["Ninguno propio: falta o valor invalido de 'propuestaAcademica' devuelve 400 automatico del model binding de ASP.NET Core, antes de llegar al controller/service."]
+      "frontHint": "Para 'ProfessionalUpdate' la respuesta puede traer DOS entradas en el array externo (nivel 3 y nivel 4 reales de la BD) - el front debe iterar todo el array y mostrarlas juntas bajo esa misma opcion de UI, nunca asumir una sola entrada. Para 'UniversityDegree'/'TechnicalDegree' siempre viene a lo sumo una entrada. Ademas, dentro de cada escuela, la forma cambia segun 'academicOffer': ver DegreeProgramsBySchoolResponse en 'types'.",
+      "mainErrors": ["Ninguno propio: falta o valor invalido de 'academicOffer' devuelve 400 automatico del model binding de ASP.NET Core, antes de llegar al controller/service."]
     }
   }
 }

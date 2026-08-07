@@ -18,6 +18,12 @@ using WebApiAdmisiones.Security.Authentication;
 var builder = WebApplication.CreateBuilder(args);
 
 // --------------------------------------------------------------------------
+// 0. Secretos obligatorios
+// Falla el arranque si falta alguno, en vez de propagar credenciales vacías.
+// --------------------------------------------------------------------------
+builder.Configuration.ValidateRequiredSecrets();
+
+// --------------------------------------------------------------------------
 // 1. Logging / Telemetría
 // --------------------------------------------------------------------------
 builder.Logging.ClearProviders();
@@ -66,7 +72,7 @@ builder.Services.AddDomainServices(builder.Configuration, builder.Environment);
 // --------------------------------------------------------------------------
 // 5. Cliente HTTP para API de Inscripciones y Pagos
 // --------------------------------------------------------------------------
-builder.Services.AddInscripcionesyPagosApiClient(builder.Configuration);
+builder.Services.AddEnrollmentsAndPaymentsApiClient(builder.Configuration);
 
 // --------------------------------------------------------------------------
 // 6. CORS
@@ -81,7 +87,8 @@ builder.Services.AddRedisRateLimiting();
 // --------------------------------------------------------------------------
 // 8. Rate Limiting (políticas específicas por endpoint)
 // --------------------------------------------------------------------------
-builder.Services.AddReconocimientoDocumentoRateLimiting(builder.Configuration);
+builder.Services.AddDocumentRecognitionRateLimiting(builder.Configuration);
+builder.Services.AddPhoneValidationRateLimiting(builder.Configuration);
 builder.Services.AddLoginRateLimiting(builder.Configuration);
 
 // --------------------------------------------------------------------------

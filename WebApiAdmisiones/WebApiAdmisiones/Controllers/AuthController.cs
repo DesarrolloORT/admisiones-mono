@@ -1,5 +1,6 @@
-using AppLogic.Autenticacion.Dtos;
-using AppLogic.Autenticacion.Interfaces;
+using AppLogic.Authentication.Dtos;
+using AppLogic.Authentication.Contracts;
+using AppLogic.Authentication.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -10,14 +11,16 @@ using WebApiAdmisiones.Security.Authentication;
 namespace WebApiAdmisiones.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("auth")]
     public class AuthController(
-        IAuthService loginService,
+        IRefreshTokens refreshTokens,
+        IRecoverPassword recoverPassword,
+        ICompletePasswordFlow completePasswordFlow,
         IPasswordActivationService passwordActivationService,
         IConfiguration configuration,
         ILogger<AuthController> logger,
         ICurrentUserService currentUser,
-        IDosFactoresAuthService dosFactoresService,
+        ITwoFactorAuthService dosFactoresService,
         ILoginFlowService loginFlowService)
         : ApiBaseController<AuthController>(logger, currentUser)
     {
@@ -64,19 +67,19 @@ namespace WebApiAdmisiones.Controllers
         /// </remarks>
         [AllowAnonymous]
         [EnableRateLimiting("LoginAttempts")]
-        [HttpPost("Login")]
+        [HttpPost("login")]
         [RequireCaptcha(CaptchaActions.Login, CaptchaValidationMode.ScoreOnly)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 202)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
-        public async Task<IActionResult> Login([FromBody] DtoAuthRequest request)
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 202)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 429)]
+        public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.TipoDocumento) || string.IsNullOrWhiteSpace(request.Documento))
+            if (string.IsNullOrWhiteSpace(request.DocumentType) || string.IsNullOrWhiteSpace(request.DocumentNumber))
             {
-                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                return ValidateResponse(OperationResult<AuthenticationResponse>.IsFailed(
                     "LOGIN_LDAP_01",
                     nameof(Login),
                     "El tipo de documento y el documento son requeridos.",
@@ -88,7 +91,7 @@ namespace WebApiAdmisiones.Controllers
             var recaptchaScore = HttpContext.GetRecaptchaScore();
             if (!recaptchaScore.HasValue)
             {
-                return ValidateResponse(OperationResult<DtoAuthenticationResponse>.IsFailed(
+                return ValidateResponse(OperationResult<AuthenticationResponse>.IsFailed(
                     "AUTH_CAPTCHA_99",
                     nameof(Login),
                     "No se encontro el score de captcha validado.",
@@ -96,7 +99,7 @@ namespace WebApiAdmisiones.Controllers
                     default!));
             }
 
-            var flowResult = await loginFlowService.EjecutarAsync(request, ipAddress, recaptchaScore.Value);
+            var flowResult = await loginFlowService.ExecuteAsync(request, ipAddress, recaptchaScore.Value);
 
             if (flowResult.RateLimitHeaders != null)
                 AgregarHeadersRateLimit(flowResult.RateLimitHeaders);
@@ -110,7 +113,7 @@ namespace WebApiAdmisiones.Controllers
             return ValidateResponse(flowResult.AuthResult!);
         }
 
-        private void AgregarHeadersRateLimit(DtoLoginRateLimitHeaders headers)
+        private void AgregarHeadersRateLimit(LoginRateLimitHeaders headers)
         {
             WebApiAdmisiones.Extensions.ServiceCollectionExtensions.LoginAccountRateLimitRejections.Inc();
             Response.Headers["X-RateLimit-Limit"] = headers.Limit.ToString();
@@ -135,19 +138,19 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="401">Código incorrecto, sesión expirada o máximo de intentos superado.</response>
         /// <response code="429">Se superó el máximo de solicitudes de verificación.</response>
         /// <remarks>
-        /// Endpoint publico usado como segundo paso del login cuando la API respondio <c>202 Accepted</c> en <c>Auth/Login</c>.
+        /// Endpoint publico usado como segundo paso del login cuando la API respondio <c>202 Accepted</c> en <c>auth/login</c>.
         /// Si el codigo es valido, se eliminan los datos temporales de 2FA y se emiten las cookies normales de autenticacion.
-        /// Si el codigo vencio pero la sesion 2FA sigue activa, el front puede solicitar uno nuevo con <c>Auth/ReenviarCodigo2FA</c>.
+        /// Si el codigo vencio pero la sesion 2FA sigue activa, el front puede solicitar uno nuevo con <c>Auth/ResendTwoFactorCode</c>.
         /// </remarks>
         [AllowAnonymous]
-        [HttpPost("VerificarCodigo2FA")]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 429)]
-        public async Task<IActionResult> VerificarCodigo2FA([FromBody] DtoVerificarCodigo2FARequest request)
+        [HttpPost("verify-two-factor-code")]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 429)]
+        public async Task<IActionResult> VerifyTwoFactorCode([FromBody] VerifyTwoFactorCodeRequest request)
         {
-            var result = await dosFactoresService.VerificarCodigoAsync(request.SessionId, request.Codigo);
+            var result = await dosFactoresService.VerifyCodeAsync(request.SessionId, request.Code);
 
             if (result.Success && result.Data != null)
             {
@@ -160,7 +163,7 @@ namespace WebApiAdmisiones.Controllers
         /// <summary>
         /// Reenvia el codigo de verificacion de dos factores para una sesion 2FA vigente.
         /// </summary>
-        /// <param name="request">Identificador de la sesion 2FA devuelto por <c>Auth/Login</c>.</param>
+        /// <param name="request">Identificador de la sesion 2FA devuelto por <c>auth/login</c>.</param>
         /// <returns>Datos necesarios para continuar el login 2FA, incluyendo el mismo sessionId y el email enmascarado.</returns>
         /// <response code="200">Codigo reenviado correctamente. El codigo anterior queda invalidado.</response>
         /// <response code="400">El request es invalido o no contiene sessionId.</response>
@@ -171,14 +174,14 @@ namespace WebApiAdmisiones.Controllers
         /// Cada reenvio exitoso genera un codigo nuevo, reinicia los intentos de validacion y conserva el tiempo restante de la sesion 2FA.
         /// </remarks>
         [AllowAnonymous]
-        [HttpPost("ReenviarCodigo2FA")]
-        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoLogin2FARequired>), 429)]
-        public async Task<IActionResult> ReenviarCodigo2FA([FromBody] DtoReenviarCodigo2FARequest request)
+        [HttpPost("resend-two-factor-code")]
+        [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 429)]
+        public async Task<IActionResult> ResendTwoFactorCode([FromBody] ResendTwoFactorCodeRequest request)
         {
-            var result = await dosFactoresService.ReenviarCodigoAsync(request.SessionId);
+            var result = await dosFactoresService.ResendCodeAsync(request.SessionId);
             return ValidateResponse(result);
         }
 
@@ -206,20 +209,20 @@ namespace WebApiAdmisiones.Controllers
         /// 
         /// Ejemplo de request:
         /// 
-        ///     POST /Auth/ActivarLinkPassword
+        ///     POST /Auth/ActivatePasswordLink
         ///     {
         ///       "token": "eyJhbGciOiJIUzI1NiIs..."
         ///     }
         /// </remarks>
         [AllowAnonymous]
-        [HttpPost("ActivarLinkPassword")]
-        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoPasswordActivationSession>), 500)]
-        public async Task<IActionResult> ActivarLinkPassword([FromBody] DtoActivarLinkPasswordRequest request)
+        [HttpPost("activate-password-link")]
+        [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 200)]
+        [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 400)]
+        [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 401)]
+        [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 500)]
+        public async Task<IActionResult> ActivatePasswordLink([FromBody] ActivatePasswordLinkRequest request)
         {
-            var result = await passwordActivationService.ActivarLinkPasswordAsync(request.Token);
+            var result = await passwordActivationService.ActivatePasswordLinkAsync(request.Token);
 
             if (result.Success && result.Data?.SessionToken != null)
             {
@@ -245,7 +248,7 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="500">Error interno al completar la password inicial o al cambiarla en LDAP.</response>
         /// <remarks>
         /// Endpoint publico pero no anonimo funcionalmente: no usa Authorize porque no debe aceptar el JWT normal.
-        /// Valida explicitamente la cookie temporal X-Password-Activation generada por Auth/ActivarLinkPassword.
+        /// Valida explicitamente la cookie temporal X-Password-Activation generada por Auth/ActivatePasswordLink.
         /// 
         /// Esta cookie solo sirve para este endpoint. No permite consumir otros servicios de la API.
         /// 
@@ -257,20 +260,20 @@ namespace WebApiAdmisiones.Controllers
         /// 
         ///     POST /Auth/CompletarPasswordInicial
         ///     {
-        ///       "passwordNueva": "NuevaPassword1!"
+        ///       "newPassword": "NuevaPassword1!"
         ///     }
         /// </remarks>
         [AllowAnonymous]
-        [HttpPost("CompletarPassword")]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 400)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 500)]
-        public async Task<IActionResult> CompletarPassword([FromBody] DtoCompletarPasswordInicialRequest request)
+        [HttpPost("complete-initial-password")]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 500)]
+        public async Task<IActionResult> CompleteInitialPassword([FromBody] CompleteInitialPasswordRequest request)
         {
             var sessionToken = CookieAuthenticationHelper.GetPasswordActivationTokenFromCookie(HttpContext);
-            var flowResult = await loginService.CompletarPasswordFlowAsync(sessionToken, request);
+            var flowResult = await completePasswordFlow.ExecuteAsync(sessionToken, request);
 
             if (flowResult.ClearActivationCookie)
             {
@@ -294,7 +297,7 @@ namespace WebApiAdmisiones.Controllers
         /// Endpoint público (anónimo a propósito, M-06): solo limpia cookies, no requiere una sesión
         /// válida — debe poder llamarse aunque el access token ya haya expirado.
         /// </remarks>
-        [HttpPost("Logout")]
+        [HttpPost("logout")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(OperationResult<string>), 200)]
         public IActionResult Logout()
@@ -319,11 +322,11 @@ namespace WebApiAdmisiones.Controllers
         /// estar vencido). El front no necesita enviar el token en el body; debe llamar este endpoint
         /// cuando expire el access token y la API actualizara las cookies si el refresh token sigue vigente.
         /// </remarks>
-        [HttpPost("RefreshToken")]
+        [HttpPost("refresh-token")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 200)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<DtoAuthenticationResponse>), 404)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 200)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 401)]
+        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 404)]
         public async Task<IActionResult> RefreshToken()
         {
             // 1. Leer refresh token de la cookie (HTTP concern).
@@ -331,7 +334,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (string.IsNullOrEmpty(refreshToken))
             {
-                var errorResult = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                var errorResult = OperationResult<AuthenticationResponse>.IsFailed(
                     errorCode: "AUTH_RT_01",
                     originMethod: nameof(RefreshToken),
                     message: "Refresh token no encontrado en las cookies.",
@@ -342,7 +345,7 @@ namespace WebApiAdmisiones.Controllers
 
 
             // 2. Delegar toda la lógica de negocio al servicio.
-            var result = await loginService.RefrescarTokensAsync(refreshToken);
+            var result = await refreshTokens.ExecuteAsync(refreshToken);
 
             if (!result.Success)
             {
@@ -371,18 +374,18 @@ namespace WebApiAdmisiones.Controllers
         /// Endpoint publico para iniciar el flujo de recuperacion de password. El front envia tipo de documento, documento y primer apellido.
         /// Si los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.
         /// </remarks>
-        [HttpPost("RecuperarPassword")]
+        [HttpPost("recover-password")]
         [AllowAnonymous]
-        [RequireCaptcha(CaptchaActions.RecuperarPassword, CaptchaValidationMode.ScoreOnly)]
+        [RequireCaptcha(CaptchaActions.RecoverPassword, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> RecuperarPassword([FromBody] DtoRecuperarPasswordRequest request)
+        public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordRequest request)
         {
-            var result = await loginService.RecuperarPassword(request);
+            var result = await recoverPassword.ExecuteAsync(request);
             return ValidateResponse(result);
         }
 
-        private void SetAuthenticationCookies(DtoAuthenticationResponse data)
+        private void SetAuthenticationCookies(AuthenticationResponse data)
         {
             if (string.IsNullOrWhiteSpace(data.AccessToken) || string.IsNullOrWhiteSpace(data.RefreshToken))
             {

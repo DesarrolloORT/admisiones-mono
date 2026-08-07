@@ -1,4 +1,4 @@
-using AppLogic.Autenticacion.Dtos;
+using AppLogic.Authentication.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -6,7 +6,7 @@ using AzureService.DTOs;
 using Prometheus;
 using Utilities;
 using StackExchange.Redis;
-using AppLogic.Infrastructure.RateLimiting;
+using AppLogic.Platform.RateLimiting;
 using WebApiAdmisiones.Security.RateLimiting;
 using WebApiAdmisiones.Security.Cache;
 using WebApiAdmisiones.Security.RequestValidation;
@@ -20,10 +20,15 @@ namespace WebApiAdmisiones.Extensions
     {
         private const string ReconocimientoDocumentoRateLimitPolicy = "ReconocimientoDocumento";
         private const string LoginRateLimitPolicy = "LoginAttempts";
+        private const string PhoneValidationRateLimitPolicy = "PhoneValidation";
 
         private static readonly Counter ReconocimientoDocumentoRateLimitRejections = Metrics.CreateCounter(
             "reconocimiento_documento_rate_limit_rejections_total",
             "Cantidad de solicitudes de reconocimiento de documento rechazadas por rate limit.");
+
+        private static readonly Counter PhoneValidationRateLimitRejections = Metrics.CreateCounter(
+            "phone_validation_rate_limit_rejections_total",
+            "Cantidad de validaciones de teléfono rechazadas por rate limit.");
 
         private static readonly Counter LoginRateLimitRejections = Metrics.CreateCounter(
             "login_rate_limit_rejections_total",
@@ -127,7 +132,7 @@ namespace WebApiAdmisiones.Extensions
             });
 
             // Registrar servicio de rate limiting
-            services.AddSingleton<AppLogic.Infrastructure.RateLimiting.IRateLimiterService, RedisRateLimiterService>();
+            services.AddSingleton<AppLogic.Platform.RateLimiting.IRateLimiterService, RedisRateLimiterService>();
 
             // Registrar servicio de cache distribuido
             services.AddSingleton<IRedisCacheService, RedisCacheService>();
@@ -170,7 +175,7 @@ namespace WebApiAdmisiones.Extensions
             return services;
         }
 
-        public static IServiceCollection AddReconocimientoDocumentoRateLimiting(
+        public static IServiceCollection AddDocumentRecognitionRateLimiting(
             this IServiceCollection services,
             IConfiguration configuration)
         {
@@ -210,7 +215,7 @@ namespace WebApiAdmisiones.Extensions
             return services;
         }
 
-        private static async Task HandleReconocimientoDocumentoRejected(
+        private static async Task HandleDocumentRecognitionRejected(
             OnRejectedContext context, CancellationToken cancellationToken)
         {
             ReconocimientoDocumentoRateLimitRejections.Inc();
@@ -220,6 +225,71 @@ namespace WebApiAdmisiones.Extensions
                 "REC_DOC_15",
                 ReconocimientoDocumentoRateLimitPolicy,
                 "Se superó el límite de solicitudes de reconocimiento de documentos. Intentá nuevamente en unos minutos.",
+                429,
+                default!);
+
+            await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
+        }
+
+        /// <summary>
+        /// Configura rate limiting para la validación de teléfonos, que es anónima.
+        /// </summary>
+        /// <param name="services">Colección de servicios.</param>
+        /// <param name="configuration">Configuración de la aplicación.</param>
+        /// <returns>La colección de servicios para encadenamiento.</returns>
+        /// <remarks>
+        /// El caso de uso es puro (libphonenumber en memoria, sin base ni servicios externos), así
+        /// que el único abuso posible es el flood. Límite holgado: el front valida al salir de cada
+        /// campo de teléfono (principal y alternativo) y no debe comerse un 429 tipeando.
+        /// Configurable con "PhoneValidation:RateLimitPerMinute".
+        /// </remarks>
+        public static IServiceCollection AddPhoneValidationRateLimiting(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var configuredLimit = configuration.GetValue<int?>("PhoneValidation:RateLimitPerMinute");
+            var permitLimit = configuredLimit is > 0 ? configuredLimit.Value : 20;
+
+            services.AddRateLimiter(options =>
+            {
+                options.AddPolicy(PhoneValidationRateLimitPolicy, httpContext =>
+                {
+                    var userKey = httpContext.User?.Identity?.IsAuthenticated == true
+                        ? httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+                          httpContext.User.FindFirst("sub")?.Value ??
+                          httpContext.User.Identity?.Name
+                        : null;
+
+                    var partitionKey = !string.IsNullOrWhiteSpace(userKey)
+                        ? $"phone-user:{userKey}"
+                        : $"phone-ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey,
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = permitLimit,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0,
+                            AutoReplenishment = true
+                        });
+                });
+
+            });
+
+            return services;
+        }
+
+        private static async Task HandlePhoneValidationRejected(
+            OnRejectedContext context, CancellationToken cancellationToken)
+        {
+            PhoneValidationRateLimitRejections.Inc();
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+            var result = OperationResult<bool>.IsFailed(
+                "PERS_RL_01",
+                PhoneValidationRateLimitPolicy,
+                "Se superó el límite de validaciones de teléfono. Intentá nuevamente en un minuto.",
                 429,
                 default!);
 
@@ -297,7 +367,7 @@ namespace WebApiAdmisiones.Extensions
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     // Usar Redis Rate Limiter en lugar de in-memory
-                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
+                    var redisService = httpContext.RequestServices.GetRequiredService<AppLogic.Platform.RateLimiting.IRateLimiterService>();
 
                     return RateLimitPartition.Get(
                         partitionKey,
@@ -319,14 +389,20 @@ namespace WebApiAdmisiones.Extensions
 
                     if (policyName == ReconocimientoDocumentoRateLimitPolicy)
                     {
-                        await HandleReconocimientoDocumentoRejected(context, cancellationToken);
+                        await HandleDocumentRecognitionRejected(context, cancellationToken);
+                        return;
+                    }
+
+                    if (policyName == PhoneValidationRateLimitPolicy)
+                    {
+                        await HandlePhoneValidationRejected(context, cancellationToken);
                         return;
                     }
 
                     LoginRateLimitRejections.Inc();
 
                     // Obtener información adicional desde Redis
-                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Infrastructure.RateLimiting.IRateLimiterService>();
+                    var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Platform.RateLimiting.IRateLimiterService>();
                     var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                     var partitionKey = $"login-ip:{ipAddress}";
 
@@ -352,7 +428,7 @@ namespace WebApiAdmisiones.Extensions
                             ((int)(resetTime.Value - DateTimeOffset.UtcNow).TotalSeconds).ToString();
                     }
 
-                    var result = OperationResult<DtoAuthenticationResponse>.IsFailed(
+                    var result = OperationResult<AuthenticationResponse>.IsFailed(
                         "AUTH_RL_01",
                         LoginRateLimitPolicy,
                         $"Se superó el límite de intentos de inicio de sesión desde esta red ({maxIpAttempts} intentos cada {windowMinutes} minutos). Por tu seguridad, intentá nuevamente más tarde.",
