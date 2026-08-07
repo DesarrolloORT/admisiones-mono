@@ -2,11 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { OrtIconModule } from '@desarrolloort/components';
 
 import { MiBeca } from '../../models/mi-beca';
-import {
-  formatFechaVencimientoPago,
-  MiInscripcion,
-  PENDING_PAYMENT_STATUS,
-} from '../../models/mi-inscripcion';
+import { MiInscripcion } from '../../models/mi-inscripcion';
 import { DashboardCardSummary } from '../dashboard-card-summary/dashboard-card-summary';
 import { DashboardCareerStatusChip } from '../dashboard-career-status-chip/dashboard-career-status-chip';
 import { DashboardQuickActions } from '../dashboard-quick-actions/dashboard-quick-actions';
@@ -56,16 +52,10 @@ export class DashboardCard {
     return this.estado() !== 'Aceptada';
   });
 
-  // Solo las tarjetas de carrera con pago pendiente y fecha informada muestran la fecha limite.
-  protected readonly paymentDeadline = computed(() => {
-    if (this.variant() !== 'careers' || this.estado() !== PENDING_PAYMENT_STATUS) return '';
+  // Cantidad de anotaciones de la inscripción: cada seminario de un paquete cuenta como una;
+  // sin seminarios (carrera simple) es siempre 1, la propia inscripción.
+  protected readonly enrollmentsCount = computed(() => this.inscripcion()?.seminarios.length || 1);
 
-    return formatFechaVencimientoPago(this.inscripcion()?.fechaVencimientoPago);
-  });
-
-  protected readonly esPaquete = computed(
-    () => this.variant() === 'careers' && (this.inscripcion()?.seminarios?.length ?? 0) > 0
-  );
   protected readonly idsInscripcion = computed(() => {
     const inscripcion = this.inscripcion();
     if (!inscripcion) return [];

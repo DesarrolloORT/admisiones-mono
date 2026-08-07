@@ -40,26 +40,60 @@ export function formatFechaVencimientoPago(value: string | null | undefined): st
   return deadline === 'No informado' ? '' : deadline;
 }
 
+export interface PendingPaymentSummary {
+  title: string;
+  detail: string;
+  navigable: boolean;
+  target: { idProducto: number; idProceso: number } | null;
+}
+
 /**
- * Detalle del alert de pago pendiente del dashboard. Con una sola inscripción pendiente informa su
- * fecha; con varias las lista todas (cada tarjeta repite la suya). Sin fechas usables cae al texto
- * genérico, que es lo que se muestra mientras la API no informe `fechaVencimientoPago`.
+ * Resumen del alert de pago pendiente del dashboard. El título va en plural apenas hay más de
+ * una inscripción pendiente, sin importar si comparten fecha. El detalle, en cambio, deduplica
+ * fechas repetidas (`Set`): con una sola fecha usable la menciona una vez aunque haya varias
+ * inscripciones. La navegación directa al pago sólo se habilita cuando hay una única inscripción
+ * pendiente en total: con 2+ pendientes (aunque compartan fecha) no hay un destino de pago único
+ * al que navegar, así que la flecha queda oculta.
  */
-export function buildPendingPaymentDetail(inscripciones: MiInscripcion[]): string {
-  const deadlines = inscripciones
-    .filter(inscripcion => inscripcion.estado === PENDING_PAYMENT_STATUS)
-    .map(inscripcion => formatFechaVencimientoPago(inscripcion.fechaVencimientoPago))
-    .filter(deadline => deadline !== '');
+export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): PendingPaymentSummary {
+  const pending = inscripciones.filter(
+    inscripcion => inscripcion.estado === PENDING_PAYMENT_STATUS
+  );
 
-  if (deadlines.length === 0) {
-    return 'Consultá el detalle desde Mis carreras.';
+  const navigable = pending.length === 1;
+  const target = navigable
+    ? { idProducto: pending[0].idProducto, idProceso: pending[0].idProceso }
+    : null;
+  const title =
+    pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Inscripciones pendientes de pago.';
+
+  const uniqueDeadlines = [
+    ...new Set(
+      pending
+        .map(inscripcion => formatFechaVencimientoPago(inscripcion.fechaVencimientoPago))
+        .filter(deadline => deadline !== '')
+    ),
+  ];
+
+  if (uniqueDeadlines.length === 0) {
+    return { title, detail: 'Consultá el detalle desde Mis carreras.', navigable, target };
   }
 
-  if (deadlines.length === 1) {
-    return `Realizá el pago antes del ${deadlines[0]}.`;
+  if (uniqueDeadlines.length === 1) {
+    const detail =
+      pending.length === 1
+        ? `Realizá el pago antes del ${uniqueDeadlines[0]}.`
+        : `Tus inscripciones pendientes de pago vencerán el ${uniqueDeadlines[0]}.`;
+
+    return { title, detail, navigable, target };
   }
 
-  const listed = new Intl.ListFormat('es-UY', { type: 'conjunction' }).format(deadlines);
+  const listed = new Intl.ListFormat('es-UY', { type: 'conjunction' }).format(uniqueDeadlines);
 
-  return `Tus inscripciones pendientes de pago vencerán los días ${listed}.`;
+  return {
+    title,
+    detail: `Tus inscripciones pendientes de pago vencerán los días ${listed}.`,
+    navigable,
+    target,
+  };
 }

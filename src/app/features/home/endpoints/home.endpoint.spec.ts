@@ -192,52 +192,23 @@ describe('HomeEndpoint', () => {
     expect(result[0]?.idOfertas).toEqual([310]);
   });
 
-  // El contrato de testing la llamaría `fechaVencimientoPago`; el de desa ya la expone como
-  // `paymentDueDate`. El adapter acepta ambos nombres hasta que quede un único contrato.
-  it('reads the payment deadline from the group or, failing that, from the item', async () => {
+  it('reads the payment deadline from the group', async () => {
     api.request.mockReturnValueOnce(
       of([
         {
-          idProducto: 10,
-          idNivelProducto: 1,
-          idProceso: 25,
-          estadoInscripcion: 'Pago pendiente',
-          fechaVencimientoPago: '2026-07-15',
-          inscripciones: [{ idInscripto: 100, idOferta: 300 }],
-        },
-        {
-          idProducto: 13,
-          idNivelProducto: 1,
-          idProceso: 28,
-          estadoInscripcion: 'Pago pendiente',
+          productId: 13,
+          productLevelId: 1,
+          admissionProcessId: 28,
+          enrollmentStatus: 'Pago pendiente',
           paymentDueDate: '2026-07-18',
-          inscripciones: [{ idInscripto: 103, idOferta: 303 }],
-        },
-        {
-          idProducto: 11,
-          idNivelProducto: 1,
-          idProceso: 26,
-          estadoInscripcion: 'Pago pendiente',
-          inscripciones: [{ idInscripto: 101, idOferta: 301, fechaVencimientoPago: '2026-07-20' }],
-        },
-        {
-          idProducto: 12,
-          idNivelProducto: 1,
-          idProceso: 27,
-          estadoInscripcion: 'Pago pendiente',
-          inscripciones: [{ idInscripto: 102, idOferta: 302, fechaVencimientoPago: '   ' }],
+          enrollments: [{ enrollmentId: 103, offeringId: 303 }],
         },
       ])
     );
 
     const result = await firstValueFrom(endpoint.getMisInscripciones());
 
-    expect(result.map(inscripcion => inscripcion.fechaVencimientoPago)).toEqual([
-      '2026-07-15',
-      '2026-07-18',
-      '2026-07-20',
-      null,
-    ]);
+    expect(result[0]?.fechaVencimientoPago).toBe('2026-07-18');
   });
 
   it('should not explode when inscripciones is null or empty', async () => {

@@ -1,15 +1,17 @@
 @if (hasPendingPayment()) {
 <ort-alert
-  actionIcon="arrow_forward"
+  actionAriaLabel="Ir al pago pendiente"
   purpose="warning"
   radius="straight"
-  [hideStatusIcon]="hideStatusIcon()">
+  [actionIcon]="pendingPaymentSummary().navigable ? 'arrow_forward' : undefined"
+  [hideStatusIcon]="hideStatusIcon()"
+  (actionTriggered)="navigateToPendingPayment()">
   <ort-alert-title>
-    Inscripción pendiente de pago.
-    <span class="alert-detail--inline">{{ pendingPaymentDetail() }}</span>
+    {{ pendingPaymentSummary().title }}
+    <span class="alert-detail--inline">{{ pendingPaymentSummary().detail }}</span>
   </ort-alert-title>
   <ort-alert-supporting-text class="alert-detail--block">
-    {{ pendingPaymentDetail() }}
+    {{ pendingPaymentSummary().detail }}
   </ort-alert-supporting-text>
 </ort-alert>
 }

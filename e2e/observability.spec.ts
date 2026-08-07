@@ -43,7 +43,7 @@ test.describe('Observable registration telemetry', () => {
 
       expectTelemetryHeaders(observed, testRunId);
       expect(observed.map(request => request.path)).toEqual(
-        expect.arrayContaining(['/Registro/EvaluarDocumento'])
+        expect.arrayContaining(['/registration/evaluate-document'])
       );
 
       console.log(`[telemetry] test_run_id=${testRunId}`);
@@ -76,7 +76,7 @@ test.describe('Backend observability probes', () => {
 
     expectTelemetryHeaders(observed, testRunId);
     expect(observed.map(request => request.path)).toEqual(
-      expect.arrayContaining(['/Registro/EvaluarDocumento'])
+      expect.arrayContaining(['/registration/evaluate-document'])
     );
 
     console.log(`[backend-telemetry] test_run_id=${testRunId}`);
@@ -106,7 +106,7 @@ test.describe('Backend observability probes', () => {
 
     for (let index = 0; index < attempts; index += 1) {
       const responsePromise = page.waitForResponse(
-        response => getAdmisionesApiPath(response.url()) === '/Registro/AnalizarAdjunto',
+        response => getAdmisionesApiPath(response.url()) === '/registration/analyze-attachment',
         { timeout: 60_000 }
       );
 
@@ -125,7 +125,9 @@ test.describe('Backend observability probes', () => {
         .catch(() => undefined);
     }
 
-    const observed = requests.filter(request => request.path === '/Registro/AnalizarAdjunto');
+    const observed = requests.filter(
+      request => request.path === '/registration/analyze-attachment'
+    );
 
     expectTelemetryHeaders(observed, testRunId);
     expect(statuses).toContain(429);
@@ -171,7 +173,7 @@ async function completeMockedRegistration(
 
 function relevantRegistrationRequests(requests: ObservedApiRequest[]): ObservedApiRequest[] {
   return requests.filter(
-    request => request.path.startsWith('/Registro/') || request.path.startsWith('/Catalogos/')
+    request => request.path.startsWith('/registration/') || request.path.startsWith('/catalogs/')
   );
 }
 

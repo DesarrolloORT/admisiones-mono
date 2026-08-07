@@ -28,25 +28,25 @@ el contrato backend sale de `inscription-flow-mappers.ts`.
 
 ## Acciones y evidencia end-to-end
 
-| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                      | Backend                                                                                                                                                                                                                                                                                        |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /Inscripciones/InteresProducto`                                     | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/InscripcionesController.cs">InscripcionesController</SourceLink> → <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Inscripciones/Services/InscripcionesService.cs">InscripcionesService</SourceLink> |
-| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /Inscripciones/ConfirmarPreInscripcion` | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/PersonaController.cs">PersonaController</SourceLink> + InscripcionesController                                                                                                                                  |
-| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /Inscripciones/Pagar`                                               | InscripcionesController → InscripcionesService → API interna de pagos                                                                                                                                                                                                                          |
-| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">InscripcionesEndpoint</SourceLink>                          | `POST /Inscripciones/Reactivar`                                           | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
+| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                   | Backend                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/InscripcionesController.cs">InscripcionesController</SourceLink> → <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Inscripciones/Services/InscripcionesService.cs">InscripcionesService</SourceLink> |
+| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/PersonaController.cs">PersonaController</SourceLink> + InscripcionesController                                                                                                                                  |
+| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /enrollments/start-payment`                                      | InscripcionesController → InscripcionesService → API interna de pagos                                                                                                                                                                                                                          |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">InscripcionesEndpoint</SourceLink>                          | `POST /enrollments/reactivate`                                         | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
 
 Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
 ## Pasos y escenarios
 
 El flujo tiene 3 pasos. El **paso 1** (Propuesta academica) avanza con
-`POST /Inscripciones/InteresProducto`. El **paso 2** (Informacion personal)
+`POST /enrollments/product-interest`. El **paso 2** (Informacion personal)
 guarda primero los cambios de identidad, luego llama a
-`POST /Inscripciones/EncuestaInicial` y finalmente a
-`POST /Inscripciones/ConfirmarPreInscripcion`. El **paso 3** (Confirmacion /
-pago) llama a `POST /Inscripciones/Pagar`; el detalle operativo forma parte de esta misma página.
+`POST /enrollments/initial-survey` y finalmente a
+`POST /enrollments/confirm-pre-enrollment`. El **paso 3** (Confirmacion /
+pago) llama a `POST /enrollments/start-payment`; el detalle operativo forma parte de esta misma página.
 
-Antes de entrar al paso 2 se consulta `GET /Inscripciones/EncuestaInicial`.
+Antes de entrar al paso 2 se consulta `GET /enrollments/initial-survey`.
 Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
 secciones de Educacion, decision academica, experiencia ORT, situacion
 laboral, identidad y reglamento. Si `tieneDerechoEncuesta === false`, solo
@@ -143,11 +143,11 @@ matriz es su lectura de negocio.
   del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`): el botón
-  del dashboard hace `POST /Inscripciones/Reactivar`, que devuelve el mismo contrato
+  del dashboard hace `POST /enrollments/reactivate`, que devuelve el mismo contrato
   que `ConfirmarPreInscripcion`. El frontend conserva transitoriamente esa respuesta y
   los IDs de las nuevas inscripciones: `enEspera` muestra la pantalla informativa,
   seña `0` muestra la reserva y el resto abre la selección de pago. El resolver no
-  llama a `GET /Inscripciones/Detalle` en esta navegación; si la respuesta ya no está
+  llama a `GET /enrollments/details` en esta navegación; si la respuesta ya no está
   disponible por recarga o acceso directo, usa `Detalle` como fallback. Los
   `getDetail` posteriores a `Pagar` se mantienen para completar coordinación, materias
   o referencias de reserva que el POST de reactivación no devuelve.
@@ -185,7 +185,7 @@ Excepciones que si limpian valores:
 | `otrasUniversidades = si`               | `universidadesInformadas`               | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                          |
 | Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
 | Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
-| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `idBancoSistarbanc`           |
+| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`            |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -210,20 +210,20 @@ El paso tiene cuatro campos en cascada. `tipoPropuesta` es una constante local
 filtrada por niveles disponibles (`1` carrera universitaria, `2` tecnicatura,
 `3` actualizacion profesional); no se envia directo al backend pero filtra las
 carreras disponibles. `carrera` usa el `idProducto` como string, proveniente de
-`GET /Catalogos/Carreras`, y se envia como `idProducto` y `carreraId`. `comienzo`
+`GET /catalogs/degree-programs`, y el adapter lo envía como `productId`. `comienzo`
 usa el `idProceso` como string, proveniente de
-`GET /Catalogos/Comienzos?idCarrera=<carrera>`, y se envia como
-`idProcesoSeleccionado` y `comienzoId`. `turno` usa el `idOferta` como string,
-proveniente de `GET /Catalogos/Turnos?idCarrera=<carrera>&idProceso=<comienzo>`,
-y se envia como `idOferta` e `idOfertaSeleccionada`.
+`GET /catalogs/intakes?degreeProgramId=<carrera>`, y el adapter lo envía como
+`admissionProcessId`. `turno` usa el `idOferta` como string, proveniente de
+`GET /catalogs/shifts?degreeProgramId=<carrera>&admissionProcessId=<comienzo>`,
+y el adapter lo envía dentro de `offeringIds`.
 
-Al continuar se llama a `POST /Inscripciones/InteresProducto` con:
+Al continuar se llama a `POST /enrollments/product-interest` con:
 
 ```json
 {
-  "idOferta": "Number(turno)",
-  "idProcesoSeleccionado": "Number(comienzo)",
-  "idProducto": "Number(carrera)"
+  "offeringIds": ["Number(turno)"],
+  "admissionProcessId": "Number(comienzo)",
+  "productId": "Number(carrera)"
 }
 ```
 
@@ -237,12 +237,12 @@ precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
 
 ### Dashboard "Mis carreras": contrato agrupado y tarjetas
 
-`GET /Persona/Inscripciones` devuelve una lista **agrupada por producto/proceso**:
-cada elemento trae `idProducto`, `nombreExtensoProducto`, `idProceso`,
-`idNivelProducto`, `estadoInscripcion`, `progConSeminariosProducto` (sin
-consumidor hoy) y un array `inscripciones[]` con las ofertas concretas
-(`idInscripto`, `idOferta`, `descripcionOferta`, `idTurno`, `idComienzo`,
-`fechaInicioComienzo`, `nombreComienzo`, `nombreTurno`, `fechaReferencia`).
+`GET /person/enrollments` devuelve una lista **agrupada por producto/proceso**:
+cada elemento trae `productId`, `productFullName`, `admissionProcessId`,
+`productLevelId`, `enrollmentStatus`, `hasSeminars`, `paymentDueDate` y un array
+`enrollments[]` con las ofertas concretas (`enrollmentId`, `offeringId`,
+`offeringDescription`, `shiftId`, `intakeId`, `intakeStartDate`, `intakeName`,
+`shiftName`, `referenceDate`).
 `HomeEndpoint.toMisInscripciones()` mapea cada grupo a uno o más
 `MiInscripcion`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
 (`src/app/features/catalogs/models/academic-proposal.ts`).
@@ -251,12 +251,11 @@ consumidor hoy) y un array `inscripciones[]` con las ofertas concretas
   `MiInscripcion` por item de `inscripciones[]`), título = `nombreExtensoProducto`,
   fila "Comienzo" y el CTA por `estadoInscripcion` vía `DashboardQuickActions`.
 - **Niveles 3 y 4 (Actualización profesional):** una tarjeta **por paquete** (un
-  `MiInscripcion` por grupo). El título sigue siendo `nombreExtensoProducto`; debajo
-  se muestra el conteo `inscripciones.length` como `"N seminarios elegidos"`
-  (singular: `"1 seminario elegido"`). Al hacer clic en esa fila se expande
-  in-situ el detalle de los seminarios elegidos (`descripcionOferta` +
-  `nombreComienzo` de cada item), como disclosure accesible en
-  `src/app/features/home/components/dashboard-card/`.
+  `MiInscripcion` por grupo). El título sigue siendo `nombreExtensoProducto`.
+  `DashboardCard.enrollmentsCount()` (`inscripcion.seminarios.length || 1`) decide
+  qué se muestra debajo del título: con un solo seminario (o sin seminarios, niveles
+  1/2) se muestra la fila "Comienzo" con su `nombreComienzo`; con 2+ seminarios se
+  reemplaza por el texto `"Anotado a N seminarios"`, sin desglose por seminario.
 
 > Reemplaza la regla anterior: antes la tarjeta de niveles 3/4 usaba
 > `descripcionOferta` del primer item como título. Ese comportamiento queda
@@ -267,36 +266,40 @@ consumidor hoy) y un array `inscripciones[]` con las ofertas concretas
 `MiInscripcion` incluye `fechaVencimientoPago: string | null` (fecha cruda de la
 API; el formateo a `dd/MM/yyyy` se hace en la UI reutilizando
 `formatPaymentDeadline`). El alert del dashboard se muestra cuando alguna
-inscripción está en `Pago pendiente` y su detalle lo arma
-`buildPendingPaymentDetail()` (`src/app/features/home/models/mi-inscripcion.ts`)
-según cuántas fechas usables haya entre las inscripciones pendientes:
+inscripción está en `Pago pendiente` y su título/detalle/navegación los arma
+`buildPendingPaymentSummary()` (`src/app/features/home/models/mi-inscripcion.ts`).
+El título va en plural apenas hay **más de una inscripción pendiente**, sin
+importar si comparten fecha. El detalle, en cambio, deduplica fechas repetidas
+(`Set`) y menciona cada fecha distinta una sola vez:
 
-| Fechas usables | Detalle del alert                                                                 |
-| -------------- | --------------------------------------------------------------------------------- |
-| 1              | `Realizá el pago antes del 15/07/2026.`                                           |
-| 2              | `Tus inscripciones pendientes de pago vencerán los días 15/07/2026 y 20/07/2026.` |
-| 3+             | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`)                |
-| 0              | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
+| Inscripciones pendientes | Fechas distintas usables | Título                              | Detalle del alert                                                                 |
+| ------------------------ | ------------------------ | ----------------------------------- | --------------------------------------------------------------------------------- |
+| 1                        | 1                        | `Inscripción pendiente de pago.`    | `Realizá el pago antes del 15/07/2026.`                                           |
+| 1                        | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`    | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
+| 2+                       | 1 (misma fecha)          | `Inscripciones pendientes de pago.` | `Tus inscripciones pendientes de pago vencerán el 15/07/2026.`                    |
+| 2+                       | 2                        | `Inscripciones pendientes de pago.` | `Tus inscripciones pendientes de pago vencerán los días 15/07/2026 y 20/07/2026.` |
+| 2+                       | 3+                       | `Inscripciones pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`)                |
+| 2+                       | 0 (sin fecha informada)  | `Inscripciones pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
 
-Además, cada tarjeta en `Pago pendiente` con fecha informada muestra el párrafo
-`Fecha límite: dd/MM/yyyy` (`dashboard-card`), también en las tarjetas de paquete
-AP (niveles 3/4), que no renderizan la fila "Comienzo".
+La flecha del alert (`actionIcon`, evento `actionTriggered`) sólo se renderiza y
+navega a `/inscripciones?idProducto=&idProceso=` cuando hay **una única**
+inscripción en `Pago pendiente` en total. Con 2 o más pendientes —tengan la
+misma fecha o fechas distintas— no hay un destino de pago único, así que la
+flecha se oculta (`buildPendingPaymentSummary().navigable === false`).
 
-> **Pendiente de entorno:** la fecha depende de contra qué contrato se genere la
-> API. En **testing** (`GET /Persona/Inscripciones` →
-> `DtoInscripcionesPorProductoProcesoResponse`) todavía **no** viene ninguna fecha
-> de vencimiento: solo `fechaInicioComienzo` y `fechaReferencia`, que son fechas de
-> comienzo del curso. En **desa**, con el contrato renombrado a inglés, sí existe:
-> `GET /person/enrollments` → `MyEnrollmentsResponse.paymentDueDate`, a nivel grupo.
-> El adapter (`readFechaVencimientoPago` en `home.endpoint.ts`) acepta ambos nombres
-> (`fechaVencimientoPago` y `paymentDueDate`), a nivel grupo y si no en el item, así
-> que la fecha aparece en cuanto el entorno generado la informe; hasta entonces
-> resuelve a `null` y el alert cae al texto genérico sin regresión.
+La tarjeta (`dashboard-card`) ya no repite la fecha límite de pago por separado:
+para eso está el alert del dashboard. Lo que muestra cada tarjeta debajo del
+título depende únicamente de `enrollmentsCount()`, ver sección anterior.
+
+`GET /person/enrollments` expone la fecha únicamente como
+`MyEnrollmentsResponse.paymentDueDate`, a nivel de grupo. El adapter la mapea a
+`MiInscripcion.fechaVencimientoPago`; si no viene, resuelve a `null` y el alert usa
+el texto genérico.
 
 ### Drift detectado (resuelto)
 
 El adapter (`HomeEndpoint.toMisInscripciones()`) mapeaba la forma plana vieja
-`DtoVdInscripcionesFresco1y2Devart` contra el contrato agrupado que el backend
+contra `MyEnrollmentsResponse`, el contrato agrupado que el backend
 ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
 nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
 `idInscripto`, `idComienzo`, `idTurno`, `nombreComienzo`, `nombreTurno` y
@@ -313,17 +316,17 @@ fila "Comienzo" salía vacía. Resuelto por el mapeo agrupado descrito arriba.
   **select de Seminarios** (oculto hasta entonces), cada uno con su fecha de
   comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
 - El programa manda el modo de selección: `tieneSeminario === true` en
-  `GET /Catalogos/Carreras` habilita **multi-select**; cualquier otro valor deja
+  `GET /catalogs/degree-programs` habilita **multi-select**; cualquier otro valor deja
   un **select simple** de una sola oferta
   (`AcademicProposalSelection.allowsMultipleSeminars`). El control `seminarios`
   guarda siempre `string[]`, así que el resto del flujo no cambia.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
-  `GET /Catalogos/Turnos`; el resultado llena el multiselect de seminarios.
+  `GET /catalogs/shifts`; el resultado llena el multiselect de seminarios.
 - Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.
   `toAcademicSeminarOption` normaliza esa fecha a `dd/MM/yyyy`: el catálogo la manda como
   ISO con hora fija (`2026-10-16T00:00:00`) y la opción muestra solo la fecha. Sin fecha
   no se pinta la descripción.
-- Al continuar se llama `POST /Inscripciones/InteresProducto`. El contrato de
+- Al continuar se llama `POST /enrollments/product-interest`. El contrato de
   feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
   primera oferta hasta que el backend acepte el array.
 
@@ -343,7 +346,7 @@ selección es obligatoria y se representa como `isCorporate`: título personal e
 `false` y corporativa es `true`. Los tipos 1/2 no ven la sección y envían
 `isCorporate = false`.
 
-**AP no envía `POST /Inscripciones/EncuestaInicial`** (ni al cerrar el paso 2 ni
+**AP no envía `POST /enrollments/initial-survey`** (ni al cerrar el paso 2 ni
 al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
 `ConfirmarPreInscripcion`. Una inscripción personal continúa al paso 3; una
 corporativa termina en la pantalla "Inscripción corporativa pendiente" y espera
@@ -357,12 +360,12 @@ arrancar en el paso 2 dejaba estas inscripciones en el paso 1 vacío. Hoy
 guarda todas sus ofertas en `sessionStorage` antes de navegar. `detalle.intereses`
 queda como fallback para entradas sin ese contexto; los params `idOferta` se leen solo
 por compatibilidad con enlaces generados anteriormente.
-Ojo con los productos que no están en `GET /Catalogos/Carreras` (o cuyo `Detalle`
+Ojo con los productos que no están en `GET /catalogs/degree-programs` (o cuyo `Detalle`
 falla): el paso 2 se abre igual, pero el tipo de propuesta queda vacío hasta que el
 catálogo resuelva el nivel, así que las secciones visibles pueden arrancar como las del
 flujo tradicional.
 
-El resolver de entrada cruza el Detalle contra `GET /Catalogos/Carreras` para
+El resolver de entrada cruza el Detalle contra `GET /catalogs/degree-programs` para
 resolver `idNivelProducto`, que decide el tipo de propuesta del paso 1 y, con eso,
 las secciones visibles del paso 2. Si el catálogo falla queda `null`: el paso 2
 igual se abre y `AcademicProposalSelection` completa el tipo cuando el catálogo
@@ -374,17 +377,17 @@ estado pendiente se mantiene la pantalla genérica "Inscripción en proceso".
 
 ### Resumen de pago: Programa + Seminarios
 
-`GET /Inscripciones/Detalle`, `POST /Inscripciones/ConfirmarPreInscripcion` y su
-pagoPendiente ya devuelven un array `inscripciones[]` (`DtoInscripcionOferta`: `idInscripcion`,
-`idOferta`, `comienzo`, `turno`, `descripcionOferta`) junto al `resumen` plano
-(`DtoCabeceraInscripcion`: solo `idProducto`/`carrera`/`fechaVencimientoPago`, sin
-comienzo/turno propios). El adapter (`InscripcionesEndpoint.toSeminarios()`) mapea ese
+`GET /enrollments/details`, `POST /enrollments/confirm-pre-enrollment` y su
+`pendingPayment` devuelven un array `enrollments[]` (`EnrollmentOffering`:
+`enrollmentId`, `offeringId`, `intake`, `shift`, `offeringDescription`) junto al
+`summary` plano (`EnrollmentHeader`: `productId`, `degreeProgram`,
+`paymentDueDate`). El adapter (`InscripcionesEndpoint.toSeminarios()`) mapea ese
 array completo a `InscripcionPreEnrollmentResponse.seminarios` (y a
 `InscripcionPendingPaymentDetail.seminarios` para "retomar"), además de seguir
 colapsando `inscripciones?.[0]` en los campos planos (`resumen`, `idInscripcion`) que
 usa el resto del flujo.
 
-`POST /Inscripciones/Pagar` recibe `idsInscripcion: number[]`, así que el pago cobra el
+`POST /enrollments/start-payment` recibe `enrollmentIds: number[]`, así que el pago cobra el
 paquete completo: `InscripcionPaymentFacade.paymentInscriptionIds()` prioriza los
 `seminarios[].idInscripcion` y el `idInscripcion` plano de la respuesta. Si ambos faltan
 al retomar, usa los `idInscripcion` positivos y deduplicados guardados por la tarjeta
@@ -478,7 +481,7 @@ de la inscripción (`isCorporate`, ver [Paso 2 AP reducido](#paso-2-ap-reducido)
 
 ### Identidad
 
-Se precargan datos desde `GET /Persona/Documento` y `GET /Persona/Foto`. La
+Se precargan datos desde `GET /person/identity-document` y `GET /person/photo`. La
 seccion requiere frente y dorso del documento (`File`, `image/jpeg` o `image/png`),
 selfie (`File`, `image/jpeg` o `image/png`) y `vencimientoDocumento` (`Date`).
 
@@ -492,12 +495,12 @@ sube o cambia archivos, el front guarda esos cambios antes de confirmar la
 preinscripcion. `identidadCorrecta` es solo de UI y no se envia al backend.
 
 Al cerrar el paso 2, si se toco frente/dorso o cambio el vencimiento se llama a
-`POST /Persona/SubirDocumento`; si se toco la selfie se llama a
-`POST /Persona/SubirFoto`.
+`POST /person/identity-document`; si se toco la selfie se llama a
+`POST /person/photo`.
 
 ### Reglamento
 
-`GET /Inscripciones/ReglamentoEstudiantil` indica si el reglamento ya fue aceptado.
+`GET /enrollments/student-regulations` indica si el reglamento ya fue aceptado.
 Si ya fue aceptado, la UI oculta el checkbox y marca `aceptaReglamento = true`
 automaticamente; el backend recibe `aceptoReglamento = true`. Si no fue aceptado,
 se muestra un checkbox requerido y el backend recibe `aceptoReglamento = true`
@@ -505,7 +508,7 @@ solo si el usuario lo marca.
 
 ## Payload de encuesta inicial
 
-Se envia con `POST /Inscripciones/EncuestaInicial` al cerrar el paso 2, despues de
+Se envia con `POST /enrollments/initial-survey` al cerrar el paso 2, despues de
 guardar correctamente los cambios de identidad y antes de confirmar la
 preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
 envian `null` cuando no aplican.
@@ -552,17 +555,17 @@ vuelve a esa seccion y no llama al backend de confirmacion.
 
 Orden de cierre:
 
-1. En paralelo, `POST /Persona/SubirDocumento` si se toco frente/dorso o cambio
-   el vencimiento, y `POST /Persona/SubirFoto` si se toco la selfie.
-2. `POST /Inscripciones/EncuestaInicial`, solo si las cargas de identidad
+1. En paralelo, `POST /person/identity-document` si se toco frente/dorso o cambio
+   el vencimiento, y `POST /person/photo` si se toco la selfie.
+2. `POST /enrollments/initial-survey`, solo si las cargas de identidad
    requeridas terminaron correctamente y la persona tiene derecho a encuesta.
-3. `POST /Inscripciones/ConfirmarPreInscripcion` con:
+3. `POST /enrollments/confirm-pre-enrollment` con:
 
 ```json
 {
-  "aceptoReglamento": "Boolean(aceptaReglamento)",
-  "esInscripcionCorporativa": "isCorporate para AP; false para los demás tipos",
-  "idsOfertasSeleccionadas": "seminarios.map(Number) para AP; [Number(turno)] para los demás"
+  "acceptedRegulations": "Boolean(aceptaReglamento)",
+  "isCorporateEnrollment": "isCorporate para AP; false para los demás tipos",
+  "selectedOfferingIds": "seminarios.map(Number) para AP; [Number(turno)] para los demás"
 }
 ```
 
@@ -574,11 +577,22 @@ avanza al paso de pago. Si Documento o Foto falla por HTTP,
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
 el check de completada.
 
+### "Guardar y salir" no vuelve a postear la encuesta ya confirmada
+
+`InscripcionSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
+al confirmar el modal "¿Querés salir de la inscripción?") solo llama a
+`POST /enrollments/initial-survey` si la persona tiene derecho a encuesta, no
+es AP, **y** `InscripcionProcessStore.preEnrollmentResponse` sigue en `null`.
+Una vez que `confirmPreEnrollment` respondio con éxito (paso 3, pago) ese
+signal deja de ser `null` y `savePartial()` retorna `true` sin llamar al
+backend: la encuesta ya quedo guardada como parte de la confirmacion y
+reintentar el POST no aporta nada, solo puede fallar y bloquear la salida.
+
 ## Paso 3: pago
 
-El paso llama a `POST /Inscripciones/Pagar`. El adapter traduce los métodos propios de la UI al contrato backend y la fachada decide si termina confirmado, reservado o pendiente en una pasarela externa.
+El paso llama a `POST /enrollments/start-payment`. El adapter traduce los métodos propios de la UI al contrato backend y la fachada decide si termina confirmado, reservado o pendiente en una pasarela externa.
 
-`GET /Catalogos/Bancos` se difiere hasta entrar al paso de pago editable; no se
+`GET /catalogs/banks` se difiere hasta entrar al paso de pago editable; no se
 consulta al abrir Inscripciones ni para reservas o inscripciones ya confirmadas.
 
 ## Pago: detalle operativo
@@ -597,14 +611,14 @@ Payload feature:
 
 Mapping adapter:
 
-| UI                | API               | `idBancoSistarbanc` |
-| ----------------- | ----------------- | ------------------- |
-| `cuenta-personal` | `CUENTA_PERSONAL` | `null`              |
-| `abitab`          | `ABITAB`          | `null`              |
-| `paganza`         | `PAGANZA`         | `null`              |
-| `banred`          | `BANRED`          | `null`              |
-| `geopay`          | `GEOPAY`          | `null`              |
-| `cuenta-bancaria` | `SISTARBANC`      | código del banco    |
+| UI                | API               | `sistarbancBankId` |
+| ----------------- | ----------------- | ------------------ |
+| `cuenta-personal` | `CUENTA_PERSONAL` | `null`             |
+| `abitab`          | `ABITAB`          | `null`             |
+| `paganza`         | `PAGANZA`         | `null`             |
+| `banred`          | `BANRED`          | `null`             |
+| `geopay`          | `GEOPAY`          | `null`             |
+| `cuenta-bancaria` | `SISTARBANC`      | código del banco   |
 
 `tarjeta-credito` no queda como método activo hasta que el backend confirme un
 `tipoPago` propio o su mapeo dentro de Sistarbanc.
@@ -613,7 +627,7 @@ Mapping adapter:
 
 ```mermaid
 flowchart TD
-  A[Inscripción con pago pendiente] --> B[POST /Inscripciones/Pagar]
+  A[Inscripción con pago pendiente] --> B[POST /enrollments/start-payment]
   B --> C{Método}
   C -->|CUENTA_PERSONAL| D{Backend confirma pago}
   D -->|OK| E[Inscripción confirmada]
@@ -625,7 +639,7 @@ flowchart TD
   I --> J
 ```
 
-## Respuesta de `/Inscripciones/Pagar`
+## Respuesta de `/enrollments/start-payment`
 
 El adapter mapea `resultado`, `urlPago`, `parametrosEncriptados`, `mensajes` y el
 bloque `confirmada` (número de estudiante, coordinación y materias) cuando el
@@ -633,9 +647,9 @@ backend confirma el pago en línea (p. ej. cuenta personal). Con eso la pantalla
 éxito pinta el detalle sin un `getDetail` adicional; ese `getDetail` queda solo
 como fallback si la respuesta no trae `confirmada`.
 
-`DtoConfirmadaDetalle` es una **cabecera compartida** (`codigoPersona`, `idProducto`,
-`carrera`, `coordinadorAcademico`, `coordinadorCursos`) más un array
-`inscripciones[]` (`DtoInscripcionConfirmada`), con una entrada por cada oferta
+`ConfirmedEnrollmentDetailsResponse` es una **cabecera compartida** (`personId`,
+`productId`, `degreeProgram`, `academicCoordinator`, `courseCoordinator`) más un array
+`enrollments[]` (`ConfirmedEnrollment`), con una entrada por cada oferta
 confirmada y su propio `comienzo`/`turno`/`materiasPrimerSemestre`: en niveles 3 y 4
 vienen varias, una por seminario. Ya no existe el bloque plano `confirmada.resumen`
 ni un `confirmada.materiasPrimerSemestre` único. El adapter arma
@@ -647,7 +661,7 @@ sin repetir las compartidas.
 
 ## Estados frontend
 
-- `processing`: solo mientras responde `/Inscripciones/Pagar`.
+- `processing`: solo mientras responde `/enrollments/start-payment`.
 - `inscription-confirmada`: pago confirmado por backend. Usa `confirmada` de la
   respuesta de Pagar; si no vino, cae al `getDetail`.
 - `reserva`: Abitab o Paganza quedan con instrucciones de pago. Se muestran la
@@ -695,20 +709,20 @@ El ASPX desencripta el blob, crea la transacción contra BanRed y recién ahí
 redirige a la pasarela. El front no puede replicar ese paso: la clave de
 desencriptación es server-side.
 
-Propuesta: que `POST /Inscripciones/Pagar` devuelva directamente la URL final de
+Propuesta: que `POST /enrollments/start-payment` devuelva directamente la URL final de
 la pasarela (BanRed) ya resuelta. Con eso admisiones muestra todo el detalle del
 pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 
 ## Catalogos usados
 
 - Carreras: el ingreso nuevo espera la elección de tipo y hace una sola llamada a
-  `GET /Catalogos/Carreras?propuestaAcademica=<1|2|3>` con el valor elegido. Aplana
+  `GET /catalogs/degree-programs?propuestaAcademica=<1|2|3>` con el valor elegido. Aplana
   `productos` para niveles 1/2 y `seminarios[].productos` para niveles 3/4,
   conservando `tieneSeminario` del grupo. Al retomar, mientras Detalle no informe
   el nivel del producto, el resolver consulta los tres tipos para reconstruirlo.
-- Comienzos: `GET /Catalogos/Comienzos?idCarrera=<idProducto>`
-- Turnos: `GET /Catalogos/Turnos?idCarrera=<idProducto>&idProceso=<idProceso>`
-- Encuesta inicial: `GET /Catalogos/EncuestaInicial`
-- Departamentos: `GET /Catalogos/PaisesEstadosCiudades` filtrando Uruguay (`codigoPais = 1`)
-- Instituciones: `GET /Catalogos/Instituciones?codigoPais=1&codigoEstado=<departamento>`
-- Bancos: `GET /Catalogos/Bancos`
+- Comienzos: `GET /catalogs/intakes?idCarrera=<idProducto>`
+- Turnos: `GET /catalogs/shifts?idCarrera=<idProducto>&idProceso=<idProceso>`
+- Encuesta inicial: `GET /catalogs/initial-survey`
+- Departamentos: `GET /catalogs/countries-states-cities` filtrando Uruguay (`codigoPais = 1`)
+- Instituciones: `GET /catalogs/institutions?codigoPais=1&codigoEstado=<departamento>`
+- Bancos: `GET /catalogs/banks`

@@ -38,7 +38,7 @@ sequenceDiagram
   U->>L: Completa documento y password
   L->>S: login(payload)
   S->>A: login(LoginPayload)
-  A->>I: POST /Auth/Login + captcha login
+  A->>I: POST /auth/login + captcha login
   I->>API: Request con X-Captcha-Token
   API->>D: Valida credenciales y politica 2FA
 
@@ -57,7 +57,7 @@ sequenceDiagram
     C->>T: Navega a /verificar-codigo
     T->>S: completeTwoFactor(sessionId, code)
     S->>A: verifyTwoFactorCode(...)
-    A->>API: POST /Auth/VerificarCodigo2FA + captcha
+    A->>API: POST /auth/verify-two-factor-code + captcha
     API->>D: Consume codigo y emite cookies HttpOnly
     A-->>S: persona
     S->>S: storeSession(AuthSession)
@@ -70,7 +70,7 @@ sequenceDiagram
 
   opt Request protegida con access token vencido
     I->>S: refreshAccessToken()
-    S->>A: POST /Auth/RefreshToken
+    S->>A: POST /auth/refresh-token
     A->>API: Cookie refresh HttpOnly
     API-->>I: Nuevas cookies
     I->>API: Reintenta request original
@@ -79,15 +79,15 @@ sequenceDiagram
 
 ## Acciones y referencias
 
-| Accion visible             | Angular                                                                     | Servicio                                   | Adapter y contrato                            | API / Backend                   |
-| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------- | ------------------------------- |
-| Iniciar sesion             | `Login.submit()` en `src/app/features/auth/pages/login/login.ts`            | `AuthSessionService.login()`               | `AuthEndpoint.login()` mapea `LoginResult`    | `POST /Auth/Login`              |
-| Ver confirmacion de codigo | `/confirmacion-correo/verificar-codigo` usa `TWO_FACTOR_EMAIL_CONFIRMATION` | Contexto 2FA queda en `AuthSessionService` | Respuesta 202 con `sessionId` y `maskedEmail` | Email con codigo 2FA            |
-| Ingresar codigo            | `TwoFactorValidationPage.verify()` y componente `TwoFactorValidation`       | `completeTwoFactor(...)`                   | `verifyTwoFactorCode(...)`                    | `POST /Auth/VerificarCodigo2FA` |
-| Reenviar codigo            | `TwoFactorValidationPage.resend()`                                          | `resendTwoFactorCode(sessionId)`           | `resendTwoFactorCode(...)`                    | `POST /Auth/ReenviarCodigo2FA`  |
-| Entrar a ruta protegida    | `authGuard` / `authMatchGuard`                                              | `ensureAuthenticatedSession()`             | `AccountService.getPersonalData()`            | Cookies HttpOnly vigentes       |
-| Refresh automatico         | `authRefreshInterceptor`                                                    | `refreshAccessToken()`                     | `refreshToken()`                              | `POST /Auth/RefreshToken`       |
-| Cerrar sesion              | Layout de home llama `AuthSessionService.logout()`                          | `logout()` limpia estado local             | `logout()`                                    | `POST /Auth/Logout`             |
+| Accion visible             | Angular                                                                     | Servicio                                   | Adapter y contrato                            | API / Backend                       |
+| -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------- | ----------------------------------- |
+| Iniciar sesion             | `Login.submit()` en `src/app/features/auth/pages/login/login.ts`            | `AuthSessionService.login()`               | `AuthEndpoint.login()` mapea `LoginResult`    | `POST /auth/login`                  |
+| Ver confirmacion de codigo | `/confirmacion-correo/verificar-codigo` usa `TWO_FACTOR_EMAIL_CONFIRMATION` | Contexto 2FA queda en `AuthSessionService` | Respuesta 202 con `sessionId` y `maskedEmail` | Email con codigo 2FA                |
+| Ingresar codigo            | `TwoFactorValidationPage.verify()` y componente `TwoFactorValidation`       | `completeTwoFactor(...)`                   | `verifyTwoFactorCode(...)`                    | `POST /auth/verify-two-factor-code` |
+| Reenviar codigo            | `TwoFactorValidationPage.resend()`                                          | `resendTwoFactorCode(sessionId)`           | `resendTwoFactorCode(...)`                    | `POST /auth/resend-two-factor-code` |
+| Entrar a ruta protegida    | `authGuard` / `authMatchGuard`                                              | `ensureAuthenticatedSession()`             | `AccountService.getPersonalData()`            | Cookies HttpOnly vigentes           |
+| Refresh automatico         | `authRefreshInterceptor`                                                    | `refreshAccessToken()`                     | `refreshToken()`                              | `POST /auth/refresh-token`          |
+| Cerrar sesion              | Layout de home llama `AuthSessionService.logout()`                          | `logout()` limpia estado local             | `logout()`                                    | `POST /auth/logout`                 |
 
 ## Estados, contratos y sesiones
 
@@ -95,10 +95,10 @@ La UI usa tipos propios de la feature y no consume DTOs generados directamente. 
 
 | Estado              | Origen                                            | Frontend                                                      | Efecto                                        |
 | ------------------- | ------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------- |
-| `authenticated`     | `POST /Auth/Login` 200                            | Guarda `AuthSession` con documento y primer nombre            | Navega a `/inicio`                            |
-| `twoFactorRequired` | `POST /Auth/Login` 202                            | Guarda `sessionId`, documento y correo enmascarado en memoria | Navega a confirmacion de correo               |
+| `authenticated`     | `POST /auth/login` 200                            | Guarda `AuthSession` con documento y primer nombre            | Navega a `/inicio`                            |
+| `twoFactorRequired` | `POST /auth/login` 202                            | Guarda `sessionId`, documento y correo enmascarado en memoria | Navega a confirmacion de correo               |
 | Sesion hidratada    | Guard en ruta protegida                           | `ensureAuthenticatedSession()` consulta datos personales      | Permite `/inicio`, `/inscripciones`, `/becas` |
-| Token refrescado    | 401 en request con credenciales fuera de `/Auth/` | Refresh compartido con `shareReplay`                          | Reintenta el request original una vez         |
+| Token refrescado    | 401 en request con credenciales fuera de `/auth/` | Refresh compartido con `shareReplay`                          | Reintenta el request original una vez         |
 | Sesion invalida     | Refresh falla o guard no hidrata                  | Limpia `AuthSession`, cache y drafts de inscripcion           | Redirige a login o rechaza navegacion         |
 
 Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend solo mantiene estado de presentacion (`AuthSession`) para guards, cabecera y mensajes.
@@ -107,9 +107,9 @@ Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend so
 
 - Login requiere tipo de documento, numero y password.
 - Para cedula, el numero se limpia/formatea antes de llegar al backend.
-- `POST /Auth/Login`, `POST /Auth/VerificarCodigo2FA` y `POST /Auth/ReenviarCodigo2FA` declaran `captchaAction`; el interceptor agrega el header de captcha.
-- `POST /Auth/Login` usa mensajes custom para `401` y `429`.
-- El refresh no se intenta para endpoints `/Auth/` para evitar loops.
+- `POST /auth/login`, `POST /auth/verify-two-factor-code` y `POST /auth/resend-two-factor-code` declaran `captchaAction`; el interceptor agrega el header de captcha.
+- `POST /auth/login` usa mensajes custom para `401` y `429`.
+- El refresh no se intenta para endpoints `/auth/` para evitar loops.
 - Los drafts de inscripcion en `sessionStorage` se limpian al cerrar o invalidar sesion.
 
 ## Casos borde

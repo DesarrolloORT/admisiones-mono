@@ -176,6 +176,8 @@ template.
 
 `RECAPTCHA_NONCE` debe coincidir exactamente con el nonce incluido en `script-src` (`'nonce-<valor>'`). Angular lo pasa al `<script>` que carga `api.js` de Google (via `RECAPTCHA_LOADER_OPTIONS.onBeforeLoad`), y Google propaga ese mismo nonce a los scripts inline que agrega despues. Como el sitio se sirve como archivos estaticos desde IIS (sin render por request), no es posible generar un nonce distinto por response; por eso se usa un valor fijo por ambiente combinado con `'strict-dynamic'` en vez de los hashes `sha256-...` que se usaban antes. Los hashes se rompen sin aviso cuando Google cambia el contenido del script inline; el nonce fijo + `strict-dynamic` no depende de ese contenido.
 
+`img-src` debe incluir `blob:` ademas de `'self' data:`. El preview/compresion de imagenes (`ImageCompressionUtils` de `@desarrolloort/ngx-utils`) genera URLs `blob:` con `URL.createObjectURL`; sin `blob:` en `img-src`, el navegador bloquea esas imagenes en la subida de identidad y OCR de registro.
+
 ## Problemas comunes
 
 ### No se abre el navegador para el login

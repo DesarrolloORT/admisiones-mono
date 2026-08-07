@@ -10,25 +10,24 @@ test.describe('Inscripción inicial', () => {
     await addAuthenticatedSession(page);
     await page.goto('/inicio');
 
-    // Una sola inscripción pendiente: el alert informa la fecha y la tarjeta la repite.
+    // Una sola inscripción pendiente: el alert informa la fecha.
     // El detalle del alert está duplicado por breakpoint (span inline / supporting text), así que
     // se busca el que esté visible en el viewport actual.
     await expect(
       page.getByText(/Realizá el pago antes del 15\/03\/2027/).filter({ visible: true })
     ).toBeVisible();
-    await expect(page.getByText('Fecha límite: 15/03/2027')).toBeVisible();
 
     const detailRequest = page.waitForRequest(request => {
       const url = new URL(request.url());
       return (
-        request.method() === 'GET' && decodeURIComponent(url.pathname) === '/Inscripciones/Detalle'
+        request.method() === 'GET' && decodeURIComponent(url.pathname) === '/enrollments/details'
       );
     });
     await page.getByRole('link', { name: /Ver instrucciones de pago/ }).click();
 
     const url = new URL((await detailRequest).url());
-    expect(url.searchParams.get('idProducto')).toBe('20');
-    expect(url.searchParams.get('idProceso')).toBe('200');
+    expect(url.searchParams.get('productId')).toBe('20');
+    expect(url.searchParams.get('admissionProcessId')).toBe('200');
     await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
     await expect(page.getByText('$ 15.500')).toBeVisible();
     await expect(page.getByText(/04\/03\/2027/)).toBeVisible();
@@ -59,30 +58,30 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
 
     // Confirma con TODAS las ofertas de interés, sin volver a registrar el interés.
-    const interestRequests = collectPostRequests(page, '/Inscripciones/InteresProducto');
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const interestRequests = collectPostRequests(page, '/enrollments/product-interest');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     const inscription = new InscripcionPage(page);
     await inscription.fillInscriptionOwnership(false);
     await inscription.fillIdentity();
     await inscription.acceptRegulation();
 
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [310, 311],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [310, 311],
     });
     expect(interestRequests).toHaveLength(0);
 
     await expect(page.getByText('Marco legal y tributario', { exact: true })).toBeVisible();
     await expect(page.getByText('Renta fija y renta variable', { exact: true })).toBeVisible();
 
-    const paymentRequest = waitForPost(page, '/Inscripciones/Pagar');
+    const paymentRequest = waitForPost(page, '/enrollments/start-payment');
     await inscription.selectPayment('abitab');
     await inscription.confirmPayment();
     expect((await paymentRequest).postDataJSON()).toEqual({
-      idsInscripcion: [7010, 7011],
-      tipoPago: 'ABITAB',
-      idBancoSistarbanc: null,
+      enrollmentIds: [7010, 7011],
+      paymentType: 'ABITAB',
+      sistarbancBankId: null,
     });
   });
 
@@ -113,19 +112,19 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillOrtExperience();
     await inscription.fillIdentity();
 
-    const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
 
     expect((await surveyRequest).postDataJSON()).toMatchObject({
-      carreraId: 20,
-      procesoId: 200,
-      ubicacionUltimoAnioSecundariaId: 1,
+      degreeProgramId: 20,
+      admissionProcessId: 200,
+      lastSecondaryYearLocationId: 1,
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [300],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [300],
     });
 
     await expect(
@@ -141,16 +140,16 @@ test.describe('Inscripción inicial', () => {
   }) => {
     await setup(page, 'empty');
     const inscription = new InscripcionPage(page);
-    const surveySaveRequests = collectPostRequests(page, '/Inscripciones/EncuestaInicial');
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
 
     await inscription.goto();
-    const interestRequest = waitForPost(page, '/Inscripciones/InteresProducto');
+    const interestRequest = waitForPost(page, '/enrollments/product-interest');
     await inscription.fillProfessionalUpdateProposal();
 
     expect((await interestRequest).postDataJSON()).toEqual({
-      idProcesoSeleccionado: 210,
-      idProducto: 40,
-      idsOferta: [310],
+      admissionProcessId: 210,
+      productId: 40,
+      offeringIds: [310],
     });
 
     // Flujo reducido: sin Educación / Decisión académica / Experiencia ORT.
@@ -161,14 +160,14 @@ test.describe('Inscripción inicial', () => {
 
     await inscription.fillInscriptionOwnership(false);
     await inscription.fillIdentity();
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
 
     expect(surveySaveRequests).toHaveLength(0);
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [310],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [310],
     });
 
     await expect(
@@ -186,13 +185,13 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillProfessionalUpdateProposal();
     await inscription.fillInscriptionOwnership(true);
     await inscription.fillIdentity();
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation('corporate');
 
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: true,
-      idsOfertasSeleccionadas: [310],
+      acceptedRegulations: true,
+      isCorporateEnrollment: true,
+      selectedOfferingIds: [310],
     });
     await expect(
       page.getByText(
@@ -210,7 +209,7 @@ test.describe('Inscripción inicial', () => {
   }) => {
     await setup(page, 'no-right');
     const inscription = new InscripcionPage(page);
-    const surveySaveRequests = collectPostRequests(page, '/Inscripciones/EncuestaInicial');
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
 
     await inscription.goto();
     await inscription.fillAcademicProposal();
@@ -221,14 +220,14 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
 
     await inscription.fillIdentity();
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
 
     expect(surveySaveRequests).toHaveLength(0);
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [300],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');
@@ -255,20 +254,20 @@ test.describe('Inscripción inicial', () => {
     await inscription.fillOrtExperience();
     await inscription.fillIdentity();
 
-    const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
 
     expect((await surveyRequest).postDataJSON()).toMatchObject({
-      idProducto: 20,
-      idProceso: 200,
-      instruccionMadre: 4,
-      instruccionPadre: 4,
+      degreeProgramId: 20,
+      admissionProcessId: 200,
+      motherEducationLevelId: 4,
+      fatherEducationLevelId: 4,
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [300],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');
@@ -290,8 +289,8 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
 
     await inscription.fillIdentity();
-    const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
     await surveyRequest;
     await preEnrollmentRequest;
@@ -306,8 +305,8 @@ test.describe('Inscripción inicial', () => {
     page,
   }) => {
     await setup(page, 'complete', 'complete');
-    const documentRequests = collectGetRequests(page, '/Persona/Documento');
-    const photoRequests = collectGetRequests(page, '/Persona/Foto');
+    const documentRequests = collectGetRequests(page, '/person/identity-document');
+    const photoRequests = collectGetRequests(page, '/person/photo');
     const inscription = new InscripcionPage(page);
 
     await inscription.goto();

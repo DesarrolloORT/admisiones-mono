@@ -106,9 +106,9 @@ del backend— y devuelve `InscripcionEntryResolved`:
 - `nueva`: sin query params. Paso 1 **siempre** virgen y editable.
 - `retomar`: con `idProducto`+`idProceso` (desde el panel); carga el detalle.
 - `reactivar`: agrega `modo=reactivar`. El botón del dashboard hace
-  `POST /Inscripciones/Reactivar`, guarda transitoriamente su respuesta y navega con
+  `POST /enrollments/reactivate`, guarda transitoriamente su respuesta y navega con
   esta intención. El resolver consume esa respuesta para iniciar el pago sin repetir
-  `GET /Inscripciones/Detalle`; si falta por recarga o acceso directo, carga el detalle
+  `GET /enrollments/details`; si falta por recarga o acceso directo, carga el detalle
   como fallback.
 
 Si el detalle de fallback falla, la intención se conserva con `detail:null` y el flujo

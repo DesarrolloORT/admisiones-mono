@@ -22,26 +22,26 @@ test.describe('Account to enrollment journey', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
 
-    const registrationRequest = waitForPost(page, '/Registro/ConfirmarNuevaPersona');
+    const registrationRequest = waitForPost(page, '/registration/confirm-new-person');
     await register.continueFromPersonalData();
     expect((await registrationRequest).postDataJSON()).toMatchObject({
-      documento: backendDocumentNumber,
-      mail: personalData.email,
-      primerNombre: personalData.firstName,
-      tipoDocumento: REGISTER_SCENARIOS['new-person'].documentType,
+      documentNumber: backendDocumentNumber,
+      email: personalData.email,
+      firstName: personalData.firstName,
+      documentType: REGISTER_SCENARIOS['new-person'].documentType,
     });
     await register.expectCreatedAccount();
 
-    const activationRequest = waitForPost(page, '/Auth/ActivarLinkPassword');
+    const activationRequest = waitForPost(page, '/auth/activate-password-link');
     await page.goto('/crear-password?token=e2e-account-token');
     expect((await activationRequest).postDataJSON()).toEqual({ token: 'e2e-account-token' });
 
     await page.getByRole('textbox', { exact: true, name: 'Contraseña' }).fill(validPassword);
     await page.getByRole('textbox', { name: 'Confirmar contraseña' }).fill(validPassword);
 
-    const passwordRequest = waitForPost(page, '/Auth/CompletarPassword');
+    const passwordRequest = waitForPost(page, '/auth/complete-initial-password');
     await page.getByRole('button', { name: 'Activar cuenta' }).click();
-    expect((await passwordRequest).postDataJSON()).toEqual({ passwordNueva: validPassword });
+    expect((await passwordRequest).postDataJSON()).toEqual({ newPassword: validPassword });
     await expect(page).toHaveURL(/\/inicio/);
     await expect(page.getByRole('heading', { name: /Hola/ })).toBeVisible();
 
@@ -49,32 +49,32 @@ test.describe('Account to enrollment journey', () => {
     await home.profileMenuButton().click();
     await expect(home.profileMenuDialog()).toBeVisible();
 
-    const logoutRequest = waitForPost(page, '/Auth/Logout');
+    const logoutRequest = waitForPost(page, '/auth/logout');
     await home.profileMenuDialog().getByRole('button', { name: 'Cerrar sesión' }).click();
     await logoutRequest;
     await expect(page).toHaveURL(/\/iniciar-sesion/);
 
     const login = new LoginPage(page);
-    const loginRequest = waitForPost(page, '/Auth/Login');
+    const loginRequest = waitForPost(page, '/auth/login');
     await login.login({
       documentNumber: REGISTER_SCENARIOS['new-person'].documentNumber,
       password: validPassword,
     });
     expect((await loginRequest).postDataJSON()).toMatchObject({
-      documento: backendDocumentNumber,
-      tipoDocumento: REGISTER_SCENARIOS['new-person'].documentType,
+      documentNumber: backendDocumentNumber,
+      documentType: REGISTER_SCENARIOS['new-person'].documentType,
     });
     await expect(page).toHaveURL(/\/inicio/);
 
     await page.getByRole('link', { name: 'Comenzar inscripción' }).click();
 
     const inscription = new InscripcionPage(page);
-    const productInterestRequest = waitForPost(page, '/Inscripciones/InteresProducto');
+    const productInterestRequest = waitForPost(page, '/enrollments/product-interest');
     await inscription.fillAcademicProposal();
     expect((await productInterestRequest).postDataJSON()).toEqual({
-      idProcesoSeleccionado: 200,
-      idProducto: 20,
-      idsOferta: [300],
+      admissionProcessId: 200,
+      productId: 20,
+      offeringIds: [300],
     });
 
     await inscription.fillEducation();
@@ -82,17 +82,17 @@ test.describe('Account to enrollment journey', () => {
     await inscription.fillOrtExperience();
     await inscription.fillIdentity();
 
-    const surveyRequest = waitForPost(page, '/Inscripciones/EncuestaInicial');
-    const preEnrollmentRequest = waitForPost(page, '/Inscripciones/ConfirmarPreInscripcion');
+    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
+    const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await inscription.acceptRegulation();
     expect((await surveyRequest).postDataJSON()).toMatchObject({
-      idProducto: 20,
-      idProceso: 200,
+      degreeProgramId: 20,
+      admissionProcessId: 200,
     });
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
-      aceptoReglamento: true,
-      esInscripcionCorporativa: false,
-      idsOfertasSeleccionadas: [300],
+      acceptedRegulations: true,
+      isCorporateEnrollment: false,
+      selectedOfferingIds: [300],
     });
 
     await inscription.selectPayment('cuenta-personal');

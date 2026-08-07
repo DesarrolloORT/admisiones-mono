@@ -42,7 +42,7 @@ Cuando el backend responde con error HTTP o con `OperationResult.success === fal
 {
   status: 409,
   errorCode: 'USER_EXISTS',
-  method: 'POST /Registro/EvaluarDocumento',
+  method: 'POST /registration/evaluate-document',
   message: 'Ya existe un usuario',
   data: null,
   action: 'notify',

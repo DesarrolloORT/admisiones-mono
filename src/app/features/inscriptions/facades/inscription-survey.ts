@@ -373,7 +373,12 @@ export class InscripcionSurveyFacade {
   }
 
   public savePartial(): Observable<boolean> {
-    if (!this.hasInitialSurveyRight() || this.isProfessionalUpdate()) return of(true);
+    if (
+      !this.hasInitialSurveyRight() ||
+      this.isProfessionalUpdate() ||
+      this.process.preEnrollmentResponse() !== null
+    )
+      return of(true);
     return this.inscriptions.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
   }
 

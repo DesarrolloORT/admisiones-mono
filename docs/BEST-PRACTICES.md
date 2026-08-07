@@ -85,9 +85,9 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 │  ApiHttpClient.data(postAuthLoginEndpoint, { body })                    │
 │       │                                                                 │
 │       ▼                                                                 │
-│  POST /Auth/Login  →  AuthRequest  →  DtoAuthenticationResponse         │
+│  POST /auth/login  →  AuthRequest  →  AuthenticationResponse            │
 │                                                                         │
-│  Tipos:  AuthRequest, DtoAuthenticationResponse (generados)             │
+│  Tipos:  AuthRequest, AuthenticationResponse (generados)                │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -121,7 +121,7 @@ export interface LoginResult {
 export class AuthEndpoint {
   login(payload: LoginPayload): Observable<LoginResult> {
     // Internamente usa postAuthLoginEndpoint (generado)
-    // Mapea DtoAuthenticationResponse → LoginResult
+    // Mapea AuthenticationResponse → LoginResult
   }
 }
 ```
@@ -143,7 +143,7 @@ export class AuthSessionService {
 
 | Cambio en backend                         | Impacto en frontend                                                   |
 | ----------------------------------------- | --------------------------------------------------------------------- |
-| Rename de URL (`/Auth/Login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                               |
+| Rename de URL (`/auth/login` → `/v2/...`) | Solo regenerar endpoints. Cero cambios.                               |
 | Rename de campo en response               | Ajustar mapper en el adapter. Cero en services.                       |
 | Nuevo campo obligatorio en request        | Agregar al adapter payload. Ajustar services.                         |
 | Endpoint eliminado                        | `check-api-contracts`/build detecta. Borrar adapter method + service. |
@@ -171,7 +171,7 @@ Regla de decision:
 
 Ejemplo en `auth`:
 
-- `AuthRequest` y `DtoAuthenticationResponse` vienen del contrato generado.
+- `AuthRequest` y `AuthenticationResponse` vienen del contrato generado.
 - `AuthLoginRequest` y `AuthSession` son tipos de feature para formulario y
   estado de sesion.
 - Los services de auth (`AuthSessionService`, `RegistrationService`,

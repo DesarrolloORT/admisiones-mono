@@ -119,7 +119,7 @@ describe('HTTP interceptors', () => {
   it('shows and hides the loader when the request opts in', async () => {
     const response = new HttpResponse({ status: 200 });
     const next = vi.fn().mockReturnValue(of(response));
-    const request = new HttpRequest('POST', '/Auth/Login', null, {
+    const request = new HttpRequest('POST', '/auth/login', null, {
       context: new HttpContext().set(SHOW_GLOBAL_LOADER, true),
     });
 
@@ -135,7 +135,7 @@ describe('HTTP interceptors', () => {
 
     const req = new HttpRequest(
       'POST',
-      '/Auth/Login',
+      '/auth/login',
       { user: 'ana' },
       {
         context: new HttpContext().set(CAPTCHA_ACTION, 'login'),
@@ -234,7 +234,7 @@ describe('HTTP interceptors', () => {
     const loginNext = vi.fn().mockReturnValue(throwError(() => unauthorized));
     const loginReq = new HttpRequest(
       'POST',
-      '/Auth/Login',
+      '/auth/login',
       { user: 'ana' },
       {
         withCredentials: true,

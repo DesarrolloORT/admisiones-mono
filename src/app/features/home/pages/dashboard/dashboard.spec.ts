@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
@@ -72,6 +72,24 @@ describe('Dashboard', () => {
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Inscripción pendiente de pago.');
     expect(text).toContain('Realizá el pago antes del 15/07/2026.');
+  });
+
+  it('should navigate to the pending enrollment payment when the alert arrow is clicked', async () => {
+    setPendingEnrollments(['2026-07-15']);
+    await fixture.whenStable();
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const actionButton = (fixture.nativeElement as HTMLElement).querySelector(
+      '.ort-alert__action'
+    ) as HTMLButtonElement | null;
+    expect(actionButton).not.toBeNull();
+    actionButton?.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
+      queryParams: { idProducto: 1, idProceso: 4 },
+    });
   });
 
   // El texto con varias fechas se cubre en `mi-inscripcion.spec.ts`: con 2+ inscripciones la

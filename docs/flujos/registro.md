@@ -48,7 +48,7 @@ sequenceDiagram
   U->>UI: Continuar
   UI->>F: continueToPersonalData()
   F->>A: evaluateDocument(identity)
-  A->>RC: POST /Registro/EvaluarDocumento
+  A->>RC: POST /registration/evaluate-document
   RC->>S: EvaluarDocumentoAsync
   S->>D: Consultar persona, solicitud y usuario
   opt Evaluación exitosa sin usuario existente
@@ -61,7 +61,7 @@ sequenceDiagram
   alt Persona existente sin usuario
     U->>UI: Confirmar
     F->>A: verifyIdentity(payload, flowId)
-    A->>RC: POST /Registro/VerificarIdentidad
+    A->>RC: POST /registration/verify-identity
     RC->>RS: Validar sesión y documento
     RC->>S: VerificarIdentidadAsync
     S->>D: Crear usuario LDAP y registrar admisión
@@ -69,14 +69,14 @@ sequenceDiagram
   else Persona nueva
     U->>UI: Crear cuenta
     F->>A: register(payload, flowId)
-    A->>RC: POST /Registro/ConfirmarNuevaPersona
+    A->>RC: POST /registration/confirm-new-person
     RC->>RS: ConfirmarNuevaPersonaAsync
     RS->>D: Guardar persona pendiente
     RS->>M: Enviar activación
   else Documento no CI
     U->>UI: Crear cuenta
     F->>A: confirmApplicationRequest(payload, flowId)
-    A->>RC: POST /Registro/ConfirmarSolicitudAlta
+    A->>RC: POST /registration/confirm-registration-request
     RC->>S: ConfirmarSolicitudAltaAsync
     S->>D: Registrar solicitud de alta
   end
@@ -84,11 +84,11 @@ sequenceDiagram
   opt Persona existente o nueva con correo de activación
     M-->>U: Enlace /crear-password?token=...
     U->>P: Abrir enlace
-    P->>A: POST /Auth/ActivarLinkPassword
+    P->>A: POST /auth/activate-password-link
     A->>AC: Validar token
     AC-->>P: Cookie X-Password-Activation
     U->>P: Activar cuenta
-    P->>A: POST /Auth/CompletarPassword
+    P->>A: POST /auth/complete-initial-password
     A->>AC: Completar contraseña con cookie temporal
     alt Persona nueva
       AC->>RS: CompletarNuevaPersona
@@ -106,15 +106,15 @@ activación ni crea una cuenta.
 
 ## Acciones y referencias
 
-| Acción visible                   | Angular                                                        | Fachada / servicio                                                                                      | Adapter y contrato                                                                                                 | API                                                   | Backend                                                                                                                                     |
-| -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Crear cuenta** en login        | [`routerLink="/registro"`][front-login] y [ruta][front-routes] | —                                                                                                       | —                                                                                                                  | —                                                     | —                                                                                                                                           |
-| **Continuar**                    | [Identity step y binding de página][front-register-page]       | [`continueToPersonalData()`][front-facade] → [`evaluateDocument()`][front-registration-service]         | [`AuthEndpoint.evaluateDocument()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                       | `POST /Registro/EvaluarDocumento`                     | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service] / [`RegistroFlowService`][back-register-flow] |
-| **Confirmar** persona existente  | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`verifyExistingPersonIdentity()`][front-registration-service] | [`AuthEndpoint.verifyIdentity()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                         | `POST /Registro/VerificarIdentidad` + `X-Flow-Id`     | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service]                                               |
-| **Crear cuenta** persona nueva   | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`confirmRegistration()`][front-registration-service]          | [`AuthEndpoint.register()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                               | `POST /Registro/ConfirmarNuevaPersona` + `X-Flow-Id`  | [`RegistroController`][back-register-controller] → [`RegistroFlowService`][back-register-flow]                                              |
-| **Crear cuenta** documento no CI | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`confirmRegistration()`][front-registration-service]          | [`AuthEndpoint.confirmApplicationRequest()`][front-auth-endpoint] y [DTO backend][back-register-dtos]              | `POST /Registro/ConfirmarSolicitudAlta` + `X-Flow-Id` | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service]                                               |
-| Abrir enlace de activación       | [`activateToken()`][front-set-password]                        | [`PasswordActivationService.activateLink()`][front-password-service]                                    | [`AuthEndpoint.activatePasswordLink()`][front-auth-endpoint] y [controller/contrato OpenAPI][back-auth-controller] | `POST /Auth/ActivarLinkPassword`                      | [`AuthController`][back-auth-controller] → [`PasswordActivationService`][back-password-activation]                                          |
-| **Activar cuenta**               | [`submit()`][front-set-password]                               | [`PasswordActivationService.completePassword()`][front-password-service]                                | [`AuthEndpoint.completePassword()`][front-auth-endpoint] y [controller/contrato OpenAPI][back-auth-controller]     | `POST /Auth/CompletarPassword` + cookie temporal      | [`AuthController`][back-auth-controller] → [`RegistroFlowService`][back-register-flow] para persona nueva                                   |
+| Acción visible                   | Angular                                                        | Fachada / servicio                                                                                      | Adapter y contrato                                                                                                 | API                                                             | Backend                                                                                                                                     |
+| -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Crear cuenta** en login        | [`routerLink="/registro"`][front-login] y [ruta][front-routes] | —                                                                                                       | —                                                                                                                  | —                                                               | —                                                                                                                                           |
+| **Continuar**                    | [Identity step y binding de página][front-register-page]       | [`continueToPersonalData()`][front-facade] → [`evaluateDocument()`][front-registration-service]         | [`AuthEndpoint.evaluateDocument()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                       | `POST /registration/evaluate-document`                          | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service] / [`RegistroFlowService`][back-register-flow] |
+| **Confirmar** persona existente  | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`verifyExistingPersonIdentity()`][front-registration-service] | [`AuthEndpoint.verifyIdentity()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                         | `POST /registration/verify-identity` + `X-Flow-Id`              | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service]                                               |
+| **Crear cuenta** persona nueva   | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`confirmRegistration()`][front-registration-service]          | [`AuthEndpoint.register()`][front-auth-endpoint] y [DTO backend][back-register-dtos]                               | `POST /registration/confirm-new-person` + `X-Flow-Id`           | [`RegistroController`][back-register-controller] → [`RegistroFlowService`][back-register-flow]                                              |
+| **Crear cuenta** documento no CI | [Submit del paso personal][front-register-page]                | [`submitPersonalData()`][front-facade] → [`confirmRegistration()`][front-registration-service]          | [`AuthEndpoint.confirmApplicationRequest()`][front-auth-endpoint] y [DTO backend][back-register-dtos]              | `POST /registration/confirm-registration-request` + `X-Flow-Id` | [`RegistroController`][back-register-controller] → [`RegistroService`][back-register-service]                                               |
+| Abrir enlace de activación       | [`activateToken()`][front-set-password]                        | [`PasswordActivationService.activateLink()`][front-password-service]                                    | [`AuthEndpoint.activatePasswordLink()`][front-auth-endpoint] y [controller/contrato OpenAPI][back-auth-controller] | `POST /auth/activate-password-link`                             | [`AuthController`][back-auth-controller] → [`PasswordActivationService`][back-password-activation]                                          |
+| **Activar cuenta**               | [`submit()`][front-set-password]                               | [`PasswordActivationService.completePassword()`][front-password-service]                                | [`AuthEndpoint.completePassword()`][front-auth-endpoint] y [controller/contrato OpenAPI][back-auth-controller]     | `POST /auth/complete-initial-password` + cookie temporal        | [`AuthController`][back-auth-controller] → [`RegistroFlowService`][back-register-flow] para persona nueva                                   |
 
 ## Decisión inicial
 
@@ -181,13 +181,13 @@ controles independientes.
 
 ## Efectos por caso
 
-| Flujo                | Endpoint                                | Efecto y final del flujo                                                                                            |
-| -------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `existing-person`    | `POST /Registro/VerificarIdentidad`     | Crea usuario LDAP, registra admisión y envía activación. `CompletarPassword` establece la contraseña.               |
-| `new-person`         | `POST /Registro/ConfirmarNuevaPersona`  | Guarda la persona pendiente en Redis y envía activación. `CompletarPassword` crea persona, usuario LDAP y admisión. |
-| `new-application`    | `POST /Registro/ConfirmarSolicitudAlta` | Registra la solicitud; no envía activación ni crea contraseña.                                                      |
-| `user-exists`        | Ninguno                                 | Ofrece iniciar sesión.                                                                                              |
-| `application-exists` | Ninguno                                 | Informa la solicitud existente.                                                                                     |
+| Flujo                | Endpoint                                          | Efecto y final del flujo                                                                                            |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `existing-person`    | `POST /registration/verify-identity`              | Crea usuario LDAP, registra admisión y envía activación. `CompletarPassword` establece la contraseña.               |
+| `new-person`         | `POST /registration/confirm-new-person`           | Guarda la persona pendiente en Redis y envía activación. `CompletarPassword` crea persona, usuario LDAP y admisión. |
+| `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña.                                                      |
+| `user-exists`        | Ninguno                                           | Ofrece iniciar sesión.                                                                                              |
+| `application-exists` | Ninguno                                           | Informa la solicitud existente.                                                                                     |
 
 Si el email de una persona nueva falla, los datos pendientes permanecen en
 Redis y el backend devuelve un mensaje de reintento sin duplicarlos.
@@ -200,7 +200,7 @@ correo para `new-application`; la solicitud queda pendiente de revisión.
 
 ## OCR y casos borde
 
-`POST /Registro/AnalizarAdjunto` acepta una imagen o PDF, tiene un límite de cinco
+`POST /registration/analyze-attachment` acepta una imagen o PDF, tiene un límite de cinco
 solicitudes por minuto por usuario/IP y solo precarga el formulario. Nunca decide
 el flujo ni reemplaza `EvaluarDocumento`.
 

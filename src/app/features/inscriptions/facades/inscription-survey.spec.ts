@@ -431,6 +431,17 @@ describe('InscripcionSurveyFacade', () => {
     expect(process.flow.currentStep()).toBe('pago');
   });
 
+  it('does not re-save the survey when exiting after pre-enrollment was already confirmed', async () => {
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+    expect(saveInitialSurvey).toHaveBeenCalledOnce();
+    saveInitialSurvey.mockClear();
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
   it.each([
     { failure: 'data false', result: of(false) },
     { failure: 'HTTP 400', result: throwError(() => ({ status: 400 })) },

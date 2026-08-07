@@ -45,7 +45,7 @@ describe('TelemetryService', () => {
 
     const request = new HttpRequest(
       'GET',
-      new URL('/Catalogos/Carreras', environment.API_URL).toString()
+      new URL('/catalogs/degree-programs', environment.API_URL).toString()
     );
     const intercepted = service.addHttpHeaders(request);
 
@@ -81,7 +81,7 @@ describe('TelemetryService', () => {
 
     const request = new HttpRequest(
       'POST',
-      new URL('/Persona/DatosPersona', environment.API_URL).toString(),
+      new URL('/person/details', environment.API_URL).toString(),
       null
     );
     const intercepted = service.addHttpHeaders(request);
@@ -95,7 +95,7 @@ describe('TelemetryService', () => {
     const request = service.addHttpHeaders(
       new HttpRequest(
         'GET',
-        new URL('/Persona/DatosPersona?token=secret-token', environment.API_URL).toString()
+        new URL('/person/details?token=secret-token', environment.API_URL).toString()
       )
     );
     const startedAt = service.startHttpRequest(request);

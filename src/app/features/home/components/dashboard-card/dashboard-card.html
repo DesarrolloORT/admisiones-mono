@@ -10,10 +10,12 @@
   <h3 class="dashboard-card__title" [id]="titleId">{{ title() }}</h3>
 
   <div class="dashboard-card__meta">
-    @if (variant() === 'careers') { @if (!esPaquete()) {
+    @if (variant() === 'careers') { @if (enrollmentsCount() === 1) {
     <app-dashboard-card-summary
       variant="careers"
       [startDate]="inscripcion()?.nombreComienzo ?? ''" />
+    } @else {
+    <p class="dashboard-card__seminars">Anotado a {{ enrollmentsCount() }} seminarios</p>
     } } @else {
     <app-dashboard-card-summary
       variant="scholarships"
@@ -24,8 +26,6 @@
       [examResult]="beca()?.resultadoPrueba ?? ''"
       [resultsDate]="beca()?.fechaResultados ?? ''"
       [status]="estado()" />
-    } @if (paymentDeadline()) {
-    <p class="dashboard-card__deadline">Fecha límite: {{ paymentDeadline() }}</p>
     }
   </div>
 

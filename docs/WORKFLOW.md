@@ -94,6 +94,8 @@ Variables:
 
 `script-src` no debe usar `unsafe-inline` ni hashes fijos para permitir los scripts inline que inyecta `api.js` de Google. En su lugar, `script-src` debe incluir `'nonce-<RECAPTCHA_NONCE>' 'strict-dynamic'`, y `RECAPTCHA_NONCE` debe ser exactamente el mismo valor en ambas variables. Google propaga ese nonce a los scripts inline que agrega, y `strict-dynamic` habilita cualquier script cargado por uno con nonce valido sin depender de hashes que se rompen cuando Google cambia el contenido del script sin aviso.
 
+`img-src` debe incluir `blob:` ademas de `'self' data:`. El preview/compresion de imagenes (`ImageCompressionUtils` de `@desarrolloort/ngx-utils`, usado en la subida de identidad y OCR de registro) genera URLs `blob:` con `URL.createObjectURL`; sin `blob:` en `img-src`, el navegador bloquea esas imagenes aunque la compresion y subida sigan funcionando.
+
 Notas:
 
 - cualquier otro secreto o variable adicional debe configurarse en el repositorio de la misma manera;
