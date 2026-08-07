@@ -83,7 +83,7 @@ export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): Pend
     const detail =
       pending.length === 1
         ? `Realizá el pago antes del ${uniqueDeadlines[0]}.`
-        : `Tus inscripciones pendientes de pago vencerán el ${uniqueDeadlines[0]}.`;
+        : `Las mismas vencerán el ${uniqueDeadlines[0]}.`;
 
     return { title, detail, navigable, target };
   }
@@ -92,7 +92,7 @@ export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): Pend
 
   return {
     title,
-    detail: `Tus inscripciones pendientes de pago vencerán los días ${listed}.`,
+    detail: `Las mismas vencerán los días ${listed}.`,
     navigable,
     target,
   };
