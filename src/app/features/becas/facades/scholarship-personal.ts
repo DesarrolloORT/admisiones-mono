@@ -1,6 +1,6 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormControl, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtFileUploaderChange } from '@desarrolloort/components';
 import { merge } from 'rxjs';
 
@@ -52,6 +52,7 @@ export class ScholarshipPersonalFacade {
 
   public setVariant(variant: ScholarshipVariant): void {
     this.variant.set(variant);
+    this.updateConditionalValidators();
   }
 
   public isSectionVisible(section: ScholarshipPersonalSectionId): boolean {
@@ -176,6 +177,13 @@ export class ScholarshipPersonalFacade {
   }
 
   private updateConditionalValidators(): void {
+    const educationInfo = this.educationInfoForm.controls;
+    const requiresCertificate = this.variant() !== 'fbc';
+    this.setRequired(educationInfo.certificateFile, requiresCertificate, Validators.requiredTrue);
+    if (!requiresCertificate) {
+      educationInfo.certificateFile.setValue(false, { emitEvent: false });
+    }
+
     const declaration = this.declarationForm.controls;
     const vehicleOwned = declaration.vehicleOwn.value === 'si';
     this.setRequired(declaration.vehicleModel, vehicleOwned);
@@ -197,8 +205,12 @@ export class ScholarshipPersonalFacade {
     }
   }
 
-  private setRequired(control: AbstractControl, required: boolean): void {
-    control.setValidators(required ? Validators.required : null);
+  private setRequired(
+    control: AbstractControl,
+    required: boolean,
+    validator: ValidatorFn = Validators.required
+  ): void {
+    control.setValidators(required ? validator : null);
     control.updateValueAndValidity({ emitEvent: false });
   }
 }
