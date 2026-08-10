@@ -162,7 +162,7 @@ describe('AccountEndpoint', () => {
         stateCode: 10,
         cityCode: undefined,
         address: 'Av. 18 de Julio 1360',
-        phone: '99123456',
+        phone: { nationalNumber: '99123456', iso2: 'UY' },
         email: 'gabrielaortiz@gmail.com',
         emailVerification: 'gabrielaortiz@gmail.com',
       })
@@ -177,7 +177,10 @@ describe('AccountEndpoint', () => {
       stateId: 10,
       cityId: undefined,
       address: 'Av. 18 de Julio 1360',
-      primaryPhone: '99123456',
+      primaryPhone: {
+        nationalNumber: '99123456',
+        iso2: 'UY',
+      },
       email: 'gabrielaortiz@gmail.com',
       emailConfirmation: 'gabrielaortiz@gmail.com',
     });
@@ -193,7 +196,7 @@ describe('AccountEndpoint', () => {
         stateCode: 10,
         cityCode: 100,
         address: 'Av. 18 de Julio 1360',
-        phone: '99123456',
+        phone: { nationalNumber: '99123456', iso2: 'UY' },
         email: 'gabrielaortiz@gmail.com',
         emailVerification: 'gabrielaortiz@gmail.com',
       })
@@ -212,7 +215,7 @@ describe('AccountEndpoint', () => {
     endpoint
       .updatePersonalData({
         address: '',
-        phone: '',
+        phone: { nationalNumber: '', iso2: null },
         email: '',
         emailVerification: '',
       })

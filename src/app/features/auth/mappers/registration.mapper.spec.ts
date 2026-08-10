@@ -41,7 +41,10 @@ describe('registration mapper', () => {
       codigoEstado: 10,
       codigoCiudad: 100,
       direccion: 'Mercedes 1234',
-      telefono1: '+59899123456',
+      telefono1: {
+        nationalNumber: '099123456',
+        iso2: 'UY',
+      },
       mail: 'ana@example.com',
       verificacionMail: 'ana@example.com',
     });
@@ -63,7 +66,10 @@ describe('registration mapper', () => {
       fechaNacimiento: '2000-01-01',
       sexo: 'F',
       direccion: 'Mercedes 1234',
-      telefono1: '+59899123456',
+      telefono1: {
+        nationalNumber: '099123456',
+        iso2: 'UY',
+      },
       mail: 'ana@example.com',
       verificacionMail: 'ana@example.com',
       codigoPais: 1,
@@ -83,8 +89,11 @@ describe('registration mapper', () => {
     });
   });
 
-  it('should preserve the international prefix for all phones', () => {
-    expect(toAuthRegisterPersonalData(personal).telefono1).toBe('+59899123456');
+  it('should send the national number and ISO country required by backend', () => {
+    expect(toAuthRegisterPersonalData(personal).telefono1).toEqual({
+      nationalNumber: '099123456',
+      iso2: 'UY',
+    });
 
     expect(
       toAuthRegisterPersonalData({
@@ -95,7 +104,10 @@ describe('registration mapper', () => {
           numberE164: '+541123456789',
         },
       }).telefono1
-    ).toBe('+541123456789');
+    ).toEqual({
+      nationalNumber: '1123456789',
+      iso2: 'AR',
+    });
   });
 
   it('should convert dd/mm/yyyy display dates to ISO format', () => {
@@ -132,13 +144,13 @@ describe('registration mapper', () => {
     ).toBe('2000/01/01');
   });
 
-  it('should map a null telefono1 to an empty string', () => {
+  it('should map a null telefono1 to an empty phone payload', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
         telefono1: null,
       }).telefono1
-    ).toBe('');
+    ).toEqual({ nationalNumber: '', iso2: null });
   });
 
   it('should trim whitespace-only names to empty strings', () => {
