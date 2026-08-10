@@ -66,7 +66,8 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       path === '/auth/complete-initial-password' ||
       path === '/auth/logout' ||
       path === '/auth/recover-password' ||
-      path === '/person/change-password'
+      path === '/person/change-password' ||
+      path === '/person/validate-phone-number'
     ) {
       return fulfillOperation(route, true);
     }

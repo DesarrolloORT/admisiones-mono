@@ -15,34 +15,57 @@ sourcePaths:
 
 import SourceLink from '@site/src/components/SourceLink';
 
-# Flow manual de inscripciones
+# Inscripciones de punta a punta
 
 > Tipo: reference
 
-Fuente de verdad frontend: `src/app/features/inscriptions/**`.
-
-Este documento describe el comportamiento actual de la pantalla: que campos
-muestran u ocultan otros, que pasa cuando cambia una seleccion padre y que
-valores llegan al backend. No uses el raw value de los formularios como contrato:
-el contrato backend sale de `inscription-flow-mappers.ts`.
+Fuentes de verdad: `src/app/features/inscriptions/**` y
+`api-admisiones/WebApiAdmisiones/AppLogic/AppLogic.Enrollments/**`. Este documento
+describe el comportamiento desplegado del frontend y del backend conectado a esta
+rama: entrada desde el dashboard, encuesta, identidad, confirmación, reactivación,
+pago, persistencia e integraciones. No uses el raw value de los formularios como
+contrato: el payload HTTP sale de `inscription-flow-mappers.ts` y OpenAPI es la
+autoridad del wire contract.
 
 ## Acciones y evidencia end-to-end
 
-| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                   | Backend                                                                                                                                                                                                                                                                                        |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/InscripcionesController.cs">InscripcionesController</SourceLink> → <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Inscripciones/Services/InscripcionesService.cs">InscripcionesService</SourceLink> |
-| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/PersonaController.cs">PersonaController</SourceLink> + InscripcionesController                                                                                                                                  |
-| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /enrollments/start-payment`                                      | InscripcionesController → InscripcionesService → API interna de pagos                                                                                                                                                                                                                          |
-| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/pages/dashboard/">dashboard</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">InscripcionesEndpoint</SourceLink>                          | `POST /enrollments/reactivate`                                         | InscripcionesController → InscripcionesService                                                                                                                                                                                                                                                 |
+| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                   | Backend                                                                                                                                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cargar Mis carreras          | <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                                                                                                                      | `GET /person/enrollments`                                              | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/UseCases/GetMyEnrollments.cs">GetMyEnrollments</SourceLink> → vistas Fresco 1/2 y 3/4                                                                                       |
+| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/RegisterProductInterest.cs">RegisterProductInterest</SourceLink> → Oracle + cola Tivenos                                                                      |
+| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/">People</SourceLink> + <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ConfirmPreEnrollment.cs">ConfirmPreEnrollment</SourceLink> |
+| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /enrollments/start-payment`                                      | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/Payments/StartEnrollmentPayment.cs">StartEnrollmentPayment</SourceLink> → API interna de Inscripciones y Pagos                                                |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/components/dashboard-quick-actions/dashboard-quick-actions.ts">DashboardQuickActions</SourceLink>                                                                                                          | `POST /enrollments/reactivate`                                         | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ReactivateEnrollment.cs">ReactivateEnrollment</SourceLink> → `ConfirmPreEnrollment`                                                                           |
 
 Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
+## Límites y componentes
+
+- Todos los endpoints de `person`, `enrollments` y `catalogs` usados aquí requieren
+  la identidad del usuario autenticado. El backend obtiene `personId` del JWT/cookie;
+  nunca acepta la persona desde el request.
+- `InscripcionesEndpoint` es la frontera anticorrupción del front: traduce los modelos
+  generados en inglés a tipos propios de la feature y limpia la caché HTTP después de
+  mutaciones. Las consultas de detalle, identidad, encuesta y reglamento se fuerzan sin
+  caché.
+- Oracle persiste interés, encuesta, aceptación del reglamento, imágenes, inscripciones
+  y método de reserva. La cola de Tivenos se registra en la misma transacción que el
+  interés o la actualización de bachillerato; la entrega efectiva ocurre fuera del
+  request.
+- La API interna de **Inscripciones y Pagos** confirma preinscripciones, consulta
+  carritos, cobra cuenta personal y genera URLs de pasarela. Su handler agrega las
+  credenciales de servicio. Admisiones traduce fallos de red a `API_NETWORK`/503,
+  timeout mayor a dos minutos a `API_TIMEOUT`/504 y fallos inesperados a
+  `API_UNEXPECTED`/500.
+- La inscripción corporativa no llama a la API de pagos: crea un trámite de bandeja por
+  oferta, con vencimiento a cinco días, y devuelve `waiting = true`.
+
 ## Pasos y escenarios
 
-El flujo tiene 3 pasos. El **paso 1** (Propuesta academica) avanza con
+El flujo tiene 3 pasos. El **paso 1** (Propuesta académica) avanza con
 `POST /enrollments/product-interest`. El **paso 2** (Informacion personal)
 guarda primero los cambios de identidad, luego llama a
-`POST /enrollments/initial-survey` y finalmente a
+`POST /enrollments/initial-survey` cuando corresponde y finalmente a
 `POST /enrollments/confirm-pre-enrollment`. El **paso 3** (Confirmacion /
 pago) llama a `POST /enrollments/start-payment`; el detalle operativo forma parte de esta misma página.
 
@@ -63,8 +86,9 @@ flowchart TD
   C --> F[Identidad + reglamento]
   D --> F
   E --> F
-  F --> G[Subir documento y foto en paralelo]
-  G -->|Ambos OK| H[Guardar encuesta]
+  F --> G[Subir cambios de documento y foto en paralelo]
+  G -->|Ambos OK y encuesta aplicable| H[Guardar encuesta]
+  G -->|Ambos OK y encuesta no aplicable / AP| I
   G -->|Error| M[Reabrir identidad sin check]
   H -->|OK| I[Confirmar preinscripcion]
   H -->|Error| K[Mostrar error y permanecer]
@@ -72,6 +96,11 @@ flowchart TD
   I -->|Error| K[Mostrar error y permanecer]
   J --> L[Pago / estado terminal]
 ```
+
+Las cargas de identidad son condicionales: un archivo precargado y no modificado no se
+vuelve a enviar. AP nunca guarda encuesta. Para niveles 1/2, el `POST initial-survey`
+es un upsert parcial que queda `temporal` mientras falten respuestas y pasa a
+`definitivo` cuando la validación sobre lo persistido no encuentra pendientes.
 
 ## Intención de entrada × estado × encuesta
 
@@ -154,6 +183,29 @@ matriz es su lectura de negocio.
   `getDetail` posteriores a `Pagar` se mantienen para completar coordinación, materias
   o referencias de reserva que el POST de reactivación no devuelve.
 
+  El backend verifica **todo o nada** que cada ID pertenezca a la persona, esté dado de
+  baja y tenga oferta; deduplica ofertas y delega en la confirmación normal. No marca la
+  baja original como “ya reactivada” ni usa clave de idempotencia, por lo que una
+  repetición incierta debe resolverse consultando el estado antes de reintentar.
+
+### Detalle como read model
+
+`GET /enrollments/details?productId=X&admissionProcessId=Y` busca primero la vista
+Fresco 1/2 y luego 3/4. Devuelve `INS_DET_01`/404 si no encuentra estado y completa
+solo el bloque correspondiente:
+
+| Estado                               | Bloque                                                       | Fuente               |
+| ------------------------------------ | ------------------------------------------------------------ | -------------------- |
+| `En proceso`                         | `inProgress` con intereses/ofertas                           | Oracle               |
+| `A la espera` o desconocido          | solo `status`                                                | Oracle               |
+| `Pago pendiente`, sin método         | `pendingPayment` con carritos, saldo, seña y vencimiento     | Oracle + API interna |
+| `Pago pendiente`, con Abitab/Paganza | `minimumDeposit` con método, documento, persona y seña total | Oracle + API interna |
+| `Confirmada`                         | `confirmed` con persona, coordinadores y materias por oferta | Oracle               |
+
+Si falla la consulta de carritos, el detalle propaga el error de la API interna; no
+degrada silenciosamente a un bloque incompleto. El front, en cambio, captura el error
+del resolver al retomar y abre el paso 2 con los IDs de la URL/contexto.
+
 ## Regla general de valores ocultos
 
 Cuando un campo padre cambia, la UI actualiza validadores y puede ocultar
@@ -228,6 +280,14 @@ Al continuar se llama a `POST /enrollments/product-interest` con:
   "productId": "Number(carrera)"
 }
 ```
+
+El backend valida persona, producto admisible, proceso habilitado y cada oferta:
+debe existir, pertenecer al producto y al proceso, y estar abierta con su supraoferta
+en estado final. Para niveles 1/2 rechaza una inscripción previa o pendiente; para
+niveles 3/4 permite varias ofertas concurrentes, pero rechaza repetir una oferta ya
+registrada. El interés, sus ofertas y la fila de cola hacia Tivenos se guardan en una
+única transacción Oracle. Un reintento luego de éxito no es idempotente: devuelve
+`GEN_IP_06`/409 (o `GEN_IP_04`/`GEN_IP_05` según el caso) y no duplica el registro.
 
 ## Actualización profesional (niveles 3 y 4)
 
@@ -347,8 +407,8 @@ Actualización profesional con más de una anotación.
   ISO con hora fija (`2026-10-16T00:00:00`) y la opción muestra solo la fecha. Sin fecha
   no se pinta la descripción.
 - Al continuar se llama `POST /enrollments/product-interest`. El contrato de
-  feature ya es un array (`idOfertas`); **transición**: el adapter envía solo la
-  primera oferta hasta que el backend acepte el array.
+  feature y el HTTP son arrays (`idOfertas` → `offeringIds`), por lo que se envían
+  todas las ofertas elegidas en una sola operación.
 
 ### Paso 2 AP reducido
 
@@ -436,10 +496,13 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
   en AP multi-seminario solo pinta la fila Programa (pendiente de decisión de UX); con
   un solo seminario sí muestra Programa + Comienzo, porque salen de `summaryItems()`.
 
-### Pendientes de backend
+### Contrato multi-oferta resuelto
 
-- Array de `idOferta` en `InteresProducto` y `ConfirmarPreInscripcion`.
-- Detalle con múltiples ofertas para retomar un AP multi-seminario.
+`product-interest`, `confirm-pre-enrollment`, `reactivate` y `start-payment`
+aceptan arrays. El backend valida todas las ofertas antes de persistir: para niveles
+1/2 deben compartir producto, comienzo y turno; para niveles 3/4 solo producto. El
+detalle, la confirmación, el dashboard y el pago conservan una fila por oferta. No
+hay pago parcial de un paquete AP desde esta UI.
 
 ## Paso 2: informacion personal
 
@@ -527,6 +590,14 @@ Al cerrar el paso 2, si se toco frente/dorso o cambio el vencimiento se llama a
 `POST /person/identity-document`; si se toco la selfie se llama a
 `POST /person/photo`.
 
+El backend no confía en extensión ni nombre: frente, dorso y foto aceptan
+`.jpg`, `.jpeg` o `.png`, validan contenido por magic bytes y limitan cada imagen
+a 5 MiB. Documento exige ambos lados y una fecha no vencida; crea o reemplaza los
+dos slots temporales y actualiza el vencimiento de la persona. La foto crea o
+reemplaza el slot de foto definitivo. Antes de confirmar, el servidor acepta un par
+temporal completo y vigente o, como fallback, un par definitivo completo y vigente;
+falta de lado, vencimiento o blob vacío se rechazan aunque el front haya validado.
+
 ### Reglamento
 
 `GET /enrollments/student-regulations` indica si el reglamento ya fue aceptado.
@@ -576,6 +647,25 @@ envian `null` cuando no aplican.
 - `publicidadOrtIds`: `mediosPublicidad.map(Number)` solo si `recuerdaPublicidad = si`.
 - `motivoEleccionOrtIds`: `motivosOrt.map(Number)`, `null` si no hay seleccion.
 
+### Persistencia y finalización de la encuesta
+
+El derecho a encuesta es por documento, no por inscripción. `GET initial-survey`
+devuelve `canAnswerSurvey = false` si la persona ya figura como Fresco, tiene la
+encuesta histórica o tiene una encuesta de admisión completa. En ese caso el POST
+queda además protegido por `INS_EI_56`/403.
+
+Cada guardado valida opciones fijas y catálogos dinámicos, resuelve producto/proceso
+contra el interés activo y actualiza la encuesta y sus listas hijas en una sola
+transacción. La completitud se calcula sobre lo ya persistido:
+
+- con campos pendientes queda `temporal` y la respuesta enumera secciones/campos;
+- sin pendientes queda `definitivo`, calcula el vencimiento de admisión en días
+  hábiles y, si la persona cursa secundaria, crea o actualiza su bachillerato y
+  encola la sincronización a Tivenos dentro de la misma transacción;
+- si producto y proceso vienen juntos debe existir exactamente una oferta de interés;
+  cero produce `INS_EI_53`/404 y más de una `INS_EI_54`/409. AP evita esta restricción
+  porque no guarda encuesta.
+
 ## Confirmacion de preinscripcion
 
 Despues de completar la ultima seccion del paso 2 el front vuelve a validar todas
@@ -597,6 +687,28 @@ Orden de cierre:
   "selectedOfferingIds": "seminarios.map(Number) para AP; [Number(turno)] para los demás"
 }
 ```
+
+El servidor vuelve a validar que cada oferta exista, esté abierta y tenga interés
+activo. Para niveles 1/2 exige encuesta nueva `definitivo` y vigente, salvo que exista
+la encuesta histórica; niveles 3/4 no requieren encuesta. Todas las ofertas deben ser
+compatibles según la regla multi-oferta descrita arriba.
+
+La aceptación se persiste por persona + producto + comienzo. Si la persona ya aceptó
+alguna vez, el backend puede crear la fila específica sin volver a exigir `true`; si
+nunca aceptó, `false` devuelve `INS_CPI_02`/400. Esta escritura ocurre antes de llamar
+a la API interna, por lo que queda persistida aunque la confirmación remota falle.
+
+La rama normal llama una sola vez a
+`ORTSecure/Inscripciones/ConfirmarPreInscripcionMultiple` y mapea su éxito —incluido
+un posible resultado parcial del sistema remoto— al response propio. No envía clave de
+idempotencia: ante timeout o respuesta incierta, no se debe asumir que reintentar sea
+seguro sin consultar primero `GET /enrollments/details` o el dashboard.
+
+La rama corporativa solo admite niveles 3/4. En una transacción crea, por cada oferta,
+un trámite/instancia de workflow y su relación estructurada; el primer paso queda
+autocompletado y el segundo pendiente para el grupo responsable. Si una oferta falla,
+se hace rollback de todo el paquete. El response no contiene pago ni resumen:
+`confirmed = false`, `waiting = true`.
 
 Si `esInscripcionCorporativa === true`, una respuesta exitosa termina en la
 pantalla de espera del pago empresarial sin abrir el paso de pago. Para las demás
@@ -632,11 +744,24 @@ Payload feature:
 
 ```json
 {
-  "idInscripcion": 1072704,
+  "idsInscripcion": [1072704, 1072705],
   "metodoPago": "cuenta-bancaria",
   "idBancoSistarbanc": "brou"
 }
 ```
+
+Payload HTTP:
+
+```json
+{
+  "enrollmentIds": [1072704, 1072705],
+  "paymentType": "SISTARBANC",
+  "sistarbancBankId": "brou"
+}
+```
+
+Para niveles 1/2 el array normalmente tiene un ID; AP envía todos los IDs del
+paquete. El backend rechaza listas vacías, IDs no positivos o inscripciones ajenas.
 
 Mapping adapter:
 
@@ -651,6 +776,20 @@ Mapping adapter:
 
 `tarjeta-credito` no queda como método activo hasta que el backend confirme un
 `tipoPago` propio o su mapeo dentro de Sistarbanc.
+
+Comportamiento servidor:
+
+- `CUENTA_PERSONAL` cobra todos los carritos en la API interna. Si responde éxito,
+  el backend arma el detalle confirmado desde Oracle y devuelve
+  `result = PAGO_CONFIRMADO`.
+- `ABITAB`/`PAGANZA` escriben una fila de seña mínima por inscripción en una sola
+  transacción y devuelven `METODO_GUARDADO`. Si alguna ya existe, toda la operación
+  hace rollback y devuelve `INS_MP_04`/409; repetir no duplica reservas.
+- `BANRED`/`GEOPAY`/`SISTARBANC` solicitan la URL de factura a la API interna y
+  devuelven `URL_GENERADA`, URL base y parámetros cifrados separados. SISTARBANC
+  exige banco (`INS_UF_03`/400).
+- Cuenta personal y generación de factura no llevan clave de idempotencia local; la
+  semántica de un reintento tras timeout depende de la API interna.
 
 ## Flujo por método
 
@@ -729,8 +868,8 @@ POST así: `Request.Form["data"].Split('=')[1].Split('"')[0]` — extraen lo que
 está entre el primer `=` y la primera `"`. Por eso el front envía
 `data = {"params":"parametrosEncriptados=<blob>"}` (mismo formato que Gestion_V2
 en producción). El backend de admisiones ya le quitó el prefijo
-`parametrosEncriptados=` a la URL original (`SepararUrlYParametrosEncriptados`
-en `InscripcionesService.cs`), así que el front lo reconstruye.
+`parametrosEncriptados=` a la URL original (`InvoicePaymentUrl.Split`), así que el
+front lo reconstruye.
 
 ### Salteo del intermediario ASPX (propuesta a backend)
 
@@ -745,13 +884,70 @@ pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 ## Catalogos usados
 
 - Carreras: el ingreso nuevo espera la elección de tipo y hace una sola llamada a
-  `GET /catalogs/degree-programs?propuestaAcademica=<1|2|3>` con el valor elegido. Aplana
+  `GET /catalogs/degree-programs?academicOffer=<1|2|3>` con el valor elegido. Aplana
   `productos` para niveles 1/2 y `seminarios[].productos` para niveles 3/4,
   conservando `tieneSeminario` del grupo. Al retomar, mientras Detalle no informe
   el nivel del producto, el resolver consulta los tres tipos para reconstruirlo.
-- Comienzos: `GET /catalogs/intakes?idCarrera=<idProducto>`
-- Turnos: `GET /catalogs/shifts?idCarrera=<idProducto>&idProceso=<idProceso>`
+- Comienzos: `GET /catalogs/intakes?degreeProgramId=<idProducto>`
+- Turnos: `GET /catalogs/shifts?degreeProgramId=<idProducto>&admissionProcessId=<idProceso>`
 - Encuesta inicial: `GET /catalogs/initial-survey`
 - Departamentos: `GET /catalogs/countries-states-cities` filtrando Uruguay (`codigoPais = 1`)
-- Instituciones: `GET /catalogs/institutions?codigoPais=1&codigoEstado=<departamento>`
+- Instituciones: `GET /catalogs/institutions?countryId=1&stateId=<departamento>`
 - Bancos: `GET /catalogs/banks`
+
+## Inventario HTTP y efectos
+
+| Método y ruta                              | Uso                                    | Escritura / integración                                 |
+| ------------------------------------------ | -------------------------------------- | ------------------------------------------------------- |
+| `GET /person/enrollments`                  | dashboard agrupado                     | Oracle, solo lectura                                    |
+| `GET /enrollments/details`                 | retomar/terminales                     | Oracle; carritos remotos solo para pago pendiente       |
+| `POST /enrollments/product-interest`       | cerrar paso 1                          | Oracle + cola Tivenos, transaccional                    |
+| `GET/POST /enrollments/initial-survey`     | precarga y guardado parcial/definitivo | Oracle + cola Tivenos al finalizar bachillerato         |
+| `GET/POST /person/identity-document`       | precarga y reemplazo frente/dorso      | Oracle (`ImagenTemporal`)                               |
+| `GET/POST /person/photo`                   | precarga y reemplazo selfie            | Oracle (`Imagen`)                                       |
+| `GET /enrollments/student-regulations`     | aceptación previa global               | Oracle, solo lectura                                    |
+| `POST /enrollments/confirm-pre-enrollment` | cerrar paso 2                          | aceptación Oracle + API interna, o workflow corporativo |
+| `POST /enrollments/reactivate`             | recrear bajas                          | API interna mediante confirmación normal                |
+| `POST /enrollments/start-payment`          | cobrar/reservar/redirigir              | API interna o seña mínima Oracle                        |
+
+## Errores e idempotencia
+
+El front muestra validaciones específicas de formulario; para fallos HTTP conserva el
+paso editable y usa un mensaje recuperable. Los códigos estables para diagnóstico son:
+
+| Área                | Códigos principales                               | Significado                                                                       |
+| ------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Interés             | `GEN_IP_00..11`                                   | request/oferta inválida, persona/producto/proceso, duplicado o inscripción previa |
+| Encuesta            | `GEN_OEI_*`, `INS_EI_*`                           | persona/documento, derecho, catálogos, condicionales, interés y finalización      |
+| Identidad           | `FILE_VAL_*`, `GEN_SDA_*`, `GEN_SFA_*`            | archivo vacío/tipo/tamaño, fecha o persona                                        |
+| Confirmación        | `INS_CPI_*`                                       | ofertas, encuesta, reglamento, identidad, vigencia y compatibilidad               |
+| Reactivación        | `INS_REA_00..02`                                  | request, pertenencia o inscripción no dada de baja                                |
+| Pago                | `INS_PAG_*`, `INS_PC_*`, `INS_MP_*`, `INS_UF_*`   | tipo, IDs, pertenencia, reserva repetida o banco                                  |
+| Detalle/integración | `INS_DET_*`, `API_*` y códigos del cliente remoto | estado no encontrado o fallo de Inscripciones y Pagos                             |
+
+Resumen operativo de reintentos:
+
+- encuesta e identidad son upserts y admiten repetir el mismo contenido;
+- interés y reserva Abitab/Paganza rechazan el duplicado con 409;
+- confirmación, reactivación, cuenta personal y generación de URL no envían una clave
+  de idempotencia: ante resultado incierto, releer estado antes de reintentar;
+- `sessionStorage` solo conserva contexto de navegación. El backend siempre revalida
+  pertenencia de IDs y no lo usa como autoridad.
+
+## Seguridad y datos sensibles
+
+- La persona siempre sale de la sesión autenticada; producto, proceso, oferta e
+  inscripción se validan contra Oracle antes de mutar o pagar.
+- Imágenes y documento viajan como bytes/base64 dentro de JSON. Se validan por
+  extensión, magic bytes y tamaño; no incluir ejemplos reales en este portal.
+- La URL externa solo se acepta si usa `http` o `https`, exige parámetros cifrados y
+  se envía por un formulario POST temporal en una pestaña nueva. El front nunca
+  desencripta el blob ni contiene la clave.
+- Este flujo no crea sesión Redis propia. La única persistencia del navegador es el
+  contexto efímero de retomar/reactivar en `sessionStorage`, validado por
+  producto/proceso y limitado a enteros positivos.
+
+## Evidencia automatizada
+
+- Frontend: <SourceLink repo="frontend" path="src/app/features/inscriptions/models/inscription-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/mi-inscripcion.spec.ts">dashboard/pagos pendientes</SourceLink>.
+- Backend: <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/EnrollmentUseCasesTests.cs">casos de uso</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/InitialSurveyServiceTests.cs">encuesta</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/IdentityDocumentServiceTests.cs">identidad</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/InscripcionDetalleContractTests.cs">detalle</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/EnrollmentsAndPaymentsWireContractTests.cs">contrato remoto</SourceLink>.
