@@ -24,4 +24,10 @@ public sealed class TivenosAltaInteresOperacion
         TipoProcesoLlamador = "Alta",
         Disparador = "ActualizarInteres",
     };
+
+    public static TivenosAltaInteresOperacion SiteRegistration() => new()
+    {
+        TipoProcesoLlamador = "Alta",
+        Disparador = "Registro",
+    };
 }

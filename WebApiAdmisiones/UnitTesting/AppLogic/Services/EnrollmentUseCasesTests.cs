@@ -76,6 +76,12 @@ namespace UnitTesting.AppLogic.Services
                     It.IsAny<int>()))
                 .Returns(true);
             _tivenosEnvioServiceMock
+                .Setup(s => s.EnqueueSiteRegistration(
+                    It.IsAny<IUnitOfWork>(),
+                    It.IsAny<DtoTivenosAltaInteresRequest>(),
+                    It.IsAny<int>()))
+                .Returns(true);
+            _tivenosEnvioServiceMock
                 .Setup(s => s.EnqueueHighSchoolDataCreation(
                     It.IsAny<IUnitOfWork>(),
                     It.IsAny<DtoTivenosBachilleratoRequest>(),
@@ -1414,6 +1420,17 @@ namespace UnitTesting.AppLogic.Services
                     r.Operacion.Disparador == "CreateProductInterest" &&
                     r.Operacion.OrigenLlamador == null),
                 It.IsAny<int>()), Times.Once);
+            // Primer ingreso de la persona a admisiones (sin fila en T_PERSONA_ADMITE): tambien va el registro.
+            _tivenosEnvioServiceMock.Verify(s => s.EnqueueSiteRegistration(
+                _uowMock.Object,
+                It.Is<DtoTivenosAltaInteresRequest>(r =>
+                    r.CodigoPersona == 123 &&
+                    r.IdProducto == 10 &&
+                    r.IdProceso == 20 &&
+                    r.Operacion.TipoProcesoLlamador == "Alta" &&
+                    r.Operacion.Disparador == "Registro" &&
+                    r.Operacion.OrigenLlamador == null),
+                It.IsAny<int>()), Times.Once);
             _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Never);
             _uowMock.Verify(u => u.Commit(), Times.Once);
@@ -1638,6 +1655,11 @@ namespace UnitTesting.AppLogic.Services
                     r.Operacion.Disparador == "ActualizarInteres" &&
                     r.Operacion.OrigenLlamador == null),
                 It.IsAny<int>()), Times.Once);
+            // La persona ya tenia FechaFrescoPersonaAdmite: no se le manda un registro duplicado.
+            _tivenosEnvioServiceMock.Verify(s => s.EnqueueSiteRegistration(
+                It.IsAny<IUnitOfWork>(),
+                It.IsAny<DtoTivenosAltaInteresRequest>(),
+                It.IsAny<int>()), Times.Never);
         }
 
         [Fact]

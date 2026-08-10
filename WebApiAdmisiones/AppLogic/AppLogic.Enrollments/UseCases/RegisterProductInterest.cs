@@ -3,6 +3,7 @@ using AppLogic.Enrollments.Constants;
 using AppLogic.Enrollments.Contracts;
 using AppLogic.Enrollments.Dtos;
 using AppLogic.Enrollments.Rules;
+using AppLogic.Integrations.Tivenos.Dtos;
 using AppLogic.Integrations.Tivenos.Interfaces;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
@@ -85,6 +86,10 @@ public class RegisterProductInterest(
     {
         var currentDate = DateTime.Now;
 
+        // Se lee antes de registrar: EnsurePersonAdmission crea la fila o completa la fecha,
+        // y despues ya no se puede distinguir el primer ingreso de la persona a admisiones.
+        var esPrimerIngreso = uow.PersonaAdmites.GetByKey(personId)?.FechaFrescoPersonaAdmite == null;
+
         uow.BeginTransaction();
         try
         {
@@ -104,6 +109,21 @@ public class RegisterProductInterest(
 
             if (result.Data != null)
             {
+                // El registro va primero para que Tivenos vea el alta de la persona antes del interes,
+                if (esPrimerIngreso)
+                {
+                    _tivenosQueue.EnqueueSiteRegistration(
+                        uow,
+                        new DtoTivenosAltaInteresRequest
+                        {
+                            CodigoPersona = personId,
+                            IdProducto = request.ProductId,
+                            IdProceso = request.AdmissionProcessId,
+                            Operacion = TivenosAltaInteresOperacion.SiteRegistration(),
+                        },
+                        _dbConnectionContext.NextId(DbConnectionContext.DbConnectionContextType.TO_TIVENOS));
+                }
+
                 _tivenosQueue.EnqueueProductInterestFromSiteSelection(
                     uow,
                     result.Data,

@@ -10,6 +10,11 @@ public interface ITivenosQueueService
         DtoTivenosAltaInteresRequest request,
         int idTivenos);
 
+    bool EnqueueSiteRegistration(
+        IUnitOfWork uow,
+        DtoTivenosAltaInteresRequest request,
+        int idTivenos);
+
     bool EnqueueHighSchoolDataCreation(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,
