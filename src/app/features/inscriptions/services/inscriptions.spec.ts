@@ -9,6 +9,7 @@ describe('Inscripciones', () => {
   let service: Inscripciones;
   let endpointMock: {
     confirmPreEnrollment: ReturnType<typeof vi.fn>;
+    reactivate: ReturnType<typeof vi.fn>;
     getDetail: ReturnType<typeof vi.fn>;
     getIdentityDocument: ReturnType<typeof vi.fn>;
     getIdentityPhoto: ReturnType<typeof vi.fn>;
@@ -28,6 +29,15 @@ describe('Inscripciones', () => {
           confirmada: true,
           fechaVencimientoPago: null,
           seniaInscripcion: null,
+          saldoCuenta: null,
+          resumen: null,
+        })
+      ),
+      reactivate: vi.fn().mockReturnValue(
+        of({
+          confirmada: false,
+          fechaVencimientoPago: null,
+          seniaInscripcion: 15500,
           saldoCuenta: null,
           resumen: null,
         })
@@ -215,6 +225,12 @@ describe('Inscripciones', () => {
     service.confirmPreEnrollment(payload).subscribe();
 
     expect(endpointMock.confirmPreEnrollment).toHaveBeenCalledWith(payload);
+  });
+
+  it('delegates inscription reactivation', () => {
+    service.reactivate([100, 101]).subscribe();
+
+    expect(endpointMock.reactivate).toHaveBeenCalledWith([100, 101]);
   });
 
   it('delegates payment', () => {

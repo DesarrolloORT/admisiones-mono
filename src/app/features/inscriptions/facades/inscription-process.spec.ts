@@ -71,6 +71,15 @@ describe('InscripcionProcessFacade', () => {
     });
   });
 
+  it('shows the reserva outcome without a payment method when the pending deposit is 0', () => {
+    const { payment, process } = createFacade(retomar(createZeroDepositPendingDetail()), FRESH);
+
+    TestBed.tick();
+
+    expect(process.flow.currentStep()).toBe('pago');
+    expect(payment.outcome()).toBe('reserva');
+  });
+
   it('shows the terminal success outcome with a confirmed detail', () => {
     const { payment, process } = createFacade(retomar(createConfirmedDetail()), FRESH);
 
@@ -608,6 +617,13 @@ function createPendingPaymentDetail(): InscripcionDetail {
     },
     seniaMinima: null,
     confirmada: null,
+  };
+}
+
+function createZeroDepositPendingDetail(): InscripcionDetail {
+  return {
+    ...createPendingPaymentDetail(),
+    pagoPendiente: { ...createPendingPaymentDetail().pagoPendiente!, senia: 0 },
   };
 }
 

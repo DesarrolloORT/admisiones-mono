@@ -21,13 +21,22 @@ export function buildSummaryItems(context: {
   startOptions: readonly OpcionInscripcion[];
   turnoOptions: readonly OpcionInscripcion[];
   isProfessionalUpdate: boolean;
+  seminarios: readonly ItemSeminarioResumen[];
 }): ItemResumenInscripcion[] {
   const carreraValue =
     context.response?.resumen?.carrera ??
     getOptionLabel(context.careerOptions, context.selectedCareer, 'Sin seleccionar');
 
   if (context.isProfessionalUpdate) {
-    return [{ icon: 'school', label: 'Programa', value: carreraValue }];
+    const programa = { icon: 'school', label: 'Programa', value: carreraValue };
+    // Un solo seminario: se lee como los niveles 1/2, con su comienzo como fila del
+    // resumen en lugar del bloque "Seminarios" (mismo criterio que DashboardCard).
+    if (context.seminarios.length !== 1) return [programa];
+
+    return [
+      programa,
+      { icon: 'calendar_today', label: 'Comienzo', value: context.seminarios[0].comienzo },
+    ];
   }
 
   return [
@@ -63,7 +72,7 @@ export function buildSeminariosSummary(
 }
 
 export function formatInscriptionAmount(value: number | null | undefined): string {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 'No informado';
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '';
 
   return `$ ${new Intl.NumberFormat('es-UY', { maximumFractionDigits: 0 }).format(value)}`;
 }
@@ -92,6 +101,9 @@ export function formatPaymentDeadline(value: string | null | undefined): string 
 const RESERVATION_HELP =
   'El pago puede demorar hasta 24 horas hábiles en acreditarse en el sistema.';
 
+const ZERO_DEPOSIT_CONTACT_MESSAGE =
+  'Para continuar el proceso de inscripciones debe comunicarse con la oficina de Admisiones.';
+
 // Las instrucciones se arman con la fecha, el monto, la cédula y el número de
 // estudiante (código de persona) reales que informa el backend. Los ítems sin
 // dato real no se muestran (nunca se inventa un placeholder).
@@ -100,6 +112,18 @@ export function buildReservationInstructions(
   response: InscripcionPreEnrollmentResponse | null,
   reservation: InscripcionReservationData | null
 ): InstruccionReserva {
+  // Seña 0: no hay nada que cobrar, así que no corresponde pedir medio de pago ni
+  // mostrar fecha límite/monto/cédula. El proceso queda en manos de la oficina.
+  if (response?.seniaInscripcion === 0) {
+    return {
+      title: '¡Inscripción reservada!',
+      description: ZERO_DEPOSIT_CONTACT_MESSAGE,
+      intro: '',
+      items: [],
+      help: '',
+    };
+  }
+
   const deadline = formatPaymentDeadline(response?.fechaVencimientoPago);
   const description =
     deadline === 'No informado'
@@ -117,8 +141,9 @@ export function buildReservationInstructions(
   const studentItem: ItemInstruccionReserva[] = studentNumber
     ? [{ label: 'Número de estudiante', value: studentNumber }]
     : [];
-  const amountItem: ItemInstruccionReserva[] =
-    amount === 'No informado' ? [] : [{ label: 'Monto a pagar', value: amount }];
+  const amountItem: ItemInstruccionReserva[] = amount
+    ? [{ label: 'Monto a pagar', value: amount }]
+    : [];
 
   if (method === 'paganza') {
     return {

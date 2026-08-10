@@ -1,59 +1,100 @@
 import { inject } from '@angular/core';
 import { ParamMap, ResolveFn } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { ACADEMIC_PROPOSAL_TYPE_IDS } from '../../catalogs/models/academic-proposal';
+import type { Career } from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import type { InscripcionDetail } from '../models/inscription-detail';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
 import { InscriptionResumeContextStore } from '../services/inscription-resume-context';
 import { Inscripciones } from '../services/inscriptions';
 
-// Producto+proceso identifican la inscripción en la URL. Al continuar desde el panel,
-// las ofertas viajan en sessionStorage; los idOferta de URL quedan como compatibilidad.
+/**
+ * Lo que la URL pide, ya validado: empezar de cero, o entrar a UNA inscripción
+ * concreta (producto+proceso la identifican; `modo=reactivar` la distingue de retomar).
+ */
+type EntryRequest =
+  | { intent: 'nueva' }
+  | { intent: 'retomar' | 'reactivar'; idProducto: number; idProceso: number; idOfertas: number[] };
+
 export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = route => {
-  const intent = resolveEntryIntent(route.queryParamMap);
-  if (intent === 'nueva') return of({ intent });
+  const request = readEntryRequest(route.queryParamMap);
 
-  const idProducto = toPositiveInteger(route.queryParamMap.get('idProducto')) as number;
-  const idProceso = toPositiveInteger(route.queryParamMap.get('idProceso')) as number;
-  const urlOffers = toPositiveIntegers(route.queryParamMap.getAll('idOferta'));
-  const storedOffers = inject(InscriptionResumeContextStore).read(idProducto, idProceso)?.idOfertas;
-  const idOfertas = urlOffers.length ? urlOffers : (storedOffers ?? []);
-  const catalogs = inject(Catalogs);
+  // Sin inscripción identificada no hay nada que cargar: el flujo arranca virgen.
+  if (request.intent === 'nueva') return of({ intent: 'nueva' });
 
-  return forkJoin({
-    detail: inject(Inscripciones)
-      .getDetail(idProducto, idProceso)
-      .pipe(catchError(() => of(null))),
-    careers: forkJoin(
-      ACADEMIC_PROPOSAL_TYPE_IDS.map(proposalType => catalogs.getCareers(proposalType))
-    ).pipe(
-      map(groups => groups.flat()),
-      catchError(() => of([]))
-    ),
-  }).pipe(
-    map(({ detail, careers }) => ({
-      intent,
-      detail,
-      idProducto,
-      idProceso,
-      idOfertas,
-      // El Detalle es la fuente preferida del producto; con el Detalle caído, el param.
-      idNivelProducto:
-        careers.find(career => career.idProducto === (detail?.detalle?.idProducto ?? idProducto))
-          ?.idNivelProducto ?? null,
-    }))
+  const { intent, idProducto, idProceso } = request;
+  const resumeContext = inject(InscriptionResumeContextStore);
+
+  // 1. Ofertas: manda la URL (enlaces anteriores); si no viene, las del panel en sessionStorage.
+  const idOfertas = request.idOfertas.length
+    ? request.idOfertas
+    : (resumeContext.read(idProducto, idProceso)?.idOfertas ?? []);
+
+  // 2. Reactivar ya trae la inscripción que creó el POST; se consume una sola vez.
+  const preEnrollment =
+    intent === 'reactivar' ? resumeContext.takeReactivation(idProducto, idProceso) : null;
+
+  // 3. Las dos cargas son opcionales: degradan a null/[] para que el flujo abra igual.
+  const detail$ = preEnrollment ? of(null) : loadDetail(idProducto, idProceso);
+  const careers$ = loadCareers();
+
+  return forkJoin({ detail: detail$, careers: careers$ }).pipe(
+    map(({ detail, careers }) => {
+      const entry = {
+        detail,
+        idProducto,
+        idProceso,
+        idOfertas,
+        idNivelProducto: findProductLevel(careers, detail?.detalle?.idProducto ?? idProducto),
+      };
+
+      return intent === 'reactivar' ? { ...entry, intent, preEnrollment } : { ...entry, intent };
+    })
   );
 };
 
-// La intención es explícita: se decide solo con params válidos + `modo`. Función pura para poder testearla sin tocar el resolver.
-export function resolveEntryIntent(params: ParamMap): InscripcionEntryResolved['intent'] {
-  const hasOffering =
-    toPositiveInteger(params.get('idProducto')) !== null &&
-    toPositiveInteger(params.get('idProceso')) !== null;
-  if (!hasOffering) return 'nueva';
-  return params.get('modo') === 'reactivar' ? 'reactivar' : 'retomar';
+/**
+ * Traduce los query params a la intención de entrada. Pura y decidida solo con la URL:
+ * nunca se infiere del backend (sin eso, una encuesta en progreso precargaba el paso 1).
+ */
+export function readEntryRequest(params: ParamMap): EntryRequest {
+  const idProducto = toPositiveInteger(params.get('idProducto'));
+  const idProceso = toPositiveInteger(params.get('idProceso'));
+  if (idProducto === null || idProceso === null) return { intent: 'nueva' };
+
+  return {
+    intent: params.get('modo') === 'reactivar' ? 'reactivar' : 'retomar',
+    idProducto,
+    idProceso,
+    idOfertas: toPositiveIntegers(params.getAll('idOferta')),
+  };
+}
+
+export const resolveEntryIntent = (params: ParamMap): InscripcionEntryResolved['intent'] =>
+  readEntryRequest(params).intent;
+
+/** El Detalle es informativo: si falla, el paso 2 sigue con lo que aporta la URL. */
+function loadDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail | null> {
+  return inject(Inscripciones)
+    .getDetail(idProducto, idProceso)
+    .pipe(catchError(() => of(null)));
+}
+
+/** Carreras de todas las propuestas, solo para deducir el nivel del producto. */
+function loadCareers(): Observable<Career[]> {
+  const catalogs = inject(Catalogs);
+  return forkJoin(ACADEMIC_PROPOSAL_TYPE_IDS.map(type => catalogs.getCareers(type))).pipe(
+    map(groups => groups.flat()),
+    catchError(() => of([]))
+  );
+}
+
+/** El Detalle es la fuente preferida del producto; con el Detalle caído, el param. */
+function findProductLevel(careers: Career[], idProducto: number): number | null {
+  return careers.find(career => career.idProducto === idProducto)?.idNivelProducto ?? null;
 }
 
 function toPositiveInteger(value: string | null): number | null {
@@ -63,11 +104,5 @@ function toPositiveInteger(value: string | null): number | null {
 }
 
 function toPositiveIntegers(values: string[]): number[] {
-  return [
-    ...new Set(
-      values
-        .map(value => toPositiveInteger(value))
-        .filter((value): value is number => value !== null)
-    ),
-  ];
+  return [...new Set(values.map(toPositiveInteger).filter((id): id is number => id !== null))];
 }

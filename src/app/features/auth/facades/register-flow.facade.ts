@@ -1,8 +1,10 @@
 import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { AsyncValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import type { OrtPhoneInputValue } from '@desarrolloort/components';
+import { firstValueFrom, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import {
@@ -26,10 +28,12 @@ import {
   resolveRegisterFlow,
 } from '../models/register-flow';
 import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
+import { AccountService } from '../services/account';
 import { DocumentPrefillResult, DocumentPrefillService } from '../services/document-prefill';
 import { RegistrationService } from '../services/registration';
 
 export class RegisterFlowFacade {
+  private readonly account = inject(AccountService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly documentPrefill = inject(DocumentPrefillService);
   private readonly registration = inject(RegistrationService);
@@ -70,6 +74,8 @@ export class RegisterFlowFacade {
   });
 
   constructor() {
+    this.personalForm.controls.telefono1.addAsyncValidators(this.phoneValidator());
+
     effect(() => {
       syncDocumentNumberValidators(
         this.identityForm.controls.documentNumber,
@@ -253,6 +259,28 @@ export class RegisterFlowFacade {
       });
   }
 
+  private phoneValidator(): AsyncValidatorFn {
+    return control => {
+      const value = control.value as OrtPhoneInputValue | null;
+
+      if (!value?.number.trim()) {
+        return of(null);
+      }
+
+      return this.account
+        .validatePhone({
+          iso2: value.iso2 ?? null,
+          countryPrefix: null,
+          number: value.number.trim(),
+          numberE164: value.numberE164?.trim() || null,
+        })
+        .pipe(
+          map(isValid => (isValid ? null : { phone: true })),
+          catchError(() => of(null))
+        );
+    };
+  }
+
   private getCleanIdentityValues(): AuthIdentityData {
     const { documentType, documentNumber } = this.identityForm.getRawValue();
 
@@ -343,7 +371,7 @@ export class RegisterFlowFacade {
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {
     if (error.code === 'maxFileSize') {
-      return 'El archivo supera el límite de 10 MB.';
+      return 'El archivo supera el límite de 5 MB.';
     }
 
     if (error.code === 'invalidMimeType') {

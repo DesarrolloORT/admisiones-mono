@@ -373,7 +373,12 @@ export class InscripcionSurveyFacade {
   }
 
   public savePartial(): Observable<boolean> {
-    if (!this.hasInitialSurveyRight() || this.isProfessionalUpdate()) return of(true);
+    if (
+      !this.hasInitialSurveyRight() ||
+      this.isProfessionalUpdate() ||
+      this.process.preEnrollmentResponse() !== null
+    )
+      return of(true);
     return this.inscriptions.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
   }
 
@@ -425,6 +430,11 @@ export class InscripcionSurveyFacade {
         next: response => {
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('completa');
+          // Seña 0: no hay nada que pagar; la pantalla terminal explica cómo continuar.
+          if (response.seniaInscripcion === 0) {
+            this.payment.outcome.set('reserva');
+            return;
+          }
           if (confirmPayload.esInscripcionCorporativa) {
             this.payment.outcome.set('inscription-en-proceso');
             return;

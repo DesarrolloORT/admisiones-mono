@@ -23,6 +23,23 @@ const RESERVATION: InscripcionReservationData = {
   codigoPersona: 34692671,
 };
 
+const PROFESSIONAL_UPDATE_CONTEXT = {
+  response: {
+    confirmada: true,
+    fechaVencimientoPago: '2027-03-04',
+    seniaInscripcion: 15500,
+    saldoCuenta: 70000,
+    resumen: { carrera: 'Actualización en IA', comienzo: null, turno: null },
+  },
+  selectedCareer: '',
+  selectedStart: '',
+  selectedTurno: '',
+  careerOptions: [],
+  startOptions: [],
+  turnoOptions: [],
+  isProfessionalUpdate: true,
+};
+
 describe('inscription flow view', () => {
   it('uses backend summary values and formats payment data', () => {
     const items = buildSummaryItems({
@@ -40,6 +57,7 @@ describe('inscription flow view', () => {
       startOptions: [],
       turnoOptions: [],
       isProfessionalUpdate: false,
+      seminarios: [],
     });
 
     expect(items.map(item => item.label)).toEqual(['Carrera', 'Comienzo', 'Turno']);
@@ -50,21 +68,30 @@ describe('inscription flow view', () => {
 
   it('collapses the summary to a single Programa row for Actualización profesional', () => {
     const items = buildSummaryItems({
-      response: {
-        confirmada: true,
-        fechaVencimientoPago: '2027-03-04',
-        seniaInscripcion: 15500,
-        saldoCuenta: 70000,
-        resumen: { carrera: 'Actualización en IA', comienzo: null, turno: null },
-      },
-      selectedCareer: '',
-      selectedStart: '',
-      selectedTurno: '',
-      careerOptions: [],
-      startOptions: [],
-      turnoOptions: [],
-      isProfessionalUpdate: true,
+      ...PROFESSIONAL_UPDATE_CONTEXT,
+      seminarios: [
+        { idInscripcion: 1, nombre: 'Seminario A', comienzo: 'Marzo', turno: 'Noche' },
+        { idInscripcion: 2, nombre: 'Seminario B', comienzo: 'Abril', turno: 'Mañana' },
+      ],
     });
+
+    expect(items).toEqual([{ icon: 'school', label: 'Programa', value: 'Actualización en IA' }]);
+  });
+
+  it('adds the Comienzo row when Actualización profesional has a single seminario', () => {
+    const items = buildSummaryItems({
+      ...PROFESSIONAL_UPDATE_CONTEXT,
+      seminarios: [{ idInscripcion: 1, nombre: 'Seminario A', comienzo: 'Marzo', turno: 'Noche' }],
+    });
+
+    expect(items).toEqual([
+      { icon: 'school', label: 'Programa', value: 'Actualización en IA' },
+      { icon: 'calendar_today', label: 'Comienzo', value: 'Marzo' },
+    ]);
+  });
+
+  it('keeps the single Programa row when Actualización profesional has no seminarios', () => {
+    const items = buildSummaryItems({ ...PROFESSIONAL_UPDATE_CONTEXT, seminarios: [] });
 
     expect(items).toEqual([{ icon: 'school', label: 'Programa', value: 'Actualización en IA' }]);
   });
@@ -111,8 +138,9 @@ describe('inscription flow view', () => {
     expect(formatPaymentDeadline(null)).toBe('No informado');
     expect(formatPaymentDeadline('2027-02-30')).toBe('No informado');
     expect(formatPaymentDeadline('not-a-date')).toBe('No informado');
-    expect(formatInscriptionAmount(null)).toBe('No informado');
-    expect(formatInscriptionAmount(-1)).toBe('No informado');
+    expect(formatInscriptionAmount(null)).toBe('');
+    expect(formatInscriptionAmount(-1)).toBe('');
+    expect(formatInscriptionAmount(0)).toBe('$ 0');
   });
 
   it('builds abitab reservation instructions with the real backend data', () => {
@@ -139,6 +167,25 @@ describe('inscription flow view', () => {
     const instructions = buildReservationInstructions('abitab', PRE_ENROLLMENT, null);
 
     expect(instructions.items).toEqual([{ label: 'Monto a pagar', value: '$ 15.500' }]);
+  });
+
+  it('replaces payment instructions with the office contact message when the deposit is 0', () => {
+    const instructions = buildReservationInstructions(
+      'abitab',
+      {
+        ...PRE_ENROLLMENT,
+        seniaInscripcion: 0,
+      },
+      RESERVATION
+    );
+
+    expect(instructions.title).toBe('¡Inscripción reservada!');
+    expect(instructions.description).toBe(
+      'Para continuar el proceso de inscripciones debe comunicarse con la oficina de Admisiones.'
+    );
+    expect(instructions.intro).toBe('');
+    expect(instructions.items).toEqual([]);
+    expect(instructions.help).toBe('');
   });
 
   it('omits unknown reservation data instead of inventing it', () => {

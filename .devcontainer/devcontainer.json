@@ -24,7 +24,7 @@
   "forwardPorts": [4200],
   "appPort": ["4200:4200"],
   "postCreateCommand": "npm install",
-  "postStartCommand": "npm run start:dc",
+  "postStartCommand": "npm start -- desa --host=0.0.0.0 --disable-host-check",
   "customizations": {
     "codespaces": {
       "openFiles": ["README.md", "package.json"]

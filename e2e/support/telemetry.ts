@@ -6,7 +6,7 @@ export interface ObservedApiRequest {
   headers: Record<string, string>;
 }
 
-const API_PATH_PREFIXES = ['/Auth/', '/Catalogos/', '/Persona/', '/Registro/'];
+const API_PATH_PREFIXES = ['/auth/', '/catalogs/', '/person/', '/registration/'];
 
 export function createTelemetryTestRunId(testInfo: TestInfo, suffix = ''): string {
   const title = testInfo.titlePath

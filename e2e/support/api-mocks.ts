@@ -13,8 +13,8 @@ export interface MockApiOptions {
 }
 
 const authenticatedPerson = {
-  documento: '12345672',
-  primerNombre: 'Ana',
+  documentNumber: '12345672',
+  firstName: 'Ana',
 };
 
 export async function mockApi(page: Page, options: MockApiOptions = {}): Promise<void> {
@@ -47,13 +47,13 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillApiError(route, 'No se pudo completar el registro.');
     }
 
-    if (path === '/Auth/Login') {
+    if (path === '/auth/login') {
       return fulfillOperation(route, {
-        persona: authenticatedPerson,
+        person: authenticatedPerson,
       });
     }
 
-    if (path === '/Auth/ReenviarCodigo2FA') {
+    if (path === '/auth/resend-two-factor-code') {
       return fulfillOperation(route, {
         sessionId: 'mock-2fa-session',
         maskedEmail: 'a***@example.com',
@@ -62,50 +62,51 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (
-      path === '/Auth/ActivarLinkPassword' ||
-      path === '/Auth/CompletarPassword' ||
-      path === '/Auth/Logout' ||
-      path === '/Auth/RecuperarContraseña' ||
-      path === '/Persona/CambiarContraseña'
+      path === '/auth/activate-password-link' ||
+      path === '/auth/complete-initial-password' ||
+      path === '/auth/logout' ||
+      path === '/auth/recover-password' ||
+      path === '/person/change-password' ||
+      path === '/person/validate-phone-number'
     ) {
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Catalogos/PaisesEstadosCiudades') {
+    if (path === '/catalogs/countries-states-cities') {
       return fulfillOperation(route, countryLocations());
     }
-    if (path === '/Catalogos/Carreras') {
-      if (url.searchParams.get('propuestaAcademica') === '1') {
+    if (path === '/catalogs/degree-programs') {
+      if (url.searchParams.get('academicOffer') === '1') {
         return fulfillOperation(route, [
           {
-            idNivelProducto: 1,
-            nombreNivelProducto: 'Carrera universitaria',
-            escuelas: [
+            productLevelId: 1,
+            productLevelName: 'Carrera universitaria',
+            schools: [
               {
-                nombreEscuela: 'Facultad de Diseño',
-                productos: [{ idProducto: 20, nombreProducto: 'Licenciatura en Diseño Gráfico' }],
+                schoolName: 'Facultad de Diseño',
+                products: [{ productId: 20, productName: 'Licenciatura en Diseño Gráfico' }],
               },
             ],
           },
         ]);
       }
 
-      if (url.searchParams.get('propuestaAcademica') === '3') {
+      if (url.searchParams.get('academicOffer') === '3') {
         return fulfillOperation(route, [
           {
-            idNivelProducto: 3,
-            nombreNivelProducto: 'Actualización profesional',
-            escuelas: [
+            productLevelId: 3,
+            productLevelName: 'Actualización profesional',
+            schools: [
               {
-                nombreEscuela: 'Facultad de Administración',
-                seminarios: [
+                schoolName: 'Facultad de Administración',
+                seminars: [
                   {
-                    tieneSeminario: true,
-                    productos: [
+                    hasSeminar: true,
+                    products: [
                       {
-                        idProducto: 40,
-                        idProceso: 210,
-                        nombreProducto: 'Programa de Asesoramiento Financiero',
+                        productId: 40,
+                        admissionProcessId: 210,
+                        productName: 'Programa de Asesoramiento Financiero',
                       },
                     ],
                   },
@@ -119,76 +120,79 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, []);
     }
 
-    if (path === '/Catalogos/Comienzos') {
-      // El producto 40 (Actualización profesional) devuelve sus seminarios como
+    if (path === '/catalogs/intakes') {
+      // El producto 40 (Actualización profesional) devuelve sus seminars como
       // procesos; el resto conserva el comienzo único del flujo tradicional.
-      return fulfillOperation(route, [{ idProceso: 200, nombreProceso: 'Marzo 2027' }]);
+      return fulfillOperation(route, [
+        { admissionProcessId: 200, admissionProcessName: 'Marzo 2027' },
+      ]);
     }
 
-    if (path === '/Catalogos/Turnos') {
-      if (url.searchParams.get('idCarrera') === '40') {
+    if (path === '/catalogs/shifts') {
+      if (url.searchParams.get('degreeProgramId') === '40') {
         return fulfillOperation(route, [
           {
-            idOferta: 310,
-            descripcionOferta: 'Marco legal y tributario',
-            fechaReferencia: '2027-03-10',
-            horarioReferencia: '',
-            turno: { idTurno: 11, nombreTurno: 'Marco legal y tributario' },
+            offeringId: 310,
+            offeringDescription: 'Marco legal y tributario',
+            referenceDate: '2027-03-10',
+            referenceSchedule: '',
+            shift: { shiftId: 11, shiftName: 'Marco legal y tributario' },
           },
           {
-            idOferta: 311,
-            descripcionOferta: 'Renta fija y renta variable',
-            fechaReferencia: '2027-04-10',
-            horarioReferencia: '',
-            turno: { idTurno: 12, nombreTurno: 'Renta fija y renta variable' },
+            offeringId: 311,
+            offeringDescription: 'Renta fija y renta variable',
+            referenceDate: '2027-04-10',
+            referenceSchedule: '',
+            shift: { shiftId: 12, shiftName: 'Renta fija y renta variable' },
           },
         ]);
       }
       return fulfillOperation(route, [
         {
-          idOferta: 300,
-          horarioReferencia: '08:00 a 12:00',
-          turno: { idTurno: 10, nombreTurno: 'Matutino' },
+          offeringId: 300,
+          referenceSchedule: '08:00 a 12:00',
+          shift: { shiftId: 10, shiftName: 'Matutino' },
         },
       ]);
     }
 
-    if (path === '/Catalogos/EncuestaInicial') {
+    if (path === '/catalogs/initial-survey') {
       return fulfillOperation(route, initialSurveyCatalogs());
     }
 
-    if (path === '/Catalogos/Instituciones') {
-      return fulfillOperation(route, [
-        { codigoEmpresa: 500, nombre: 'Liceo Nº 1', codigoPais: 1, codigoEstado: 10 },
-      ]);
+    if (path === '/catalogs/institutions') {
+      return fulfillOperation(route, [{ id: 500, name: 'Liceo Nº 1' }]);
     }
 
-    if (path === '/Persona/SubirDocumento' || path === '/Persona/SubirFoto') {
+    if (
+      (path === '/person/identity-document' || path === '/person/photo') &&
+      request.method() === 'POST'
+    ) {
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Persona/Documento' && request.method() === 'GET') {
+    if (path === '/person/identity-document' && request.method() === 'GET') {
       return fulfillOperation(
         route,
         options.identityPreload === 'complete'
           ? {
-              frente: {
-                nombreArchivo: 'documento-frente.png',
-                archivo:
+              front: {
+                fileName: 'documento-frente.png',
+                content:
                   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
               },
-              dorso: {
-                nombreArchivo: 'documento-dorso.png',
-                archivo:
+              back: {
+                fileName: 'documento-dorso.png',
+                content:
                   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
               },
-              fechaVencimiento: '2030-02-04',
+              expirationDate: '2030-02-04',
             }
           : {}
       );
     }
 
-    if (path === '/Persona/Foto' && request.method() === 'GET') {
+    if (path === '/person/photo' && request.method() === 'GET') {
       return route.fulfill({
         contentType: 'image/png',
         headers: corsHeaders(route),
@@ -201,69 +205,70 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
             : Buffer.alloc(0),
       });
     }
-    if (path === '/Persona/DatosPersona' && request.method() === 'GET') {
+    if (path === '/person/details' && request.method() === 'GET') {
       return fulfillOperation(route, profileData());
     }
 
-    if (path === '/Persona/DatosPersona' && request.method() === 'PUT') {
+    if (path === '/person/details' && request.method() === 'PUT') {
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Persona/Inscripciones' && request.method() === 'GET') {
+    if (path === '/person/enrollments' && request.method() === 'GET') {
       return fulfillOperation(
         route,
         options.inscriptionDetail
           ? [
               {
-                idProducto: 20,
-                nombreExtensoProducto: 'Licenciatura en Diseño Gráfico',
-                idProceso: 200,
-                idNivelProducto: 1,
-                estadoInscripcion: 'Pago pendiente',
-                progConSeminariosProducto: 'N',
-                inscripciones: [
+                productId: 20,
+                productFullName: 'Licenciatura en Diseño Gráfico',
+                admissionProcessId: 200,
+                productLevelId: 1,
+                enrollmentStatus: 'Pago pendiente',
+                paymentDueDate: '2027-03-15',
+                hasSeminars: 'N',
+                enrollments: [
                   {
-                    idInscripto: 7001,
-                    idOferta: 300,
-                    descripcionOferta: 'Licenciatura en Diseño Gráfico',
-                    idTurno: 3,
-                    idComienzo: 2,
-                    fechaInicioComienzo: '2027-03-01',
-                    nombreComienzo: 'Marzo 2027',
-                    nombreTurno: 'Matutino',
-                    fechaReferencia: '2027-03-01',
+                    enrollmentId: 7001,
+                    offeringId: 300,
+                    offeringDescription: 'Licenciatura en Diseño Gráfico',
+                    shiftId: 3,
+                    intakeId: 2,
+                    intakeStartDate: '2027-03-01',
+                    intakeName: 'Marzo 2027',
+                    shiftName: 'Matutino',
+                    referenceDate: '2027-03-01',
                   },
                 ],
               },
               {
-                idProducto: 40,
-                nombreExtensoProducto: 'Programa de Asesoramiento Financiero',
-                idProceso: 210,
-                idNivelProducto: 3,
-                estadoInscripcion: 'En proceso',
-                progConSeminariosProducto: 'S',
-                inscripciones: [
+                productId: 40,
+                productFullName: 'Programa de Asesoramiento Financiero',
+                admissionProcessId: 210,
+                productLevelId: 3,
+                enrollmentStatus: 'En proceso',
+                hasSeminars: 'S',
+                enrollments: [
                   {
-                    idInscripto: 7010,
-                    idOferta: 310,
-                    descripcionOferta: 'Marco legal y tributario',
-                    idTurno: 11,
-                    idComienzo: 21,
-                    fechaInicioComienzo: '2027-03-10',
-                    nombreComienzo: 'Marzo 2027',
-                    nombreTurno: 'Matutino',
-                    fechaReferencia: '2027-03-10',
+                    enrollmentId: 7010,
+                    offeringId: 310,
+                    offeringDescription: 'Marco legal y tributario',
+                    shiftId: 11,
+                    intakeId: 21,
+                    intakeStartDate: '2027-03-10',
+                    intakeName: 'Marzo 2027',
+                    shiftName: 'Matutino',
+                    referenceDate: '2027-03-10',
                   },
                   {
-                    idInscripto: 7011,
-                    idOferta: 311,
-                    descripcionOferta: 'Renta fija y renta variable',
-                    idTurno: 12,
-                    idComienzo: 22,
-                    fechaInicioComienzo: '2027-04-10',
-                    nombreComienzo: 'Marzo 2027',
-                    nombreTurno: 'Nocturno',
-                    fechaReferencia: '2027-04-10',
+                    enrollmentId: 7011,
+                    offeringId: 311,
+                    offeringDescription: 'Renta fija y renta variable',
+                    shiftId: 12,
+                    intakeId: 22,
+                    intakeStartDate: '2027-04-10',
+                    intakeName: 'Marzo 2027',
+                    shiftName: 'Nocturno',
+                    referenceDate: '2027-04-10',
                   },
                 ],
               },
@@ -272,47 +277,43 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       );
     }
 
-    if (path === '/Persona/Becas' && request.method() === 'GET') {
+    if (path === '/person/scholarships' && request.method() === 'GET') {
       return fulfillOperation(route, []);
     }
 
-    if (path === '/Inscripciones/MisInscripciones') {
-      return fulfillOperation(route, []);
-    }
-
-    if (path === '/Inscripciones/InteresProducto') {
+    if (path === '/enrollments/product-interest') {
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Inscripciones/Detalle' && request.method() === 'GET') {
-      // Producto que el mock no conoce: el Detalle falla, como pasa con productos fuera
+    if (path === '/enrollments/details' && request.method() === 'GET') {
+      // Producto que el mock no conoce: el Detalle falla, como pasa con products fuera
       // del catálogo. Retomar tiene que aguantar igual (nunca paso 1).
-      if (!['20', '40'].includes(url.searchParams.get('idProducto') ?? '')) {
+      if (!['20', '40'].includes(url.searchParams.get('productId') ?? '')) {
         return fulfillApiError(route, 'No se encontró la inscripción.');
       }
 
-      // Actualización profesional en proceso: la cabecera no trae idComienzo/idTurno y
-      // las ofertas elegidas llegan en `detalle.intereses` (una por seminario).
-      if (url.searchParams.get('idProducto') === '40') {
+      // Actualización profesional en proceso: la cabecera no trae comienzo/turno y
+      // las ofertas elegidas llegan en `inProgress.interests` (una por seminario).
+      if (url.searchParams.get('productId') === '40') {
         return fulfillOperation(route, {
-          estado: 'En proceso',
-          detalle: {
-            resumen: { idProducto: 40, carrera: 'Programa de Asesoramiento Financiero' },
-            intereses:
+          status: 'En proceso',
+          inProgress: {
+            summary: { productId: 40, degreeProgram: 'Programa de Asesoramiento Financiero' },
+            interests:
               options.inscriptionDetail === 'offers-missing'
                 ? []
                 : [
                     {
-                      idOferta: 310,
-                      descripcionOferta: 'Marco legal y tributario',
-                      comienzo: 'Marzo 2027',
-                      turno: 'Matutino',
+                      offeringId: 310,
+                      offeringDescription: 'Marco legal y tributario',
+                      intake: 'Marzo 2027',
+                      shift: 'Matutino',
                     },
                     {
-                      idOferta: 311,
-                      descripcionOferta: 'Renta fija y renta variable',
-                      comienzo: 'Marzo 2027',
-                      turno: 'Nocturno',
+                      offeringId: 311,
+                      offeringDescription: 'Renta fija y renta variable',
+                      intake: 'Marzo 2027',
+                      shift: 'Nocturno',
                     },
                   ],
           },
@@ -320,73 +321,73 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       }
 
       return fulfillOperation(route, {
-        estado: 'Pago pendiente',
-        pagoPendiente: {
-          inscripciones: [
+        status: 'Pago pendiente',
+        pendingPayment: {
+          enrollments: [
             {
-              idInscripcion: 7001,
-              idOferta: 300,
-              comienzo: 'Marzo 2027',
-              turno: 'Matutino',
+              enrollmentId: 7001,
+              offeringId: 300,
+              intake: 'Marzo 2027',
+              shift: 'Matutino',
             },
           ],
-          pagoReserva: 15500,
-          resumen: {
-            idProducto: 20,
-            carrera: 'Licenciatura en Diseño Gráfico',
-            fechaVencimientoPago: '2027-03-04',
+          depositAmount: 15500,
+          summary: {
+            productId: 20,
+            degreeProgram: 'Licenciatura en Diseño Gráfico',
+            paymentDueDate: '2027-03-04',
           },
         },
-        reservaMinima: {
-          tipoPago: 'ABITAB',
-          cedula: '12345678',
-          codigoPersona: 7001,
-          pagoReserva: 15500,
+        minimumDeposit: {
+          paymentType: 'ABITAB',
+          documentNumber: '12345678',
+          personId: 7001,
+          depositAmount: 15500,
         },
       });
     }
 
-    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'GET') {
+    if (path === '/enrollments/initial-survey' && request.method() === 'GET') {
       return fulfillOperation(route, initialSurvey(options.initialSurvey ?? 'empty'));
     }
 
-    if (path === '/Inscripciones/EncuestaInicial' && request.method() === 'POST') {
+    if (path === '/enrollments/initial-survey' && request.method() === 'POST') {
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Inscripciones/Pagar') {
-      return fulfillOperation(route, { resultado: 'Confirmada' });
+    if (path === '/enrollments/start-payment') {
+      return fulfillOperation(route, { result: 'Confirmada' });
     }
 
-    if (path === '/Inscripciones/ConfirmarPreInscripcion') {
+    if (path === '/enrollments/confirm-pre-enrollment') {
       return fulfillOperation(route, {
-        confirmada: true,
-        pagoReserva: 15500,
-        estadoCuenta: { saldoActual: 20000 },
-        inscripciones: [
+        confirmed: true,
+        depositAmount: 15500,
+        currentAccount: { currentBalance: 20000 },
+        enrollments: [
           {
-            idInscripcion: 7001,
-            idOferta: 300,
-            comienzo: 'Marzo 2027',
-            turno: 'Matutino',
+            enrollmentId: 7001,
+            offeringId: 300,
+            intake: 'Marzo 2027',
+            shift: 'Matutino',
           },
         ],
-        resumen: {
-          idProducto: 20,
-          carrera: 'Licenciatura en Diseño Gráfico',
-          fechaVencimientoPago: '2027-03-04',
+        summary: {
+          productId: 20,
+          degreeProgram: 'Licenciatura en Diseño Gráfico',
+          paymentDueDate: '2027-03-04',
         },
       });
     }
 
-    if (path === '/Registro/EvaluarDocumento') {
+    if (path === '/registration/evaluate-document') {
       return fulfillRegisterEvaluation(route, registerScenario);
     }
 
     if (
-      path === '/Registro/VerificarIdentidad' ||
-      path === '/Registro/ConfirmarNuevaPersona' ||
-      path === '/Registro/ConfirmarSolicitudAlta'
+      path === '/registration/verify-identity' ||
+      path === '/registration/confirm-new-person' ||
+      path === '/registration/confirm-registration-request'
     ) {
       if (request.headers()['x-flow-id'] !== registerScenario.flowId) {
         const receivedFlowId = request.headers()['x-flow-id'] ?? '<missing>';
@@ -400,7 +401,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, true);
     }
 
-    if (path === '/Registro/AnalizarAdjunto') {
+    if (path === '/registration/analyze-attachment') {
       return fulfillOperation(route, {});
     }
 
@@ -410,11 +411,11 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
 function isApiPath(path: string): boolean {
   return (
-    path.startsWith('/Auth/') ||
-    path.startsWith('/Catalogos/') ||
-    path.startsWith('/Inscripciones/') ||
-    path.startsWith('/Persona/') ||
-    path.startsWith('/Registro/')
+    path.startsWith('/auth/') ||
+    path.startsWith('/catalogs/') ||
+    path.startsWith('/enrollments/') ||
+    path.startsWith('/person/') ||
+    path.startsWith('/registration/')
   );
 }
 
@@ -444,7 +445,14 @@ function fulfillRecaptchaScript(route: Route): Promise<void> {
 function fulfillRegisterEvaluation(route: Route, scenario: RegisterScenario): Promise<void> {
   return fulfillOperation(
     route,
-    { ...scenario.evaluation, flowId: scenario.flowId },
+    {
+      userAlreadyRegistered: scenario.evaluation.usuarioExistente,
+      requiresIdentityVerification: scenario.evaluation.requiereVerificacion,
+      requiresPersonRegistration: scenario.evaluation.requiereAltaPersona,
+      requiresRegistrationRequest: scenario.evaluation.requiereAltaSolicitud,
+      registrationRequestPending: scenario.evaluation.solicitudAltaExistente,
+      flowId: scenario.flowId,
+    },
     {
       message: scenario.terminalMessage ?? null,
     }
@@ -504,19 +512,19 @@ function corsHeaders(route: Route): Record<string, string> {
 function countryLocations(): unknown[] {
   return [
     {
-      codigoPais: 1,
-      nombre: 'Uruguay',
-      estado: [
+      countryId: 1,
+      name: 'Uruguay',
+      states: [
         {
-          codigoPais: 1,
-          codigoEstado: 10,
-          nombre: 'Montevideo',
-          ciudad: [
+          countryId: 1,
+          stateId: 10,
+          name: 'Montevideo',
+          cities: [
             {
-              codigoPais: 1,
-              codigoEstado: 10,
-              codigoCiudad: 100,
-              nombre: 'Montevideo',
+              countryId: 1,
+              stateId: 10,
+              cityId: 100,
+              name: 'Montevideo',
             },
           ],
         },
@@ -527,96 +535,92 @@ function countryLocations(): unknown[] {
 
 function profileData(): unknown {
   return {
-    tipoDocumento: 'CI',
-    documento: '12345672',
-    primerNombre: 'Gabriela',
-    segundoNombre: '',
-    primerApellido: 'Ortiz',
-    segundoApellido: 'Morales',
-    fechaNacimiento: '1988-05-31',
-    sexo: 'F',
-    codigoPais: 1,
-    codigoEstado: 10,
-    codigoCiudad: 100,
-    direccion: 'Av. 18 de Julio 1360',
-    telefono1: '99123456',
-    mail: 'gabrielaortiz@example.com',
-    verificacionMail: 'gabrielaortiz@example.com',
+    documentType: 'CI',
+    documentNumber: '12345672',
+    firstName: 'Gabriela',
+    middleName: '',
+    firstSurname: 'Ortiz',
+    secondSurname: 'Morales',
+    birthDate: '1988-05-31',
+    sex: 'F',
+    countryId: 1,
+    stateId: 10,
+    cityId: 100,
+    address: 'Av. 18 de Julio 1360',
+    primaryPhone: '99123456',
+    email: 'gabrielaortiz@example.com',
+    emailConfirmation: 'gabrielaortiz@example.com',
   };
 }
 
 function initialSurveyCatalogs(): unknown {
   return {
-    educacion: {
-      ubicacionesUltimoAnioSecundaria: [
+    education: {
+      lastSecondaryYearLocations: [
         { value: 1, label: 'Uruguay' },
         { value: 2, label: 'En el exterior' },
       ],
-      aniosBachillerato: [
+      highSchoolYears: [
         {
           value: 11,
           label: 'Durante secundaria',
-          orientaciones: [{ value: 12, label: 'Científico', orientacion: 'Matemática' }],
+          tracks: [{ value: 12, label: 'Científico', track: 'Matemática' }],
         },
       ],
-      estadosEducacionSuperiorPrevia: [{ value: 3, label: 'No cursé estudios superiores' }],
-      universidades: [],
-      nivelesFormacionTutores: [{ value: 5, label: 'Universitaria completa' }],
+      previousHigherEducationOptions: [{ value: 3, label: 'No cursé estudios superiores' }],
+      universities: [],
+      educationLevels: [{ value: 5, label: 'Universitaria completa' }],
     },
-    decisionAcademica: {
-      aniosEducacionMediaSuperior: [
+    academicDecision: {
+      upperSecondaryYears: [
         { value: 1, label: 'Durante secundaria' },
         { value: 2, label: '2º EMS (5º año)' },
       ],
-      apoyosDecision: [{ value: 1, label: 'Familia' }],
-      nivelesDecision: [{ value: 1, label: 'Decidido/a' }],
-      universidades: [],
-      motivosEleccionOrt: [{ value: 1, label: 'Propuesta académica' }],
+      decisionSupports: [{ value: 1, label: 'Familia' }],
+      decisionLevels: [{ value: 1, label: 'Decidido/a' }],
+      universities: [],
+      ortChoiceReasons: [{ value: 1, label: 'Propuesta académica' }],
     },
-    experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+    ortExperience: { ratings: [], ortAdvertisements: [] },
   };
 }
 
 function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unknown {
   if (kind === 'no-right') {
-    return { tieneDerechoEncuesta: false, encuesta: null };
+    return { canAnswerSurvey: false, survey: null };
   }
 
   if (kind === 'empty') {
-    return { tieneDerechoEncuesta: true, encuesta: null };
+    return { canAnswerSurvey: true, survey: null };
   }
 
-  const encuesta = {
-    idEncuestaIni: 1,
-    idProducto: 20,
-    idProceso: 200,
-    idTurno: 10,
-    estadoEncuestaIniAdmision: kind === 'complete' ? 'completa' : 'decision-academica',
-    fechaProcesadoEncuestaIni: kind === 'complete' ? '2027-02-01T00:00:00' : null,
-    ultimoanioSecundariaEncuestaIni: true,
-    codigoInstitucionBac: 1,
-    tieneEducacionSuperiorEncuestaIni: 'N',
-    instruccionMadreEncuestaIni: '4',
-    instruccionPadreEncuestaIni: '4',
+  const survey = {
+    surveyId: 1,
+    degreeProgramId: 20,
+    admissionProcessId: 200,
+    status: kind === 'complete' ? 'completa' : 'decision-academica',
+    currentlyInSecondary: true,
+    secondaryInstitutionId: 1,
+    previousHigherEducationId: 3,
+    motherEducationLevelId: 4,
+    fatherEducationLevelId: 4,
     ...(kind === 'complete'
       ? {
-          decisionCarreraEncuestaIni: '1',
-          decisionUniverEncuestaIni: '2-ems',
-          inforOtrasAntesEncuestaIni: 'S',
-          nivelDecisionEncuestaIni: true,
-          asesoramientoOrtEncuestaIni: 'S',
-          vistaSitioWebOrtEncuestaIni: 'S',
-          vistaInstalacionesOrtEncuestaIni: 'S',
-          publicidadOrtEncuestaIni: 'S',
+          careerDecisionYearId: 1,
+          ortDecisionYearId: 2,
+          researchedOtherUniversities: true,
+          decisionLevelId: 1,
+          hadOrtAdvisory: true,
+          visitedOrtWebsite: true,
+          visitedOrtFacilities: true,
+          recallsOrtAdvertising: true,
+          ortChoiceReasonIds: [1],
         }
       : {}),
-    producto: { idNivelProducto: 1 },
   };
 
   return {
-    tieneDerechoEncuesta: true,
-    encuesta,
-    opcionesMotivosSeleccionados:
-      kind === 'complete' ? [{ idMotivo: 1, nombreMotivo: 'Propuesta académica' }] : [],
+    canAnswerSurvey: true,
+    survey,
   };
 }

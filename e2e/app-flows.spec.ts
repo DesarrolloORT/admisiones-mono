@@ -13,8 +13,8 @@ test.describe('Base user flows', () => {
   test('logs in and reaches home @smoke @regression', async ({ page }) => {
     await mockApi(page, {
       delayMsByPath: {
-        '/Auth/Login': 500,
-        '/Persona/DatosPersona': 500,
+        '/auth/login': 500,
+        '/person/details': 500,
       },
     });
     const login = new LoginPage(page);
@@ -47,8 +47,8 @@ test.describe('Base user flows', () => {
   test('creates a password from a valid activation token @regression', async ({ page }) => {
     await mockApi(page, {
       delayMsByPath: {
-        '/Auth/CompletarPassword': 500,
-        '/Persona/DatosPersona': 500,
+        '/auth/complete-initial-password': 500,
+        '/person/details': 500,
       },
     });
     await page.goto('/crear-password?token=e2e-token');
@@ -69,8 +69,8 @@ test.describe('Base user flows', () => {
   test('updates personal data for an authenticated user @regression', async ({ page }) => {
     await mockApi(page, {
       delayMsByPath: {
-        '/Catalogos/PaisesEstadosCiudades': 500,
-        '/Persona/DatosPersona': 500,
+        '/catalogs/countries-states-cities': 500,
+        '/person/details': 500,
       },
     });
     await addAuthenticatedSession(page);

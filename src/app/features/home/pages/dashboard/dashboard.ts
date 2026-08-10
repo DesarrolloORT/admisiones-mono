@@ -10,18 +10,24 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { OrtAlertModule, OrtButton, OrtDialog, OrtIconModule } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
+import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
 import { DashboardActionCard } from '../../components/dashboard-action-card/dashboard-action-card';
 import { DashboardCareersSection } from '../../components/dashboard-careers-section/dashboard-careers-section';
 import { DashboardScholarshipsSection } from '../../components/dashboard-scholarships-section/dashboard-scholarships-section';
 import { ReviewScholarshipResult } from '../../components/review-scholarship-result/review-scholarship-result';
 import { MiBeca } from '../../models/mi-beca';
-import { MiInscripcion } from '../../models/mi-inscripcion';
+import {
+  buildPendingPaymentSummary,
+  MiInscripcion,
+  PENDING_PAYMENT_STATUS,
+} from '../../models/mi-inscripcion';
 
 @Component({
   selector: 'app-dashboard',
@@ -43,6 +49,8 @@ import { MiInscripcion } from '../../models/mi-inscripcion';
 export class Dashboard implements AfterViewInit, OnDestroy {
   private readonly authSession = inject(AuthSessionService);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly router = inject(Router);
+  private readonly resumeContext = inject(InscriptionResumeContextStore);
   private readonly swipers: Swiper[] = [];
 
   readonly inscripciones = input.required<MiInscripcion[]>();
@@ -53,7 +61,10 @@ export class Dashboard implements AfterViewInit, OnDestroy {
     return name ? `¡Hola ${name}!` : '¡Hola!';
   });
   protected readonly hasPendingPayment = computed(() =>
-    this.inscripciones().some(i => i.estado === 'Pago pendiente')
+    this.inscripciones().some(i => i.estado === PENDING_PAYMENT_STATUS)
+  );
+  protected readonly pendingPaymentSummary = computed(() =>
+    buildPendingPaymentSummary(this.inscripciones())
   );
 
   protected readonly singleRow = computed(
@@ -116,13 +127,11 @@ export class Dashboard implements AfterViewInit, OnDestroy {
     this.isDialogOpen.set(false);
   }
 
-  readonly showScholarshipResult = signal(false);
+  protected navigateToPendingPayment(): void {
+    const target = this.pendingPaymentSummary().target;
+    if (!target) return;
 
-  showScholarshipReview() {
-    this.showScholarshipResult.set(true);
-  }
-
-  closeReview() {
-    this.showScholarshipResult.set(false);
+    this.resumeContext.clear();
+    this.router.navigate(['/inscripciones'], { queryParams: target });
   }
 }

@@ -28,7 +28,7 @@ const protectedPages = [
 
 test.beforeEach(async ({ page }) => {
   // El retardo en Pagar permite observar la pantalla "Estamos procesando el pago".
-  await mockApi(page, { delayMsByPath: { '/Inscripciones/Pagar': 800 } });
+  await mockApi(page, { delayMsByPath: { '/enrollments/start-payment': 800 } });
 });
 
 test.describe('WCAG axe coverage @a11y', () => {

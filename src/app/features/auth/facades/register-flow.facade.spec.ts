@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../catalogs/services/catalogs';
+import { AccountService } from '../services/account';
 import { DocumentPrefillService } from '../services/document-prefill';
 import { RegistrationService } from '../services/registration';
 import { RegisterFlowFacade } from './register-flow.facade';
@@ -65,6 +66,10 @@ describe('RegisterFlowFacade', () => {
         {
           provide: DocumentPrefillService,
           useValue: { preload: vi.fn() },
+        },
+        {
+          provide: AccountService,
+          useValue: { validatePhone: vi.fn().mockReturnValue(of(true)) },
         },
         {
           provide: SnackbarHandler,

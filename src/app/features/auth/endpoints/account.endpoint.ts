@@ -3,11 +3,11 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  getPersonaDatosPersonaEndpoint,
-  postPersonaCambiarPasswordEndpoint,
-  postPersonaValidarTelefonoEndpoint,
-  putPersonaDatosPersonaEndpoint,
-} from 'src/app/shared/api/generated/endpoints/persona.endpoints';
+  getPersonDetailsEndpoint,
+  postPersonChangePasswordEndpoint,
+  postPersonValidatePhoneNumberEndpoint,
+  putPersonDetailsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
 export interface AccountPersonalData {
   documentType: string;
@@ -57,39 +57,39 @@ export class AccountEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getPersonalData(): Observable<AccountPersonalData> {
-    return this.api.request(getPersonaDatosPersonaEndpoint, { cache: false }).pipe(
+    return this.api.request(getPersonDetailsEndpoint, { cache: false }).pipe(
       map(data => ({
-        documentType: data.tipoDocumento ?? '',
-        documentNumber: data.documento ?? '',
-        firstName: data.primerNombre ?? '',
-        secondName: data.segundoNombre ?? '',
-        firstLastName: data.primerApellido ?? '',
-        secondLastName: data.segundoApellido ?? '',
-        birthDate: data.fechaNacimiento ?? '',
-        sex: data.sexo ?? '',
-        countryCode: data.codigoPais ?? null,
-        stateCode: data.codigoEstado ?? null,
-        cityCode: data.codigoCiudad ?? null,
-        address: data.direccion ?? '',
-        phone: data.telefono1 ?? '',
-        email: data.mail ?? '',
-        emailVerification: data.verificacionMail ?? data.mail ?? '',
-        identityRestricted: data.identidadRestringida ?? false,
+        documentType: data.documentType ?? '',
+        documentNumber: data.documentNumber ?? '',
+        firstName: data.firstName ?? '',
+        secondName: data.middleName ?? '',
+        firstLastName: data.firstSurname ?? '',
+        secondLastName: data.secondSurname ?? '',
+        birthDate: data.birthDate ?? '',
+        sex: data.sex ?? '',
+        countryCode: data.countryId ?? null,
+        stateCode: data.stateId ?? null,
+        cityCode: data.cityId ?? null,
+        address: data.address ?? '',
+        phone: data.primaryPhone ?? '',
+        email: data.email ?? '',
+        emailVerification: data.emailConfirmation ?? data.email ?? '',
+        identityRestricted: data.hasRestrictedIdentity ?? false,
       }))
     );
   }
 
   public updatePersonalData(payload: UpdateAccountPersonalDataPayload): Observable<boolean> {
     return this.api
-      .request(putPersonaDatosPersonaEndpoint, {
+      .request(putPersonDetailsEndpoint, {
         body: {
-          codigoPais: payload.countryCode,
-          codigoEstado: payload.stateCode,
-          codigoCiudad: payload.cityCode,
-          direccion: payload.address,
-          telefono1: payload.phone,
-          mail: payload.email,
-          verificacionMail: payload.emailVerification,
+          countryId: payload.countryCode,
+          stateId: payload.stateCode,
+          cityId: payload.cityCode,
+          address: payload.address,
+          primaryPhone: payload.phone,
+          email: payload.email,
+          emailConfirmation: payload.emailVerification,
         },
       })
       .pipe(map(result => result === true));
@@ -97,10 +97,10 @@ export class AccountEndpoint {
 
   public changePassword(payload: AccountChangePasswordPayload): Observable<void> {
     return this.api
-      .request(postPersonaCambiarPasswordEndpoint, {
+      .request(postPersonChangePasswordEndpoint, {
         body: {
-          passwordActual: payload.currentPassword,
-          passwordNueva: payload.password,
+          currentPassword: payload.currentPassword,
+          newPassword: payload.password,
         },
       })
       .pipe(map(() => undefined));
@@ -108,13 +108,13 @@ export class AccountEndpoint {
 
   public validatePhone(payload: AccountPhoneValidationPayload): Observable<boolean> {
     return this.api
-      .request(postPersonaValidarTelefonoEndpoint, {
-        queryParams: { telefono1: true },
+      .request(postPersonValidatePhoneNumberEndpoint, {
+        queryParams: { isPrimaryPhone: true },
         body: {
-          telefonoE164: payload.numberE164,
+          e164: payload.numberE164,
           iso2: payload.iso2,
-          caracteristicaPais: payload.countryPrefix ?? undefined,
-          telefonoSimple: payload.number,
+          countryCode: payload.countryPrefix ?? undefined,
+          nationalNumber: payload.number,
         },
       })
       .pipe(map(result => result === true));

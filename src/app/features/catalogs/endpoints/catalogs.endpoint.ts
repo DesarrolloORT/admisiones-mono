@@ -3,20 +3,20 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
-  getCatalogosBancosEndpoint,
-  getCatalogosCarrerasEndpoint,
-  getCatalogosComienzosEndpoint,
-  getCatalogosEncuestaInicialEndpoint,
-  getCatalogosInstitucionesEndpoint,
-  getCatalogosPaisesEstadosCiudadesEndpoint,
-  getCatalogosTurnosEndpoint,
-} from 'src/app/shared/api/generated/endpoints/catalogos.endpoints';
-import type { DtoAnioBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoAnioBachilleratoCatalogo';
-import type { DtoBachilleratoCatalogo } from 'src/app/shared/api/generated/models/dtoBachilleratoCatalogo';
-import type { DtoCarrerasPorNivelResponse } from 'src/app/shared/api/generated/models/dtoCarrerasPorNivelResponse';
-import type { DtoCiudadResponse } from 'src/app/shared/api/generated/models/dtoCiudadResponse';
-import type { DtoEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoEstadoCiudadResponse';
-import type { DtoPaisEstadoCiudadResponse } from 'src/app/shared/api/generated/models/dtoPaisEstadoCiudadResponse';
+  getCatalogsBanksEndpoint,
+  getCatalogsCountriesStatesCitiesEndpoint,
+  getCatalogsDegreeProgramsEndpoint,
+  getCatalogsInitialSurveyEndpoint,
+  getCatalogsInstitutionsEndpoint,
+  getCatalogsIntakesEndpoint,
+  getCatalogsShiftsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/catalogs.endpoints';
+import type { CityResponse } from 'src/app/shared/api/generated/models/cityResponse';
+import type { CountryStateCityResponse } from 'src/app/shared/api/generated/models/countryStateCityResponse';
+import type { DegreeProgramsByLevelResponse } from 'src/app/shared/api/generated/models/degreeProgramsByLevelResponse';
+import type { HighSchoolTrackCatalog } from 'src/app/shared/api/generated/models/highSchoolTrackCatalog';
+import type { HighSchoolYearCatalog } from 'src/app/shared/api/generated/models/highSchoolYearCatalog';
+import type { StateWithCitiesResponse } from 'src/app/shared/api/generated/models/stateWithCitiesResponse';
 
 import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
@@ -42,11 +42,11 @@ export class CatalogsEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getCountries(): Observable<Country[]> {
-    return this.api.request(getCatalogosPaisesEstadosCiudadesEndpoint).pipe(
+    return this.api.request(getCatalogsCountriesStatesCitiesEndpoint).pipe(
       map(data =>
         this.fromData(data, item => ({
-          id: item.codigoPais ?? 0,
-          label: item.nombre ?? '',
+          id: item.countryId ?? 0,
+          label: item.name ?? '',
         }))
       )
     );
@@ -54,67 +54,73 @@ export class CatalogsEndpoint {
 
   public getCountryLocations(): Observable<LocationCountry[]> {
     return this.api
-      .request(getCatalogosPaisesEstadosCiudadesEndpoint)
+      .request(getCatalogsCountriesStatesCitiesEndpoint)
       .pipe(map(data => this.fromData(data, item => this.toLocationCountry(item))));
   }
 
   public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
     return this.api
-      .request(getCatalogosCarrerasEndpoint, { queryParams: { propuestaAcademica } })
+      .request(getCatalogsDegreeProgramsEndpoint, {
+        queryParams: { academicOffer: propuestaAcademica },
+      })
       .pipe(map(data => this.fromData(data, nivel => this.toCareers(nivel)).flat()));
   }
 
   public getComienzos(idCarrera: number): Observable<Comienzo[]> {
-    return this.api.request(getCatalogosComienzosEndpoint, { queryParams: { idCarrera } }).pipe(
-      map(data =>
-        this.fromData(data, item => ({
-          idProceso: item.idProceso ?? 0,
-          nombreProceso: item.nombreProceso ?? '',
-        }))
-      )
-    );
+    return this.api
+      .request(getCatalogsIntakesEndpoint, {
+        queryParams: { degreeProgramId: idCarrera },
+      })
+      .pipe(
+        map(data =>
+          this.fromData(data, item => ({
+            idProceso: item.admissionProcessId ?? 0,
+            nombreProceso: item.admissionProcessName ?? '',
+          }))
+        )
+      );
   }
 
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
-    return this.api.request(getCatalogosEncuestaInicialEndpoint).pipe(
+    return this.api.request(getCatalogsInitialSurveyEndpoint).pipe(
       map(data => ({
         educacion: {
           ubicacionesUltimoAnioSecundaria: this.toCatalogItems(
-            data?.educacion?.ubicacionesUltimoAnioSecundaria
+            data?.education?.lastSecondaryYearLocations
           ),
-          aniosBachillerato: (data?.educacion?.aniosBachillerato ?? []).map(year =>
+          aniosBachillerato: (data?.education?.highSchoolYears ?? []).map(year =>
             this.toBaccalaureateYear(year)
           ),
           estadosEducacionSuperiorPrevia: this.toCatalogItems(
-            data?.educacion?.estadosEducacionSuperiorPrevia
+            data?.education?.previousHigherEducationOptions
           ),
-          universidades: this.toCatalogItems(data?.educacion?.universidades),
-          nivelesFormacionTutores: this.toCatalogItems(data?.educacion?.nivelesFormacionTutores),
+          universidades: this.toCatalogItems(data?.education?.universities),
+          nivelesFormacionTutores: this.toCatalogItems(data?.education?.educationLevels),
         },
         decisionAcademica: {
           aniosEducacionMediaSuperior: this.toCatalogItems(
-            data?.decisionAcademica?.aniosEducacionMediaSuperior
+            data?.academicDecision?.upperSecondaryYears
           ),
-          apoyosDecision: this.toCatalogItems(data?.decisionAcademica?.apoyosDecision),
-          nivelesDecision: this.toCatalogItems(data?.decisionAcademica?.nivelesDecision),
-          universidades: this.toCatalogItems(data?.decisionAcademica?.universidades),
-          motivosEleccionOrt: this.toCatalogItems(data?.decisionAcademica?.motivosEleccionOrt),
+          apoyosDecision: this.toCatalogItems(data?.academicDecision?.decisionSupports),
+          nivelesDecision: this.toCatalogItems(data?.academicDecision?.decisionLevels),
+          universidades: this.toCatalogItems(data?.academicDecision?.universities),
+          motivosEleccionOrt: this.toCatalogItems(data?.academicDecision?.ortChoiceReasons),
         },
         experienciaOrt: {
-          valoraciones: this.toCatalogItems(data?.experienciaOrt?.valoraciones),
-          publicidadesOrt: this.toCatalogItems(data?.experienciaOrt?.publicidadesOrt),
+          valoraciones: this.toCatalogItems(data?.ortExperience?.ratings),
+          publicidadesOrt: this.toCatalogItems(data?.ortExperience?.ortAdvertisements),
         },
       }))
     );
   }
 
   public getBancos(): Observable<Bank[]> {
-    return this.api.request(getCatalogosBancosEndpoint).pipe(
+    return this.api.request(getCatalogsBanksEndpoint).pipe(
       map(data =>
         this.fromData(data, banco => ({
-          id: banco.idBanco ?? 0,
-          label: banco.nombreBanco ?? '',
-          code: banco.idBancoSistarbanc ?? banco.codigoBanco?.toString() ?? null,
+          id: banco.id ?? 0,
+          label: banco.name ?? '',
+          code: banco.sistarbancBankId ?? banco.code?.toString() ?? null,
         }))
       )
     );
@@ -125,14 +131,16 @@ export class CatalogsEndpoint {
     codigoEstado: number
   ): Observable<EducationalInstitution[]> {
     return this.api
-      .request(getCatalogosInstitucionesEndpoint, { queryParams: { codigoPais, codigoEstado } })
+      .request(getCatalogsInstitutionsEndpoint, {
+        queryParams: { countryId: codigoPais, stateId: codigoEstado },
+      })
       .pipe(
         map(data =>
           this.fromData(data, item => ({
-            id: item.codigoEmpresa,
-            label: item.nombre,
-            codigoPais: item.codigoPais ?? null,
-            codigoEstado: item.codigoEstado ?? null,
+            id: item.id ?? 0,
+            label: item.name ?? '',
+            codigoPais,
+            codigoEstado,
           }))
         )
       );
@@ -140,16 +148,18 @@ export class CatalogsEndpoint {
 
   public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
     return this.api
-      .request(getCatalogosTurnosEndpoint, { queryParams: { idCarrera, idProceso } })
+      .request(getCatalogsShiftsEndpoint, {
+        queryParams: { degreeProgramId: idCarrera, admissionProcessId: idProceso },
+      })
       .pipe(
         map(data =>
           this.fromData(data, item => ({
-            idOferta: item.idOferta ?? 0,
-            idTurno: item.turno?.idTurno ?? 0,
-            nombreTurno: item.turno?.nombreTurno ?? '',
-            horarioReferencia: item.horarioReferencia ?? '',
-            descripcionOferta: item.descripcionOferta ?? '',
-            fechaReferencia: item.fechaReferencia ?? null,
+            idOferta: item.offeringId ?? 0,
+            idTurno: item.shift?.shiftId ?? 0,
+            nombreTurno: item.shift?.shiftName ?? '',
+            horarioReferencia: item.referenceSchedule ?? '',
+            descripcionOferta: item.offeringDescription ?? '',
+            fechaReferencia: item.referenceDate ?? null,
           }))
         )
       );
@@ -159,65 +169,65 @@ export class CatalogsEndpoint {
     this.api.clearCache();
   }
 
-  private toCareers(nivel: DtoCarrerasPorNivelResponse): Career[] {
-    return (nivel.escuelas ?? []).flatMap(escuela => {
-      const groups = escuela.seminarios?.length
-        ? escuela.seminarios
-        : [{ tieneSeminario: false, productos: escuela.productos }];
+  private toCareers(nivel: DegreeProgramsByLevelResponse): Career[] {
+    return (nivel.schools ?? []).flatMap(escuela => {
+      const groups = escuela.seminars?.length
+        ? escuela.seminars
+        : [{ hasSeminar: false, products: escuela.products }];
 
       return groups.flatMap(group =>
-        (group.productos ?? []).map(producto => ({
-          idProducto: producto.idProducto ?? 0,
-          idProceso: producto.idProceso ?? null,
-          idNivelProducto: nivel.idNivelProducto ?? 0,
-          nombreProducto: producto.nombreProducto ?? '',
-          nombreNivelProducto: nivel.nombreNivelProducto ?? '',
-          nombreEscuela: escuela.nombreEscuela ?? '',
-          tieneSeminario: group.tieneSeminario ?? false,
+        (group.products ?? []).map(producto => ({
+          idProducto: producto.productId ?? 0,
+          idProceso: producto.admissionProcessId ?? null,
+          idNivelProducto: nivel.productLevelId ?? 0,
+          nombreProducto: producto.productName ?? '',
+          nombreNivelProducto: nivel.productLevelName ?? '',
+          nombreEscuela: escuela.schoolName ?? '',
+          tieneSeminario: group.hasSeminar ?? false,
         }))
       );
     });
   }
 
-  private toLocationCountry(item: DtoPaisEstadoCiudadResponse): LocationCountry {
+  private toLocationCountry(item: CountryStateCityResponse): LocationCountry {
     return {
-      codigoPais: item.codigoPais ?? 0,
-      nombre: item.nombre ?? '',
-      estado: item.estado?.map(s => this.toLocationState(s)) ?? null,
+      codigoPais: item.countryId ?? 0,
+      nombre: item.name ?? '',
+      estado: item.states?.map(s => this.toLocationState(s)) ?? null,
     };
   }
 
-  private toLocationState(s: DtoEstadoCiudadResponse): LocationState {
+  private toLocationState(s: StateWithCitiesResponse): LocationState {
     return {
-      codigoPais: s.codigoPais ?? 0,
-      codigoEstado: s.codigoEstado ?? 0,
-      nombre: s.nombre ?? '',
-      ciudad: s.ciudad?.map(c => this.toLocationCity(c)) ?? null,
+      codigoPais: s.countryId ?? 0,
+      codigoEstado: s.stateId ?? 0,
+      nombre: s.name ?? '',
+      ciudad: s.cities?.map(c => this.toLocationCity(c)) ?? null,
     };
   }
 
-  private toLocationCity(c: DtoCiudadResponse): LocationCity {
+  private toLocationCity(c: CityResponse): LocationCity {
     return {
-      codigoPais: c.codigoPais ?? 0,
-      codigoEstado: c.codigoEstado ?? 0,
-      codigoCiudad: c.codigoCiudad ?? 0,
-      nombre: c.nombre ?? '',
+      codigoPais: c.countryId ?? 0,
+      codigoEstado: c.stateId ?? 0,
+      codigoCiudad: c.cityId ?? 0,
+      nombre: c.name ?? '',
     };
   }
 
-  private toBaccalaureateYear(year: DtoAnioBachilleratoCatalogo): BaccalaureateYearGroup {
+  private toBaccalaureateYear(year: HighSchoolYearCatalog): BaccalaureateYearGroup {
     return {
       id: year.value ?? 0,
       label: year.label ?? '',
-      baccalaureates: (year.orientaciones ?? []).map(item => this.toBaccalaureate(item)),
+      baccalaureates: (year.tracks ?? []).map(item => this.toBaccalaureate(item)),
     };
   }
 
-  private toBaccalaureate(item: DtoBachilleratoCatalogo): BaccalaureateOption {
+  private toBaccalaureate(item: HighSchoolTrackCatalog): BaccalaureateOption {
     return {
       id: item.value ?? 0,
       label: item.label ?? '',
-      orientation: item.orientacion ?? item.orientacionNueva ?? null,
+      orientation: item.track ?? item.newTrack ?? null,
     };
   }
 

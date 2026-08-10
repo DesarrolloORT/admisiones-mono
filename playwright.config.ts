@@ -25,7 +25,7 @@ export default defineConfig({
   },
   webServer: shouldStartLocalServer
     ? {
-        command: 'npm start',
+        command: 'npm start -- desa',
         reuseExistingServer: !process.env['CI'],
         timeout: 120_000,
         url: baseURL,

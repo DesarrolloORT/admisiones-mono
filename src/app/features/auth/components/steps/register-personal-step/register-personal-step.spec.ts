@@ -36,7 +36,7 @@ describe('RegisterPersonalStep', () => {
 
     const text = fixture.nativeElement.textContent as string;
 
-    expect(text).toContain('Confirmá tus datos');
+    expect(text).toContain('Necesitamos verificar tus datos');
     expect(text).toContain('Confirmar');
     expect(text).not.toContain('Crear cuenta');
     expect(text).not.toContain('Primer nombre');
