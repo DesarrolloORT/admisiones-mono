@@ -117,6 +117,7 @@ export class ScholarshipProposalFacade {
   private syncConditionalValidators(): void {
     this.setRequired(this.applicationModeControl, this.shouldShowApplicationMode());
     this.setRequired(this.evaluationDateControl, this.shouldShowEvaluationSection());
+    this.setRequired(this.selectionControl, this.academicStepData().length > 1);
   }
 
   private setRequired(control: FormControl<string | null>, required: boolean): void {
