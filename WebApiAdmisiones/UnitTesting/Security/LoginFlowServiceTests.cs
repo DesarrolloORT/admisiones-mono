@@ -120,11 +120,210 @@ namespace UnitTesting.Security
             return CreateService(out authenticateMock, out issueTokensMock, out dosFactoresMock, out _);
         }
 
+        [Fact]
+        public async Task EjecutarAsync_CuentaConRateLimitSuperado_Devuelve429ConHeaders()
+        {
+            var resetTime = DateTimeOffset.UtcNow.AddMinutes(15);
+            var sut = CreateService(out var authenticateMock, out _, out _, out var rateLimiterMock);
+            rateLimiterMock
+                .Setup(s => s.ValidateAsync(
+                    It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                    It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(new RateLimitValidationResult
+                {
+                    IsAllowed = false,
+                    RemainingAttempts = 0,
+                    ResetTime = resetTime,
+                    PartitionKey = "login:127.0.0.1:12345678"
+                });
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_RL_02", result.AuthResult.ErrorCode);
+            Assert.Equal(429, result.AuthResult.HttpCode);
+            Assert.NotNull(result.RateLimitHeaders);
+            Assert.Equal(5, result.RateLimitHeaders.Limit);
+            Assert.Equal(0, result.RateLimitHeaders.Remaining);
+            Assert.Equal(resetTime, result.RateLimitHeaders.ResetTime);
+            authenticateMock.Verify(
+                s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_BloqueoPorFallidosDelUsuario_Devuelve429SinConsultarLdap()
+        {
+            var sut = CreateService(out var authenticateMock, out _, out _, out var rateLimiterMock);
+            rateLimiterMock
+                .Setup(s => s.GetRemainingAsync(
+                    It.Is<string>(k => k.StartsWith("login-fail-cred-user:")), It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(0);
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_RL_03", result.AuthResult.ErrorCode);
+            Assert.Equal(429, result.AuthResult.HttpCode);
+            Assert.Contains("15 minutos", result.AuthResult.Message);
+            authenticateMock.Verify(
+                s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_BloqueoPorFallidosDeLaIp_Devuelve429SinConsultarLdap()
+        {
+            var sut = CreateService(out var authenticateMock, out _, out _, out var rateLimiterMock);
+            rateLimiterMock
+                .Setup(s => s.GetRemainingAsync(
+                    It.Is<string>(k => k.StartsWith("login-fail-cred-ip:")), It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(0);
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_RL_04", result.AuthResult.ErrorCode);
+            Assert.Equal(429, result.AuthResult.HttpCode);
+            authenticateMock.Verify(
+                s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_CredencialesInvalidas_CuentaElFallidoEnUsuarioYIp()
+        {
+            var sut = CreateService(out var authenticateMock, out var issueTokensMock, out _, out var rateLimiterMock);
+            authenticateMock
+                .Setup(s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<AuthenticatedPerson>.IsFailed(
+                    "AUTH_01", nameof(IAuthenticateWithLdap), "Credenciales inválidas.", 401, default!));
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_01", result.AuthResult.ErrorCode);
+            rateLimiterMock.Verify(
+                s => s.IsAllowedAsync(
+                    It.Is<string>(k => k.StartsWith("login-fail-cred-user:")), It.IsAny<int>(), It.IsAny<TimeSpan>()),
+                Times.Once);
+            rateLimiterMock.Verify(
+                s => s.IsAllowedAsync(
+                    It.Is<string>(k => k.StartsWith("login-fail-cred-ip:")), It.IsAny<int>(), It.IsAny<TimeSpan>()),
+                Times.Once);
+            rateLimiterMock.Verify(s => s.ClearAsync(It.IsAny<string>()), Times.Never);
+            issueTokensMock.Verify(s => s.ExecuteAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_LdapDevuelveExitoSinPersona_TrataComoFallo()
+        {
+            var sut = CreateService(out var authenticateMock, out var issueTokensMock, out _, out _);
+            authenticateMock
+                .Setup(s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<AuthenticatedPerson>.Ok(null!, nameof(IAuthenticateWithLdap)));
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.False(result.AuthResult!.Success);
+            issueTokensMock.Verify(s => s.ExecuteAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task EjecutarAsync_ScoreBajoSinEmail_Devuelve422SinIniciar2Fa(string? email)
+        {
+            var sut = CreateService(out var authenticateMock, out _, out var dosFactoresMock, out _);
+            authenticateMock
+                .Setup(s => s.ExecuteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<AuthenticatedPerson>.Ok(
+                    new AuthenticatedPerson { PersonId = 123, DocumentNumber = "12345678", Email = email },
+                    nameof(IAuthenticateWithLdap)));
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.4);
+
+            Assert.False(result.RequiresTwoFactor);
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_2FA_NO_EMAIL", result.AuthResult.ErrorCode);
+            Assert.Equal(422, result.AuthResult.HttpCode);
+            dosFactoresMock.Verify(
+                s => s.StartAsync(It.IsAny<AuthenticatedPerson>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_FallaElEnvioDel2Fa_PropagaElError()
+        {
+            var sut = CreateService(out _, out _, out var dosFactoresMock, out _);
+            dosFactoresMock
+                .Setup(s => s.StartAsync(It.IsAny<AuthenticatedPerson>(), It.IsAny<string>()))
+                .ReturnsAsync(OperationResult<TwoFactorRequiredResponse>.IsFailed(
+                    "AUTH_2FA_MAIL", nameof(ITwoFactorAuthService.StartAsync), "No se pudo enviar el código.", 502, default!));
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.4);
+
+            Assert.False(result.RequiresTwoFactor);
+            Assert.False(result.AuthResult!.Success);
+            Assert.Equal("AUTH_2FA_MAIL", result.AuthResult.ErrorCode);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_ConLoggingHabilitado_LogueaElLoginExitoso()
+        {
+            var sut = CreateService(out _, out _, out _, out _, VerboseLogger());
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.True(result.AuthResult!.Success);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_ConLoggingHabilitado_LogueaElInicioDel2Fa()
+        {
+            var sut = CreateService(out _, out _, out _, out _, VerboseLogger());
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.4);
+
+            Assert.True(result.RequiresTwoFactor);
+        }
+
+        [Fact]
+        public async Task EjecutarAsync_SinConfiguracionDeLimites_UsaLosValoresPorDefecto()
+        {
+            var rateLimiterMock = new Mock<IRateLimiterService>();
+            rateLimiterMock
+                .Setup(s => s.ValidateAsync(
+                    It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                    It.IsAny<int>(), It.IsAny<TimeSpan>()))
+                .ReturnsAsync(new RateLimitValidationResult
+                {
+                    IsAllowed = false,
+                    RemainingAttempts = 0,
+                    PartitionKey = "login:127.0.0.1:12345678"
+                });
+
+            var sut = new LoginFlowService(
+                Mock.Of<IAuthenticateWithLdap>(),
+                Mock.Of<IIssueTokensForPerson>(),
+                rateLimiterMock.Object,
+                Mock.Of<ITwoFactorAuthService>(),
+                new ConfigurationBuilder().Build(),
+                Mock.Of<ILogger<LoginFlowService>>());
+
+            var result = await sut.ExecuteAsync(CreateRequest(), "127.0.0.1", 0.9);
+
+            Assert.Equal("AUTH_RL_02", result.AuthResult!.ErrorCode);
+            Assert.Equal(5, result.RateLimitHeaders!.Limit);
+            rateLimiterMock.Verify(
+                s => s.ValidateAsync(
+                    "127.0.0.1", "CI", "12345678", 5, TimeSpan.FromMinutes(15)),
+                Times.Once);
+        }
+
         private static LoginFlowService CreateService(
             out Mock<IAuthenticateWithLdap> authenticateMock,
             out Mock<IIssueTokensForPerson> issueTokensMock,
             out Mock<ITwoFactorAuthService> dosFactoresMock,
-            out Mock<IRateLimiterService> rateLimiterMock)
+            out Mock<IRateLimiterService> rateLimiterMock,
+            ILogger<LoginFlowService>? logger = null)
         {
             Environment.SetEnvironmentVariable("RECAPTCHA_SCORE", "0.5");
 
@@ -199,7 +398,15 @@ namespace UnitTesting.Security
                 rateLimiterMock.Object,
                 dosFactoresMock.Object,
                 configuration,
-                Mock.Of<ILogger<LoginFlowService>>());
+                logger ?? Mock.Of<ILogger<LoginFlowService>>());
+        }
+
+        /// <summary>Logger que responde IsEnabled=true, para ejercitar los logs condicionales.</summary>
+        private static ILogger<LoginFlowService> VerboseLogger()
+        {
+            var mock = new Mock<ILogger<LoginFlowService>>();
+            mock.Setup(l => l.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+            return mock.Object;
         }
 
         private static AuthRequest CreateRequest() =>
