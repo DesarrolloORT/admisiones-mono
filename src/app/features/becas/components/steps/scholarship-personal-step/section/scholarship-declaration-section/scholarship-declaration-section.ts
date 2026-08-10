@@ -70,15 +70,7 @@ export class ScholarshipDeclarationSection {
   protected readonly vehicleOwnControl = this.declarationForm.controls.vehicleOwn;
   protected readonly vehicleModelControl = this.declarationForm.controls.vehicleModel;
   protected readonly vehicleYearControl = this.declarationForm.controls.vehicleYear;
-  protected readonly savingsAmountControl = this.declarationForm.controls.savingsAmount;
   protected readonly studyPlanControl = this.declarationForm.controls.studyPlan;
-  protected readonly housingExpensesControl = this.declarationForm.controls.housingExpenses;
-  protected readonly otherServicesExpensesControl =
-    this.declarationForm.controls.otherServicesExpenses;
-  protected readonly healthExpensesControl = this.declarationForm.controls.healthExpenses;
-  protected readonly personalExpensesControl = this.declarationForm.controls.personalExpenses;
-  protected readonly transportationExpensesControl =
-    this.declarationForm.controls.transportationExpenses;
   protected readonly observationsControl = this.declarationForm.controls.observations;
 
   protected readonly relationshipOptions: ResponsiveSelectOption[] = [

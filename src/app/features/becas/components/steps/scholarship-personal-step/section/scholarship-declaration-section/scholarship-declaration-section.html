@@ -64,8 +64,8 @@
           <ort-radio-group
             divider="true"
             formControlName="percibeIngresos"
-            legend="¿Percibe ingresos?"
             [indicatorPosition]="radioGroupIndicatorPosition()"
+            [legend]="index === 0 ? '¿Percibís ingresos?' : '¿Percibe ingresos?'"
             [name]="'percibeIngresos-' + member.controls.id.value"
             [orientation]="radioGroupOrientation()"
             [required]="true">
@@ -270,11 +270,8 @@
     <ort-form-field>
       <ort-label>Aportes o ahorros</ort-label>
       <span ortTextPrefix>$</span>
-      <input class="money-input" formControlName="savingsAmount" ortNumberInput required />
+      <input class="money-input" formControlName="savingsAmount" ortNumberInput />
     </ort-form-field>
-    @if (savingsAmountControl.invalid && (facade.submitted() || savingsAmountControl.touched)) {
-    <ort-error>Ingresá el monto de los ahorros</ort-error>
-    }
 
     <ort-form-field>
       <ort-label>¿Cómo piensas solventar tus estudios?</ort-label>
@@ -310,73 +307,45 @@
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>Vivienda</ort-label>
             <span ortTextPrefix>$</span>
-            <input class="money-input" formControlName="housingExpenses" ortNumberInput required />
+            <input class="money-input" formControlName="housingExpenses" ortNumberInput />
             <ort-hint>Cuota u alquiler, impuestos, servicios, etc.</ort-hint>
           </ort-form-field>
-          @if (housingExpensesControl.invalid && (facade.submitted() ||
-          housingExpensesControl.touched)) {
-          <ort-error>Ingresá un monto</ort-error>
-          }
         </div>
 
         <div>
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>Otros servicios</ort-label>
             <span ortTextPrefix>$</span>
-            <input
-              class="money-input"
-              formControlName="otherServicesExpenses"
-              ortNumberInput
-              required />
+            <input class="money-input" formControlName="otherServicesExpenses" ortNumberInput />
             <ort-hint>Suscripciones, telefonía móvil, etc.</ort-hint>
           </ort-form-field>
-          @if (otherServicesExpensesControl.invalid && (facade.submitted() ||
-          otherServicesExpensesControl.touched)) {
-          <ort-error>Ingresá un monto</ort-error>
-          }
         </div>
 
         <div>
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>Salud y bienestar</ort-label>
             <span ortTextPrefix>$</span>
-            <input class="money-input" formControlName="healthExpenses" ortNumberInput required />
+            <input class="money-input" formControlName="healthExpenses" ortNumberInput />
             <ort-hint>Mutualista, medicamentos, club, etc.</ort-hint>
           </ort-form-field>
-          @if (healthExpensesControl.invalid && (facade.submitted() ||
-          healthExpensesControl.touched)) {
-          <ort-error>Ingresá un monto</ort-error>
-          }
         </div>
 
         <div>
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>Gastos personales</ort-label>
             <span ortTextPrefix>$</span>
-            <input class="money-input" formControlName="personalExpenses" ortNumberInput required />
+            <input class="money-input" formControlName="personalExpenses" ortNumberInput />
             <ort-hint>Alimentación, vestimenta, etc.</ort-hint>
           </ort-form-field>
-          @if (personalExpensesControl.invalid && (facade.submitted() ||
-          personalExpensesControl.touched)) {
-          <ort-error>Ingresá un monto</ort-error>
-          }
         </div>
 
         <div>
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>Transporte</ort-label>
             <span ortTextPrefix>$</span>
-            <input
-              class="money-input"
-              formControlName="transportationExpenses"
-              ortNumberInput
-              required />
+            <input class="money-input" formControlName="transportationExpenses" ortNumberInput />
             <ort-hint>Boletos, combustible, peajes, etc.</ort-hint>
           </ort-form-field>
-          @if (transportationExpensesControl.invalid && (facade.submitted() ||
-          transportationExpensesControl.touched)) {
-          <ort-error>Ingresá un monto</ort-error>
-          }
         </div>
 
         @for (expense of expenses(); track expense.name) {
@@ -384,7 +353,7 @@
           <ort-form-field class="scholarship-form-field--auto">
             <ort-label>{{ expense.name }}</ort-label>
             <span ortTextPrefix>$</span>
-            <input class="money-input" ortNumberInput required [value]="expense.amount" />
+            <input class="money-input" ortNumberInput [value]="expense.amount" />
             <button
               aria-label="Eliminar gasto"
               class="delete-expense-button"
