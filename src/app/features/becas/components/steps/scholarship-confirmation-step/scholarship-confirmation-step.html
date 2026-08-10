@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
 @if (!showTermsAndConditions()) {
 <section aria-labelledby="scholarship-postulation-title" class="scholarship-screen">
   <header class="scholarship-screen__header">
@@ -47,7 +48,7 @@
               <span class="card-item__value">Fondo de Excelencia Académica</span>
               <span class="card-item__label">Hasta 35%</span>
               } @case('fbc'){
-              <span class="card-item__value">Fondo de becas concursables</span>
+              <span class="card-item__value">Fondo de Becas Concursables</span>
               } }
             </p>
           </div>
@@ -71,9 +72,9 @@
             <p class="card-item__text">
               <span class="card-item__label">Beca aplicada</span>
               @if (variant() === 'fbr') {
-              <span class="card-item__value">Fondo de becas de reválidas</span>
+              <span class="card-item__value">Fondo de Becas de Reválidas</span>
               }@else if (variant() === 'fcl') {
-              <span class="card-item__value">Fondo de beca de capacitación laboral</span>
+              <span class="card-item__value">Fondo de Becas de Capacitación Laboral</span>
               }
             </p>
           </div>
@@ -112,7 +113,7 @@
         Descargar material de estudio
       </button>
     </section>
-    }
+    } @if (variant() !== 'fcl') {
     <ort-snackbar
       class="scholarship-postulation-banner"
       message="Entrevista pendiente"
@@ -121,7 +122,7 @@
       variant="information"
       [autoDismiss]="false"
       [closeable]="false" />
-
+    }
     <section
       aria-labelledby="terms-and-conditions-section__title"
       class="terms-and-conditions-section">
