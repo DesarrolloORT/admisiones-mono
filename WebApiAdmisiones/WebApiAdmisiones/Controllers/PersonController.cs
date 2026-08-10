@@ -102,49 +102,6 @@ namespace WebApiAdmisiones.Controllers
         }
 
         /// <summary>
-        /// Obtiene las becas de la persona autenticada.
-        /// </summary>
-        /// <returns>Lista mock de becas para la vista del front.</returns>
-        /// <response code="200">Datos obtenidos correctamente.</response>
-        [HttpGet("scholarships")]
-        [ProducesResponseType(typeof(OperationResult<IEnumerable<ScholarshipSummary>>), 200)]
-        public IActionResult GetMyScholarships()
-        {
-            var scholarships = new List<ScholarshipSummary>
-            {
-                new()
-                {
-                    ScholarshipId = 1,
-                    ApplicationId = 1001,
-                    Name = "Fondo de Excelencia Academica",
-                    DegreeProgram = "Licenciatura en Diseño Grafico",
-                    Status = "En proceso",
-                    ApplicationCloseDate = new DateTime(2026, 5, 26, 0, 0, 0, DateTimeKind.Local),
-                    TestDate = new DateTime(2026, 6, 13, 0, 0, 0, DateTimeKind.Local),
-                    PrimaryAction = "Continuar postulación",
-                    CanContinueApplication = true,
-                    CanDownloadStudyMaterial = false
-                },
-                new()
-                {
-                    ScholarshipId = 2,
-                    ApplicationId = 1002,
-                    Name = "Fondo de Excelencia Academica",
-                    DegreeProgram = "Licenciatura en Diseño Grafico",
-                    TestDate = new DateTime(2026, 6, 13, 0, 0, 0, DateTimeKind.Local),
-                    ResultsDate = new DateTime(2025, 7, 24, 0, 0, 0, DateTimeKind.Local),
-                    PrimaryAction = "Descargar material de estudio",
-                    CanContinueApplication = false,
-                    CanDownloadStudyMaterial = true,
-                    StudyMaterialUrl = "#"
-                }
-            };
-
-            var result = OperationResult<IEnumerable<ScholarshipSummary>>.Ok(scholarships, nameof(GetMyScholarships));
-            return ValidateResponse(result);
-        }
-
-        /// <summary>
         /// Cambia la contraseña del usuario autenticado.
         /// </summary>
         /// <param name="request">Password actual y nueva password.</param>
