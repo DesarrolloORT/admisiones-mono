@@ -46,7 +46,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Sync environment from Azure App Configuration
-        run: npm run env:sync -- desa
+        run: npm run env -- desa
 
       - name: Download API contracts
         uses: actions/download-artifact@v8
