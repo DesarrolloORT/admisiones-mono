@@ -151,7 +151,7 @@ public class CatalogService(
         }
 
         return OperationResult<List<OfferingResponse>>.Ok(
-            offeringsResult.Data.Select(OfferingMapper.ToResponse).ToList(),
+            offeringsResult.Data!.Select(OfferingMapper.ToResponse).ToList(),
             nameof(GetShifts));
     }
 

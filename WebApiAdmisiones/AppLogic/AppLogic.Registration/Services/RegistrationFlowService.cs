@@ -7,6 +7,7 @@ using AppLogic.Registration.Dtos;
 using AppLogic.Registration.Constants;
 using AppLogic.Registration.Contracts;
 using AppLogic.Registration.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using AppLogic.Authentication.Security;
 using AppLogic.Platform.Serialization;
@@ -38,6 +39,9 @@ public class RegistrationFlowService : IRegistrationFlowService
 
     private static readonly JsonSerializerOptions JsonOptions = JsonSerializationDefaults.Redis;
 
+    [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "Orquesta el flujo de registro completo: validación, Redis, cache de imágenes y mail. " +
+                        "Las dependencias son las de los pasos del flujo, no acumulación accidental.")]
     public RegistrationFlowService(
         IValidateNewPerson validateNewPerson,
         ICompleteNewPerson completeNewPerson,
@@ -135,8 +139,8 @@ public class RegistrationFlowService : IRegistrationFlowService
 
     private async Task<OperationResult<RegistrationFlowResult>?> ValidateFlowDocumentResultAsync(
         string flowId,
-        string documentType,
-        string document,
+        string? documentType,
+        string? document,
         string originMethod)
     {
         var session = await GetFlowSessionAsync(flowId);
@@ -166,8 +170,8 @@ public class RegistrationFlowService : IRegistrationFlowService
 
     public async Task<OperationResult<object?>?> ValidateFlowDocumentAsync(
         string flowId,
-        string documentType,
-        string document,
+        string? documentType,
+        string? document,
         string originMethod)
     {
         var result = await ValidateFlowDocumentResultAsync(flowId, documentType, document, originMethod);
@@ -267,15 +271,15 @@ public class RegistrationFlowService : IRegistrationFlowService
     public Task DeletePendingPersonAsync(string flowId)
         => _pendingPersonaStore.DeleteAsync(flowId);
 
-    public Task<OperationResult<long>> CreatePersonFromPendingAsync(PendingPerson data, string passwordNueva)
-        => CompleteNewPersonAsync(data, passwordNueva);
+    public Task<OperationResult<long>> CreatePersonFromPendingAsync(PendingPerson data, string newPassword)
+        => CompleteNewPersonAsync(data, newPassword);
 
     private async Task<OperationResult<long>> CompleteNewPersonAsync(
         PendingPerson data,
-        string passwordNueva)
+        string newPassword)
     {
         var images = await GetTemporaryImagesAsync(data);
-        var result = await _completeNewPerson.ExecuteAsync(data, passwordNueva, images);
+        var result = await _completeNewPerson.ExecuteAsync(data, newPassword, images);
 
         if (result.Success)
         {

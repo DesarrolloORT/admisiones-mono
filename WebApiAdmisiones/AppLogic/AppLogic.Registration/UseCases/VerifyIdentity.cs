@@ -139,8 +139,8 @@ public class VerifyIdentity(
         if (_serviceScopeFactory != null)
         {
             using var scope = _serviceScopeFactory.CreateScope();
-            var passwordActivationService = scope.ServiceProvider.GetRequiredService<IPasswordActivationService>();
-            mail = await passwordActivationService.SendPasswordLinkMailAsync(person, MethodName);
+            var scopedPasswordActivationService = scope.ServiceProvider.GetRequiredService<IPasswordActivationService>();
+            mail = await scopedPasswordActivationService.SendPasswordLinkMailAsync(person, MethodName);
         }
         else
         {

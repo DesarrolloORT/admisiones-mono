@@ -8,16 +8,13 @@ namespace UnitTesting.AppLogic.Services
 {
     public class AdmissionDueDateCalculatorTests
     {
-        private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock;
         private readonly Mock<IUnitOfWork> _uowMock;
         private readonly AdmissionDueDateCalculator _service;
 
         public AdmissionDueDateCalculatorTests()
         {
-            _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
-            _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new AdmissionDueDateCalculator(_uowFactoryMock.Object);
+            _service = new AdmissionDueDateCalculator();
         }
 
         [Fact]

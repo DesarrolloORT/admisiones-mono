@@ -65,7 +65,7 @@ internal static class InitialSurveyChildRecords
         SaveInitialSurveyRequest request)
     {
         if (request.PreviousHigherEducationId is InitialSurveyState.EstadoEducacionSuperiorPrevia.Exterior
-            or InitialSurveyState.EstadoEducacionSuperiorPrevia.No)
+            or InitialSurveyState.EstadoEducacionSuperiorPrevia.Ninguna)
         {
             uow.EducacionSuperiorAdmisions.RemoveByPersona(personId);
             return;

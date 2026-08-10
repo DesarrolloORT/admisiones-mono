@@ -31,7 +31,7 @@ public class ReactivateEnrollment(
         // el UoW comparte un ModelContext scoped y disponerlo antes cambiaría el comportamiento.
         using var uow = _uowFactory.Create();
 
-        // Todo o nada: si una sola inscripcion no sirve no se reactiva ninguna.
+        // Atomico: si una sola inscripcion no sirve no se reactiva ninguna.
         var offeringIds = new List<long>();
         foreach (var enrollmentId in request.EnrollmentIds)
         {

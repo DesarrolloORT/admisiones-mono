@@ -45,7 +45,36 @@ internal static class InitialSurveyMapper
             survey.IdTurno = idTurno.Value;
     }
 
+    /// <summary>
+    /// Valor "SI"/"NO" que depende de un flag: si el flag está en false se limpia, y si está en true
+    /// solo se actualiza cuando el request trae dato nuevo (si no, conserva lo que ya tenía la encuesta).
+    /// </summary>
+    private static string? YesNoWhen(bool enabled, bool? newValue, string? current)
+    {
+        if (!enabled)
+            return null;
+
+        return newValue.HasValue ? InitialSurveyState.BoolToYesNo(newValue.Value) : current;
+    }
+
+    /// <summary>Misma regla que <see cref="YesNoWhen"/> para las valoraciones numéricas.</summary>
+    private static short? RatingWhen(bool enabled, long? newValue, short? current)
+    {
+        if (!enabled)
+            return null;
+
+        return newValue.HasValue ? (short)newValue.Value : current;
+    }
+
     internal static void ApplyEducation(IUnitOfWork uow, EncuestaIniAdmision survey, SaveInitialSurveyRequest request)
+    {
+        ApplySecondaryInstitution(survey, request);
+        ApplyHighSchoolProgress(uow, survey, request);
+        ApplyPreviousHigherEducation(survey, request);
+        ApplyParentsEducation(survey, request);
+    }
+
+    private static void ApplySecondaryInstitution(EncuestaIniAdmision survey, SaveInitialSurveyRequest request)
     {
         if (request.LastSecondaryYearLocationId.HasValue)
         {
@@ -61,7 +90,10 @@ internal static class InitialSurveyMapper
 
         if (request.SecondaryInstitutionName != null)
             survey.NombreInstSecEncuestaIni = InitialSurveyState.NormalizeText(request.SecondaryInstitutionName);
+    }
 
+    private static void ApplyHighSchoolProgress(IUnitOfWork uow, EncuestaIniAdmision survey, SaveInitialSurveyRequest request)
+    {
         if (request.CurrentlyInSecondary.HasValue)
             survey.CursaSecundariaActualmenteEncuestaIni = InitialSurveyState.BoolToYesNo(request.CurrentlyInSecondary.Value);
 
@@ -93,32 +125,40 @@ internal static class InitialSurveyMapper
                 ? request.HighSchoolYearRepeatCount?.ToString()
                 : null;
         }
+    }
 
-        if (request.PreviousHigherEducationId.HasValue)
+    private static void ApplyPreviousHigherEducation(EncuestaIniAdmision survey, SaveInitialSurveyRequest request)
+    {
+        if (!request.PreviousHigherEducationId.HasValue)
+            return;
+
+        survey.TieneEducacionSuperiorEncuestaIni = request.PreviousHigherEducationId.Value switch
         {
-            survey.TieneEducacionSuperiorEncuestaIni = request.PreviousHigherEducationId.Value switch
-            {
-                InitialSurveyState.EstadoEducacionSuperiorPrevia.Uruguay
-                    or InitialSurveyState.EstadoEducacionSuperiorPrevia.Exterior => SchemaConstants.BooleanFlag.Yes,
-                InitialSurveyState.EstadoEducacionSuperiorPrevia.No => SchemaConstants.BooleanFlag.No,
-                _ => survey.TieneEducacionSuperiorEncuestaIni
-            };
-        }
+            InitialSurveyState.EstadoEducacionSuperiorPrevia.Uruguay
+                or InitialSurveyState.EstadoEducacionSuperiorPrevia.Exterior => SchemaConstants.BooleanFlag.Yes,
+            InitialSurveyState.EstadoEducacionSuperiorPrevia.Ninguna => SchemaConstants.BooleanFlag.No,
+            _ => survey.TieneEducacionSuperiorEncuestaIni
+        };
+    }
 
+    private static void ApplyParentsEducation(EncuestaIniAdmision survey, SaveInitialSurveyRequest request)
+    {
         if (request.FatherEducationLevelId.HasValue)
         {
             survey.InstruccionPadreEncuestaIni = request.FatherEducationLevelId.Value.ToString();
-            survey.InstruccionPadreOrtEncuestaIni = InitialSurveyState.IsHigherEducationLevel(request.FatherEducationLevelId)
-                ? request.FatherIsOrtGraduate.HasValue ? InitialSurveyState.BoolToYesNo(request.FatherIsOrtGraduate.Value) : survey.InstruccionPadreOrtEncuestaIni
-                : null;
+            survey.InstruccionPadreOrtEncuestaIni = YesNoWhen(
+                InitialSurveyState.IsHigherEducationLevel(request.FatherEducationLevelId),
+                request.FatherIsOrtGraduate,
+                survey.InstruccionPadreOrtEncuestaIni);
         }
 
         if (request.MotherEducationLevelId.HasValue)
         {
             survey.InstruccionMadreEncuestaIni = request.MotherEducationLevelId.Value.ToString();
-            survey.InstruccionMadreOrtEncuestaIni = InitialSurveyState.IsHigherEducationLevel(request.MotherEducationLevelId)
-                ? request.MotherIsOrtGraduate.HasValue ? InitialSurveyState.BoolToYesNo(request.MotherIsOrtGraduate.Value) : survey.InstruccionMadreOrtEncuestaIni
-                : null;
+            survey.InstruccionMadreOrtEncuestaIni = YesNoWhen(
+                InitialSurveyState.IsHigherEducationLevel(request.MotherEducationLevelId),
+                request.MotherIsOrtGraduate,
+                survey.InstruccionMadreOrtEncuestaIni);
         }
     }
 
@@ -145,25 +185,28 @@ internal static class InitialSurveyMapper
         if (request.HadOrtAdvisory.HasValue)
         {
             survey.AsesoramientoOrtEncuestaIni = InitialSurveyState.BoolToYesNo(request.HadOrtAdvisory.Value);
-            survey.ValoracionAsesoramientoOrtEncuestaIni = request.HadOrtAdvisory.Value
-                ? request.OrtAdvisoryRatingId.HasValue ? (short)request.OrtAdvisoryRatingId.Value : survey.ValoracionAsesoramientoOrtEncuestaIni
-                : null;
+            survey.ValoracionAsesoramientoOrtEncuestaIni = RatingWhen(
+                request.HadOrtAdvisory.Value,
+                request.OrtAdvisoryRatingId,
+                survey.ValoracionAsesoramientoOrtEncuestaIni);
         }
 
         if (request.VisitedOrtWebsite.HasValue)
         {
             survey.VistaSitioWebOrtEncuestaIni = InitialSurveyState.BoolToYesNo(request.VisitedOrtWebsite.Value);
-            survey.ValoracionSitioWebOrtEncuestaIni = request.VisitedOrtWebsite.Value
-                ? request.OrtWebsiteRatingId.HasValue ? (short)request.OrtWebsiteRatingId.Value : survey.ValoracionSitioWebOrtEncuestaIni
-                : null;
+            survey.ValoracionSitioWebOrtEncuestaIni = RatingWhen(
+                request.VisitedOrtWebsite.Value,
+                request.OrtWebsiteRatingId,
+                survey.ValoracionSitioWebOrtEncuestaIni);
         }
 
         if (request.VisitedOrtFacilities.HasValue)
         {
             survey.VistaInstalacionesOrtEncuestaIni = InitialSurveyState.BoolToYesNo(request.VisitedOrtFacilities.Value);
-            survey.ValoracionInstalacionesOrtEncuestaIni = request.VisitedOrtFacilities.Value
-                ? request.OrtFacilitiesRatingId.HasValue ? (short)request.OrtFacilitiesRatingId.Value : survey.ValoracionInstalacionesOrtEncuestaIni
-                : null;
+            survey.ValoracionInstalacionesOrtEncuestaIni = RatingWhen(
+                request.VisitedOrtFacilities.Value,
+                request.OrtFacilitiesRatingId,
+                survey.ValoracionInstalacionesOrtEncuestaIni);
         }
 
         if (request.RecallsOrtAdvertising.HasValue)
@@ -232,7 +275,7 @@ internal static class InitialSurveyMapper
             true => tieneUniversidades
                 ? InitialSurveyState.EstadoEducacionSuperiorPrevia.Uruguay
                 : InitialSurveyState.EstadoEducacionSuperiorPrevia.Exterior,
-            false => InitialSurveyState.EstadoEducacionSuperiorPrevia.No,
+            false => InitialSurveyState.EstadoEducacionSuperiorPrevia.Ninguna,
             _ => null
         };
     }

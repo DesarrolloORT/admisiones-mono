@@ -67,19 +67,43 @@ public static class InitialSurveyCatalogValidation
         return InitialSurveyRejection.None;
     }
 
+    // Los grupos se evalúan en cadena y no en un array: cada uno consulta la base, así que el
+    // primer rechazo tiene que cortar antes de que los siguientes vayan a la DB.
     private static InitialSurveyRejection ValidateDynamicCatalogs(
         IUnitOfWork uow,
         SaveInitialSurveyRequest request)
     {
-        Producto? product = null;
-        if (request.DegreeProgramId.HasValue)
-        {
-            if (!uow.Productos.EsProductoValidoParaInteres(request.DegreeProgramId.Value))
-                return InitialSurveyRejection.InvalidProduct;
+        if (request.DegreeProgramId.HasValue
+            && !uow.Productos.EsProductoValidoParaInteres(request.DegreeProgramId.Value))
+            return InitialSurveyRejection.InvalidProduct;
 
-            product = uow.Productos.GetByKey(request.DegreeProgramId.Value);
-        }
+        var product = request.DegreeProgramId.HasValue
+            ? uow.Productos.GetByKey(request.DegreeProgramId.Value)
+            : null;
 
+        var rejection = ValidateAvailableProcess(uow, request);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        rejection = ValidateHighSchool(uow, request, product);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        rejection = ValidateSecondaryInstitution(uow, request);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        rejection = ValidateUniversities(uow, request);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        return ValidateMultiOptionCatalogs(uow, request);
+    }
+
+    private static InitialSurveyRejection ValidateAvailableProcess(
+        IUnitOfWork uow,
+        SaveInitialSurveyRequest request)
+    {
         var availableProcesses = uow.VdProcesosDisponibles1y2s;
         if (request.DegreeProgramId.HasValue
             && request.AdmissionProcessId.HasValue
@@ -89,38 +113,65 @@ public static class InitialSurveyCatalogValidation
             return InitialSurveyRejection.NoEnabledProcessForProduct;
         }
 
-        var aplicaBachillerato = request.CurrentlyInSecondary != false;
-        if (aplicaBachillerato && request.HighSchoolYear.HasValue && ResolveHighSchoolYear(uow, request.HighSchoolYear.Value) == null)
+        return InitialSurveyRejection.None;
+    }
+
+    private static InitialSurveyRejection ValidateHighSchool(
+        IUnitOfWork uow,
+        SaveInitialSurveyRequest request,
+        Producto? product)
+    {
+        // Sin dato explícito de "cursa secundaria" se asume que el bachillerato aplica.
+        if (request.CurrentlyInSecondary == false)
+            return InitialSurveyRejection.None;
+
+        if (request.HighSchoolYear.HasValue && ResolveHighSchoolYear(uow, request.HighSchoolYear.Value) == null)
             return InitialSurveyRejection.InvalidHighSchoolYear;
 
-        if (aplicaBachillerato
-            && product?.IdNivelProducto == NivelProductoUniversitario
+        if (product?.IdNivelProducto == NivelProductoUniversitario
             && request.HighSchoolYear.HasValue
             && IsFourthHighSchoolYear(uow, request.HighSchoolYear.Value))
             return InitialSurveyRejection.UniversityRequiresFifthOrSixthYear;
 
-        if (aplicaBachillerato && request.HighSchoolTrackId.HasValue && !IsCatalogedTrack(uow, request.HighSchoolTrackId.Value))
+        if (request.HighSchoolTrackId.HasValue && !IsCatalogedTrack(uow, request.HighSchoolTrackId.Value))
             return InitialSurveyRejection.UncatalogedDegreeTitle;
 
-        if (request.LastSecondaryYearLocationId == InitialSurveyState.UbicacionUltimoAnioSecundaria.Uruguay)
-        {
-            if (request.SecondaryInstitutionId is <= 0)
-                return InitialSurveyRejection.InvalidSecondaryInstitutionId;
-            if (request.SecondaryInstitutionId.HasValue && uow.Empresas.GetByKey(request.SecondaryInstitutionId.Value) == null)
-                return InitialSurveyRejection.UnknownSecondaryInstitution;
-        }
+        return InitialSurveyRejection.None;
+    }
 
+    private static InitialSurveyRejection ValidateSecondaryInstitution(
+        IUnitOfWork uow,
+        SaveInitialSurveyRequest request)
+    {
+        if (request.LastSecondaryYearLocationId != InitialSurveyState.UbicacionUltimoAnioSecundaria.Uruguay)
+            return InitialSurveyRejection.None;
+
+        if (request.SecondaryInstitutionId is <= 0)
+            return InitialSurveyRejection.InvalidSecondaryInstitutionId;
+        if (request.SecondaryInstitutionId.HasValue && uow.Empresas.GetByKey(request.SecondaryInstitutionId.Value) == null)
+            return InitialSurveyRejection.UnknownSecondaryInstitution;
+
+        return InitialSurveyRejection.None;
+    }
+
+    private static InitialSurveyRejection ValidateUniversities(
+        IUnitOfWork uow,
+        SaveInitialSurveyRequest request)
+    {
         var companies = ValidateCompanies(uow, request.ConsideredUniversityIds, request.ConsideredUniversityOthers);
         if (companies != InitialSurveyRejection.None)
             return companies;
 
-        if (request.PreviousHigherEducationId == InitialSurveyState.EstadoEducacionSuperiorPrevia.Uruguay)
-        {
-            companies = ValidateCompanies(uow, request.HigherEducationUniversityIds, request.HigherEducationUniversityOthers);
-            if (companies != InitialSurveyRejection.None)
-                return companies;
-        }
+        if (request.PreviousHigherEducationId != InitialSurveyState.EstadoEducacionSuperiorPrevia.Uruguay)
+            return InitialSurveyRejection.None;
 
+        return ValidateCompanies(uow, request.HigherEducationUniversityIds, request.HigherEducationUniversityOthers);
+    }
+
+    private static InitialSurveyRejection ValidateMultiOptionCatalogs(
+        IUnitOfWork uow,
+        SaveInitialSurveyRequest request)
+    {
         if (request.OrtChoiceReasonIds is { Count: > 0 })
         {
             var reasons = uow.MotivoOpcionesAdmisions.GetAll();
@@ -141,6 +192,19 @@ public static class InitialSurveyCatalogValidation
     private static InitialSurveyRejection ValidateInternalConsistency(
         SaveInitialSurveyRequest request)
     {
+        var rejection = ValidateHigherEducationConsistency(request);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        rejection = ValidateRatingsConsistency(request);
+        if (rejection != InitialSurveyRejection.None)
+            return rejection;
+
+        return ValidateParentsConsistency(request);
+    }
+
+    private static InitialSurveyRejection ValidateHigherEducationConsistency(SaveInitialSurveyRequest request)
+    {
         if (request.RepeatsHighSchoolYear == true
             && (!request.HighSchoolYearRepeatCount.HasValue || request.HighSchoolYearRepeatCount.Value < 1))
             return InitialSurveyRejection.InvalidRepeatCount;
@@ -153,6 +217,11 @@ public static class InitialSurveyCatalogValidation
             && (request.HigherEducationUniversityIds?.Count > 0 || HasOthers(request.HigherEducationUniversityOthers)))
             return InitialSurveyRejection.InvalidSelectedUniversity;
 
+        return InitialSurveyRejection.None;
+    }
+
+    private static InitialSurveyRejection ValidateRatingsConsistency(SaveInitialSurveyRequest request)
+    {
         if (request.HadOrtAdvisory == true && !request.OrtAdvisoryRatingId.HasValue)
             return InitialSurveyRejection.AdvisoryRatingRequired;
         if (request.VisitedOrtWebsite == true && !request.OrtWebsiteRatingId.HasValue)
@@ -160,6 +229,11 @@ public static class InitialSurveyCatalogValidation
         if (request.VisitedOrtFacilities == true && !request.OrtFacilitiesRatingId.HasValue)
             return InitialSurveyRejection.FacilitiesRatingRequired;
 
+        return InitialSurveyRejection.None;
+    }
+
+    private static InitialSurveyRejection ValidateParentsConsistency(SaveInitialSurveyRequest request)
+    {
         if (InitialSurveyState.IsHigherEducationLevel(request.FatherEducationLevelId) && !request.FatherIsOrtGraduate.HasValue)
             return InitialSurveyRejection.FatherOrtGraduateRequired;
         if (InitialSurveyState.IsHigherEducationLevel(request.MotherEducationLevelId) && !request.MotherIsOrtGraduate.HasValue)

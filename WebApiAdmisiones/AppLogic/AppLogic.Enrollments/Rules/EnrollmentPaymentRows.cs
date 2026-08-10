@@ -10,9 +10,10 @@ namespace AppLogic.Enrollments.Rules;
 /// </summary>
 internal static class EnrollmentPaymentRows
 {
+    // IdInscripto es la clave de la vista: nunca viene null, el decimal? es ruido del mapeo Devart.
     internal static EnrollmentPaymentRow From(VdInscripcionesFresco1y2 fila) => new(
-        (long)fila.IdInscripto, (long?)fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, null);
+        (long)fila.IdInscripto!.Value, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, null);
 
     internal static EnrollmentPaymentRow From(VdInscripcionesFresco3y4 fila) => new(
-        (long)fila.IdInscripto, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, fila.DescripcionOferta);
+        (long)fila.IdInscripto!.Value, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, fila.DescripcionOferta);
 }

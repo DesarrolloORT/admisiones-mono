@@ -21,7 +21,7 @@ internal static class InitialSurveyState
     {
         internal const int Uruguay = 1;
         internal const int Exterior = 2;
-        internal const int No = 3;
+        internal const int Ninguna = 3;
     }
 
     /// <summary>
