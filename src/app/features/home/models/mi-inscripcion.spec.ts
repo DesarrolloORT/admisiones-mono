@@ -64,7 +64,7 @@ describe('buildPendingPaymentSummary', () => {
 
     expect(summary).toEqual({
       title: 'Inscripciones pendientes de pago.',
-      detail: 'Tus inscripciones pendientes de pago vencerán el 15/07/2026.',
+      detail: 'Las mismas vencerán el 15/07/2026.',
       navigable: false,
       target: null,
     });
@@ -78,7 +78,7 @@ describe('buildPendingPaymentSummary', () => {
 
     expect(summary).toEqual({
       title: 'Inscripciones pendientes de pago.',
-      detail: 'Tus inscripciones pendientes de pago vencerán los días 15/07/2026 y 20/07/2026.',
+      detail: 'Las mismas vencerán los días 15/07/2026 y 20/07/2026.',
       navigable: false,
       target: null,
     });
@@ -92,7 +92,7 @@ describe('buildPendingPaymentSummary', () => {
     ]);
 
     expect(summary.detail).toBe(
-      'Tus inscripciones pendientes de pago vencerán los días 15/07/2026, 20/07/2026 y 25/07/2026.'
+      'Las mismas vencerán los días 15/07/2026, 20/07/2026 y 25/07/2026.'
     );
     expect(summary.navigable).toBe(false);
   });
@@ -104,7 +104,7 @@ describe('buildPendingPaymentSummary', () => {
       createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-15' }),
     ]);
 
-    expect(summary.detail).toBe('Tus inscripciones pendientes de pago vencerán el 15/07/2026.');
+    expect(summary.detail).toBe('Las mismas vencerán el 15/07/2026.');
     expect(summary.navigable).toBe(false);
   });
 

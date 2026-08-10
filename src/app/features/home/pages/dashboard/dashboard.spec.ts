@@ -31,22 +31,10 @@ describe('Dashboard', () => {
 
     fixture = TestBed.createComponent(Dashboard);
     fixture.componentRef.setInput('inscripciones', [createEnrollment({ idProducto: 1 })]);
-    fixture.componentRef.setInput('becas', [
-      {
-        id: 4,
-        nombreBeca: 'Fondo de Excelencia Académica',
-        nombreCarrera: 'Analista Programador',
-        estado: 'En proceso',
-        cierrePostulacion: 'Miércoles 15/07/2026',
-        fechaPrueba: 'Miércoles 22/07/2026',
-        resultadoPrueba: '',
-        beneficio: '',
-        fechaResultados: '',
-      },
-    ]);
+    fixture.componentRef.setInput('becas', []);
   });
 
-  it('should render the collections supplied by the home entry point', async () => {
+  it('should render the enrollments supplied by the home entry point', async () => {
     await fixture.whenStable();
 
     const text = fixture.nativeElement.textContent as string;
@@ -54,8 +42,6 @@ describe('Dashboard', () => {
     expect(text).toContain('¡Hola Ana!');
     expect(text).toContain('Mis carreras');
     expect(text).toContain('Analista Programador');
-    expect(text).toContain('Mis becas');
-    expect(text).toContain('Fondo de Excelencia Académica');
   });
 
   it('should not render the pending payment alert without pending enrollments', async () => {

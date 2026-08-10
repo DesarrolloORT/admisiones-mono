@@ -286,14 +286,14 @@ El título va en plural apenas hay **más de una inscripción pendiente**, sin
 importar si comparten fecha. El detalle, en cambio, deduplica fechas repetidas
 (`Set`) y menciona cada fecha distinta una sola vez:
 
-| Inscripciones pendientes | Fechas distintas usables | Título                              | Detalle del alert                                                                 |
-| ------------------------ | ------------------------ | ----------------------------------- | --------------------------------------------------------------------------------- |
-| 1                        | 1                        | `Inscripción pendiente de pago.`    | `Realizá el pago antes del 15/07/2026.`                                           |
-| 1                        | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`    | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
-| 2+                       | 1 (misma fecha)          | `Inscripciones pendientes de pago.` | `Tus inscripciones pendientes de pago vencerán el 15/07/2026.`                    |
-| 2+                       | 2                        | `Inscripciones pendientes de pago.` | `Tus inscripciones pendientes de pago vencerán los días 15/07/2026 y 20/07/2026.` |
-| 2+                       | 3+                       | `Inscripciones pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`)                |
-| 2+                       | 0 (sin fecha informada)  | `Inscripciones pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)                        |
+| Inscripciones pendientes | Fechas distintas usables | Título                              | Detalle del alert                                                  |
+| ------------------------ | ------------------------ | ----------------------------------- | ------------------------------------------------------------------ |
+| 1                        | 1                        | `Inscripción pendiente de pago.`    | `Realizá el pago antes del 15/07/2026.`                            |
+| 1                        | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`    | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
+| 2+                       | 1 (misma fecha)          | `Inscripciones pendientes de pago.` | `Las mismas vencerán el 15/07/2026.`                               |
+| 2+                       | 2                        | `Inscripciones pendientes de pago.` | `Las mismas vencerán los días 15/07/2026 y 20/07/2026.`            |
+| 2+                       | 3+                       | `Inscripciones pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`) |
+| 2+                       | 0 (sin fecha informada)  | `Inscripciones pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
 
 La flecha del alert (`actionIcon`, evento `actionTriggered`) sólo se renderiza y
 navega a `/inscripciones?idProducto=&idProceso=` cuando hay **una única**
