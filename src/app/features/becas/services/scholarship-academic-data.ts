@@ -1,16 +1,16 @@
-import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
 
-import {
-  ScholarshipAcademicStepData,
-  ScholarshipEndpoint,
-} from '../endpoints/scholarship.endpoint';
+export interface ScholarshipAcademicStepData {
+  carrera: string;
+  comienzo: string;
+  turno: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ScholarshipAcademicData {
-  private readonly endpoint = inject(ScholarshipEndpoint);
-
+  // TODO: restore ScholarshipEndpoint call once scholarship.endpoint is reinstated.
   public getAcademicStepData(): Observable<ScholarshipAcademicStepData[]> {
-    return this.endpoint.getAcademicStepData();
+    return of([]);
   }
 }

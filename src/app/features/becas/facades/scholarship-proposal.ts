@@ -1,10 +1,12 @@
 import { computed, effect, inject, signal } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 
-import { ScholarshipAcademicStepData } from '../endpoints/scholarship.endpoint';
 import type { ScholarshipVariant } from '../models/scholarship-personal-forms';
 import { createSectionStatus, SectionStatus } from '../models/section-status';
-import { ScholarshipAcademicData } from '../services/scholarship-academic-data';
+import {
+  ScholarshipAcademicData,
+  ScholarshipAcademicStepData,
+} from '../services/scholarship-academic-data';
 import { ScholarshipFormsStore } from '../store/scholarship-forms';
 import { ScholarshipProcessFacade } from './scholarship-process';
 

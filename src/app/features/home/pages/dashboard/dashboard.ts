@@ -118,6 +118,7 @@ export class Dashboard implements AfterViewInit, OnDestroy {
   });
 
   readonly isDialogOpen = signal(false);
+  readonly showScholarshipResult = signal(false);
 
   openDialog() {
     this.isDialogOpen.set(true);
@@ -125,6 +126,14 @@ export class Dashboard implements AfterViewInit, OnDestroy {
 
   closeDialog() {
     this.isDialogOpen.set(false);
+  }
+
+  showScholarshipReview() {
+    this.showScholarshipResult.set(true);
+  }
+
+  closeReview() {
+    this.showScholarshipResult.set(false);
   }
 
   protected navigateToPendingPayment(): void {
