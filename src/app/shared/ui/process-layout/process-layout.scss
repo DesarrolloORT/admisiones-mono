@@ -255,10 +255,6 @@
   max-width: none;
 }
 
-.process-layout--desktop .process-layout__top {
-  position: static;
-}
-
 .process-layout--desktop .process-layout__body {
   display: grid;
   grid-template-columns: minmax(18rem, 22.375rem) minmax(0, 1fr);
@@ -278,7 +274,7 @@
 
 .process-layout--desktop .process-layout__rail-inner {
   position: sticky;
-  top: 0;
+  top: 5rem;
   display: grid;
   align-content: space-between;
   min-height: calc(100dvh - 5rem);
