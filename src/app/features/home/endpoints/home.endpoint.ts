@@ -39,6 +39,11 @@ export class HomeEndpoint {
 
   private toMisInscripcionesFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
     const items = group.enrollments ?? [];
+
+    if (items.length === 0) {
+      return [];
+    }
+
     const nombreProducto = group.productFullName ?? '';
     const estado = group.enrollmentStatus ?? '';
 
@@ -66,25 +71,6 @@ export class HomeEndpoint {
             nombreComienzo: item.intakeName ?? '',
             nombreTurno: item.shiftName ?? '',
           })),
-        },
-      ];
-    }
-
-    if (items.length === 0) {
-      return [
-        {
-          idInscripto: 0,
-          idOfertas: [],
-          idProducto: group.productId ?? 0,
-          idProceso: group.admissionProcessId ?? 0,
-          idComienzo: 0,
-          idTurno: 0,
-          nombreProducto,
-          nombreComienzo: '',
-          nombreTurno: '',
-          estado,
-          fechaVencimientoPago: readFechaVencimientoPago(group),
-          seminarios: [],
         },
       ];
     }

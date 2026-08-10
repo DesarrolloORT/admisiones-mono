@@ -51,7 +51,6 @@ export class DashboardQuickActions {
   readonly cardType = input<CardType>('careers');
   readonly idProducto = input<number | null>(null);
   readonly idProceso = input<number | null>(null);
-  readonly idInscripto = input<number | null>(null);
   readonly idInscripciones = input<readonly number[]>([]);
   readonly idOfertas = input<readonly number[]>([]);
   private readonly isReactivating = signal(false);
@@ -75,12 +74,13 @@ export class DashboardQuickActions {
       (this.idProducto() ?? 0) > 0 &&
       (this.idProceso() ?? 0) > 0
   );
+  // Actualización profesional (nivel 3/4) trae una anotación por seminario y todas se
+  // reactivan juntas; carrera simple trae una sola. La tarjeta ya manda el set completo.
   protected readonly reactivatesFlow = computed(
     () =>
       this.cardType() === 'careers' &&
       this.status() === 'Dada de baja' &&
-      Number.isSafeInteger(this.idInscripto()) &&
-      (this.idInscripto() ?? 0) > 0 &&
+      this.idInscripciones().length > 0 &&
       Number.isSafeInteger(this.idProducto()) &&
       (this.idProducto() ?? 0) > 0 &&
       Number.isSafeInteger(this.idProceso()) &&
@@ -88,10 +88,10 @@ export class DashboardQuickActions {
   );
 
   protected reactivate(): void {
-    const idInscripto = this.idInscripto();
-    if (this.isReactivating() || !idInscripto) return;
+    const idsInscripcion = positiveIds(this.idInscripciones());
+    if (this.isReactivating() || !idsInscripcion.length) return;
     this.isReactivating.set(true);
-    this.inscriptions.reactivate(idInscripto).subscribe({
+    this.inscriptions.reactivate(idsInscripcion).subscribe({
       next: response => {
         this.saveReactivationContext(response);
         this.router.navigate(['/inscripciones'], {

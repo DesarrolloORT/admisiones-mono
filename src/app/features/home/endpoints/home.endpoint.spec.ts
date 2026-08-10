@@ -211,7 +211,7 @@ describe('HomeEndpoint', () => {
     expect(result[0]?.fechaVencimientoPago).toBe('2026-07-18');
   });
 
-  it('should not explode when inscripciones is null or empty', async () => {
+  it('should ignore groups without enrollments', async () => {
     api.request.mockReturnValueOnce(
       of([
         {
@@ -235,7 +235,7 @@ describe('HomeEndpoint', () => {
 
     const result = await firstValueFrom(endpoint.getMisInscripciones());
 
-    expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
+    expect(result).toEqual([]);
   });
 
   it('should map Persona/Becas into dashboard cards', async () => {

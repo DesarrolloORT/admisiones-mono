@@ -103,7 +103,6 @@ describe('DashboardQuickActions', () => {
 
   it('reactivates a cancelled enrollment and navigates to resume it', async () => {
     const fixture = createComponent('Dada de baja');
-    fixture.componentRef.setInput('idInscripto', 100);
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
@@ -113,7 +112,7 @@ describe('DashboardQuickActions', () => {
     expect(button).not.toBeNull();
     button.click();
 
-    expect(inscriptions.reactivate).toHaveBeenCalledWith(100);
+    expect(inscriptions.reactivate).toHaveBeenCalledWith([100]);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
       queryParams: { idProducto: 20, idProceso: 200, modo: 'reactivar' },
     });
@@ -128,8 +127,18 @@ describe('DashboardQuickActions', () => {
     expect(store.takeReactivation(20, 200)).toBeNull();
   });
 
-  it('keeps Dada de baja inert without an idInscripto', async () => {
-    const fixture = createComponent('Dada de baja');
+  it('reactivates every enrollment of a cancelled professional update package', async () => {
+    const fixture = createComponent('Dada de baja', [310, 311], [7010, 7011]);
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    await fixture.whenStable();
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+
+    expect(inscriptions.reactivate).toHaveBeenCalledWith([7010, 7011]);
+  });
+
+  it('keeps Dada de baja inert without enrollment ids', async () => {
+    const fixture = createComponent('Dada de baja', [300], []);
 
     await fixture.whenStable();
 

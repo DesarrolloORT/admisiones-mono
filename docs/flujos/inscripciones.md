@@ -143,8 +143,10 @@ matriz es su lectura de negocio.
   del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`): el botón
-  del dashboard hace `POST /enrollments/reactivate`, que devuelve el mismo contrato
-  que `ConfirmarPreInscripcion`. El frontend conserva transitoriamente esa respuesta y
+  del dashboard hace `POST /enrollments/reactivate` con **todas** las anotaciones de
+  la tarjeta en `enrollmentIds` (una en niveles 1/2; una por seminario en los paquetes
+  de Actualización profesional, que se dan de baja y se reactivan en bloque), y
+  devuelve el mismo contrato que `ConfirmarPreInscripcion`. El frontend conserva transitoriamente esa respuesta y
   los IDs de las nuevas inscripciones: `enEspera` muestra la pantalla informativa,
   seña `0` muestra la reserva y el resto abre la selección de pago. El resolver no
   llama a `GET /enrollments/details` en esta navegación; si la respuesta ya no está
@@ -247,6 +249,10 @@ cada elemento trae `productId`, `productFullName`, `admissionProcessId`,
 `MiInscripcion`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
 (`src/app/features/catalogs/models/academic-proposal.ts`).
 
+Los grupos cuyo `enrollments[]` llega vacío o `null` no representan una
+inscripción y se omiten. Si no queda ninguna inscripción ni beca, la home muestra
+el estado inicial con las dos cards ilustradas.
+
 - **Niveles 1 y 2:** sin cambios funcionales. Una tarjeta por inscripción (un
   `MiInscripcion` por item de `inscripciones[]`), título = `nombreExtensoProducto`,
   fila "Comienzo" y el CTA por `estadoInscripcion` vía `DashboardQuickActions`.
@@ -305,8 +311,14 @@ nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
 `idInscripto`, `idComienzo`, `idTurno`, `nombreComienzo`, `nombreTurno` y
 `descripcionOferta` habían pasado al item interno (`inscripciones[]`) y
 resolvían a `undefined` → `0`/`''`. Efecto observable: el botón "Reactivar
-inscripción" quedaba inerte (`reactivatesFlow` exige `idInscripto > 0`) y la
-fila "Comienzo" salía vacía. Resuelto por el mapeo agrupado descrito arriba.
+inscripción" quedaba inerte y la fila "Comienzo" salía vacía. Resuelto por el
+mapeo agrupado descrito arriba.
+
+Un segundo drift dejó el mismo botón inerte después de ese arreglo: la tarjeta
+dejó de pasarle `idInscripto` a `DashboardQuickActions`, que era la condición de
+`reactivatesFlow`. Resuelto unificando la reactivación sobre `idInscripciones`
+(el set que la tarjeta ya calculaba), que además cubre los paquetes de
+Actualización profesional con más de una anotación.
 
 ### Paso 1 AP: Programa + Seminarios
 

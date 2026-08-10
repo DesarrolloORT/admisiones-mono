@@ -174,6 +174,9 @@ y las comparaciones para personas existentes en
 | `user-exists`                    | Acción para login                                                             | No permite confirmar              | No se llama a confirmación                                                                          |
 | `application-exists`             | Mensaje de solicitud pendiente                                                | No permite confirmar              | No se vuelve a crear la solicitud; el `flowId` recibido no se usa                                   |
 
+El frontend envía el teléfono principal en formato internacional E.164, incluido
+el prefijo de país (por ejemplo, `+59892123456`).
+
 `EvaluarDocumento`, `VerificarIdentidad`, `AnalizarAdjunto`,
 `ConfirmarNuevaPersona` y `ConfirmarSolicitudAlta` son públicos y están
 protegidos por captcha. La sesión, el captcha y la cookie de activación son

@@ -85,8 +85,8 @@ export class Inscripciones {
     return this.endpoint.confirmPreEnrollment(payload);
   }
 
-  public reactivate(idInscripcion: number): Observable<InscripcionPreEnrollmentResponse> {
-    return this.endpoint.reactivate(idInscripcion);
+  public reactivate(idsInscripcion: number[]): Observable<InscripcionPreEnrollmentResponse> {
+    return this.endpoint.reactivate(idsInscripcion);
   }
 
   public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {

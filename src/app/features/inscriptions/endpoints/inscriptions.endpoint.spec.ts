@@ -554,7 +554,7 @@ describe('InscripcionesEndpoint', () => {
       })
     );
 
-    await expect(firstValueFrom(endpoint.reactivate(100))).resolves.toEqual({
+    await expect(firstValueFrom(endpoint.reactivate([100, 101]))).resolves.toEqual({
       confirmada: false,
       enEspera: false,
       idInscripcion: 1072704,
@@ -577,7 +577,7 @@ describe('InscripcionesEndpoint', () => {
       ],
     });
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsReactivateEndpoint, {
-      body: { enrollmentIds: [100] },
+      body: { enrollmentIds: [100, 101] },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -743,7 +743,7 @@ describe('InscripcionesEndpoint', () => {
           esInscripcionCorporativa: false,
           idOfertasSeleccionadas: [300],
         }),
-      () => endpoint.reactivate(100),
+      () => endpoint.reactivate([100]),
       () => endpoint.pay({ idsInscripcion: [1], metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 

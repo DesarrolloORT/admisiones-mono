@@ -242,10 +242,12 @@ export class InscripcionesEndpoint {
       );
   }
 
-  public reactivate(idInscripcion: number): Observable<InscripcionPreEnrollmentResponse> {
+  // Actualización profesional (nivel 3/4) da de baja el paquete entero: se reactivan
+  // todas sus anotaciones en una sola llamada, igual que `Pagar` las cobra en bloque.
+  public reactivate(idsInscripcion: number[]): Observable<InscripcionPreEnrollmentResponse> {
     return this.api
       .request(postEnrollmentsReactivateEndpoint, {
-        body: { enrollmentIds: [idInscripcion] },
+        body: { enrollmentIds: idsInscripcion },
         showLoader: true,
       })
       .pipe(

@@ -228,9 +228,9 @@ describe('Inscripciones', () => {
   });
 
   it('delegates inscription reactivation', () => {
-    service.reactivate(100).subscribe();
+    service.reactivate([100, 101]).subscribe();
 
-    expect(endpointMock.reactivate).toHaveBeenCalledWith(100);
+    expect(endpointMock.reactivate).toHaveBeenCalledWith([100, 101]);
   });
 
   it('delegates payment', () => {
