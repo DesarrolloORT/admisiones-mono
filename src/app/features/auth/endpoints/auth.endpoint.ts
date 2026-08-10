@@ -22,6 +22,7 @@ import {
   postRegistrationVerifyIdentityEndpoint,
 } from 'src/app/shared/api/generated/endpoints/registration.endpoints';
 
+import type { AuthPhoneNumber } from '../models/auth.interface';
 import type {
   DocumentRecognitionData,
   DocumentRecognitionRequest,
@@ -78,7 +79,7 @@ export interface RegisterPayload {
   codigoEstado?: number;
   codigoCiudad?: number;
   direccion: string;
-  telefono1: string;
+  telefono1: AuthPhoneNumber;
   mail: string;
   verificacionMail: string;
 }
@@ -505,7 +506,10 @@ export class AuthEndpoint {
       stateId: payload.codigoEstado,
       cityId: payload.codigoCiudad,
       address: payload.direccion,
-      primaryPhone: payload.telefono1,
+      primaryPhone: {
+        nationalNumber: payload.telefono1.nationalNumber,
+        iso2: payload.telefono1.iso2,
+      },
       email: payload.mail,
       emailConfirmation: payload.verificacionMail,
     };

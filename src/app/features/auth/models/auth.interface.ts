@@ -17,6 +17,11 @@ export interface AuthIdentityData {
   documentNumber: string;
 }
 
+export interface AuthPhoneNumber {
+  nationalNumber: string;
+  iso2: string | null;
+}
+
 export interface AuthRegisterPersonalData {
   primerNombre: string;
   segundoNombre: string;
@@ -28,7 +33,7 @@ export interface AuthRegisterPersonalData {
   codigoEstado: number | null;
   codigoCiudad: number | null;
   direccion: string;
-  telefono1: string;
+  telefono1: AuthPhoneNumber;
   mail: string;
   verificacionMail: string;
 }

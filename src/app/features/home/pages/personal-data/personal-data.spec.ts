@@ -194,7 +194,10 @@ describe('PersonalData', () => {
       stateCode: 10,
       cityCode: 100,
       address: 'Bulevar Artigas 1234',
-      phone: '99123456',
+      phone: {
+        nationalNumber: '99123456',
+        iso2: 'UY',
+      },
       email: 'gabrielaortiz@gmail.com',
       emailVerification: 'gabrielaortiz@gmail.com',
     });
@@ -215,7 +218,10 @@ describe('PersonalData', () => {
 
     expect(service.updatePersonalData).toHaveBeenCalledWith(
       expect.objectContaining({
-        phone: '+5491123456789',
+        phone: {
+          nationalNumber: '91123456789',
+          iso2: 'AR',
+        },
       })
     );
   });
