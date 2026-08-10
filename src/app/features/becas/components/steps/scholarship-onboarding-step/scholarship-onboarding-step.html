@@ -20,6 +20,17 @@
 
     <app-scholarship-requirements-card [variant]="variant()" />
 
+    @if (variant() === 'fbr') {
+    <ort-snackbar
+      class="scholarship-onboarding__snackbar"
+      message="Sobre la aceptación de la beca"
+      role="status"
+      supportingText="Si decidís no aceptar la beca, podés solicitar el reintegro del dinero que pagaste para la inscripción."
+      variant="information"
+      [autoDismiss]="false"
+      [closeable]="false" />
+    }
+
     <button
       class="scholarship-onboarding__cta"
       ort-primary-button

@@ -54,6 +54,11 @@
   line-height: var(--ort-sys-line-height-24);
 }
 
+.scholarship-onboarding__snackbar {
+  display: block;
+  margin-top: var(--ort-sys-spacing-24);
+}
+
 .scholarship-onboarding__cta {
   width: 100%;
   margin-block: var(--ort-sys-spacing-24);
@@ -77,5 +82,9 @@
     display: block;
     width: fit-content;
     margin-inline-start: auto;
+  }
+
+  .scholarship-onboarding__snackbar ::ng-deep .ort-snackbar {
+    width: 100%;
   }
 }

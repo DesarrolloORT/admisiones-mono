@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
+import { OrtButtonModule, OrtIconModule, OrtSnackbarModule } from '@desarrolloort/components';
 
 import { ScholarshipProposalFacade } from '../../../facades/scholarship-proposal';
 import { ScholarshipVariant } from '../../../models/scholarship-personal-forms';
@@ -7,7 +7,7 @@ import { ScholarshipRequirementsCard } from '../../scholarship-requirements-card
 
 @Component({
   selector: 'app-scholarship-onboarding-step',
-  imports: [OrtIconModule, ScholarshipRequirementsCard, OrtButtonModule],
+  imports: [OrtIconModule, ScholarshipRequirementsCard, OrtButtonModule, OrtSnackbarModule],
   templateUrl: './scholarship-onboarding-step.html',
   styleUrl: './scholarship-onboarding-step.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
