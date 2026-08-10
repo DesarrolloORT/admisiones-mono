@@ -20,7 +20,10 @@ import {
   OrtIconModule,
   OrtProgressBar,
 } from '@desarrolloort/components';
-import { ACCEPTED_IMAGE_MIME_TYPES } from 'src/app/shared/files/image-upload';
+import {
+  ACCEPTED_IMAGE_MIME_TYPES,
+  MAX_IMAGE_SIZE_BEFORE_COMPRESSION_BYTES,
+} from 'src/app/shared/files/image-upload';
 import {
   buildFormErrorSummary,
   focusFieldById,
@@ -54,6 +57,7 @@ export class RegisterIdentityStep {
   public readonly form = input.required<FormGroup<IdentityForm>>();
   public readonly documentNumberLabel = input('Nro. de documento');
   public readonly acceptedDocumentTypes = input<string[]>([...ACCEPTED_IMAGE_MIME_TYPES]);
+  public readonly maxDocumentFileSize = MAX_IMAGE_SIZE_BEFORE_COMPRESSION_BYTES;
   public readonly isSubmitting = input(false);
   public readonly isRecognizingDocument = input(false);
   public readonly showLoginAction = input(false);

@@ -371,7 +371,7 @@ export class RegisterFlowFacade {
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {
     if (error.code === 'maxFileSize') {
-      return 'El archivo supera el límite de 10 MB.';
+      return 'El archivo supera el límite de 5 MB.';
     }
 
     if (error.code === 'invalidMimeType') {

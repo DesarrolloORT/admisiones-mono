@@ -129,15 +129,37 @@ describe('DocumentRecognition', () => {
     });
   });
 
-  it('should reject files bigger than the final max size', async () => {
-    const file = fileWithSize(
-      new File(['content'], 'cedula.jpg', { type: 'image/jpeg' }),
-      MAX_IMAGE_SIZE_BYTES + 1
-    );
+  it('should try to compress files above the max size before rejecting them', async () => {
+    const close = vi.fn();
+    const drawImage = vi.fn();
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => ({ drawImage })),
+      toBlob: vi.fn((callback: BlobCallback, type?: string) => {
+        callback(new Blob([new Uint8Array(MAX_IMAGE_SIZE_BYTES + 500)], { type }));
+      }),
+    } as unknown as HTMLCanvasElement;
+    const createElement = document.createElement.bind(document);
+
+    vi.spyOn(document, 'createElement').mockImplementation(((
+      tagName: string,
+      options?: ElementCreationOptions
+    ) =>
+      tagName === 'canvas'
+        ? canvas
+        : createElement(tagName, options)) as typeof document.createElement);
+    const bitmap = { width: 4000, height: 2000, close } as ImageBitmap;
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue(bitmap));
+
+    const file = new File([new Uint8Array(MAX_IMAGE_SIZE_BYTES + 1000)], 'cedula.jpg', {
+      type: 'image/jpeg',
+    });
 
     await expect(service.createRequestFromFile(file)).rejects.toEqual(
       new DocumentRecognitionFileError('maxFileSize')
     );
+    expect(createImageBitmap).toHaveBeenCalledWith(file);
   });
 
   it('should reject PDF files', async () => {

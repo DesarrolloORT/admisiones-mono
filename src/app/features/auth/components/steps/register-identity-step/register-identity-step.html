@@ -9,6 +9,7 @@
       <ort-file-uploader
         [acceptedTypes]="acceptedDocumentTypes()"
         [disabled]="isRecognizingDocument()"
+        [maxFileSize]="maxDocumentFileSize"
         [maxFiles]="1"
         (filesChanged)="onDocumentFilesChanged($event)" />
 

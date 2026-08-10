@@ -33,10 +33,6 @@ export class DocumentRecognition {
       throw new DocumentRecognitionFileError('invalidMimeType');
     }
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      throw new DocumentRecognitionFileError('maxFileSize');
-    }
-
     const preparedFile = await compressImageIfNeeded(file, tipoMime);
     if (preparedFile.size > MAX_IMAGE_SIZE_BYTES) {
       throw new DocumentRecognitionFileError('maxFileSize');
