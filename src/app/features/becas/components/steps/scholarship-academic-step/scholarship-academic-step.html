@@ -4,6 +4,9 @@
   <header class="scholarship-screen__header">
     <h1 id="scholarship-academic-title">Postulación a beca</h1>
     <p>Este proceso te llevará aproximadamente 25–30 minutos.</p>
+    @if (facade.shouldShowApplicationMode()) {
+    <p>Según la modalidad, deberás completar información adicional.</p>
+    }
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
