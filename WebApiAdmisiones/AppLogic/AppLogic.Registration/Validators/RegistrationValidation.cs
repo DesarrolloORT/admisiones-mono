@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Contracts.Text;
 using AppLogic.Identity;
 using AppLogic.Identity.Services;
@@ -5,11 +6,40 @@ using AppLogic.Registration.Constants;
 using AppLogic.Registration.Dtos;
 using System;
 using BusinessLogic.Entities;
+using Utilities;
 
 namespace AppLogic.Registration.Validators;
 
 public static class RegistrationValidation
 {
+    /// <summary>
+    /// Teléfono principal del registro: obligatorio y celular válido para su país, igual que FDP.
+    /// Devuelve el teléfono ya normalizado a E.164 para guardarlo.
+    /// </summary>
+    public static OperationResult<PhoneVerification> ValidatePrimaryPhone(PhoneNumber? phone, string originMethod)
+    {
+        var normalized = PhoneNormalization.Validate(phone?.NationalNumber, isPrimaryPhone: true, phone?.Iso2);
+        if (normalized is null)
+        {
+            return OperationResult<PhoneVerification>.IsFailed(
+                RegistrationErrorCodes.MissingPrimaryPhone,
+                originMethod,
+                RegistrationErrorCodes.MissingPrimaryPhoneMessage,
+                400);
+        }
+
+        if (!normalized.TelefonoValido)
+        {
+            return OperationResult<PhoneVerification>.IsFailed(
+                RegistrationErrorCodes.InvalidPrimaryPhone,
+                originMethod,
+                $"{RegistrationErrorCodes.InvalidPrimaryPhoneMessage} {normalized.Error}".TrimEnd(),
+                400);
+        }
+
+        return OperationResult<PhoneVerification>.Ok(normalized, originMethod);
+    }
+
     /// <summary>
     /// Traduce el error de <see cref="IdentityDocumentRules.ValidateBaseDocument"/> al código que
     /// espera el front para el registro.

@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
 using AppLogic.Scholarships.Dtos;

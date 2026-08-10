@@ -21,7 +21,7 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                PrimaryPhone = "+59899123456",
                 Email = "ana@example.com",
                 TokenHash = "hash",
                 CountryId = 1,

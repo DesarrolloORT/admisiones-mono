@@ -1,5 +1,6 @@
+using AppLogic.Contracts.Dtos;
+using AppLogic.Contracts.Text;
 using AppLogic.People.Contracts;
-using AppLogic.People.Dtos;
 using Utilities;
 
 namespace AppLogic.People.UseCases;
@@ -14,13 +15,7 @@ public class ValidatePhoneNumber : IValidatePhoneNumber
     {
         const string methodName = nameof(ValidatePhoneNumber);
 
-        // Retorno temprano si el teléfono está vacío o nulo
-        if (string.IsNullOrWhiteSpace(phoneNumber.NationalNumber))
-        {
-            return OperationResult<bool>.Ok(false, methodName);
-        }
-
-        var validPhone = PhoneVerification.Validar(phoneNumber.NationalNumber, phoneNumber.Iso2, isPrimaryPhone);
+        var validPhone = PhoneNormalization.Validate(phoneNumber.NationalNumber, isPrimaryPhone, phoneNumber.Iso2);
         var esValido = validPhone != null && validPhone.TelefonoValido;
 
         return OperationResult<bool>.Ok(esValido, methodName);

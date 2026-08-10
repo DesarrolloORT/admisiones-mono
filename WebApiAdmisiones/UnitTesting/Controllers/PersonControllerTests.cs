@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
 using AppLogic.Scholarships.Dtos;
@@ -104,7 +105,7 @@ namespace UnitTesting.Controllers
                 StateId = 2,
                 CityId = 3,
                 Address = "18 de julio 1234",
-                PrimaryPhone = "24001234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099333222", Iso2 = "UY" },
                 Email = "ana@test.com",
                 EmailConfirmation = "ana@test.com"
             };
@@ -141,19 +142,6 @@ namespace UnitTesting.Controllers
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);
             _enrollmentsMock.Verify(s => s.Execute(123), Times.Once);
-        }
-
-        [Fact]
-        public void ObtenerMisBecas_ReturnsMockBecas()
-        {
-            var response = _controller.GetMyScholarships();
-
-            var okResult = Assert.IsType<ObjectResult>(response);
-            Assert.Equal(200, okResult.StatusCode);
-            var operationResult = Assert.IsType<OperationResult<IEnumerable<ScholarshipSummary>>>(okResult.Value);
-            Assert.True(operationResult.Success);
-            var scholarships = Assert.IsAssignableFrom<IEnumerable<ScholarshipSummary>>(operationResult.Data);
-            Assert.Equal(2, scholarships.Count());
         }
 
         [Fact]

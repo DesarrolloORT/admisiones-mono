@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.People.Dtos;
 using Utilities;

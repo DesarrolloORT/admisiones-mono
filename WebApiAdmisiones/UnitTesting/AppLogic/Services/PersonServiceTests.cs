@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
 using AppLogic.People.Dtos;
@@ -25,6 +26,7 @@ namespace UnitTesting.AppLogic.Services
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepositoryMock;
         private readonly Mock<IImagenRepository> _imagenRepositoryMock;
         private readonly Mock<IImagenTemporalRepository> _imagenTemporalRepositoryMock;
+        private readonly Mock<ICaracteristicaPaiRepository> _caracteristicaPaisRepositoryMock;
         private readonly Mock<ILdap> _ldapMock;
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock;
         private readonly PeopleUseCases _service;
@@ -49,6 +51,7 @@ namespace UnitTesting.AppLogic.Services
             _ciudadRepositoryMock = new Mock<BusinessLogic.IDevartRepositories.ICiudadRepository>();
             _imagenRepositoryMock = new Mock<IImagenRepository>();
             _imagenTemporalRepositoryMock = new Mock<IImagenTemporalRepository>();
+            _caracteristicaPaisRepositoryMock = new Mock<ICaracteristicaPaiRepository>();
             _ldapMock = new Mock<ILdap>();
             _dbConnectionContextMock = new Mock<IDbConnectionContext>();
 
@@ -60,6 +63,13 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Ciudads).Returns(_ciudadRepositoryMock.Object);
             _uowMock.Setup(u => u.Imagens).Returns(_imagenRepositoryMock.Object);
             _uowMock.Setup(u => u.ImagenTemporals).Returns(_imagenTemporalRepositoryMock.Object);
+            _uowMock.Setup(u => u.CaracteristicaPais).Returns(_caracteristicaPaisRepositoryMock.Object);
+            _caracteristicaPaisRepositoryMock
+                .Setup(r => r.GetAll())
+                .Returns(new List<CaracteristicaPai>
+                {
+                    new() { IdCaracteristicaPais = 7, Iso2 = "UY", NombrePais = "Uruguay", Caracteristica = 598 }
+                });
             _uowMock.Setup(u => u.ObtenerDbUserId()).Returns("ADMISIONES");
             _inscriptoRepositoryMock.Setup(r => r.TieneInscripcionActiva(It.IsAny<long>())).Returns(false);
 
@@ -571,7 +581,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 5,
                 CityId = 6,
                 Address = "  nueva direccion  ",
-                PrimaryPhone = " 222 ",
+                PrimaryPhone = new PhoneNumber { NationalNumber = " 099333222 ", Iso2 = "UY" },
                 Email = "nuevo@test.com",
                 EmailConfirmation = "nuevo@test.com"
             };
@@ -594,10 +604,90 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(5, person.CodigoEstado);
             Assert.Equal(6, person.CodigoCiudad);
             Assert.Equal("Nueva Direccion", person.Direccion);
-            Assert.Equal("222", person.Telefono1);
+            // El teléfono se guarda en E.164, igual que FDP, con su característica de país.
+            Assert.Equal("+59899333222", person.Telefono1);
+            Assert.Equal(7, person.IdCaracteristicaPaisTel1);
             Assert.Equal("nuevo@test.com", person.Email);
             _personaRepositoryMock.Verify(r => r.Update(person), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_TelefonoNoCelular_ReturnsFailed()
+        {
+            var person = new Persona { CodigoPersona = 123, Telefono1 = "+59899333222" };
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(person);
+
+            var result = _service.Update.Execute(123, new UpdatePersonDetailsRequest
+            {
+                CountryId = 4,
+                StateId = 5,
+                CityId = 6,
+                Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "24001234", Iso2 = "UY" },
+                Email = "nuevo@test.com",
+                EmailConfirmation = "nuevo@test.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_ADP_07", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            Assert.Equal("+59899333222", person.Telefono1);
+            _personaRepositoryMock.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_IgnoraElE164QueMandaElCliente()
+        {
+            var person = new Persona { CodigoPersona = 123 };
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(person);
+            _ciudadRepositoryMock.Setup(r => r.GetByKey(4, 5, 6)).Returns(new Ciudad());
+
+            var result = _service.Update.Execute(123, new UpdatePersonDetailsRequest
+            {
+                CountryId = 4,
+                StateId = 5,
+                CityId = 6,
+                Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber
+                {
+                    NationalNumber = "099333222",
+                    Iso2 = "UY",
+                    // Basura a propósito: el servidor arma el E.164 él mismo, igual que FDP.
+                    E164 = "+10000000000",
+                    CountryCode = 1,
+                    IsValid = true
+                },
+                Email = "nuevo@test.com",
+                EmailConfirmation = "nuevo@test.com"
+            });
+
+            Assert.True(result.Success);
+            Assert.Equal("+59899333222", person.Telefono1);
+        }
+
+        [Fact]
+        public void ActualizarDatosPersona_PaisDelTelefonoSinCaracteristica_ReturnsFailed()
+        {
+            var person = new Persona { CodigoPersona = 123, Telefono1 = "+59899333222" };
+            _personaRepositoryMock.Setup(r => r.GetByKey(123)).Returns(person);
+
+            // El mock de T_CARACTERISTICA_PAIS solo tiene Uruguay.
+            var result = _service.Update.Execute(123, new UpdatePersonDetailsRequest
+            {
+                CountryId = 4,
+                StateId = 5,
+                CityId = 6,
+                Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "91122223333", Iso2 = "AR" },
+                Email = "nuevo@test.com",
+                EmailConfirmation = "nuevo@test.com"
+            });
+
+            Assert.False(result.Success);
+            Assert.Equal("PER_ADP_08", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _personaRepositoryMock.Verify(r => r.Update(It.IsAny<Persona>()), Times.Never);
         }
 
         [Fact]
@@ -627,6 +717,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 2,
                 CityId = 3,
                 Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099333222", Iso2 = "UY" },
                 Email = "uno@test.com",
                 EmailConfirmation = "uno@test.com"
             });
@@ -670,7 +761,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 5,
                 CityId = 6,
                 Address = "  nueva direccion  ",
-                PrimaryPhone = " 222 ",
+                PrimaryPhone = new PhoneNumber { NationalNumber = " 099333222 ", Iso2 = "UY" },
                 Email = "nuevo@test.com",
                 EmailConfirmation = "nuevo@test.com"
             });
@@ -683,7 +774,9 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(new DateTime(2000, 1, 2), person.FechaNacimiento);
             Assert.Equal("F", person.Sexo);
             Assert.Equal("Nueva Direccion", person.Direccion);
-            Assert.Equal("222", person.Telefono1);
+            // El teléfono se guarda en E.164, igual que FDP, con su característica de país.
+            Assert.Equal("+59899333222", person.Telefono1);
+            Assert.Equal(7, person.IdCaracteristicaPaisTel1);
             Assert.Equal("nuevo@test.com", person.Email);
             _personaRepositoryMock.Verify(r => r.Update(person), Times.Once);
             _uowMock.Verify(u => u.Save(), Times.Once);
@@ -726,6 +819,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 2,
                 CityId = 3,
                 Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099333222", Iso2 = "UY" },
                 Email = "uno@test.com",
                 EmailConfirmation = "uno@test.com"
             });
@@ -758,6 +852,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 2,
                 CityId = 3,
                 Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099333222", Iso2 = "UY" },
                 Email = "uno@test.com",
                 EmailConfirmation = "dos@test.com"
             });
@@ -783,6 +878,7 @@ namespace UnitTesting.AppLogic.Services
                 StateId = 2,
                 CityId = 3,
                 Address = "18 de julio 1234",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099333222", Iso2 = "UY" },
                 Email = "uno@test.com",
                 EmailConfirmation = "uno@test.com"
             });
