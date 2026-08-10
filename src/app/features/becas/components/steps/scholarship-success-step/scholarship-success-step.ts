@@ -6,13 +6,12 @@ import {
   OrtIconModule,
   OrtStatusIconModule,
 } from '@desarrolloort/components';
-import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
 import { ScholarshipVariant } from '../../../models/scholarship-personal-forms';
 
 @Component({
   selector: 'app-scholarship-success-step',
-  imports: [OrtStatusIconModule, HomeHeader, OrtCardModule, OrtIconModule, OrtButtonModule],
+  imports: [OrtStatusIconModule, OrtCardModule, OrtIconModule, OrtButtonModule],
   templateUrl: './scholarship-success-step.html',
   styleUrls: [
     './scholarship-success-step.scss',

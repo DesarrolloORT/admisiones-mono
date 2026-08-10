@@ -4,7 +4,6 @@ import {
   OrtAccordionModule,
   OrtBadgeModule,
   OrtButton,
-  OrtError,
   OrtIconModule,
 } from '@desarrolloort/components';
 import { ErrorAlert } from 'src/app/shared/ui/error-alert/error-alert';
@@ -24,7 +23,6 @@ import { ScholarshipWorkHistorySection } from './section/scholarship-work-histor
     OrtAccordionModule,
     OrtIconModule,
     OrtButton,
-    OrtError,
     ScholarshipPersonalDataSection,
     ScholarshipEducationInfoFbrSection,
     ScholarshipDeclarationSection,

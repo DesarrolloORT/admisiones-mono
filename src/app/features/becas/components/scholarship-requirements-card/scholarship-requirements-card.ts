@@ -17,9 +17,9 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, Scholar
   fbr: {
     requirements: [
       {
-        title: 'Perfil del estudiante',
+        title: 'Declaración jurada de ingresos',
         description:
-          'Dirigido a quienes revalidan materias de otras universidades (nacionales o extranjeras).',
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
       },
       {
         title: 'Antecedentes académicos',
@@ -103,13 +103,9 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, Scholar
   fbc: {
     requirements: [
       {
-        title: 'Perfil del estudiante',
+        title: 'Declaración jurada de ingresos',
         description:
-          'Ingreso desde cero con bachillerato completo o con materias de 3.° de EMS pendientes.',
-      },
-      {
-        title: 'Certificado de secundaria',
-        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
       },
       {
         title: 'Prueba de aptitud académica',
@@ -121,12 +117,9 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, Scholar
   fcl: {
     requirements: [
       {
-        title: 'Perfil del estudiante',
-        description: 'Dirigido a programas de nivel corto o capacitación laboral.',
-      },
-      {
-        title: 'Requisitos académicos',
-        description: 'Mínimo 1.° de EMS (4.° año) aprobado.',
+        title: 'Declaración jurada de ingresos',
+        description:
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
       },
     ],
     methods: [],
