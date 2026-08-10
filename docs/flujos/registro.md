@@ -174,8 +174,10 @@ y las comparaciones para personas existentes en
 | `user-exists`                    | Acción para login                                                             | No permite confirmar              | No se llama a confirmación                                                                          |
 | `application-exists`             | Mensaje de solicitud pendiente                                                | No permite confirmar              | No se vuelve a crear la solicitud; el `flowId` recibido no se usa                                   |
 
-El frontend envía el teléfono principal en formato internacional E.164, incluido
-el prefijo de país (por ejemplo, `+59892123456`).
+El frontend valida que el teléfono principal sea celular y envía `primaryPhone`
+como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste en
+formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son
+informativos y el servidor los recalcula o ignora.
 
 `EvaluarDocumento`, `VerificarIdentidad`, `AnalizarAdjunto`,
 `ConfirmarNuevaPersona` y `ConfirmarSolicitudAlta` son públicos y están

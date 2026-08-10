@@ -4,6 +4,7 @@ import { LocationValue } from '../../catalogs/models/location-value';
 import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
 import {
   AuthIdentityData,
+  AuthPhoneNumber,
   AuthRegisterPersonalData,
   AuthRegisterRequest,
 } from '../models/auth.interface';
@@ -49,12 +50,11 @@ export function toAuthRegisterPersonalData(
   };
 }
 
-function toBackendPhone(value: OrtPhoneInputValue | null): string {
-  if (!value) {
-    return '';
-  }
-
-  return (value.numberE164 || value.number).trim();
+function toBackendPhone(value: OrtPhoneInputValue | null): AuthPhoneNumber {
+  return {
+    nationalNumber: value?.number.trim() ?? '',
+    iso2: value?.iso2 || null,
+  };
 }
 
 function toIsoDateOnly(value: string | Date | null): string {

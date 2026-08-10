@@ -9,6 +9,8 @@ import {
   putPersonDetailsEndpoint,
 } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
+import type { AuthPhoneNumber } from '../models/auth.interface';
+
 export interface AccountPersonalData {
   documentType: string;
   documentNumber: string;
@@ -33,7 +35,7 @@ export interface UpdateAccountPersonalDataPayload {
   stateCode?: number;
   cityCode?: number;
   address: string;
-  phone: string;
+  phone: AuthPhoneNumber;
   email: string;
   emailVerification: string;
 }
@@ -87,7 +89,10 @@ export class AccountEndpoint {
           stateId: payload.stateCode,
           cityId: payload.cityCode,
           address: payload.address,
-          primaryPhone: payload.phone,
+          primaryPhone: {
+            nationalNumber: payload.phone.nationalNumber,
+            iso2: payload.phone.iso2,
+          },
           email: payload.email,
           emailConfirmation: payload.emailVerification,
         },

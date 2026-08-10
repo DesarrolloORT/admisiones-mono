@@ -30,6 +30,7 @@ import {
 } from '@desarrolloort/components';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
+import type { AuthPhoneNumber } from 'src/app/features/auth/models/auth.interface';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
@@ -207,7 +208,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toOptionalNumber(value.stateCode),
         cityCode: this.toOptionalNumber(value.cityCode),
         address: value.address.trim(),
-        phone: this.toBackendPhone(value.phone).trim(),
+        phone: this.toBackendPhone(value.phone),
         email: value.email.trim(),
         emailVerification: value.emailConfirmation.trim(),
       })
@@ -310,16 +311,11 @@ export class PersonalData implements OnInit {
     return { iso2: 'UY', number, numberE164: `+598${number}` };
   }
 
-  private toBackendPhone(value: OrtPhoneInputValue | null): string {
-    if (!value) {
-      return '';
-    }
-
-    if (value.iso2 === 'UY') {
-      return value.number.trim();
-    }
-
-    return (value.numberE164 || value.number).trim();
+  private toBackendPhone(value: OrtPhoneInputValue | null): AuthPhoneNumber {
+    return {
+      nationalNumber: value?.number.trim() ?? '',
+      iso2: value?.iso2 || null,
+    };
   }
 
   private phoneValidator(): AsyncValidatorFn {

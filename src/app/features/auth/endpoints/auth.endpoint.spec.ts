@@ -229,7 +229,7 @@ describe('AuthEndpoint', () => {
         fechaNacimiento: '2000-01-01',
         sexo: 'F',
         direccion: 'Mercedes 1234',
-        telefono1: '099123456',
+        telefono1: { nationalNumber: '099123456', iso2: 'UY' },
         mail: 'ana@example.com',
         verificacionMail: 'ana@example.com',
       };
@@ -255,7 +255,10 @@ describe('AuthEndpoint', () => {
         stateId: undefined,
         cityId: undefined,
         address: 'Mercedes 1234',
-        primaryPhone: '099123456',
+        primaryPhone: {
+          nationalNumber: '099123456',
+          iso2: 'UY',
+        },
         email: 'ana@example.com',
         emailConfirmation: 'ana@example.com',
       });
@@ -278,7 +281,7 @@ describe('AuthEndpoint', () => {
             fechaNacimiento: '2000-01-01',
             sexo: 'M',
             direccion: '',
-            telefono1: '',
+            telefono1: { nationalNumber: '', iso2: null },
             mail: '',
             verificacionMail: '',
           },
@@ -312,7 +315,7 @@ describe('AuthEndpoint', () => {
         fechaNacimiento: '2000-01-01',
         sexo: 'F',
         direccion: 'Mercedes 1234',
-        telefono1: '099123456',
+        telefono1: { nationalNumber: '099123456', iso2: 'UY' },
         mail: 'ana@example.com',
         verificacionMail: 'ana@example.com',
       };
@@ -338,7 +341,10 @@ describe('AuthEndpoint', () => {
         stateId: undefined,
         cityId: undefined,
         address: 'Mercedes 1234',
-        primaryPhone: '099123456',
+        primaryPhone: {
+          nationalNumber: '099123456',
+          iso2: 'UY',
+        },
         email: 'ana@example.com',
         emailConfirmation: 'ana@example.com',
       });

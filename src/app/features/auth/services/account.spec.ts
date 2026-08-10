@@ -42,7 +42,7 @@ describe('AccountService', () => {
       stateCode: 10,
       cityCode: undefined,
       address: 'Mercedes 1234',
-      phone: '99123456',
+      phone: { nationalNumber: '99123456', iso2: 'UY' },
       email: 'gabriela@example.com',
       emailVerification: 'gabriela@example.com',
     };

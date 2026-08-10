@@ -496,13 +496,17 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
   en AP multi-seminario solo pinta la fila Programa (pendiente de decisión de UX); con
   un solo seminario sí muestra Programa + Comienzo, porque salen de `summaryItems()`.
 
-### Contrato multi-oferta resuelto
+### Regla de cardinalidad y drift backend
 
-`product-interest`, `confirm-pre-enrollment`, `reactivate` y `start-payment`
-aceptan arrays. El backend valida todas las ofertas antes de persistir: para niveles
-1/2 deben compartir producto, comienzo y turno; para niveles 3/4 solo producto. El
-detalle, la confirmación, el dashboard y el pago conservan una fila por oferta. No
-hay pago parcial de un paquete AP desde esta UI.
+La regla de negocio confirmada es: **niveles 1/2 admiten exactamente una oferta**;
+solo niveles 3/4 pueden enviar varias. El frontend cumple esa cardinalidad y los
+paquetes AP se procesan completos en `product-interest`, `confirm-pre-enrollment`,
+`reactivate` y `start-payment`.
+
+> **Drift detectado:** `SelectedOfferingsCompatibility` hoy no rechaza dos ofertas de
+> nivel 1/2 si comparten producto, comienzo y turno. El contrato esperado es una sola;
+> falta endurecer esa validación en backend. Para niveles 3/4 se permiten varias del
+> mismo producto y no hay pago parcial del paquete desde esta UI.
 
 ## Paso 2: informacion personal
 
@@ -690,8 +694,9 @@ Orden de cierre:
 
 El servidor vuelve a validar que cada oferta exista, esté abierta y tenga interés
 activo. Para niveles 1/2 exige encuesta nueva `definitivo` y vigente, salvo que exista
-la encuesta histórica; niveles 3/4 no requieren encuesta. Todas las ofertas deben ser
-compatibles según la regla multi-oferta descrita arriba.
+la encuesta histórica; niveles 3/4 no requieren encuesta. La cardinalidad esperada es
+una oferta para niveles 1/2 y una o más del mismo producto para niveles 3/4; ver el
+drift backend señalado arriba.
 
 La aceptación se persiste por persona + producto + comienzo. Si la persona ya aceptó
 alguna vez, el backend puede crear la fila específica sin volver a exigir `true`; si
@@ -760,8 +765,8 @@ Payload HTTP:
 }
 ```
 
-Para niveles 1/2 el array normalmente tiene un ID; AP envía todos los IDs del
-paquete. El backend rechaza listas vacías, IDs no positivos o inscripciones ajenas.
+Para niveles 1/2 el array debe tener un único ID; AP envía todos los IDs del paquete.
+El backend rechaza listas vacías, IDs no positivos o inscripciones ajenas.
 
 Mapping adapter:
 
@@ -850,15 +855,13 @@ sin repetir las compartidas.
 - `editing`: errores de validación o error de backend; el usuario puede corregir
   y reintentar.
 
-## Brecha pendiente
+## Limitación confirmada de pagos externos
 
-Para Banred, Geopay y Sistarbanc el front redirige fuera del proyecto. Hoy este
-proyecto no recibe callback ni consulta de estado para saber si el usuario pagó.
-Por eso el estado default al volver o no poder confirmar es
-`pago-pendiente-externo`, nunca un loader infinito.
-
-Cuando backend defina callback, polling o endpoint de consulta, ese mecanismo debe
-actualizar este estado a `inscription-confirmada` o mostrar error final.
+Banred, Geopay y Sistarbanc **no tienen callback hacia Admisiones**. El front abre la
+pasarela fuera del proyecto y deja la pantalla actual en
+`pago-pendiente-externo`; tampoco hace polling ni consulta automática de estado. Para
+ver el estado actualizado, la persona debe volver al dashboard o reingresar al flujo,
+que consulta nuevamente el estado persistido. Nunca se mantiene un loader infinito.
 
 ### Contrato con las páginas Pagos\*Gestion.aspx
 
