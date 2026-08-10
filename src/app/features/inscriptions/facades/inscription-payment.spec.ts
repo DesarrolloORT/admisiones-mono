@@ -610,6 +610,34 @@ describe('InscripcionPaymentFacade', () => {
     ]);
   });
 
+  it('shows Programa and Comienzo without the seminarios block for a single seminario', () => {
+    const selection = TestBed.inject(AcademicProposalSelection);
+    selection.setProposalType('3');
+    process.preEnrollmentResponse.set({
+      idInscripcion: 1072704,
+      confirmada: false,
+      fechaVencimientoPago: null,
+      seniaInscripcion: 15500,
+      saldoCuenta: 70000,
+      resumen: { carrera: 'Actualización en IA', comienzo: null, turno: null },
+      seminarios: [
+        {
+          idInscripcion: 1,
+          idOferta: 10,
+          nombre: 'Seminario A',
+          comienzo: 'Marzo',
+          turno: 'Noche',
+        },
+      ],
+    });
+
+    expect(facade.summaryItems()).toEqual([
+      { icon: 'school', label: 'Programa', value: 'Actualización en IA' },
+      { icon: 'calendar_today', label: 'Comienzo', value: 'Marzo' },
+    ]);
+    expect(facade.seminariosResumen()).toEqual([]);
+  });
+
   it('uses the selected seminar catalog when confirmation omits the offer detail', () => {
     const selection = TestBed.inject(AcademicProposalSelection);
     const proposal = TestBed.inject(InscripcionProposalFacade);
@@ -640,6 +668,29 @@ describe('InscripcionPaymentFacade', () => {
         turno: 'No informado',
       },
     ]);
+  });
+
+  it('collapses the catalog fallback to a Comienzo row when a single offer is selected', () => {
+    const selection = TestBed.inject(AcademicProposalSelection);
+    const proposal = TestBed.inject(InscripcionProposalFacade);
+    selection.setProposalType('3');
+    vi.spyOn(selection, 'seminars').mockReturnValue([
+      {
+        idOferta: 10,
+        idProceso: 210,
+        nombre: 'Seminario A',
+        fechaComienzo: '2027-03-04T00:00:00',
+      },
+    ]);
+    proposal.academicForm.controls.seminarios.setValue(['10']);
+    process.preEnrollmentResponse.update(response => ({ ...response!, seminarios: [] }));
+
+    expect(facade.summaryItems().at(-1)).toEqual({
+      icon: 'calendar_today',
+      label: 'Comienzo',
+      value: '04/03/2027',
+    });
+    expect(facade.seminariosResumen()).toEqual([]);
   });
 
   it('uses enrollment ids from the resume session when confirmation omits them', () => {

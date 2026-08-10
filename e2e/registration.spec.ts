@@ -80,7 +80,7 @@ test.describe('Registration flow guardrails', () => {
   test('surfaces API errors without leaving the identity step @regression', async ({ page }) => {
     await mockApi(page, {
       registerFlow: 'new-person',
-      failPaths: ['/Registro/EvaluarDocumento'],
+      failPaths: ['/registration/evaluate-document'],
     });
 
     const register = new RegisterPage(page);

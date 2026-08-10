@@ -22,6 +22,7 @@ describe('DashboardCard', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      fechaVencimientoPago: null,
       seminarios: [],
     });
 
@@ -46,7 +47,27 @@ describe('DashboardCard', () => {
     expect(text).toContain('Comienzo');
   });
 
-  it('renders only the title, without the "Comienzo" summary row, for a paquete (niveles 3/4)', async () => {
+  it('renders the "Comienzo" summary row for a paquete with a single seminario', async () => {
+    TestBed.configureTestingModule({
+      imports: [DashboardCard],
+      providers: [provideRouter([])],
+    });
+    const fixture = TestBed.createComponent(DashboardCard);
+    fixture.componentRef.setInput(
+      'inscripcion',
+      buildInscripcion({
+        seminarios: [buildSeminario({ idInscripto: 1, descripcionOferta: 'Seminario A' })],
+      })
+    );
+
+    await fixture.whenStable();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Comienzo');
+    expect(text).not.toContain('Anotado a');
+  });
+
+  it('renders only the title and the seminar count, without the "Comienzo" summary row, for a paquete con varios seminarios', async () => {
     TestBed.configureTestingModule({
       imports: [DashboardCard],
       providers: [provideRouter([])],
@@ -66,6 +87,7 @@ describe('DashboardCard', () => {
 
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Analista Programador');
+    expect(text).toContain('Anotado a 2 seminarios');
     expect(text).not.toContain('Comienzo');
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
       '/inscripciones?idProducto=20&idProceso=200'
@@ -84,6 +106,7 @@ describe('DashboardCard', () => {
       nombreComienzo: 'Marzo 2027',
       nombreTurno: 'Noche',
       estado: 'Confirmada',
+      fechaVencimientoPago: null,
       seminarios: [],
       ...overrides,
     };

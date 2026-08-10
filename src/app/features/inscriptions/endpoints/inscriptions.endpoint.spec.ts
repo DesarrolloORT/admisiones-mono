@@ -5,20 +5,21 @@ import { vi } from 'vitest';
 
 import { ApiHttpClient } from '../../../shared/api/core/api-http-client';
 import {
-  getInscripcionesDetalleEndpoint,
-  getInscripcionesEncuestaInicialEndpoint,
-  getInscripcionesReglamentoEstudiantilEndpoint,
-  postInscripcionesConfirmarPreInscripcionEndpoint,
-  postInscripcionesEncuestaInicialEndpoint,
-  postInscripcionesInteresProductoEndpoint,
-  postInscripcionesPagarEndpoint,
-} from '../../../shared/api/generated/endpoints/inscripciones.endpoints';
+  getEnrollmentsDetailsEndpoint,
+  getEnrollmentsInitialSurveyEndpoint,
+  getEnrollmentsStudentRegulationsEndpoint,
+  postEnrollmentsConfirmPreEnrollmentEndpoint,
+  postEnrollmentsInitialSurveyEndpoint,
+  postEnrollmentsProductInterestEndpoint,
+  postEnrollmentsReactivateEndpoint,
+  postEnrollmentsStartPaymentEndpoint,
+} from '../../../shared/api/generated/endpoints/enrollments.endpoints';
 import {
-  getPersonaDocumentoEndpoint,
-  getPersonaFotoEndpoint,
-  postPersonaSubirDocumentoEndpoint,
-  postPersonaSubirFotoEndpoint,
-} from '../../../shared/api/generated/endpoints/persona.endpoints';
+  getPersonIdentityDocumentEndpoint,
+  getPersonPhotoEndpoint,
+  postPersonIdentityDocumentEndpoint,
+  postPersonPhotoEndpoint,
+} from '../../../shared/api/generated/endpoints/person.endpoints';
 import type { InscripcionInitialSurveyPayload } from '../models/inscription-flow';
 import { InscripcionesEndpoint } from './inscriptions.endpoint';
 
@@ -44,15 +45,13 @@ describe('InscripcionesEndpoint', () => {
   it('maps inscription detail without exposing generated contracts', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'Confirmada',
-        confirmada: {
-          codigoPersona: 397654,
-          idProducto: 20,
-          carrera: 'Sistemas',
-          coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
-          inscripciones: [
-            { materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Programación' }, {}] },
-          ],
+        status: 'Confirmada',
+        confirmed: {
+          personId: 397654,
+          productId: 20,
+          degreeProgram: 'Sistemas',
+          academicCoordinator: { name: 'Ana Coordinadora', email: 'ana@example.com' },
+          enrollments: [{ firstSemesterSubjects: [{ subjectId: 1, name: 'Programación' }, {}] }],
         },
       })
     );
@@ -88,8 +87,8 @@ describe('InscripcionesEndpoint', () => {
         ],
       },
     });
-    expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesDetalleEndpoint, {
-      queryParams: { idProducto: 20, idProceso: 200 },
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsDetailsEndpoint, {
+      queryParams: { productId: 20, admissionProcessId: 200 },
       cache: false,
       showLoader: true,
     });
@@ -98,12 +97,17 @@ describe('InscripcionesEndpoint', () => {
   it('maps every interest offering of an in-progress detail', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'En proceso',
-        detalle: {
-          resumen: { idProducto: 40, carrera: 'Asesoramiento financiero' },
-          intereses: [
-            { idOferta: 310, descripcionOferta: 'Marco legal', comienzo: 'Abril', turno: 'Noche' },
-            { idOferta: 311, descripcionOferta: 'Renta fija' },
+        status: 'En proceso',
+        inProgress: {
+          summary: { productId: 40, degreeProgram: 'Asesoramiento financiero' },
+          interests: [
+            {
+              offeringId: 310,
+              offeringDescription: 'Marco legal',
+              intake: 'Abril',
+              shift: 'Noche',
+            },
+            { offeringId: 311, offeringDescription: 'Renta fija' },
           ],
         },
       })
@@ -134,11 +138,11 @@ describe('InscripcionesEndpoint', () => {
   it('maps the course coordinator alongside the academic coordinator', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'Confirmada',
-        confirmada: {
-          codigoPersona: 397654,
-          coordinadorAcademico: { nombre: 'Ana Coordinadora', email: 'ana@example.com' },
-          coordinadorCursos: { nombre: 'Beto Cursos', email: 'beto@example.com' },
+        status: 'Confirmada',
+        confirmed: {
+          personId: 397654,
+          academicCoordinator: { name: 'Ana Coordinadora', email: 'ana@example.com' },
+          courseCoordinator: { name: 'Beto Cursos', email: 'beto@example.com' },
         },
       })
     );
@@ -156,12 +160,12 @@ describe('InscripcionesEndpoint', () => {
   it('maps the seniaMinima block when the payment method was already chosen', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'Pago pendiente',
-        reservaMinima: {
-          tipoPago: 'ABITAB',
-          cedula: '12345678',
-          codigoPersona: 555,
-          pagoReserva: 3339,
+        status: 'Pago pendiente',
+        minimumDeposit: {
+          paymentType: 'ABITAB',
+          documentNumber: '12345678',
+          personId: 555,
+          depositAmount: 3339,
         },
       })
     );
@@ -183,12 +187,12 @@ describe('InscripcionesEndpoint', () => {
   it('maps pending payment account balance from inscription detail', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'Pago pendiente',
-        pagoPendiente: {
-          inscripciones: [{ idInscripcion: 1072704, fechaVencimientoPago: '2026-06-26T16:29:20' }],
-          pagoReserva: 3339,
-          estadoCuenta: { saldoActual: 70000 },
-          resumen: { carrera: 'Arquitectura' },
+        status: 'Pago pendiente',
+        pendingPayment: {
+          enrollments: [{ enrollmentId: 1072704, paymentDueDate: '2026-06-26T16:29:20' }],
+          depositAmount: 3339,
+          currentAccount: { currentBalance: 70000 },
+          summary: { degreeProgram: 'Arquitectura' },
         },
       })
     );
@@ -206,27 +210,27 @@ describe('InscripcionesEndpoint', () => {
   it('maps the Actualización profesional seminarios array from a pending payment detail', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        estado: 'Pago pendiente',
-        pagoPendiente: {
-          inscripciones: [
+        status: 'Pago pendiente',
+        pendingPayment: {
+          enrollments: [
             {
-              idInscripcion: 1072704,
-              idOferta: 58563,
-              comienzo: 'Marzo',
-              turno: 'Matutino',
-              descripcionOferta: 'Seminario de Liderazgo',
+              enrollmentId: 1072704,
+              offeringId: 58563,
+              intake: 'Marzo',
+              shift: 'Matutino',
+              offeringDescription: 'Seminario de Liderazgo',
             },
             {
-              idInscripcion: 1072705,
-              idOferta: 58564,
-              comienzo: 'Abril',
-              turno: 'Nocturno',
-              descripcionOferta: 'Seminario de Finanzas',
+              enrollmentId: 1072705,
+              offeringId: 58564,
+              intake: 'Abril',
+              shift: 'Nocturno',
+              offeringDescription: 'Seminario de Finanzas',
             },
           ],
-          pagoReserva: 3339,
-          estadoCuenta: { saldoActual: 70000 },
-          resumen: { carrera: 'Actualización profesional' },
+          depositAmount: 3339,
+          currentAccount: { currentBalance: 70000 },
+          summary: { degreeProgram: 'Actualización profesional' },
         },
       })
     );
@@ -257,9 +261,9 @@ describe('InscripcionesEndpoint', () => {
   it('maps identity document fields to the feature contract', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        frente: { archivo: 'front', nombreArchivo: 'front.png' },
-        dorso: {},
-        fechaVencimiento: '2030-02-04',
+        front: { content: 'front', fileName: 'front.png' },
+        back: {},
+        expirationDate: '2030-02-04',
       })
     );
 
@@ -268,13 +272,15 @@ describe('InscripcionesEndpoint', () => {
       dorso: { archivo: null, nombreArchivo: null },
       fechaVencimiento: '2030-02-04',
     });
-    expect(apiMock.request).toHaveBeenCalledWith(getPersonaDocumentoEndpoint, { cache: false });
+    expect(apiMock.request).toHaveBeenCalledWith(getPersonIdentityDocumentEndpoint, {
+      cache: false,
+    });
   });
 
   it('loads the identity photo as a blob without using the GET cache', () => {
     endpoint.getIdentityPhoto().subscribe();
 
-    expect(apiMock.request).toHaveBeenCalledWith(getPersonaFotoEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(getPersonPhotoEndpoint, {
       cache: false,
       responseType: 'blob',
     });
@@ -289,8 +295,12 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.uploadIdentityDocument(payload))).resolves.toBe(true);
 
-    expect(apiMock.request).toHaveBeenCalledWith(postPersonaSubirDocumentoEndpoint, {
-      body: payload,
+    expect(apiMock.request).toHaveBeenCalledWith(postPersonIdentityDocumentEndpoint, {
+      body: {
+        expirationDate: '2030-02-04',
+        front: { fileName: 'frente.png', content: 'front' },
+        back: { fileName: 'dorso.png', content: 'back' },
+      },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -301,8 +311,8 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.uploadIdentityPhoto(payload))).resolves.toBe(true);
 
-    expect(apiMock.request).toHaveBeenCalledWith(postPersonaSubirFotoEndpoint, {
-      body: payload,
+    expect(apiMock.request).toHaveBeenCalledWith(postPersonPhotoEndpoint, {
+      body: { file: { fileName: 'selfie.png', content: 'photo' } },
       showLoader: true,
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -310,23 +320,23 @@ describe('InscripcionesEndpoint', () => {
   it('maps the initial survey to the feature contract', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        tieneDerechoEncuesta: true,
-        encuesta: {
+        canAnswerSurvey: true,
+        survey: {
           idEncuestaIni: 1,
-          carreraId: 20,
-          procesoId: 200,
-          estado: 'completa',
-          cursaSecundariaActualmente: true,
-          recursaAnioBachillerato: true,
-          vecesRecursaAnioBachillerato: 2,
-          estadoEducacionSuperiorPreviaId: 1,
-          nivelDecisionId: 1,
-          universidadConsideradaIds: [10],
-          universidadConsideradaOtros: ['Otra consultada'],
-          universidadEducacionSuperiorIds: [20],
-          universidadEducacionSuperiorOtros: ['Otra superior'],
-          motivoEleccionOrtIds: [5],
-          publicidadOrtIds: [7],
+          degreeProgramId: 20,
+          admissionProcessId: 200,
+          status: 'completa',
+          currentlyInSecondary: true,
+          repeatsHighSchoolYear: true,
+          highSchoolYearRepeatCount: 2,
+          previousHigherEducationId: 1,
+          decisionLevelId: 1,
+          consideredUniversityIds: [10],
+          consideredUniversityOthers: ['Otra consultada'],
+          higherEducationUniversityIds: [20],
+          higherEducationUniversityOthers: ['Otra superior'],
+          ortChoiceReasonIds: [5],
+          ortAdvertisingIds: [7],
         },
       })
     );
@@ -354,13 +364,13 @@ describe('InscripcionesEndpoint', () => {
         opcionesPublicidadSeleccionadas: [7],
       })
     );
-    expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesEncuestaInicialEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsInitialSurveyEndpoint, {
       cache: false,
     });
   });
   it('preserves the regulation acceptance date and normalizes missing values', async () => {
     apiMock.request.mockReturnValueOnce(
-      of({ aceptoReglamentoEstudiantil: true, fechaAceptacion: '2026-06-01' })
+      of({ acceptedStudentRegulations: true, acceptanceDate: '2026-06-01' })
     );
 
     await expect(firstValueFrom(endpoint.getStudentRegulationAcceptance())).resolves.toEqual({
@@ -373,7 +383,7 @@ describe('InscripcionesEndpoint', () => {
       aceptoReglamentoEstudiantil: false,
       fechaAceptacion: null,
     });
-    expect(apiMock.request).toHaveBeenCalledWith(getInscripcionesReglamentoEstudiantilEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsStudentRegulationsEndpoint, {
       cache: false,
     });
   });
@@ -419,13 +429,13 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe(true);
 
-    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesEncuestaInicialEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
       body: expect.objectContaining({
-        carreraId: 20,
-        procesoId: 200,
-        cursaSecundariaActualmente: null,
-        universidadConsideradaOtros: null,
-        universidadEducacionSuperiorOtros: null,
+        degreeProgramId: 20,
+        admissionProcessId: 200,
+        currentlyInSecondary: null,
+        consideredUniversityOthers: null,
+        higherEducationUniversityOthers: null,
       }),
       showLoader: true,
     });
@@ -435,14 +445,14 @@ describe('InscripcionesEndpoint', () => {
   it('maps pre-enrollment response and invalidates cached API responses', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        confirmada: true,
-        enEspera: true,
-        idInscripcion: null,
-        fechaVencimientoPago: null,
-        pagoReserva: 0,
-        estadoCuenta: { saldoActual: 70000 },
-        resumen: { carrera: 'Sistemas' },
-        inscripciones: [{ comienzo: 'Marzo', turno: 'Matutino' }],
+        confirmed: true,
+        waiting: true,
+        enrollmentId: null,
+        paymentDueDate: null,
+        depositAmount: 0,
+        currentAccount: { currentBalance: 70000 },
+        summary: { degreeProgram: 'Sistemas' },
+        enrollments: [{ intake: 'Marzo', shift: 'Matutino' }],
       })
     );
     const payload = {
@@ -463,11 +473,11 @@ describe('InscripcionesEndpoint', () => {
         { idInscripcion: null, idOferta: null, nombre: null, comienzo: 'Marzo', turno: 'Matutino' },
       ],
     });
-    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesConfirmarPreInscripcionEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsConfirmPreEnrollmentEndpoint, {
       body: {
-        aceptoReglamento: true,
-        esInscripcionCorporativa: true,
-        idsOfertasSeleccionadas: [300],
+        acceptedRegulations: true,
+        isCorporateEnrollment: true,
+        selectedOfferingIds: [300],
       },
       showLoader: true,
     });
@@ -477,22 +487,22 @@ describe('InscripcionesEndpoint', () => {
   it('maps the Actualización profesional seminarios array from confirmarPreInscripcion', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        confirmada: false,
-        resumen: { carrera: 'Actualización profesional' },
-        inscripciones: [
+        confirmed: false,
+        summary: { degreeProgram: 'Actualización profesional' },
+        enrollments: [
           {
-            idInscripcion: 1072704,
-            idOferta: 58563,
-            comienzo: 'Marzo',
-            turno: 'Matutino',
-            descripcionOferta: 'Seminario de Liderazgo',
+            enrollmentId: 1072704,
+            offeringId: 58563,
+            intake: 'Marzo',
+            shift: 'Matutino',
+            offeringDescription: 'Seminario de Liderazgo',
           },
           {
-            idInscripcion: 1072705,
-            idOferta: 58564,
-            comienzo: 'Abril',
-            turno: 'Nocturno',
-            descripcionOferta: 'Seminario de Finanzas',
+            enrollmentId: 1072705,
+            offeringId: 58564,
+            intake: 'Abril',
+            shift: 'Nocturno',
+            offeringDescription: 'Seminario de Finanzas',
           },
         ],
       })
@@ -524,13 +534,62 @@ describe('InscripcionesEndpoint', () => {
     ]);
   });
 
+  it('maps reactivation with the pre-enrollment contract and invalidates cache', async () => {
+    apiMock.request.mockReturnValueOnce(
+      of({
+        confirmed: false,
+        waiting: false,
+        depositAmount: 15500,
+        currentAccount: { currentBalance: 1200 },
+        summary: { degreeProgram: 'Actualización profesional', paymentDueDate: '2027-03-04' },
+        enrollments: [
+          {
+            enrollmentId: 1072704,
+            offeringId: 58563,
+            intake: 'Marzo',
+            shift: 'Matutino',
+            offeringDescription: 'Seminario de Liderazgo',
+          },
+        ],
+      })
+    );
+
+    await expect(firstValueFrom(endpoint.reactivate([100, 101]))).resolves.toEqual({
+      confirmada: false,
+      enEspera: false,
+      idInscripcion: 1072704,
+      fechaVencimientoPago: '2027-03-04',
+      seniaInscripcion: 15500,
+      saldoCuenta: 1200,
+      resumen: {
+        carrera: 'Actualización profesional',
+        comienzo: 'Marzo',
+        turno: 'Matutino',
+      },
+      seminarios: [
+        {
+          idInscripcion: 1072704,
+          idOferta: 58563,
+          nombre: 'Seminario de Liderazgo',
+          comienzo: 'Marzo',
+          turno: 'Matutino',
+        },
+      ],
+    });
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsReactivateEndpoint, {
+      body: { enrollmentIds: [100, 101] },
+      showLoader: true,
+    });
+    expect(apiMock.clearCache).toHaveBeenCalledOnce();
+  });
+
   it('maps bank account payment to Sistarbanc payload', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        resultado: 'pendiente',
-        urlPago: 'https://pagos.example/sistarbanc',
-        parametrosEncriptados: 'token-encriptado',
-        mensajes: [{ clave: 'factura', valor: 'Creada' }],
+        result: 'pendiente',
+        paymentUrl: 'https://pagos.example/sistarbanc',
+        encryptedParameters: 'token-encriptado',
+        messages: [{ key: 'factura', value: 'Creada' }],
       })
     );
 
@@ -552,11 +611,11 @@ describe('InscripcionesEndpoint', () => {
       message: null,
       errorCode: null,
     });
-    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesPagarEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsStartPaymentEndpoint, {
       body: {
-        idsInscripcion: [1072704, 1072705],
-        tipoPago: 'SISTARBANC',
-        idBancoSistarbanc: 'brou',
+        enrollmentIds: [1072704, 1072705],
+        paymentType: 'SISTARBANC',
+        sistarbancBankId: 'brou',
       },
     });
     expect(apiMock.clearCache).toHaveBeenCalledOnce();
@@ -565,25 +624,25 @@ describe('InscripcionesEndpoint', () => {
   it('maps the confirmada block when the backend confirms the payment inline', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
-        resultado: 'confirmada',
-        urlPago: null,
-        parametrosEncriptados: null,
-        mensajes: [],
+        result: 'confirmada',
+        paymentUrl: null,
+        encryptedParameters: null,
+        messages: [],
         // La confirmada trae producto/carrera en la cabecera y comienzo/turno/materias
         // en cada inscripción confirmada.
-        confirmada: {
-          codigoPersona: 34692671,
-          idProducto: 20,
-          carrera: 'Sistemas',
-          coordinadorAcademico: { nombre: 'Ana', email: 'ana@ort.edu.uy' },
-          coordinadorCursos: null,
-          inscripciones: [
+        confirmed: {
+          personId: 34692671,
+          productId: 20,
+          degreeProgram: 'Sistemas',
+          academicCoordinator: { name: 'Ana', email: 'ana@ort.edu.uy' },
+          courseCoordinator: null,
+          enrollments: [
             {
-              idInscripcion: 1072704,
-              idOferta: 300,
-              comienzo: 'Marzo',
-              turno: 'Matutino',
-              materiasPrimerSemestre: [{ idMateria: 1, nombre: 'Cálculo' }],
+              enrollmentId: 1072704,
+              offeringId: 300,
+              intake: 'Marzo',
+              shift: 'Matutino',
+              firstSemesterSubjects: [{ subjectId: 1, name: 'Cálculo' }],
             },
           ],
         },
@@ -638,28 +697,28 @@ describe('InscripcionesEndpoint', () => {
 
     expect(apiMock.request).toHaveBeenNthCalledWith(
       1,
-      postInscripcionesPagarEndpoint,
-      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'CUENTA_PERSONAL' }) })
+      postEnrollmentsStartPaymentEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ paymentType: 'CUENTA_PERSONAL' }) })
     );
     expect(apiMock.request).toHaveBeenNthCalledWith(
       2,
-      postInscripcionesPagarEndpoint,
-      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'ABITAB' }) })
+      postEnrollmentsStartPaymentEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ paymentType: 'ABITAB' }) })
     );
     expect(apiMock.request).toHaveBeenNthCalledWith(
       3,
-      postInscripcionesPagarEndpoint,
-      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'PAGANZA' }) })
+      postEnrollmentsStartPaymentEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ paymentType: 'PAGANZA' }) })
     );
     expect(apiMock.request).toHaveBeenNthCalledWith(
       4,
-      postInscripcionesPagarEndpoint,
-      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'BANRED' }) })
+      postEnrollmentsStartPaymentEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ paymentType: 'BANRED' }) })
     );
     expect(apiMock.request).toHaveBeenNthCalledWith(
       5,
-      postInscripcionesPagarEndpoint,
-      expect.objectContaining({ body: expect.objectContaining({ tipoPago: 'GEOPAY' }) })
+      postEnrollmentsStartPaymentEndpoint,
+      expect.objectContaining({ body: expect.objectContaining({ paymentType: 'GEOPAY' }) })
     );
   });
   it('maps product interest payload and boolean response', async () => {
@@ -667,8 +726,8 @@ describe('InscripcionesEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.registerProductInterest(payload))).resolves.toBe(true);
 
-    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesInteresProductoEndpoint, {
-      body: { idsOferta: [300], idProcesoSeleccionado: 200, idProducto: 20 },
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsProductInterestEndpoint, {
+      body: { offeringIds: [300], admissionProcessId: 200, productId: 20 },
       showLoader: true,
     });
   });
@@ -684,6 +743,7 @@ describe('InscripcionesEndpoint', () => {
           esInscripcionCorporativa: false,
           idOfertasSeleccionadas: [300],
         }),
+      () => endpoint.reactivate([100]),
       () => endpoint.pay({ idsInscripcion: [1], metodoPago: 'abitab', idBancoSistarbanc: null }),
     ];
 
@@ -699,43 +759,43 @@ describe('InscripcionesEndpoint', () => {
       true
     );
 
-    expect(apiMock.request).toHaveBeenCalledWith(postInscripcionesEncuestaInicialEndpoint, {
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
       body: {
-        carreraId: 20,
-        procesoId: 200,
-        orientacionBachilleratoId: 3,
-        anioBachillerato: 2025,
-        cursaSecundariaActualmente: false,
-        vecesRecursaAnioBachillerato: 1,
-        recursaAnioBachillerato: true,
-        nivelFormacionPadreTutorId: 4,
-        nivelFormacionMadreTutorId: 5,
-        anioDecisionCarreraId: 6,
-        anioDecisionOrtId: 7,
-        seInformoEnOtrasUniversidades: true,
-        informacionOtrasUniversidadesLinea1: 'UCU',
-        informacionOtrasUniversidadesLinea2: 'UM',
-        apoyoDecisionId: 8,
-        institucionSecundariaId: 9,
-        nombreInstitucionSecundaria: 'Liceo 1',
-        ubicacionUltimoAnioSecundariaId: 10,
-        estadoEducacionSuperiorPreviaId: 11,
-        nivelDecisionId: 12,
-        tuvoAsesoramientoOrt: true,
-        valoracionAsesoramientoOrtId: 13,
-        visitoSitioWebOrt: true,
-        valoracionSitioWebOrtId: 14,
-        visitoInstalacionesOrt: false,
-        valoracionInstalacionesOrtId: 15,
-        recuerdaPublicidadOrt: true,
-        madreTutorEgresadoOrt: false,
-        padreTutorEgresadoOrt: true,
-        universidadConsideradaIds: [10, 11],
-        universidadConsideradaOtros: ['Otra consultada'],
-        universidadEducacionSuperiorIds: [20],
-        universidadEducacionSuperiorOtros: ['Otra superior'],
-        publicidadOrtIds: [7],
-        motivoEleccionOrtIds: [5],
+        degreeProgramId: 20,
+        admissionProcessId: 200,
+        highSchoolTrackId: 3,
+        highSchoolYear: 2025,
+        currentlyInSecondary: false,
+        highSchoolYearRepeatCount: 1,
+        repeatsHighSchoolYear: true,
+        fatherEducationLevelId: 4,
+        motherEducationLevelId: 5,
+        careerDecisionYearId: 6,
+        ortDecisionYearId: 7,
+        researchedOtherUniversities: true,
+        otherUniversitiesInfoLine1: 'UCU',
+        otherUniversitiesInfoLine2: 'UM',
+        decisionSupportId: 8,
+        secondaryInstitutionId: 9,
+        secondaryInstitutionName: 'Liceo 1',
+        lastSecondaryYearLocationId: 10,
+        previousHigherEducationId: 11,
+        decisionLevelId: 12,
+        hadOrtAdvisory: true,
+        ortAdvisoryRatingId: 13,
+        visitedOrtWebsite: true,
+        ortWebsiteRatingId: 14,
+        visitedOrtFacilities: false,
+        ortFacilitiesRatingId: 15,
+        recallsOrtAdvertising: true,
+        motherIsOrtGraduate: false,
+        fatherIsOrtGraduate: true,
+        consideredUniversityIds: [10, 11],
+        consideredUniversityOthers: ['Otra consultada'],
+        higherEducationUniversityIds: [20],
+        higherEducationUniversityOthers: ['Otra superior'],
+        ortAdvertisingIds: [7],
+        ortChoiceReasonIds: [5],
       },
       showLoader: true,
     });
@@ -757,7 +817,7 @@ describe('InscripcionesEndpoint', () => {
 
   it('drops an unknown survey estado to a null active section', async () => {
     apiMock.request.mockReturnValueOnce(
-      of({ tieneDerechoEncuesta: true, encuesta: { estado: 'en-revision' } })
+      of({ canAnswerSurvey: true, survey: { status: 'en-revision' } })
     );
     const unknown = await firstValueFrom(endpoint.getInitialSurvey());
 
@@ -765,7 +825,7 @@ describe('InscripcionesEndpoint', () => {
     expect(unknown.encuesta?.completa).toBe(false);
 
     apiMock.request.mockReturnValueOnce(
-      of({ tieneDerechoEncuesta: true, encuesta: { estado: 'identidad' } })
+      of({ canAnswerSurvey: true, survey: { status: 'identidad' } })
     );
     const known = await firstValueFrom(endpoint.getInitialSurvey());
 

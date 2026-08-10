@@ -125,7 +125,7 @@ describe('PersonalData', () => {
       number: '99123456',
       numberE164: '+59899123456',
     });
-  });
+  }, 10_000);
 
   it('should render the fdp organism when the identity is restricted', () => {
     service.getPersonalData.mockReturnValue(

@@ -10,8 +10,16 @@ export const ACCEPTED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 
 export type AcceptedImageMimeType = (typeof ACCEPTED_IMAGE_MIME_TYPES)[number];
 
-export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 export const IMAGE_COMPRESSION_THRESHOLD_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Techo del archivo original a partir del cual ni se intenta comprimir: por
+ * debajo de este tamaño la compresión suele lograr bajar de MAX_IMAGE_SIZE_BYTES;
+ * por encima, es un rechazo inmediato en el file-input (ver `maxFileSize` de
+ * ort-file-uploader) en lugar de gastar tiempo comprimiendo en vano.
+ */
+export const MAX_IMAGE_SIZE_BEFORE_COMPRESSION_BYTES = 15 * 1024 * 1024;
 
 const IMAGE_MAX_SIDE_PX = 2000;
 const IMAGE_QUALITY = 0.82;

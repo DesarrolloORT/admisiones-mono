@@ -54,7 +54,7 @@ function toBackendPhone(value: OrtPhoneInputValue | null): string {
     return '';
   }
 
-  return (value.iso2 === 'UY' ? value.number : value.numberE164 || value.number).trim();
+  return (value.numberE164 || value.number).trim();
 }
 
 function toIsoDateOnly(value: string | Date | null): string {

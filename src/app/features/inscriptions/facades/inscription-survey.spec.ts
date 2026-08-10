@@ -431,6 +431,17 @@ describe('InscripcionSurveyFacade', () => {
     expect(process.flow.currentStep()).toBe('pago');
   });
 
+  it('does not re-save the survey when exiting after pre-enrollment was already confirmed', async () => {
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+    expect(saveInitialSurvey).toHaveBeenCalledOnce();
+    saveInitialSurvey.mockClear();
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
   it.each([
     { failure: 'data false', result: of(false) },
     { failure: 'HTTP 400', result: throwError(() => ({ status: 400 })) },
@@ -517,7 +528,7 @@ describe('InscripcionSurveyFacade', () => {
         confirmada: false,
         enEspera: false,
         fechaVencimientoPago: null,
-        seniaInscripcion: null,
+        seniaInscripcion: 15500,
         saldoCuenta: null,
         resumen: null,
       })
@@ -532,6 +543,25 @@ describe('InscripcionSurveyFacade', () => {
     expect(survey.preEnrollmentError()).toBeNull();
   });
 
+  it('sets the reserva outcome and skips payment method selection when the deposit is 0', () => {
+    confirmPreEnrollment.mockReturnValue(
+      of({
+        confirmada: false,
+        enEspera: false,
+        fechaVencimientoPago: null,
+        seniaInscripcion: 0,
+        saldoCuenta: null,
+        resumen: null,
+      })
+    );
+    const { survey, process } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(process.flow.currentStep()).toBe('encuesta');
+    expect(payment.outcome()).toBe('reserva');
+  });
+
   it('shows the in-process outcome when pre-enrollment is waiting for manual review', () => {
     confirmPreEnrollment.mockReturnValue(
       of({
@@ -539,7 +569,7 @@ describe('InscripcionSurveyFacade', () => {
         enEspera: true,
         idInscripcion: null,
         fechaVencimientoPago: null,
-        seniaInscripcion: 0,
+        seniaInscripcion: 15500,
         saldoCuenta: null,
         resumen: { carrera: 'Sistemas', comienzo: 'Marzo', turno: 'Noche' },
       })

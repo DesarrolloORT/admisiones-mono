@@ -52,9 +52,10 @@ export class DashboardCard {
     return this.estado() !== 'Aceptada';
   });
 
-  protected readonly esPaquete = computed(
-    () => this.variant() === 'careers' && (this.inscripcion()?.seminarios?.length ?? 0) > 0
-  );
+  // Cantidad de anotaciones de la inscripción: cada seminario de un paquete cuenta como una;
+  // sin seminarios (carrera simple) es siempre 1, la propia inscripción.
+  protected readonly enrollmentsCount = computed(() => this.inscripcion()?.seminarios.length || 1);
+
   protected readonly idsInscripcion = computed(() => {
     const inscripcion = this.inscripcion();
     if (!inscripcion) return [];

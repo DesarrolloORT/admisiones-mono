@@ -1,17 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import { postInscripcionesReactivarEndpoint } from 'src/app/shared/api/generated/endpoints/inscripciones.endpoints';
-import {
-  getPersonaBecasEndpoint,
-  getPersonaInscripcionesEndpoint,
-} from 'src/app/shared/api/generated/endpoints/persona.endpoints';
-import type { DtoBecaPersona } from 'src/app/shared/api/generated/models/dtoBecaPersona';
-import type { DtoInscripcionesPorProductoProcesoResponse } from 'src/app/shared/api/generated/models/dtoInscripcionesPorProductoProcesoResponse';
+import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
 
-import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion';
 
 @Injectable({
@@ -21,145 +16,81 @@ export class HomeEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getMisInscripciones(): Observable<MiInscripcion[]> {
-    return this.api
-      .request(getPersonaInscripcionesEndpoint)
-      .pipe(map(data => this.toMisInscripciones(data)));
-  }
-
-  public getMisBecas(): Observable<MiBeca[]> {
-    return this.api.request(getPersonaBecasEndpoint).pipe(map(data => this.toMisBecas(data)));
-  }
-
-  public reactivarInscripcion(idInscripcion: number): Observable<boolean> {
-    return this.api
-      .request(postInscripcionesReactivarEndpoint, { body: { idInscripcion }, showLoader: true })
-      .pipe(
-        tap(() => this.api.clearCache()),
-        map(() => true)
-      );
+    return this.api.request(getPersonEnrollmentsEndpoint).pipe(
+      catchError((error: HttpErrorResponse) =>
+        error.status === 404 ? of([]) : throwError(() => error)
+      ),
+      map(data => this.toMisInscripciones(data))
+    );
   }
 
   private toMisInscripciones(
-    data:
-      | { data: DtoInscripcionesPorProductoProcesoResponse[] | null }
-      | DtoInscripcionesPorProductoProcesoResponse[]
-      | null
-      | undefined
+    data: { data: MyEnrollmentsResponse[] | null } | MyEnrollmentsResponse[] | null | undefined
   ): MiInscripcion[] {
     const groups = Array.isArray(data) ? data : (data?.data ?? []);
 
     return groups.flatMap(group => this.toMisInscripcionesFromGroup(group));
   }
 
-  private toMisInscripcionesFromGroup(
-    group: DtoInscripcionesPorProductoProcesoResponse
-  ): MiInscripcion[] {
-    const items = group.inscripciones ?? [];
-    const nombreProducto = group.nombreExtensoProducto ?? '';
-    const estado = group.estadoInscripcion ?? '';
+  private toMisInscripcionesFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
+    const items = group.enrollments ?? [];
 
-    if (isProfessionalUpdateLevel(group.idNivelProducto)) {
+    if (items.length === 0) {
+      return [];
+    }
+
+    const nombreProducto = group.productFullName ?? '';
+    const estado = group.enrollmentStatus ?? '';
+
+    if (isProfessionalUpdateLevel(group.productLevelId)) {
       const primero = items[0];
       return [
         {
-          idInscripto: primero?.idInscripto ?? 0,
-          idOfertas: [...new Set(items.map(item => item.idOferta).filter(isPositiveInteger))],
-          idProducto: group.idProducto ?? 0,
-          idProceso: group.idProceso ?? 0,
-          idComienzo: primero?.idComienzo ?? 0,
-          idTurno: primero?.idTurno ?? 0,
+          idInscripto: primero?.enrollmentId ?? 0,
+          idOfertas: [...new Set(items.map(item => item.offeringId).filter(isPositiveInteger))],
+          idProducto: group.productId ?? 0,
+          idProceso: group.admissionProcessId ?? 0,
+          idComienzo: primero?.intakeId ?? 0,
+          idTurno: primero?.shiftId ?? 0,
           nombreProducto,
-          nombreComienzo: primero?.nombreComienzo ?? '',
-          nombreTurno: primero?.nombreTurno ?? '',
+          nombreComienzo: primero?.intakeName ?? '',
+          nombreTurno: primero?.shiftName ?? '',
           estado,
+          fechaVencimientoPago: readFechaVencimientoPago(group),
           seminarios: items.map((item): MiInscripcionSeminario => ({
-            idInscripto: item.idInscripto ?? 0,
-            idOferta: item.idOferta ?? 0,
-            descripcionOferta: item.descripcionOferta ?? '',
-            idComienzo: item.idComienzo ?? 0,
-            idTurno: item.idTurno ?? 0,
-            nombreComienzo: item.nombreComienzo ?? '',
-            nombreTurno: item.nombreTurno ?? '',
+            idInscripto: item.enrollmentId ?? 0,
+            idOferta: item.offeringId ?? 0,
+            descripcionOferta: item.offeringDescription ?? '',
+            idComienzo: item.intakeId ?? 0,
+            idTurno: item.shiftId ?? 0,
+            nombreComienzo: item.intakeName ?? '',
+            nombreTurno: item.shiftName ?? '',
           })),
         },
       ];
     }
 
-    if (items.length === 0) {
-      return [
-        {
-          idInscripto: 0,
-          idOfertas: [],
-          idProducto: group.idProducto ?? 0,
-          idProceso: group.idProceso ?? 0,
-          idComienzo: 0,
-          idTurno: 0,
-          nombreProducto,
-          nombreComienzo: '',
-          nombreTurno: '',
-          estado,
-          seminarios: [],
-        },
-      ];
-    }
-
     return items.map(item => ({
-      idInscripto: item.idInscripto ?? 0,
-      idOfertas: isPositiveInteger(item.idOferta) ? [item.idOferta] : [],
-      idProducto: group.idProducto ?? 0,
-      idProceso: group.idProceso ?? 0,
-      idComienzo: item.idComienzo ?? 0,
-      idTurno: item.idTurno ?? 0,
+      idInscripto: item.enrollmentId ?? 0,
+      idOfertas: isPositiveInteger(item.offeringId) ? [item.offeringId] : [],
+      idProducto: group.productId ?? 0,
+      idProceso: group.admissionProcessId ?? 0,
+      idComienzo: item.intakeId ?? 0,
+      idTurno: item.shiftId ?? 0,
       nombreProducto,
-      nombreComienzo: item.nombreComienzo ?? '',
-      nombreTurno: item.nombreTurno ?? '',
+      nombreComienzo: item.intakeName ?? '',
+      nombreTurno: item.shiftName ?? '',
       estado,
+      fechaVencimientoPago: readFechaVencimientoPago(group),
       seminarios: [],
     }));
-  }
-
-  private toMisBecas(
-    data: { data: DtoBecaPersona[] | null } | DtoBecaPersona[] | null | undefined
-  ): MiBeca[] {
-    const items = Array.isArray(data) ? data : (data?.data ?? []);
-
-    return items.map(item => ({
-      id: item.idPostulacion ?? item.idBeca ?? 0,
-      nombreBeca: item.nombre ?? '',
-      nombreCarrera: item.carrera ?? '',
-      estado: item.estado ?? '',
-      cierrePostulacion: this.formatDate(item.fechaCierrePostulacion),
-      fechaPrueba: this.formatDate(item.fechaPrueba),
-      resultadoPrueba: '',
-      beneficio: '',
-      fechaResultados: this.formatDate(item.fechaResultados),
-    }));
-  }
-
-  private formatDate(value: string | null | undefined): string {
-    if (!value) {
-      return '';
-    }
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return '';
-    }
-
-    const formatted = new Intl.DateTimeFormat('es-UY', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'UTC',
-    })
-      .format(date)
-      .replace(',', '');
-
-    return `${formatted.charAt(0).toUpperCase()}${formatted.slice(1)}`;
   }
 }
 
 function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function readFechaVencimientoPago(group: MyEnrollmentsResponse): string | null {
+  return group.paymentDueDate ?? null;
 }

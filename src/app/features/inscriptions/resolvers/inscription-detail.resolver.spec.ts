@@ -15,6 +15,25 @@ import { InscriptionResumeContextStore } from '../services/inscription-resume-co
 import { Inscripciones } from '../services/inscriptions';
 import { inscriptionDetailResolver, resolveEntryIntent } from './inscription-detail.resolver';
 
+const REACTIVATION_RESPONSE = {
+  confirmada: false,
+  enEspera: false,
+  idInscripcion: 7010,
+  fechaVencimientoPago: '2027-03-04',
+  seniaInscripcion: 15500,
+  saldoCuenta: 1200,
+  resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
+  seminarios: [
+    {
+      idInscripcion: 7010,
+      idOferta: 310,
+      nombre: 'Seminario',
+      comienzo: 'Marzo 2027',
+      turno: 'Noche',
+    },
+  ],
+};
+
 describe('inscriptionDetailResolver', () => {
   let getDetail: ReturnType<typeof vi.fn>;
   let getCareers: ReturnType<typeof vi.fn>;
@@ -95,12 +114,39 @@ describe('inscriptionDetailResolver', () => {
     ).resolves.toEqual({
       intent: 'reactivar',
       detail,
+      preEnrollment: null,
       idProducto: 20,
       idProceso: 200,
       idOfertas: [],
       idNivelProducto: null,
     });
     expect(getDetail).toHaveBeenCalledWith(20, 200);
+  });
+
+  it('uses the transient reactivation response without loading detail', async () => {
+    TestBed.inject(InscriptionResumeContextStore).saveReactivation(
+      {
+        idProducto: 20,
+        idProceso: 200,
+        idOfertas: [310],
+        idInscripciones: [7010],
+      },
+      REACTIVATION_RESPONSE
+    );
+
+    await expect(
+      resolve({ idProducto: '20', idProceso: '200', modo: 'reactivar' })
+    ).resolves.toEqual({
+      intent: 'reactivar',
+      detail: null,
+      preEnrollment: REACTIVATION_RESPONSE,
+      idProducto: 20,
+      idProceso: 200,
+      idOfertas: [310],
+      idNivelProducto: null,
+    });
+    expect(getDetail).not.toHaveBeenCalled();
+    expect(TestBed.inject(InscriptionResumeContextStore).takeReactivation(20, 200)).toBeNull();
   });
 
   it('resolves the "nueva" intent without valid parameters so the flow starts fresh', async () => {

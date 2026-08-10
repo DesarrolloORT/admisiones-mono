@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { Catalogs } from '../../../catalogs/services/catalogs';
 import { RegisterFlowFacade } from '../../facades/register-flow.facade';
+import { AccountService } from '../../services/account';
 import { DocumentPrefillService } from '../../services/document-prefill';
 import { RegistrationService } from '../../services/registration';
 import { Register } from './register';
@@ -92,6 +93,7 @@ describe('Register', () => {
         },
         { provide: DocumentPrefillService, useValue: documentPrefillMock },
         { provide: SnackbarHandler, useValue: snackbarMock },
+        { provide: AccountService, useValue: { validatePhone: vi.fn().mockReturnValue(of(true)) } },
       ],
     });
 

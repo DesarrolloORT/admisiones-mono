@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+import type { InscripcionPreEnrollmentResponse } from '../models/inscription-flow';
+
 const STORAGE_KEY = 'inscription-resume-context';
 
 export interface InscriptionResumeContext {
@@ -11,6 +13,12 @@ export interface InscriptionResumeContext {
 
 @Injectable({ providedIn: 'root' })
 export class InscriptionResumeContextStore {
+  private reactivation: {
+    idProducto: number;
+    idProceso: number;
+    response: InscripcionPreEnrollmentResponse;
+  } | null = null;
+
   public save(context: InscriptionResumeContext): void {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(context));
@@ -49,7 +57,33 @@ export class InscriptionResumeContextStore {
     }
   }
 
+  public saveReactivation(
+    context: InscriptionResumeContext,
+    response: InscripcionPreEnrollmentResponse
+  ): void {
+    this.save(context);
+    this.reactivation = {
+      idProducto: context.idProducto,
+      idProceso: context.idProceso,
+      response,
+    };
+  }
+
+  public takeReactivation(
+    idProducto: number,
+    idProceso: number
+  ): InscripcionPreEnrollmentResponse | null {
+    if (this.reactivation?.idProducto !== idProducto || this.reactivation.idProceso !== idProceso) {
+      return null;
+    }
+
+    const response = this.reactivation.response;
+    this.reactivation = null;
+    return response;
+  }
+
   public clear(): void {
+    this.reactivation = null;
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {

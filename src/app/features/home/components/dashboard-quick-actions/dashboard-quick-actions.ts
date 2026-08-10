@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
+import type { InscripcionPreEnrollmentResponse } from '../../../inscriptions/models/inscription-flow';
 import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
-import { HomeService } from '../../services/home';
+import { Inscripciones } from '../../../inscriptions/services/inscriptions';
 
 type CardType = 'careers' | 'scholarships';
 
@@ -41,7 +42,7 @@ const DEFAULT_ACTION: ActionConfig = { type: 'secondary', label: 'Ver detalle' }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardQuickActions {
-  private readonly homeService = inject(HomeService);
+  private readonly inscriptions = inject(Inscripciones);
   private readonly router = inject(Router);
   private readonly resumeContext = inject(InscriptionResumeContextStore);
 
@@ -50,7 +51,6 @@ export class DashboardQuickActions {
   readonly cardType = input<CardType>('careers');
   readonly idProducto = input<number | null>(null);
   readonly idProceso = input<number | null>(null);
-  readonly idInscripto = input<number | null>(null);
   readonly idInscripciones = input<readonly number[]>([]);
   readonly idOfertas = input<readonly number[]>([]);
   private readonly isReactivating = signal(false);
@@ -74,12 +74,13 @@ export class DashboardQuickActions {
       (this.idProducto() ?? 0) > 0 &&
       (this.idProceso() ?? 0) > 0
   );
+  // Actualización profesional (nivel 3/4) trae una anotación por seminario y todas se
+  // reactivan juntas; carrera simple trae una sola. La tarjeta ya manda el set completo.
   protected readonly reactivatesFlow = computed(
     () =>
       this.cardType() === 'careers' &&
       this.status() === 'Dada de baja' &&
-      Number.isSafeInteger(this.idInscripto()) &&
-      (this.idInscripto() ?? 0) > 0 &&
+      this.idInscripciones().length > 0 &&
       Number.isSafeInteger(this.idProducto()) &&
       (this.idProducto() ?? 0) > 0 &&
       Number.isSafeInteger(this.idProceso()) &&
@@ -87,13 +88,15 @@ export class DashboardQuickActions {
   );
 
   protected reactivate(): void {
-    const idInscripto = this.idInscripto();
-    if (this.isReactivating() || !idInscripto) return;
+    const idsInscripcion = positiveIds(this.idInscripciones());
+    if (this.isReactivating() || !idsInscripcion.length) return;
     this.isReactivating.set(true);
-    this.homeService.reactivarInscripcion(idInscripto).subscribe({
-      next: () => {
-        this.saveResumeContext();
-        this.router.navigate(['/inscripciones'], { queryParams: this.resumeQueryParams() });
+    this.inscriptions.reactivate(idsInscripcion).subscribe({
+      next: response => {
+        this.saveReactivationContext(response);
+        this.router.navigate(['/inscripciones'], {
+          queryParams: { ...this.resumeQueryParams(), modo: 'reactivar' },
+        });
       },
       error: () => this.isReactivating.set(false),
     });
@@ -116,4 +119,37 @@ export class DashboardQuickActions {
       idInscripciones: [...this.idInscripciones()],
     });
   }
+
+  private saveReactivationContext(response: InscripcionPreEnrollmentResponse): void {
+    const idProducto = this.idProducto();
+    const idProceso = this.idProceso();
+    if (!idProducto || !idProceso) return;
+
+    const responseOffers = positiveIds((response.seminarios ?? []).map(item => item.idOferta));
+    const responseInscriptions = positiveIds([
+      response.idInscripcion,
+      ...(response.seminarios ?? []).map(item => item.idInscripcion),
+    ]);
+
+    this.resumeContext.saveReactivation(
+      {
+        idProducto,
+        idProceso,
+        idOfertas: responseOffers.length ? responseOffers : [...this.idOfertas()],
+        idInscripciones: responseInscriptions,
+      },
+      response
+    );
+  }
+}
+
+function positiveIds(values: readonly (number | null | undefined)[]): number[] {
+  return [
+    ...new Set(
+      values.filter(
+        (value): value is number =>
+          typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+      )
+    ),
+  ];
 }

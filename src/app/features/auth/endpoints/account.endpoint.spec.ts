@@ -57,7 +57,7 @@ describe('AccountEndpoint', () => {
     });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+      r => r.url.includes('/person/details') && r.method === 'GET'
     );
 
     expect(req.request.withCredentials).toBe(true);
@@ -66,21 +66,21 @@ describe('AccountEndpoint', () => {
       success: true,
       httpCode: 200,
       data: {
-        tipoDocumento: 'CI',
-        documento: '4123456-9',
-        primerNombre: 'Gabriela',
-        segundoNombre: '',
-        primerApellido: 'Ortiz',
-        segundoApellido: 'Morales',
-        fechaNacimiento: '1988-05-31',
-        sexo: 'F',
-        codigoPais: 1,
-        codigoEstado: 10,
-        codigoCiudad: 100,
-        direccion: 'Av. 18 de Julio 1360',
-        telefono1: '99123456',
-        mail: 'gabrielaortiz@gmail.com',
-        verificacionMail: null,
+        documentType: 'CI',
+        documentNumber: '4123456-9',
+        firstName: 'Gabriela',
+        middleName: '',
+        firstSurname: 'Ortiz',
+        secondSurname: 'Morales',
+        birthDate: '1988-05-31',
+        sex: 'F',
+        countryId: 1,
+        stateId: 10,
+        cityId: 100,
+        address: 'Av. 18 de Julio 1360',
+        primaryPhone: '99123456',
+        email: 'gabrielaortiz@gmail.com',
+        emailConfirmation: null,
       },
     });
   });
@@ -108,7 +108,7 @@ describe('AccountEndpoint', () => {
     });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+      r => r.url.includes('/person/details') && r.method === 'GET'
     );
 
     req.flush({ success: true, httpCode: 200, data: {} });
@@ -121,16 +121,16 @@ describe('AccountEndpoint', () => {
     });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+      r => r.url.includes('/person/details') && r.method === 'GET'
     );
 
     req.flush({
       success: true,
       httpCode: 200,
       data: {
-        mail: 'gabrielaortiz@gmail.com',
-        verificacionMail: null,
-        identidadRestringida: true,
+        email: 'gabrielaortiz@gmail.com',
+        emailConfirmation: null,
+        hasRestrictedIdentity: true,
       },
     });
   });
@@ -145,7 +145,7 @@ describe('AccountEndpoint', () => {
     });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'GET'
+      r => r.url.includes('/person/details') && r.method === 'GET'
     );
     req.flush(null, { status: 500, statusText: 'Internal Server Error' });
 
@@ -169,17 +169,17 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBe(true));
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'PUT'
+      r => r.url.includes('/person/details') && r.method === 'PUT'
     );
 
     expect(req.request.body).toEqual({
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: undefined,
-      direccion: 'Av. 18 de Julio 1360',
-      telefono1: '99123456',
-      mail: 'gabrielaortiz@gmail.com',
-      verificacionMail: 'gabrielaortiz@gmail.com',
+      countryId: 1,
+      stateId: 10,
+      cityId: undefined,
+      address: 'Av. 18 de Julio 1360',
+      primaryPhone: '99123456',
+      email: 'gabrielaortiz@gmail.com',
+      emailConfirmation: 'gabrielaortiz@gmail.com',
     });
     expect(req.request.withCredentials).toBe(true);
 
@@ -200,7 +200,7 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBe(false));
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'PUT'
+      r => r.url.includes('/person/details') && r.method === 'PUT'
     );
 
     req.flush({ success: true, httpCode: 200, data: false });
@@ -223,7 +223,7 @@ describe('AccountEndpoint', () => {
       });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/DatosPersona') && r.method === 'PUT'
+      r => r.url.includes('/person/details') && r.method === 'PUT'
     );
     req.flush(null, { status: 400, statusText: 'Bad Request' });
 
@@ -245,18 +245,18 @@ describe('AccountEndpoint', () => {
 
     const req = httpController.expectOne(
       r =>
-        r.url.includes('/Persona/ValidarTelefono') &&
+        r.url.includes('/person/validate-phone-number') &&
         r.method === 'POST' &&
-        r.params.get('telefono1') === 'true'
+        r.params.get('isPrimaryPhone') === 'true'
     );
 
     expect(req.request.body).toEqual({
-      telefonoE164: '+59899123456',
+      e164: '+59899123456',
       iso2: 'UY',
-      caracteristicaPais: 598,
-      telefonoSimple: '99123456',
+      countryCode: 598,
+      nationalNumber: '99123456',
     });
-    expect(req.request.withCredentials).toBe(true);
+    expect(req.request.withCredentials).toBeFalsy();
 
     req.flush({ success: true, httpCode: 200, data: true });
   });
@@ -272,7 +272,7 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBe(false));
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/ValidarTelefono') && r.method === 'POST'
+      r => r.url.includes('/person/validate-phone-number') && r.method === 'POST'
     );
 
     req.flush({ success: true, httpCode: 200, data: false });
@@ -295,7 +295,7 @@ describe('AccountEndpoint', () => {
       });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/ValidarTelefono') && r.method === 'POST'
+      r => r.url.includes('/person/validate-phone-number') && r.method === 'POST'
     );
     req.flush(null, { status: 400, statusText: 'Bad Request' });
 
@@ -314,12 +314,12 @@ describe('AccountEndpoint', () => {
       .subscribe(result => expect(result).toBeUndefined());
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
+      r => r.url.includes('/person/change-password') && r.method === 'POST'
     );
 
     expect(req.request.body).toEqual({
-      passwordActual: 'ActualPassword1!',
-      passwordNueva: 'NuevaPassword1!',
+      currentPassword: 'ActualPassword1!',
+      newPassword: 'NuevaPassword1!',
     });
     expect(req.request.withCredentials).toBe(true);
 
@@ -341,7 +341,7 @@ describe('AccountEndpoint', () => {
       });
 
     const req = httpController.expectOne(
-      r => r.url.includes('/Persona/CambiarPassword') && r.method === 'POST'
+      r => r.url.includes('/person/change-password') && r.method === 'POST'
     );
     req.flush(null, { status: 400, statusText: 'Bad Request' });
 

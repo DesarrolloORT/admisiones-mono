@@ -41,7 +41,7 @@ describe('registration mapper', () => {
       codigoEstado: 10,
       codigoCiudad: 100,
       direccion: 'Mercedes 1234',
-      telefono1: '099123456',
+      telefono1: '+59899123456',
       mail: 'ana@example.com',
       verificacionMail: 'ana@example.com',
     });
@@ -63,7 +63,7 @@ describe('registration mapper', () => {
       fechaNacimiento: '2000-01-01',
       sexo: 'F',
       direccion: 'Mercedes 1234',
-      telefono1: '099123456',
+      telefono1: '+59899123456',
       mail: 'ana@example.com',
       verificacionMail: 'ana@example.com',
       codigoPais: 1,
@@ -83,7 +83,9 @@ describe('registration mapper', () => {
     });
   });
 
-  it('should preserve the international prefix for non-Uruguayan phones', () => {
+  it('should preserve the international prefix for all phones', () => {
+    expect(toAuthRegisterPersonalData(personal).telefono1).toBe('+59899123456');
+
     expect(
       toAuthRegisterPersonalData({
         ...personal,
