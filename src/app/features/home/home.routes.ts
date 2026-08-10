@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { ResolveFn, Routes } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import { HomeLayout } from './layouts/home-layout/home-layout';
 import { HomeData } from './models/home-data';
@@ -13,10 +13,10 @@ import { HomeService } from './services/home';
 export const homeResolver: ResolveFn<HomeData | null> = () => {
   const homeService = inject(HomeService);
 
-  return forkJoin({
-    inscripciones: homeService.getMisInscripciones(),
-    becas: homeService.getMisBecas(),
-  }).pipe(catchError(() => of(null)));
+  return homeService.getMisInscripciones().pipe(
+    map(inscripciones => ({ inscripciones, becas: [] })),
+    catchError(() => of(null))
+  );
 };
 
 export const routes: Routes = [

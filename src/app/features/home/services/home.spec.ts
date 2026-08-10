@@ -8,13 +8,11 @@ describe('HomeService', () => {
   let service: HomeService;
   let endpointMock: {
     getMisInscripciones: ReturnType<typeof vi.fn>;
-    getMisBecas: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
       getMisInscripciones: vi.fn().mockReturnValue(of([])),
-      getMisBecas: vi.fn().mockReturnValue(of([])),
     };
 
     TestBed.configureTestingModule({
@@ -43,25 +41,5 @@ describe('HomeService', () => {
 
     await expect(firstValueFrom(service.getMisInscripciones())).resolves.toEqual(inscripciones);
     expect(endpointMock.getMisInscripciones).toHaveBeenCalled();
-  });
-
-  it('delegates getMisBecas to the endpoint', async () => {
-    const becas = [
-      {
-        id: 4,
-        nombreBeca: 'Fondo de Excelencia Académica',
-        nombreCarrera: 'Analista Programador',
-        estado: 'En proceso',
-        cierrePostulacion: '',
-        fechaPrueba: '',
-        resultadoPrueba: '',
-        beneficio: '',
-        fechaResultados: '',
-      },
-    ];
-    endpointMock.getMisBecas.mockReturnValue(of(becas));
-
-    await expect(firstValueFrom(service.getMisBecas())).resolves.toEqual(becas);
-    expect(endpointMock.getMisBecas).toHaveBeenCalled();
   });
 });

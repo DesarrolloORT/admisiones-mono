@@ -1,10 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import {
-  getPersonEnrollmentsEndpoint,
-  getPersonScholarshipsEndpoint,
-} from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
 import { HomeEndpoint } from './home.endpoint';
 
@@ -238,35 +236,9 @@ describe('HomeEndpoint', () => {
     expect(result).toEqual([]);
   });
 
-  it('should map Persona/Becas into dashboard cards', async () => {
-    api.request.mockReturnValueOnce(
-      of([
-        {
-          scholarshipId: 40,
-          applicationId: 50,
-          name: 'Fondo de Excelencia Académica',
-          degreeProgram: 'Licenciatura en Diseño Gráfico',
-          status: 'En proceso',
-          applicationCloseDate: '2026-07-15T00:00:00Z',
-          testDate: '2026-07-22T00:00:00Z',
-          resultsDate: null,
-        },
-      ])
-    );
+  it('should treat a 404 response as no enrollments', async () => {
+    api.request.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
 
-    await expect(firstValueFrom(endpoint.getMisBecas())).resolves.toEqual([
-      {
-        id: 50,
-        nombreBeca: 'Fondo de Excelencia Académica',
-        nombreCarrera: 'Licenciatura en Diseño Gráfico',
-        estado: 'En proceso',
-        cierrePostulacion: 'Miércoles 15/07/2026',
-        fechaPrueba: 'Miércoles 22/07/2026',
-        resultadoPrueba: '',
-        beneficio: '',
-        fechaResultados: '',
-      },
-    ]);
-    expect(api.request).toHaveBeenCalledWith(getPersonScholarshipsEndpoint);
+    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([]);
   });
 });

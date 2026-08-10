@@ -306,7 +306,7 @@ ort-card h4 {
 
   .inscription-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: end;
     margin-inline: 0;
     padding: 0;
     background: transparent;
@@ -314,10 +314,6 @@ ort-card h4 {
 
   .inscription-footer:has(> :not(:only-child)) {
     justify-content: space-between;
-  }
-
-  .inscription-footer:has(> :only-child) {
-    justify-content: center;
   }
 
   .inscription-regulation-footer__accept {

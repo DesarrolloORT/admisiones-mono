@@ -253,6 +253,14 @@ Los grupos cuyo `enrollments[]` llega vacío o `null` no representan una
 inscripción y se omiten. Si no queda ninguna inscripción ni beca, la home muestra
 el estado inicial con las dos cards ilustradas.
 
+Un `404` de `GET /person/enrollments` significa que la persona no tiene registros y
+se normaliza a una colección vacía. Los demás errores conservan el estado de error
+de la home. `GET /person/scholarships` fue eliminado del contrato: la home ya no lo
+consulta y compone `becas: []`.
+
+> **Drift detectado:** testing devuelve `404` cuando no hay inscripciones, pero el
+> endpoint generado solo documenta respuestas `200` y `400`.
+
 - **Niveles 1 y 2:** sin cambios funcionales. Una tarjeta por inscripción (un
   `MiInscripcion` por item de `inscripciones[]`), título = `nombreExtensoProducto`,
   fila "Comienzo" y el CTA por `estadoInscripcion` vía `DashboardQuickActions`.

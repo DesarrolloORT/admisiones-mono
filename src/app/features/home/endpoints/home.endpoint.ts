@@ -1,16 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import {
-  getPersonEnrollmentsEndpoint,
-  getPersonScholarshipsEndpoint,
-} from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
-import type { ScholarshipSummary } from 'src/app/shared/api/generated/models/scholarshipSummary';
 
-import { MiBeca } from '../models/mi-beca';
 import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion';
 
 @Injectable({
@@ -20,13 +16,12 @@ export class HomeEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getMisInscripciones(): Observable<MiInscripcion[]> {
-    return this.api
-      .request(getPersonEnrollmentsEndpoint)
-      .pipe(map(data => this.toMisInscripciones(data)));
-  }
-
-  public getMisBecas(): Observable<MiBeca[]> {
-    return this.api.request(getPersonScholarshipsEndpoint).pipe(map(data => this.toMisBecas(data)));
+    return this.api.request(getPersonEnrollmentsEndpoint).pipe(
+      catchError((error: HttpErrorResponse) =>
+        error.status === 404 ? of([]) : throwError(() => error)
+      ),
+      map(data => this.toMisInscripciones(data))
+    );
   }
 
   private toMisInscripciones(
@@ -89,47 +84,6 @@ export class HomeEndpoint {
       fechaVencimientoPago: readFechaVencimientoPago(group),
       seminarios: [],
     }));
-  }
-
-  private toMisBecas(
-    data: { data: ScholarshipSummary[] | null } | ScholarshipSummary[] | null | undefined
-  ): MiBeca[] {
-    const items = Array.isArray(data) ? data : (data?.data ?? []);
-
-    return items.map(item => ({
-      id: item.applicationId ?? item.scholarshipId ?? 0,
-      nombreBeca: item.name ?? '',
-      nombreCarrera: item.degreeProgram ?? '',
-      estado: item.status ?? '',
-      cierrePostulacion: this.formatDate(item.applicationCloseDate),
-      fechaPrueba: this.formatDate(item.testDate),
-      resultadoPrueba: '',
-      beneficio: '',
-      fechaResultados: this.formatDate(item.resultsDate),
-    }));
-  }
-
-  private formatDate(value: string | null | undefined): string {
-    if (!value) {
-      return '';
-    }
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return '';
-    }
-
-    const formatted = new Intl.DateTimeFormat('es-UY', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'UTC',
-    })
-      .format(date)
-      .replace(',', '');
-
-    return `${formatted.charAt(0).toUpperCase()}${formatted.slice(1)}`;
   }
 }
 
