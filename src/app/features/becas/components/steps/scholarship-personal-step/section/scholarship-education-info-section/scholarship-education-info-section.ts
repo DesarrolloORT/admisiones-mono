@@ -39,6 +39,8 @@ export class ScholarshipEducationInfoSection {
     return breakpoint.isXSmall || breakpoint.isSmall ? 'inline' : 'block';
   });
 
+  protected readonly showCertificateUpload = computed(() => this.facade.variant() !== 'fbc');
+
   public onCertificateFilesChanged(change: OrtFileUploaderChange): void {
     this.facade.setFileFlag(this.certificateFileControl, change);
   }
