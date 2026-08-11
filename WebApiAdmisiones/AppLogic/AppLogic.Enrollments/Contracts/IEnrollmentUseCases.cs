@@ -24,7 +24,13 @@ public interface IReactivateEnrollment
 /// <summary>Detalle de una inscripción de "Mis carreras" según su estado.</summary>
 public interface IGetEnrollmentDetails
 {
-    Task<OperationResult<EnrollmentDetailsResponse>> ExecuteAsync(long personId, long productId, long admissionProcessId);
+    /// <param name="status">
+    /// Estado de la tarjeta que se abrió. Un producto y proceso puede tener ofertas en más de un
+    /// estado (seminarios de nivel 3 y 4), y cada estado es una tarjeta distinta en "Mis carreras":
+    /// sin este dato el detalle mezcla las ofertas de todos los estados. Null: comportamiento
+    /// anterior, gana la fila con el comienzo más temprano.
+    /// </param>
+    Task<OperationResult<EnrollmentDetailsResponse>> ExecuteAsync(long personId, long productId, long admissionProcessId, string? status = null);
 }
 
 /// <summary>Indica si la persona ya aceptó el reglamento estudiantil.</summary>

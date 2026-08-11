@@ -100,6 +100,26 @@ producto son N inscripciones (una por seminario/oferta). El front tiene que mand
 Es todo o nada: si alguna inscripción de la lista no existe o no está de baja no se reactiva ninguna
 (`INS_REA_01` / `INS_REA_02`). Si las ofertas no son compatibles entre sí llega `INS_CPI_17`.
 
+### "Mis carreras": una tarjeta por estado, no por producto
+
+Misma raíz que el punto anterior. `person/enrollments` agrupaba por `{producto, proceso}` y tomaba el
+estado de una fila arbitraria del grupo. Con seminarios de nivel 3 y 4 la persona puede pagar unos y
+dejar otros pendientes: las filas caían todas en la misma tarjeta y los seminarios impagos quedaban
+invisibles, sin forma de pagarlos. Ahora la clave es `{producto, proceso, estado}`.
+
+Dos cosas para el front:
+
+- `person/enrollments` puede devolver **más de una entrada con el mismo `productId` y
+  `admissionProcessId`**. El `trackBy` del listado tiene que incluir `enrollmentStatus`, o Angular
+  reusa el nodo equivocado.
+- Al abrir una tarjeta hay que reenviar ese `enrollmentStatus` como query param `status` a
+  `enrollments/details`; si no, el detalle mezcla las ofertas de todos los estados (el carrito de
+  "Pago pendiente" incluiría los seminarios ya pagos). El param es opcional: sin él, el detalle se
+  comporta como antes.
+
+Efecto secundario esperado: filas `Dada de baja` o `En proceso` que antes quedaban tapadas por
+hermanas confirmadas ahora aparecen como tarjeta propia.
+
 ### Formato del teléfono: E.164, igual que FDP
 
 El contrato para el front, con ejemplos y códigos de error, está en

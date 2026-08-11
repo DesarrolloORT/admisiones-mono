@@ -3116,6 +3116,81 @@ namespace UnitTesting.AppLogic.Services
             inscriptoRepo.Verify(r => r.GetDetalleByKey(556, It.IsAny<long>()), Times.Never);
         }
 
+        /// <summary>
+        /// Producto con seminarios en dos estados: los ya pagos no tienen que entrar al carrito de
+        /// la tarjeta de pago pendiente. El estado llega desde la tarjeta que abrió la persona.
+        /// </summary>
+        [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenSeminariosEnDosEstados_UsaSoloLosDelEstadoPedido()
+        {
+            var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
+            fresco1y2Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco1y2>());
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
+
+            var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
+            fresco3y4Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123, 10, 20))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    // Comienzo más temprano: sin filtro por estado, esta fila decidiría el detalle.
+                    new()
+                    {
+                        IdProducto = 10, IdProceso = 20, IdInscripto = 555, IdOferta = 99,
+                        IdNivelProducto = 4,
+                        EstadoInscripcion = global::AppLogic.Contracts.Constants.EnrollmentStatus.Confirmed,
+                        ProgConSeminariosProducto = "SI",
+                        DescripcionOferta = "Seminario ya pago",
+                        FechaInicioComienzo = new DateTime(2026, 3, 1)
+                    },
+                    new()
+                    {
+                        IdProducto = 10, IdProceso = 20, IdInscripto = 556, IdOferta = 100,
+                        IdNivelProducto = 4,
+                        EstadoInscripcion = global::AppLogic.Contracts.Constants.EnrollmentStatus.PaymentPending,
+                        ProgConSeminariosProducto = "SI",
+                        DescripcionOferta = "Seminario impago",
+                        FechaInicioComienzo = new DateTime(2026, 3, 2)
+                    }
+                });
+            _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(fresco3y4Repo.Object);
+
+            var inscriptoRepo = new Mock<IInscriptoRepository>();
+            inscriptoRepo
+                .Setup(r => r.GetDetalleByKey(556, 123))
+                .Returns(new Inscripto { IdInscripto = 556, CodigoPersona = 123, IdOferta = 100, FechaVtoInscr = new DateTime(2026, 7, 1) });
+            _uowMock.Setup(u => u.Inscriptos).Returns(inscriptoRepo.Object);
+
+            var seniaRepo = new Mock<IInscriptoSeniaMinimumRepository>();
+            seniaRepo.Setup(r => r.GetByKey(556)).Returns((InscriptoSeniaMinimum)null);
+            _uowMock.Setup(u => u.InscriptoSeniaMinima).Returns(seniaRepo.Object);
+
+            var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK,
+                """
+                {
+                  "carritos": [
+                    { "idCarrito": "123|10|1|8|556", "senia": 800.25 }
+                  ],
+                  "estadoCuenta": { "saldoActual": 3210.50 }
+                }
+                """));
+            var service = CrearServiceConApi(handler);
+
+            var result = await service.Details.ExecuteAsync(
+                123, 10, 20, global::AppLogic.Contracts.Constants.EnrollmentStatus.PaymentPending);
+
+            Assert.True(result.Success);
+            Assert.Equal("Pago pendiente", result.Data!.Status);
+            var pendiente = Assert.Single(result.Data.PendingPayment!.Enrollments);
+            Assert.Equal(556, pendiente.EnrollmentId);
+            Assert.Equal("Seminario impago", pendiente.OfferingDescription);
+            Assert.Equal(800.25m, result.Data.PendingPayment.DepositAmount);
+            var request = Assert.Single(handler.Requests);
+            Assert.Contains("idsInscripcion=556", request.RequestUri);
+            Assert.DoesNotContain("idsInscripcion=555", request.RequestUri);
+        }
+
         [Fact]
         public async Task ObtenerDetalleInscripcion_WhenConfirmada_ReturnsDatosYMaterias()
         {

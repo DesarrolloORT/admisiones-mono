@@ -4,8 +4,10 @@ using BusinessLogic.Entities;
 namespace AppLogic.People.Mapping;
 
 /// <summary>
-/// Une las filas de las vistas fresco de nivel 1-2 y 3-4 y las agrupa por producto y proceso,
-/// que es la forma que consume la pantalla "Mis carreras".
+/// Une las filas de las vistas fresco de nivel 1-2 y 3-4 y las agrupa por producto, proceso y
+/// estado, que es la forma que consume la pantalla "Mis carreras". El estado va en la clave porque
+/// un producto con seminarios (nivel 3 y 4) puede tener unos confirmados y otros con el pago
+/// pendiente: cada estado es una tarjeta distinta, con sus propias ofertas adentro.
 /// Traducción pura: recibe las filas ya leídas, no consulta la base.
 /// </summary>
 internal static class MyEnrollmentsMapper
@@ -16,9 +18,13 @@ internal static class MyEnrollmentsMapper
     {
         return nivel1y2.Select(ToItem)
             .Concat(nivel3y4.Select(ToItem))
-            .GroupBy(x => new { x.IdProducto, x.IdProceso })
+            .GroupBy(x => new { x.IdProducto, x.IdProceso, x.EstadoInscripcion })
             .OrderBy(g => g.Key.IdProducto)
             .ThenBy(g => g.Key.IdProceso)
+            // Un mismo producto y proceso puede dar varias tarjetas: se ordenan por el comienzo más
+            // próximo, y el estado desempata para que el orden no dependa del orden de llegada.
+            .ThenBy(g => g.Min(x => x.FechaInicioComienzo))
+            .ThenBy(g => g.Key.EstadoInscripcion, StringComparer.Ordinal)
             .Select(ToResponse)
             .ToList();
     }

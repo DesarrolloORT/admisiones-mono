@@ -4,8 +4,9 @@ using System.Text.Json.Serialization;
 namespace AppLogic.People.Dtos;
 
 /// <summary>
-/// Inscripciones de la persona agrupadas por producto y proceso de admisión: una entrada por
-/// combinación, con las ofertas concretas adentro.
+/// Inscripciones de la persona agrupadas por producto, proceso de admisión y estado: una entrada
+/// por combinación, con las ofertas concretas adentro. Un mismo producto y proceso puede aparecer
+/// más de una vez si sus ofertas están en estados distintos.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public class MyEnrollmentsResponse
@@ -22,7 +23,9 @@ public class MyEnrollmentsResponse
     /// <summary>Nivel del producto: 1 y 2 son grado y tecnicatura; 3 y 4, actualización profesional.</summary>
     public long? ProductLevelId { get; set; }
 
-    /// <summary>Estado de la inscripción.</summary>
+    /// <summary>
+    /// Estado de la inscripción.
+    /// </summary>
     public string? EnrollmentStatus { get; set; }
 
     /// <summary>"SI" / "NO": solo viene para niveles 3 y 4, donde la oferta puede tener seminarios.</summary>
@@ -30,8 +33,8 @@ public class MyEnrollmentsResponse
     public string? HasSeminars { get; set; }
 
     /// <summary>
-    /// Vencimiento del pago de la inscripción (FECHA_VTO_INSCR). Es el mismo para todas las ofertas
-    /// del grupo; null si todavía no hay vencimiento calculado.
+    /// Vencimiento del pago de la inscripción (FECHA_VTO_INSCR). Se toma de la fila cabecera del
+    /// grupo; null si todavía no hay vencimiento calculado.
     /// </summary>
     public DateTime? PaymentDueDate { get; set; }
 

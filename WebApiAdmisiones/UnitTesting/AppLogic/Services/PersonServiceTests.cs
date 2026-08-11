@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Constants;
 using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
@@ -441,6 +442,58 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("SI", grupo.HasSeminars);
             Assert.Equal(new long?[] { 1L, 2L }, grupo.Enrollments.Select(i => i.OfferingId));
         }
+
+        /// <summary>
+        /// Nivel 4 con seminarios: se pagaron dos y los otros dos quedaron con el pago pendiente.
+        /// Son dos tarjetas, no una confirmada con los cuatro seminarios adentro.
+        /// </summary>
+        [Fact]
+        public void ObtenerMisInscripciones_SeparaTarjetasPorEstado()
+        {
+            _vdInscripcionesFresco1y2RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco1y2>());
+
+            _vdInscripcionesFresco3y4RepositoryMock
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(123))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    SeminarioNivel4(1, EnrollmentStatus.Confirmed, new DateTime(2026, 3, 1)),
+                    SeminarioNivel4(2, EnrollmentStatus.Confirmed, new DateTime(2026, 3, 2)),
+                    SeminarioNivel4(3, EnrollmentStatus.PaymentPending, new DateTime(2026, 3, 3)),
+                    SeminarioNivel4(4, EnrollmentStatus.PaymentPending, new DateTime(2026, 3, 4))
+                });
+
+            var result = _service.Enrollments.Execute(123);
+
+            Assert.True(result.Success);
+            var grupos = Assert.IsAssignableFrom<IEnumerable<MyEnrollmentsResponse>>(result.Data).ToList();
+            Assert.Equal(2, grupos.Count);
+            Assert.All(grupos, g => Assert.Equal(30m, g.ProductId));
+            Assert.All(grupos, g => Assert.Equal(2m, g.AdmissionProcessId));
+
+            Assert.Equal(EnrollmentStatus.Confirmed, grupos[0].EnrollmentStatus);
+            Assert.Equal(new long?[] { 1L, 2L }, grupos[0].Enrollments.Select(i => i.OfferingId));
+
+            Assert.Equal(EnrollmentStatus.PaymentPending, grupos[1].EnrollmentStatus);
+            Assert.Equal(new long?[] { 3L, 4L }, grupos[1].Enrollments.Select(i => i.OfferingId));
+        }
+
+        private static VdInscripcionesFresco3y4 SeminarioNivel4(long idOferta, string estado, DateTime fechaInicioComienzo) =>
+            new()
+            {
+                CodigoPersona = 123,
+                IdProducto = 30,
+                IdProceso = 2,
+                IdOferta = idOferta,
+                NombreExtensoProducto = "Curso nivel 4 con seminarios",
+                IdNivelProducto = 4,
+                ProgConSeminariosProducto = "SI",
+                EstadoInscripcion = estado,
+                FechaInicioComienzo = fechaInicioComienzo,
+                FechaReferencia = DateTime.Today,
+                VengoDe = "3y4"
+            };
 
         [Fact]
         public void ObtenerDatosPersona_NotFound_ReturnsFailed()

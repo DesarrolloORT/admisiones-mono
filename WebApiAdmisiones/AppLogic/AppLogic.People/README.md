@@ -52,7 +52,7 @@ UseCases/                      una clase por caso de uso
 Rules/PersonIdentityRules      identidad restringida
 Rules/PersonAuditStamp         sella usuario/fecha/hora de última modificación
 Mapping/PersonMapper           Persona → PersonDetailsResponse
-Mapping/MyEnrollmentsMapper    el GroupBy de inscripciones por producto y proceso
+Mapping/MyEnrollmentsMapper    el GroupBy de inscripciones por producto, proceso y estado
 Validators/RequiredPersonData  detecta datos faltantes → PersonDataGap
 Constants/PersonDataGap        enum + catálogo de errores (10 motivos)
 ```
