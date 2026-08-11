@@ -70,8 +70,9 @@ public class StartEnrollmentPayment(
             methodName);
     }
 
+    // paymentType llega no nulo: el switch de ExecuteAsync solo entra acá tras matchear una constante.
     private OperationResult<StartPaymentResponse> SaveExternalMethod(
-        long personId, StartPaymentRequest request, string? paymentType, string methodName)
+        long personId, StartPaymentRequest request, string paymentType, string methodName)
     {
         var result = _registerExternalPaymentMethod.Execute(
             personId,
@@ -84,7 +85,7 @@ public class StartEnrollmentPayment(
     }
 
     private async Task<OperationResult<StartPaymentResponse>> GenerateInvoiceUrlAsync(
-        long personId, StartPaymentRequest request, string? paymentType, string methodName)
+        long personId, StartPaymentRequest request, string paymentType, string methodName)
     {
         var result = await _generateInvoicePaymentUrl.ExecuteAsync(personId, new GenerateInvoicePaymentUrlRequest
         {

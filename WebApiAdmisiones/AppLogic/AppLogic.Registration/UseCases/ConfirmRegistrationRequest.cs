@@ -1,3 +1,4 @@
+using AppLogic.Contracts;
 using AppLogic.Contracts.Text;
 using AppLogic.Identity;
 using AppLogic.Registration.Constants;
@@ -54,6 +55,13 @@ public class ConfirmRegistrationRequest(
                 MethodName,
                 "ConfirmRegistrationRequest solo aplica para documentos distintos a cédula de identidad.",
                 400));
+        }
+
+        // T_SOLICITUD_ALTA no tiene columna de característica de país: solo se valida el teléfono.
+        var primaryPhone = RegistrationValidation.ValidatePrimaryPhone(request.PrimaryPhone, MethodName);
+        if (!primaryPhone.Success)
+        {
+            return Task.FromResult(primaryPhone.Failure().As<object?>(MethodName));
         }
 
         using var uow = _uowFactory.Create();

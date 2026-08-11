@@ -25,6 +25,22 @@ public class TivenosQueueService : ITivenosQueueService
         return true;
     }
 
+    public bool EnqueueSiteRegistration(
+        IUnitOfWork uow,
+        DtoTivenosAltaInteresRequest request,
+        int idTivenos)
+    {
+        ArgumentNullException.ThrowIfNull(uow);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var envio = TivenosMessageMapper.ToSiteRegistrationMessage(request);
+        envio.IdEnvioParaTivenos = idTivenos;
+
+        uow.EnvioParaTivenos.Add(envio);
+
+        return true;
+    }
+
     public bool EnqueueHighSchoolDataCreation(
         IUnitOfWork uow,
         DtoTivenosBachilleratoRequest request,

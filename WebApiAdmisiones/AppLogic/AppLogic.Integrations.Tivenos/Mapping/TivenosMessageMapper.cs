@@ -33,6 +33,27 @@ internal static class TivenosMessageMapper
         };
     }
 
+    /// <summary>
+    /// Alta de la persona en el CRM, al registrar su primer interés desde el sitio.
+    /// No lleva grado de interés ni motivo de desinterés: el mensaje habla de la persona, no del producto.
+    /// </summary>
+    internal static EnvioParaTiveno ToSiteRegistrationMessage(DtoTivenosAltaInteresRequest request)
+    {
+        return new EnvioParaTiveno
+        {
+            OrigenLlamador = request.Operacion.OrigenLlamador,
+            Origen = OrigenAdmisiones,
+            TipoProcesoLlamador = request.Operacion.TipoProcesoLlamador,
+            Disparador = request.Operacion.Disparador,
+            Modulo = "InteresPersona",
+            Metodo = "RegistroDesdeSitioAdmisiones",
+            Status = StatusNuevo,
+            CodigoSape = request.CodigoPersona,
+            ProcesoId = request.IdProceso,
+            ProductoId = request.IdProducto,
+        };
+    }
+
     /// <summary>Alta o modificación de los datos de bachillerato de la persona.</summary>
     internal static EnvioParaTiveno ToHighSchoolMessage(
         DtoTivenosBachilleratoRequest request,

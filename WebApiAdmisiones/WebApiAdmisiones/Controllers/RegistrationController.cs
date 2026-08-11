@@ -36,17 +36,14 @@ namespace WebApiAdmisiones.Controllers
     {
         private const string FlowIdHeaderName = "X-Flow-Id";
 
-        private string? ObtenerFlowId() =>
-            HttpContext.Request.Headers[FlowIdHeaderName].FirstOrDefault();
-
         /// <summary>
-        /// Lee el flowId del header y valida que la sesión de registro esté en el step "evaluado".
+        /// Valida que la sesión de registro del flowId exista y esté en el step "evaluado".
+        /// El flowId lo bindea MVC desde el header <c>X-Flow-Id</c> de cada acción.
         /// </summary>
-        private async Task<(string? FlowId, IActionResult? Error)> ValidarFlowEvaluadoAsync()
+        private async Task<IActionResult?> ValidarFlowEvaluadoAsync(string? flowId)
         {
-            var flowId = ObtenerFlowId();
             var flowValidation = await registroFlowService.ValidateFlowSessionAsync(flowId, stepEsperado: RegistrationFlowConstants.Step.Evaluado);
-            return (flowId, flowValidation != null ? ValidateResponse(flowValidation) : null);
+            return flowValidation != null ? ValidateResponse(flowValidation) : null;
         }
 
         /// <summary>
@@ -103,6 +100,7 @@ namespace WebApiAdmisiones.Controllers
         /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluateDocument.
         /// </remarks>
         /// <param name="request">Datos de validacion de identidad asociados a la persona.</param>
+        /// <param name="flowId">Identificador de la sesion de registro, enviado en el header <c>X-Flow-Id</c>.</param>
         /// <returns>Resultado de la verificacion de identidad.</returns>
         /// <response code="200">Identidad verificada correctamente.</response>
         /// <response code="400">Datos invalidos, verificacion rechazada o sesion de registro expirada.</response>
@@ -111,9 +109,11 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("verify-identity")]
         [ProducesResponseType(typeof(OperationResult<RegistrationConfirmationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<RegistrationConfirmationResponse>), 400)]
-        public async Task<IActionResult> VerifyIdentity([FromBody] VerifyIdentityRequest request)
+        public async Task<IActionResult> VerifyIdentity(
+            [FromBody] VerifyIdentityRequest request,
+            [FromHeader(Name = FlowIdHeaderName)] string? flowId = null)
         {
-            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            var flowError = await ValidarFlowEvaluadoAsync(flowId);
             if (flowError != null) return flowError;
 
             if (request == null)
@@ -245,6 +245,7 @@ namespace WebApiAdmisiones.Controllers
         /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluateDocument.
         /// </remarks>
         /// <param name="request">Datos personales de la nueva persona.</param>
+        /// <param name="flowId">Identificador de la sesion de registro, enviado en el header <c>X-Flow-Id</c>.</param>
         /// <returns>Resultado de la confirmacion. La persona queda pendiente hasta que se establezca la contraseña.</returns>
         /// <response code="200">Persona nueva confirmada correctamente. Se envió mail de activación.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
@@ -253,9 +254,11 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("confirm-new-person")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmNewPerson([FromBody] RegisterPersonRequest request)
+        public async Task<IActionResult> ConfirmNewPerson(
+            [FromBody] RegisterPersonRequest request,
+            [FromHeader(Name = FlowIdHeaderName)] string? flowId = null)
         {
-            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            var flowError = await ValidarFlowEvaluadoAsync(flowId);
             if (flowError != null) return flowError;
 
             var result = await registroFlowService.ConfirmNewPersonAsync(request, flowId!);
@@ -270,6 +273,7 @@ namespace WebApiAdmisiones.Controllers
         /// Requiere el header <c>X-Flow-Id</c> obtenido de EvaluateDocument.
         /// </remarks>
         /// <param name="request">Datos de la solicitud de alta que se confirma.</param>
+        /// <param name="flowId">Identificador de la sesion de registro, enviado en el header <c>X-Flow-Id</c>.</param>
         /// <returns>Resultado de la confirmacion de la solicitud.</returns>
         /// <response code="200">Solicitud de alta confirmada correctamente.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
@@ -278,9 +282,11 @@ namespace WebApiAdmisiones.Controllers
         [HttpPost("confirm-registration-request")]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
-        public async Task<IActionResult> ConfirmRegistrationRequest([FromBody] RegisterPersonRequest request)
+        public async Task<IActionResult> ConfirmRegistrationRequest(
+            [FromBody] RegisterPersonRequest request,
+            [FromHeader(Name = FlowIdHeaderName)] string? flowId = null)
         {
-            var (flowId, flowError) = await ValidarFlowEvaluadoAsync();
+            var flowError = await ValidarFlowEvaluadoAsync(flowId);
             if (flowError != null) return flowError;
 
             if (request == null)

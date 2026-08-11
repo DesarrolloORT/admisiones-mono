@@ -23,10 +23,14 @@ public interface IRegistrationFlowService : IPendingRegistrationCompletion
     /// </summary>
     Task<OperationResult<object?>?> ValidateFlowSessionAsync(string? flowId, string stepEsperado);
 
+    /// <summary>
+    /// Compara el documento del request con el de la sesión. Tipo y número son opcionales porque
+    /// llegan del request sin validar: si faltan, no coinciden con la sesión y la validación falla.
+    /// </summary>
     Task<OperationResult<object?>?> ValidateFlowDocumentAsync(
         string flowId,
-        string documentType,
-        string document,
+        string? documentType,
+        string? document,
         string originMethod);
 
     /// <summary>Avanza el step de la sesión al valor indicado.</summary>

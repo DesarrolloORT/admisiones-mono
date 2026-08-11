@@ -1,5 +1,7 @@
+using AppLogic.Contracts;
 using AppLogic.Contracts.Text;
 using AppLogic.Identity;
+using AppLogic.People.Rules;
 using AppLogic.Registration.Constants;
 using AppLogic.Registration.Contracts;
 using AppLogic.Registration.Dtos;
@@ -46,7 +48,24 @@ public class ValidateNewPerson(IUnitOfWorkFactory uowFactory) : IValidateNewPers
                 400));
         }
 
+        var primaryPhone = RegistrationValidation.ValidatePrimaryPhone(request.PrimaryPhone, MethodName);
+        if (!primaryPhone.Success)
+        {
+            return Task.FromResult(primaryPhone.Failure().As<object?>(MethodName));
+        }
+
         using var uow = _uowFactory.Create();
+
+        // La característica del país se chequea acá, antes de guardar en Redis: si falta la fila, el
+        // alta fallaría recién después de que la persona confirmó el mail.
+        if (PhoneCountryCode.ResolveId(uow, primaryPhone.Data!.Iso2) is null)
+        {
+            return Task.FromResult(OperationResult<object?>.IsFailed(
+                RegistrationErrorCodes.UnknownPhoneCountryCode,
+                MethodName,
+                RegistrationErrorCodes.UnknownPhoneCountryCodeMessage,
+                400));
+        }
 
         var document = TextNormalization.Trim(request.DocumentNumber);
         var person = uow.Personas.GetByDocumento(document);

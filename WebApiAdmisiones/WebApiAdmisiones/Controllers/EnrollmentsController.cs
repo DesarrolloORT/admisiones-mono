@@ -165,15 +165,17 @@ namespace WebApiAdmisiones.Controllers
         /// </summary>
         /// <param name="productId">ID del producto de la tarjeta.</param>
         /// <param name="admissionProcessId">ID del proceso de la tarjeta.</param>
+        /// <param name="status">
+        /// Estado de la tarjeta (el <c>enrollmentStatus</c> que devuelve <c>person/enrollments</c>).</param>
         /// <returns>Estado de la inscripción y, si corresponde, la oferta seleccionada.</returns>
         /// <response code="200">Detalle obtenido correctamente.</response>
         /// <response code="404">No se encontró la inscripción para la persona.</response>
         [HttpGet("details")]
         [ProducesResponseType(typeof(OperationResult<EnrollmentDetailsResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<EnrollmentDetailsResponse>), 404)]
-        public async Task<IActionResult> GetEnrollmentDetails([FromQuery] long productId, [FromQuery] long admissionProcessId)
+        public async Task<IActionResult> GetEnrollmentDetails([FromQuery] long productId, [FromQuery] long admissionProcessId, [FromQuery] string? status = null)
         {
-            var result = await getEnrollmentDetails.ExecuteAsync(_currentUser.GetUserId(), productId, admissionProcessId);
+            var result = await getEnrollmentDetails.ExecuteAsync(_currentUser.GetUserId(), productId, admissionProcessId, status);
             return ValidateResponse(result);
         }
 

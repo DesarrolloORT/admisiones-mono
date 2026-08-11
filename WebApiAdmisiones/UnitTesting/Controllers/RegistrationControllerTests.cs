@@ -339,14 +339,14 @@ namespace UnitTesting.Controllers
             {
                 HttpContext = new DefaultHttpContext()
             };
-            controller.ControllerContext.HttpContext.Request.Headers["X-Flow-Id"] = "test-flow-id";
             var request = new RegisterPersonRequest
             {
                 DocumentType = "PS",
                 DocumentNumber = "A123"
             };
 
-            var response = await controller.ConfirmNewPerson(request);
+            // El flowId lo bindea MVC desde el header X-Flow-Id; acá se pasa como argumento.
+            var response = await controller.ConfirmNewPerson(request, "test-flow-id");
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);

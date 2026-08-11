@@ -28,6 +28,30 @@ public class UpdatePersonDetails(IUnitOfWorkFactory uowFactory) : IUpdatePersonD
             return validation;
         }
 
+        // El teléfono principal es obligatorio (ya lo cubrió ValidateRequest) y tiene que ser celular.
+        var primaryPhone = PhoneNormalization.Validate(
+            request.PrimaryPhone?.NationalNumber,
+            isPrimaryPhone: true,
+            request.PrimaryPhone?.Iso2);
+        if (primaryPhone is null || !primaryPhone.TelefonoValido)
+        {
+            return OperationResult<bool>.IsFailed(
+                "PER_ADP_07",
+                MethodName,
+                $"El teléfono principal no es un celular válido. {primaryPhone?.Error}".TrimEnd(),
+                400);
+        }
+
+        var phoneCountryCodeId = PhoneCountryCode.ResolveId(uow, primaryPhone.Iso2);
+        if (phoneCountryCodeId is null)
+        {
+            return OperationResult<bool>.IsFailed(
+                "PER_ADP_08",
+                MethodName,
+                "No se pudo identificar la característica del país del teléfono.",
+                400);
+        }
+
         var identidadRestringida = PersonIdentityRules.HasRestrictedIdentity(
             person,
             uow.Inscriptos.TieneInscripcionActiva(personId));
@@ -55,7 +79,8 @@ public class UpdatePersonDetails(IUnitOfWorkFactory uowFactory) : IUpdatePersonD
         person.CodigoEstado = request.StateId;
         person.CodigoCiudad = request.CityId;
         person.Direccion = TextNormalization.ToTitleCase(request.Address);
-        person.Telefono1 = TextNormalization.TrimOrNull(request.PrimaryPhone);
+        person.Telefono1 = primaryPhone.TelefonoE164;
+        person.IdCaracteristicaPaisTel1 = phoneCountryCodeId.Value;
         person.Email = TextNormalization.TrimOrNull(request.Email);
 
         PersonAuditStamp.Apply(person, personId, uow);
@@ -74,7 +99,8 @@ public class UpdatePersonDetails(IUnitOfWorkFactory uowFactory) : IUpdatePersonD
 
         if (string.IsNullOrWhiteSpace(request.Address)
             || string.IsNullOrWhiteSpace(request.Email)
-            || string.IsNullOrWhiteSpace(request.EmailConfirmation))
+            || string.IsNullOrWhiteSpace(request.EmailConfirmation)
+            || string.IsNullOrWhiteSpace(request.PrimaryPhone?.NationalNumber))
         {
             return OperationResult<bool>.IsFailed("PER_ADP_03", MethodName, "Faltan parámetros obligatorios.", 400);
         }

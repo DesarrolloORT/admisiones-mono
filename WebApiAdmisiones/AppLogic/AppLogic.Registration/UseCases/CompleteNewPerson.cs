@@ -2,6 +2,7 @@ using AppLogic.Contracts;
 using AppLogic.Contracts.Text;
 using AppLogic.Identity.Dtos;
 using AppLogic.Identity.Services;
+using AppLogic.People.Rules;
 using AppLogic.Registration.Constants;
 using AppLogic.Registration.Contracts;
 using AppLogic.Registration.Mapping;
@@ -148,6 +149,15 @@ public class CompleteNewPerson(
                 data,
                 city,
                 DateTime.Now);
+
+            // El teléfono ya quedó en E.164; la característica de país acompaña al prefijo para que
+            // FDP pueda desarmar el número al mostrarlo. ValidateNewPerson ya verificó que la fila
+            // exista, así que el fallback solo cubre un pendiente viejo en Redis (formato local).
+            person.IdCaracteristicaPaisTel1 = PhoneCountryCode.ResolveId(
+                uow,
+                PhoneNormalization.Validate(data.PrimaryPhone, isPrimaryPhone: true, iso2: null)?.Iso2)
+                ?? person.IdCaracteristicaPaisTel1;
+
             uow.Personas.Add(person);
             uow.Save();
 

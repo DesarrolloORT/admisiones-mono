@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -48,8 +49,11 @@ public class UpdatePersonDetailsRequest
     /// <summary>Dirección del domicilio.</summary>
     public string Address { get; set; } = string.Empty;
 
-    /// <summary>Teléfono principal de contacto, en formato internacional.</summary>
-    public string PrimaryPhone { get; set; } = string.Empty;
+    /// <summary>
+    /// Teléfono principal de contacto: celular obligatorio. Se guarda en E.164 armado con
+    /// <see cref="PhoneNumber.NationalNumber"/> y <see cref="PhoneNumber.Iso2"/>.
+    /// </summary>
+    public PhoneNumber PrimaryPhone { get; set; } = new();
 
     /// <summary>Mail de contacto.</summary>
     public string Email { get; set; } = string.Empty;
@@ -58,28 +62,3 @@ public class UpdatePersonDetailsRequest
     public string EmailConfirmation { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Teléfono desglosado por el validador del front. Se valida contra el formato del país antes de
-/// aceptarlo como teléfono de contacto.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public class PhoneNumber
-{
-    /// <summary>Si el front ya lo dio por válido.</summary>
-    public bool IsValid { get; set; }
-
-    /// <summary>Número completo en formato E.164 (por ejemplo +59899123456).</summary>
-    [StringLength(20)]
-    public string? E164 { get; set; }
-
-    /// <summary>Código de país ISO 3166-1 alfa-2 (por ejemplo UY).</summary>
-    [StringLength(2)]
-    public string? Iso2 { get; set; }
-
-    /// <summary>Prefijo telefónico del país (por ejemplo 598).</summary>
-    public long CountryCode { get; set; }
-
-    /// <summary>Número sin el prefijo del país.</summary>
-    [StringLength(20)]
-    public string? NationalNumber { get; set; }
-}

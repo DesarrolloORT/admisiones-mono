@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Authentication.Dtos;
 using AppLogic.Scholarships.Dtos;
@@ -6,6 +7,7 @@ using AppLogic.People.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Diagnostics.CodeAnalysis;
 using Utilities;
 using WebApiAdmisiones.Models;
 using WebApiAdmisiones.Security.Authentication;
@@ -15,6 +17,9 @@ namespace WebApiAdmisiones.Controllers
     [Authorize]
     [ApiController]
     [Route("person")]
+    [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "Un caso de uso inyectado por endpoint. Agruparlos en un bundle solo esconde el " +
+                        "conteo, y partir el controller cambia las rutas /person/* que consume el front.")]
     public class PersonController(
         IGetPersonDetails getPersonDetails,
         IUpdatePersonDetails updatePersonDetails,

@@ -12,6 +12,7 @@ using BusinessLogic.IServices;
 using ConnectionContext;
 using LdapService.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Utilities;
 
@@ -21,6 +22,10 @@ namespace AppLogic.Authentication.UseCases;
 /// Alta de la contraseña inicial. La sesión temporal decide el camino: persona nueva (los datos
 /// están en Redis y los completa el módulo de registro) o persona ya existente en el padrón.
 /// </summary>
+[SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+    Justification = "El alta de password inicial coordina LDAP, DB, Redis y emisión de tokens en una " +
+                    "transacción sensible. Repartir las dependencias implica partir el caso de uso, " +
+                    "no reordenar el constructor.")]
 public class CompletePasswordFlow(
     IUnitOfWorkFactory uowFactory,
     IDbConnectionContext dbConnectionContext,
@@ -211,10 +216,10 @@ public class CompletePasswordFlow(
             {
                 // La password ya cambió en LDAP (irreversible); el link de activación sigue
                 // vigente para que el usuario reintente en vez de quedar en un estado sin salida.
-                _logger.LogError(ex,
-                    "Estado inconsistente: password de la persona {CodigoPersona} ya cambiada en LDAP pero no persistida en DB.",
-                    personId);
-                throw;
+                // Se relanza con contexto: el middleware de excepciones loguea y responde 500.
+                throw new InvalidOperationException(
+                    $"Estado inconsistente: password de la persona {personId} ya cambiada en LDAP pero no persistida en DB.",
+                    ex);
             }
 
             // El link de activación se consume solo después de confirmar la persistencia en DB.

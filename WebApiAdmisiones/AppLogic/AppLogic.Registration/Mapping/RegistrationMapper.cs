@@ -1,6 +1,7 @@
 using AppLogic.Identity.Dtos;
 using AppLogic.Registration.Constants;
 using AppLogic.Contracts.Constants;
+using AppLogic.Contracts.Dtos;
 using AppLogic.Contracts.Text;
 using AppLogic.Registration.Dtos;
 using BusinessLogic.Entities;
@@ -34,7 +35,7 @@ public static class RegistrationMapper
             BirthDate = request.BirthDate,
             Sex = request.Sex,
             Address = request.Address,
-            PrimaryPhone = request.PrimaryPhone,
+            PrimaryPhone = ToE164(request.PrimaryPhone),
             Email = request.Email,
             CountryId = request.CountryId,
             StateId = request.StateId,
@@ -61,7 +62,7 @@ public static class RegistrationMapper
             CodigoPais = request.CountryId,
             CodigoEstado = request.StateId,
             CodigoCiudad = request.CityId,
-            Telefono1SolicitudAlta = TextNormalization.Trim(request.PrimaryPhone),
+            Telefono1SolicitudAlta = ToE164(request.PrimaryPhone),
             EmailSolicitudAlta = TextNormalization.Trim(request.Email),
             FechaNacimientoSolicituAlta = request.BirthDate.Date,
             TipoDocumentoSolicitudAlta = TextNormalization.Trim(request.DocumentType),
@@ -79,46 +80,6 @@ public static class RegistrationMapper
             IdRegistroAdmisiones = idRegistroAdmisiones,
             CodigoPersona = personId,
             IdSolicitudAlta = idSolicitudAlta
-        };
-    }
-
-    public static Persona CreatePerson(long personId, RegisterPersonRequest request, Ciudad city, DateTime now)
-    {
-        var firstName = TextNormalization.ToTitleCaseInvariant(request.FirstName);
-        var middleName = TextNormalization.ToTitleCaseInvariant(request.MiddleName);
-        var firstSurname = TextNormalization.ToTitleCaseInvariant(request.FirstSurname);
-        var secondSurname = TextNormalization.ToTitleCaseInvariant(request.SecondSurname);
-
-        return new Persona
-        {
-            CodigoPersona = personId,
-            CodigoVigencia = SgiPersonRecordConstants.ActiveValidityCode,
-            TipoPersona = SgiPersonRecordConstants.SgiPersonType,
-            PrimerNombre = firstName,
-            SegundoNombre = middleName,
-            PrimerApellido = firstSurname,
-            SegundoApellido = secondSurname,
-            PrimerNombreMay = TextNormalization.ToUpperWithoutAccents(firstName),
-            SegundoNombreMay = TextNormalization.ToUpperWithoutAccents(middleName),
-            PrimerApellidoMay = TextNormalization.ToUpperWithoutAccents(firstSurname),
-            SegundoApellidoMay = TextNormalization.ToUpperWithoutAccents(secondSurname),
-            FechaNacimiento = request.BirthDate.Date,
-            Sexo = TextNormalization.Trim(request.Sex),
-            Direccion = TextNormalization.Trim(request.Address),
-            Telefono1 = TextNormalization.Trim(request.PrimaryPhone),
-            Email = TextNormalization.Trim(request.Email),
-            Documento = TextNormalization.Trim(request.DocumentNumber),
-            TipoDocumento = TextNormalization.Trim(request.DocumentType),
-            CodigoPais = request.CountryId,
-            CodigoEstado = request.StateId,
-            CodigoCiudad = request.CityId,
-            CodigoFuenteDatos = SgiPersonRecordConstants.AdmissionsDataSourceCode,
-            RecibeCartasPersona = "SI",
-            RecibeEmailsPersona = "SI",
-            UsuarioUltimaActualizacion = Constantes.kUSERNAME_USUARIO_ADMISIONES,
-            FechaUltimaActualizacion = now.Date,
-            HoraUltimaActualizacion = now.ToString(SchemaConstants.LegacyTimeFormat, CultureInfo.InvariantCulture),
-            Ciudad = city
         };
     }
 
@@ -148,6 +109,7 @@ public static class RegistrationMapper
             FechaNacimiento = data.BirthDate.Date,
             Sexo = TextNormalization.Trim(data.Sex),
             Direccion = TextNormalization.Trim(data.Address),
+            // Ya viene en E.164 desde Redis (lo normalizó ToPendingPerson).
             Telefono1 = TextNormalization.Trim(data.PrimaryPhone),
             Email = TextNormalization.Trim(data.Email),
             Documento = TextNormalization.Trim(data.DocumentNumber),
@@ -164,6 +126,15 @@ public static class RegistrationMapper
             Ciudad = city
         };
     }
+
+    /// <summary>
+    /// Teléfono en E.164 para guardar, igual que FDP. La validación ya corrió en ValidateNewPerson /
+    /// ConfirmRegistrationRequest, así que acá solo se formatea: si no se pudo parsear queda el
+    /// número crudo en lugar de perderse.
+    /// </summary>
+    private static string ToE164(PhoneNumber? phone) =>
+        PhoneNormalization.Validate(phone?.NationalNumber, isPrimaryPhone: true, phone?.Iso2)?.TelefonoE164
+        ?? TextNormalization.Trim(phone?.NationalNumber);
 
     public static ParamCrearUsuarioLdap BuildLdapUserRequest(Persona person)
     {

@@ -22,7 +22,7 @@ public class ConfirmPreEnrollmentResponse
     /// <summary>Una inscripción por cada oferta confirmada (1 elemento para nivel 1 y 2, 1 o mas para nivel 3 y 4).</summary>
     public List<EnrollmentOffering> Enrollments { get; set; } = new();
 
-    /// <summary>Total a pagar de reserva, suma de todas las ofertas confirmadas (el alumno paga todo junto, no elige).</summary>
+    /// <summary>Total a pagar de reserva, suma de todas las ofertas confirmadas (el alumno paga el conjunto, no elige).</summary>
     public decimal DepositAmount { get; set; }
 }
 

@@ -53,7 +53,7 @@ public class GenerateInvoicePaymentUrl(
         if (!urlResult.Success)
             return urlResult.Failure().As<InvoicePaymentUrlResponse>(methodName);
 
-        var (url, parametrosEncriptados) = InvoicePaymentUrl.Split(urlResult.Data);
+        var (url, parametrosEncriptados) = InvoicePaymentUrl.Split(urlResult.Data!);
         return OperationResult<InvoicePaymentUrlResponse>.Ok(
             new InvoicePaymentUrlResponse { Url = url, EncryptedParameters = parametrosEncriptados },
             methodName);

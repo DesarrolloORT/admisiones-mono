@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
@@ -61,9 +62,12 @@ public class RegisterPersonRequest
     [Required]
     public string Address { get; set; } = string.Empty;
 
-    /// <summary>Teléfono principal de contacto, en formato internacional.</summary>
+    /// <summary>
+    /// Teléfono principal de contacto: celular obligatorio. Se guarda en E.164 armado con
+    /// <see cref="PhoneNumber.NationalNumber"/> y <see cref="PhoneNumber.Iso2"/>.
+    /// </summary>
     [Required]
-    public string PrimaryPhone { get; set; } = string.Empty;
+    public PhoneNumber PrimaryPhone { get; set; } = new();
 
     /// <summary>Mail de contacto: es donde llega el link de activación de contraseña.</summary>
     [Required]

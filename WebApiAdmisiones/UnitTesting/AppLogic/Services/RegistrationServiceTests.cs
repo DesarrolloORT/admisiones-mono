@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Dtos;
 using AppLogic.Registration.Dtos;
 using System;
@@ -44,6 +45,15 @@ namespace UnitTesting.AppLogic.Services
             _ldapMock = new Mock<ILdap>();
             _passwordActivationServiceMock = new Mock<IPasswordActivationService>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
+
+            var caracteristicaPaisRepo = new Mock<ICaracteristicaPaiRepository>();
+            caracteristicaPaisRepo
+                .Setup(r => r.GetAll())
+                .Returns(new List<CaracteristicaPai>
+                {
+                    new() { IdCaracteristicaPais = 7, Iso2 = "UY", NombrePais = "Uruguay", Caracteristica = 598 }
+                });
+            _uowMock.Setup(u => u.CaracteristicaPais).Returns(caracteristicaPaisRepo.Object);
 
             var ldapDirectory = new LdapUserDirectory(_ldapMock.Object);
             _service = new RegistrationUseCases(
@@ -421,7 +431,8 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                // En Redis el teléfono ya viaja en E.164.
+                PrimaryPhone = "+59899123456",
                 Email = "ana@example.com",
                 CountryId = 1,
                 StateId = 2,
@@ -545,6 +556,47 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ValidarNuevaPersona_TelefonoNoCelular_ReturnsFailed()
+        {
+            var request = CrearRegistroPersonaRequest("CI", "1234567-2");
+            request.PrimaryPhone = new PhoneNumber { NationalNumber = "24001234", Iso2 = "UY" };
+
+            var result = await _service.ValidateNewPerson.ExecuteAsync(request);
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_TEL_01", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _uowMock.Verify(u => u.Personas, Times.Never);
+        }
+
+        [Fact]
+        public async Task ValidarNuevaPersona_SinTelefono_ReturnsFailed()
+        {
+            var request = CrearRegistroPersonaRequest("CI", "1234567-2");
+            request.PrimaryPhone = new PhoneNumber { Iso2 = "UY" };
+
+            var result = await _service.ValidateNewPerson.ExecuteAsync(request);
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_TEL_02", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+        }
+
+        [Fact]
+        public async Task ValidarNuevaPersona_PaisSinCaracteristica_ReturnsFailed()
+        {
+            var request = CrearRegistroPersonaRequest("CI", "1234567-2");
+            request.PrimaryPhone = new PhoneNumber { NationalNumber = "91122223333", Iso2 = "AR" };
+
+            var result = await _service.ValidateNewPerson.ExecuteAsync(request);
+
+            Assert.False(result.Success);
+            Assert.Equal("REG_TEL_03", result.ErrorCode);
+            Assert.Equal(400, result.HttpCode);
+            _uowMock.Verify(u => u.Personas, Times.Never);
+        }
+
+        [Fact]
         public async Task CompletarNuevaPersonaAsync_WithInvalidTemporaryDocument_ReturnsFailureWithoutCommit()
         {
             var personaRepo = new Mock<IPersonaRepository>();
@@ -655,7 +707,7 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099123456", Iso2 = "UY" },
                 Email = "ana@example.com",
                 EmailConfirmation = "ana@example.com",
                 CountryId = 1,
@@ -739,7 +791,8 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                // En Redis el teléfono ya viaja en E.164.
+                PrimaryPhone = "+59899123456",
                 Email = "ana@example.com",
                 CountryId = 1,
                 StateId = 2,

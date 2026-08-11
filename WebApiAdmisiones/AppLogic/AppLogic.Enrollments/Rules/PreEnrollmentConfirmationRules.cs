@@ -217,7 +217,6 @@ internal static class PreEnrollmentConfirmationRules
         string usuarioIngreso)
     {
         var ahora = DateTime.Now;
-        var hora = ahora.ToString(SchemaConstants.LegacyTimeFormat);
 
         return new[]
         {

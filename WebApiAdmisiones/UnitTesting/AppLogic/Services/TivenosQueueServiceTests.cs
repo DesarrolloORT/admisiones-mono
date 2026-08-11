@@ -73,6 +73,30 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void EncolarRegistroDesdeSitioAdmisiones_EncolaPayload()
+        {
+            var result = _service.EnqueueSiteRegistration(
+                _uowMock.Object,
+                RequestBase(TivenosAltaInteresOperacion.SiteRegistration()),
+                999);
+
+            Assert.True(result);
+            _envioParaTivenosRepoMock.Verify(r => r.Add(It.Is<EnvioParaTiveno>(e =>
+                e.IdEnvioParaTivenos == 999 &&
+                e.Origen == "ADMISIONES" &&
+                e.OrigenLlamador == null &&
+                e.TipoProcesoLlamador == "Alta" &&
+                e.Disparador == "Registro" &&
+                e.Modulo == "InteresPersona" &&
+                e.Metodo == "RegistroDesdeSitioAdmisiones" &&
+                e.Status == "Nuevo" &&
+                e.CodigoSape == 123 &&
+                e.ProcesoId == 20 &&
+                e.ProductoId == 10 &&
+                e.InteresProdGradoInteresId == null)), Times.Once);
+        }
+
+        [Fact]
         public void EncolarAltaDatosBachillerato_EncolaPayload()
         {
             var result = _service.EnqueueHighSchoolDataCreation(

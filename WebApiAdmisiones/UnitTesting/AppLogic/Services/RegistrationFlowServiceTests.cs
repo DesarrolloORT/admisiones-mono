@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Identity.Services;
 using AppLogic.Identity.Interfaces;
 using AppLogic.Identity.Dtos;
@@ -289,7 +290,7 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                PrimaryPhone = new PhoneNumber { NationalNumber = "099123456", Iso2 = "UY" },
                 Email = mail,
                 EmailConfirmation = mail,
                 CountryId = 1,
@@ -307,7 +308,8 @@ namespace UnitTesting.AppLogic.Services
                 BirthDate = new DateTime(1990, 1, 1),
                 Sex = "F",
                 Address = "Calle 1",
-                PrimaryPhone = "099123456",
+                // En Redis el teléfono ya viaja en E.164.
+                PrimaryPhone = "+59899123456",
                 Email = "ana@example.com",
                 CountryId = 1,
                 StateId = 1,

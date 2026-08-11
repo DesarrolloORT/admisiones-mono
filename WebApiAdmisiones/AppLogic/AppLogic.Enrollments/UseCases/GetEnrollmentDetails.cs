@@ -19,11 +19,12 @@ public class GetEnrollmentDetails(
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
     private readonly IEnrollmentsAndPaymentsApiClient _apiClient = apiClient;
 
-    public async Task<OperationResult<EnrollmentDetailsResponse>> ExecuteAsync(long personId, long productId, long admissionProcessId)
+    public async Task<OperationResult<EnrollmentDetailsResponse>> ExecuteAsync(long personId, long productId, long admissionProcessId, string? status = null)
     {
         using var uow = _uowFactory.Create();
 
         var level1And2Rows = uow.VdInscripcionesFresco1y2s.GetInscripcionesFrescoHabilitadas(personId, productId, admissionProcessId)
+            .Where(x => status == null || x.EstadoInscripcion == status)
             .OrderBy(x => x.FechaInicioComienzo)
             .ToList();
         var estado = level1And2Rows.Count > 0 ? level1And2Rows[0].EstadoInscripcion : null;
@@ -33,6 +34,7 @@ public class GetEnrollmentDetails(
         if (estado == null)
         {
             var level3And4Rows = uow.VdInscripcionesFresco3y4s.GetInscripcionesFrescoHabilitadas(personId, productId, admissionProcessId)
+                .Where(x => status == null || x.EstadoInscripcion == status)
                 .OrderBy(x => x.FechaInicioComienzo)
                 .ToList();
             estado = level3And4Rows.Count > 0 ? level3And4Rows[0].EstadoInscripcion : null;

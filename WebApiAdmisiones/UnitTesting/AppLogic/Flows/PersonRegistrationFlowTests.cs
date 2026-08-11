@@ -41,6 +41,7 @@ namespace UnitTesting.AppLogic.Flows
         private readonly Mock<IPersonaRepository> _personaRepo = new();
         private readonly Mock<BusinessLogic.IDevartRepositories.ICiudadRepository> _ciudadRepo = new();
         private readonly Mock<IRegistroAdmisioneRepository> _registroAdmisionesRepo = new();
+        private readonly Mock<ICaracteristicaPaiRepository> _caracteristicaPaisRepo = new();
         private readonly Mock<IDbConnectionContext> _dbConnectionContextMock = new();
         private readonly Mock<ILdap> _ldapMock = new();
 
@@ -50,6 +51,13 @@ namespace UnitTesting.AppLogic.Flows
             _uowMock.Setup(u => u.Personas).Returns(_personaRepo.Object);
             _uowMock.Setup(u => u.Ciudads).Returns(_ciudadRepo.Object);
             _uowMock.Setup(u => u.RegistroAdmisiones).Returns(_registroAdmisionesRepo.Object);
+            _uowMock.Setup(u => u.CaracteristicaPais).Returns(_caracteristicaPaisRepo.Object);
+            _caracteristicaPaisRepo
+                .Setup(r => r.GetAll())
+                .Returns(new List<CaracteristicaPai>
+                {
+                    new() { IdCaracteristicaPais = 7, Iso2 = "UY", NombrePais = "Uruguay", Caracteristica = 598 }
+                });
 
             _uowMock.Setup(u => u.BeginTransaction()).Callback(() => _bitacora.Add("tx:begin"));
             _uowMock.Setup(u => u.Commit()).Callback(() => _bitacora.Add("tx:commit"));

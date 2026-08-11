@@ -18,6 +18,9 @@ namespace WebApiAdmisiones.Extensions
     /// </summary>
     public static class ServiceCollectionExtensions
     {
+        /// <summary>Partición de rate limit cuando la IP del request no se puede resolver.</summary>
+        private const string UnknownIpPartition = "unknown";
+
         private const string ReconocimientoDocumentoRateLimitPolicy = "ReconocimientoDocumento";
         private const string LoginRateLimitPolicy = "LoginAttempts";
         private const string PhoneValidationRateLimitPolicy = "PhoneValidation";
@@ -194,7 +197,7 @@ namespace WebApiAdmisiones.Extensions
 
                     var partitionKey = !string.IsNullOrWhiteSpace(userKey)
                         ? $"user:{userKey}"
-                        : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+                        : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? UnknownIpPartition}";
 
                     return RateLimitPartition.GetFixedWindowLimiter(
                         partitionKey,
@@ -262,7 +265,7 @@ namespace WebApiAdmisiones.Extensions
 
                     var partitionKey = !string.IsNullOrWhiteSpace(userKey)
                         ? $"phone-user:{userKey}"
-                        : $"phone-ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+                        : $"phone-ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? UnknownIpPartition}";
 
                     return RateLimitPartition.GetFixedWindowLimiter(
                         partitionKey,
@@ -363,7 +366,7 @@ namespace WebApiAdmisiones.Extensions
                 options.AddPolicy(LoginRateLimitPolicy, httpContext =>
                 {
                     // Login es SIEMPRE anónimo, usamos solo IP
-                    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? UnknownIpPartition;
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     // Usar Redis Rate Limiter en lugar de in-memory
@@ -403,7 +406,7 @@ namespace WebApiAdmisiones.Extensions
 
                     // Obtener información adicional desde Redis
                     var redisService = context.HttpContext.RequestServices.GetRequiredService<AppLogic.Platform.RateLimiting.IRateLimiterService>();
-                    var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? UnknownIpPartition;
                     var partitionKey = $"login-ip:{ipAddress}";
 
                     var remaining = await redisService.GetRemainingAsync(

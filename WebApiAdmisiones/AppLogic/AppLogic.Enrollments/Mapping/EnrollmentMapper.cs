@@ -154,7 +154,7 @@ internal static class EnrollmentMapper
         var dataByOffering = ofertasContexto
             .GroupBy(o => o.IdOferta)
             .ToDictionary(g => g.Key, g => g.First());
-        var cabecera = ofertasContexto.First();
+        var cabecera = ofertasContexto[0];
 
         var enrollments = source.Ofertas
             .Select(o =>

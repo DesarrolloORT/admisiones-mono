@@ -100,6 +100,63 @@ producto son N inscripciones (una por seminario/oferta). El front tiene que mand
 Es todo o nada: si alguna inscripción de la lista no existe o no está de baja no se reactiva ninguna
 (`INS_REA_01` / `INS_REA_02`). Si las ofertas no son compatibles entre sí llega `INS_CPI_17`.
 
+### "Mis carreras": una tarjeta por estado, no por producto
+
+Misma raíz que el punto anterior. `person/enrollments` agrupaba por `{producto, proceso}` y tomaba el
+estado de una fila arbitraria del grupo. Con seminarios de nivel 3 y 4 la persona puede pagar unos y
+dejar otros pendientes: las filas caían todas en la misma tarjeta y los seminarios impagos quedaban
+invisibles, sin forma de pagarlos. Ahora la clave es `{producto, proceso, estado}`.
+
+Dos cosas para el front:
+
+- `person/enrollments` puede devolver **más de una entrada con el mismo `productId` y
+  `admissionProcessId`**. El `trackBy` del listado tiene que incluir `enrollmentStatus`, o Angular
+  reusa el nodo equivocado.
+- Al abrir una tarjeta hay que reenviar ese `enrollmentStatus` como query param `status` a
+  `enrollments/details`; si no, el detalle mezcla las ofertas de todos los estados (el carrito de
+  "Pago pendiente" incluiría los seminarios ya pagos). El param es opcional: sin él, el detalle se
+  comporta como antes.
+
+Efecto secundario esperado: filas `Dada de baja` o `En proceso` que antes quedaban tapadas por
+hermanas confirmadas ahora aparecen como tarjeta propia.
+
+### Formato del teléfono: E.164, igual que FDP
+
+El contrato para el front, con ejemplos y códigos de error, está en
+`WebApiAdmisiones/WebApiAdmisiones/Docs/contracts/telefono.contract.json`.
+
+`T_PERSONA.TELEFONO1` la escriben las dos APIs. FDP siempre guardó E.164
+(`DatosPersonalesService.ProcesarContacto`); admisiones guardaba el string crudo trimeado y dejaba
+`ID_CARACTERISTICA_PAIS_TEL1` en el default `1`, así que FDP —que desarma el número con esa
+característica para mostrarlo— renderizaba mal lo que escribía admisiones.
+
+Ahora admisiones normaliza con `PhoneNormalization` (wrapper de `Core/Utilities/ValidadorTelefonos`,
+que ya era idéntico en los dos repos) en los tres puntos de escritura: `PUT person/details`,
+`T_SOLICITUD_ALTA` y el alta de `T_PERSONA`.
+
+**El teléfono pasa a ser un objeto en el request**, como el `DtoTelefono` de FDP: el servidor arma el
+E.164 con `nationalNumber` + `iso2` e ignora lo que venga en `e164` / `countryCode`. Es un breaking
+change y necesita despliegue coordinado con el front.
+
+| | Antes | Ahora |
+|---|---|---|
+| `PUT person/details` y `POST person/register` request | `{"primaryPhone": "99333222"}` | `{"primaryPhone": {"nationalNumber": "99333222", "iso2": "UY"}}` |
+| `GET person/details` response | `{"primaryPhone": "99333222"}` | `{"primaryPhone": "+59899333222"}` (sigue siendo string) |
+| Sin teléfono | se guardaba `NULL` | `400` (`PER_ADP_03` en el update, `REG_TEL_02` en el registro) |
+| Teléfono inválido | se guardaba igual | `400` (`PER_ADP_07` / `REG_TEL_01`) |
+| País sin fila en `T_CARACTERISTICA_PAIS` | no se consultaba | `400` (`PER_ADP_08` / `REG_TEL_03`), como el `DP_PC_00` de FDP |
+| `ID_CARACTERISTICA_PAIS_TEL1` | siempre `1` | fila de `T_CARACTERISTICA_PAIS` según el ISO2 |
+
+Reglas heredadas de FDP que ahora aplican del lado del servidor: el teléfono principal es
+**obligatorio** y tiene que ser **celular** (un fijo da 400, que es lo que ya validaba el front vía
+`person/validate-phone-number`), y **no hay país por defecto** — un número local sin `iso2` no valida,
+y un `iso2` que no coincide con el país del número tampoco.
+
+`PhoneNumber` vivía en `AppLogic.People.Dtos`; al usarlo también Registration pasó a
+`AppLogic.Contracts.Dtos` (nivel 1).
+
+Los datos ya guardados en formato local **no se migraron**.
+
 ### Rutas: pasan a inglés en kebab-case
 
 Decisión revisada en la fase 4g: las rutas también se traducen. Los controllers pasan de

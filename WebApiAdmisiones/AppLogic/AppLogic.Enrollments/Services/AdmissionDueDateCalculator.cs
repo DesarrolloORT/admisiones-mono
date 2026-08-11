@@ -4,10 +4,10 @@ using Utilities;
 
 namespace AppLogic.Enrollments.Services;
 
-public class AdmissionDueDateCalculator(IUnitOfWorkFactory uowFactory) : IAdmissionDueDateCalculator
+// La unidad de trabajo llega por parámetro en cada cálculo: no hace falta inyectar la factory.
+public class AdmissionDueDateCalculator : IAdmissionDueDateCalculator
 {
     private const int DueDateBusinessDays = 5;
-    private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
 
     public OperationResult<DateTime> CalculateAdmissionDueDate(IUnitOfWork uow, long personId, long admissionProcessId)
     {

@@ -2,7 +2,7 @@
 
 ## Resumen
 
-`WebApiAdmisiones` no llama directo a Tivenos. La API legacy de Admisiones solo genera registros en `T_ENVIO_PARA_TIVENOS`.
+`WebApiAdmisiones` no llama directo a Tivenos. Igual que la API legacy, solo genera registros en `T_ENVIO_PARA_TIVENOS`.
 
 El envio real lo hace `ServicioInterno`, que levanta esa cola, completa datos desde ORT y pega a la API de Tivenos.
 
@@ -38,9 +38,34 @@ Ubicaciones:
 
 Notas:
 
-- `WebApiAdmisiones` referencia `BusinessAdmisiones`, no `BusinessApiTivenos`.
-- `Beca_Seleccion` y `Beca_CompletaDJ` aparecen comentados; no estan activos.
-- Antes de insertar en `T_ENVIO_PARA_TIVENOS`, se valida el parametro `SE_LIBERO_TIVENOS`.
+- La legacy `WebApiAdmisiones` referencia `BusinessAdmisiones`, no `BusinessApiTivenos`.
+- `Beca_Seleccion` y `Beca_CompletaDJ` estan comentados en `AdmAdmisiones`, pero `Beca_CompletaDJ`
+  igual se encola desde `Inscripto.ConfirmacionDeclaracionJuradaWeb:5176` (via
+  `ConfirmarPreInscripcionMultiple`), y `AltaInscripcion` desde
+  `ModInterBecasSGI.DarAltaEnvioParaTivenosDesdeInscripcion:140` por la misma cadena.
+- Antes de insertar en `T_ENVIO_PARA_TIVENOS`, se valida el parametro `SE_LIBERO_TIVENOS`
+  (`Core/Business/EnvioParaTivenos.cs:2980`). Aplica a todas las ramas, incluida la API nueva.
+
+## Metodos que encola la API nueva (`api-admisiones`)
+
+| Metodo enviado a Tivenos | Endpoint | Donde se encola |
+|---|---|---|
+| `RegistroDesdeSitioAdmisiones` | `POST enrollments/product-interest` | `RegisterProductInterest.RegisterAndEnqueue` |
+| `AltaInteresXSeleccionEnSitio` | `POST enrollments/product-interest` | `RegisterProductInterest.RegisterAndEnqueue` |
+| `AltaDatosBachillerato` | `POST enrollments/initial-survey` | `InitialSurveyService` |
+| `ModificacionDatosBachillerato` | `POST enrollments/initial-survey` | `InitialSurveyService` |
+
+`RegistroDesdeSitioAdmisiones` cambio de lugar respecto al legacy: salia del Paso5
+(`AdmAdmisiones.AgregarPersonaInteres:836`), al insertar la fila de `T_PERSONA`. En el sitio nuevo
+`POST registration/confirm-new-person` no crea la persona -- los datos van a Redis y la persona se
+inserta al establecer la contraseña, momento en el que todavia no hay `ProcesoId` ni `ProductoId`.
+Por eso se encola en el paso 1 de inscripcion, junto con `AltaInteresXSeleccionEnSitio` y en la
+misma transaccion, solo cuando es el primer ingreso de la persona a admisiones
+(`T_PERSONA_ADMITE.FECHA_FRESCO_PERSONA_ADMITE` sin cargar).
+
+`CI_Enviada`, `AltaInscripcion` y `Beca_CompletaDJ` siguen saliendo de la legacy
+`WebApiInscripcionesPagos` (`ConfirmarPreInscripcion[Multiple]`); `POST enrollments/confirm-pre-enrollment`
+todavia no los encola.
 
 ## Quien dispara Servicio Interno
 
