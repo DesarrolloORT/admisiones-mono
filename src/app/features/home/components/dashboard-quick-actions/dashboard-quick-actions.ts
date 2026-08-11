@@ -63,6 +63,7 @@ export class DashboardQuickActions {
   protected readonly resumeQueryParams = computed(() => ({
     idProducto: this.idProducto(),
     idProceso: this.idProceso(),
+    estado: this.status(),
   }));
 
   protected readonly resumesFlow = computed(

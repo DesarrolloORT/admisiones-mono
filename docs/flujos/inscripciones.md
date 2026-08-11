@@ -190,9 +190,19 @@ matriz es su lectura de negocio.
 
 ### Detalle como read model
 
-`GET /enrollments/details?productId=X&admissionProcessId=Y` busca primero la vista
-Fresco 1/2 y luego 3/4. Devuelve `INS_DET_01`/404 si no encuentra estado y completa
-solo el bloque correspondiente:
+`GET /enrollments/details?productId=X&admissionProcessId=Y&status=Z` busca primero la
+vista Fresco 1/2 y luego 3/4. Devuelve `INS_DET_01`/404 si no encuentra estado y
+completa solo el bloque correspondiente:
+
+`status` es el `enrollmentStatus` que ya devuelve `GET /person/enrollments`; se agregó
+porque `productId` + `admissionProcessId` dejaron de identificar una única inscripción
+cuando la persona tiene más de una tarjeta con ese mismo par (por ejemplo, una
+inscripción confirmada y una reactivación posterior del mismo producto/proceso). El
+front lo manda siempre que lo conoce, pero el param sigue siendo opcional: un link
+viejo sin `estado` se llama sin `status` y el backend resuelve como antes. El frontend
+lo propaga por el query param `estado` en la URL de `/inscripciones` (mismo mecanismo
+que `idProducto`/`idProceso`/`modo`), leído por `inscriptionDetailResolver` y por
+`InscripcionPaymentFacade` al retomar el pago desde el panel.
 
 | Estado                               | Bloque                                                       | Fuente               |
 | ------------------------------------ | ------------------------------------------------------------ | -------------------- |

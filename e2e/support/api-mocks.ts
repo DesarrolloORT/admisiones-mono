@@ -6,7 +6,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 export interface MockApiOptions {
   initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
   identityPreload?: 'none' | 'complete';
-  inscriptionDetail?: 'offers-missing' | 'pending-payment';
+  inscriptionDetail?: 'offers-missing' | 'pending-payment' | 'duplicate-status';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -214,6 +214,56 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (path === '/person/enrollments' && request.method() === 'GET') {
+      // Misma tarjeta producto+proceso, dos tarjetas: sin `status` en el Detalle,
+      // ambas resolverían a la misma inscripción.
+      if (options.inscriptionDetail === 'duplicate-status') {
+        return fulfillOperation(route, [
+          {
+            productId: 20,
+            productFullName: 'Licenciatura en Diseño Gráfico',
+            admissionProcessId: 200,
+            productLevelId: 1,
+            enrollmentStatus: 'Pago pendiente',
+            paymentDueDate: '2027-03-15',
+            hasSeminars: 'N',
+            enrollments: [
+              {
+                enrollmentId: 7001,
+                offeringId: 300,
+                offeringDescription: 'Licenciatura en Diseño Gráfico',
+                shiftId: 3,
+                intakeId: 2,
+                intakeStartDate: '2027-03-01',
+                intakeName: 'Marzo 2027',
+                shiftName: 'Matutino',
+                referenceDate: '2027-03-01',
+              },
+            ],
+          },
+          {
+            productId: 20,
+            productFullName: 'Licenciatura en Diseño Gráfico',
+            admissionProcessId: 200,
+            productLevelId: 1,
+            enrollmentStatus: 'Confirmada',
+            hasSeminars: 'N',
+            enrollments: [
+              {
+                enrollmentId: 7002,
+                offeringId: 300,
+                offeringDescription: 'Licenciatura en Diseño Gráfico',
+                shiftId: 3,
+                intakeId: 2,
+                intakeStartDate: '2027-03-01',
+                intakeName: 'Marzo 2027',
+                shiftName: 'Matutino',
+                referenceDate: '2027-03-01',
+              },
+            ],
+          },
+        ]);
+      }
+
       return fulfillOperation(
         route,
         options.inscriptionDetail
@@ -290,6 +340,31 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       // del catálogo. Retomar tiene que aguantar igual (nunca paso 1).
       if (!['20', '40'].includes(url.searchParams.get('productId') ?? '')) {
         return fulfillApiError(route, 'No se encontró la inscripción.');
+      }
+
+      // Mismo productId+admissionProcessId, dos tarjetas: solo `status` las distingue.
+      if (
+        url.searchParams.get('productId') === '20' &&
+        url.searchParams.get('admissionProcessId') === '200' &&
+        url.searchParams.get('status') === 'Confirmada'
+      ) {
+        return fulfillOperation(route, {
+          status: 'Confirmada',
+          confirmed: {
+            personId: 7002,
+            productId: 20,
+            degreeProgram: 'Licenciatura en Diseño Gráfico',
+            enrollments: [
+              {
+                enrollmentId: 7002,
+                offeringId: 300,
+                intake: 'Marzo 2027',
+                shift: 'Matutino',
+                firstSemesterSubjects: [],
+              },
+            ],
+          },
+        });
       }
 
       // Actualización profesional en proceso: la cabecera no trae comienzo/turno y

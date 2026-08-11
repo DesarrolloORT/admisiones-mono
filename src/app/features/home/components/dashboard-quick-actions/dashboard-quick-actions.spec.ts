@@ -53,7 +53,9 @@ describe('DashboardQuickActions', () => {
       await fixture.whenStable();
 
       const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
-      expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
+      expect(link.getAttribute('href')).toBe(
+        `/inscripciones?idProducto=20&idProceso=200&estado=${encodeURIComponent(status)}`
+      );
     }
   );
 
@@ -71,7 +73,9 @@ describe('DashboardQuickActions', () => {
       idOfertas: [310, 311],
       idInscripciones: [7010, 7011],
     });
-    expect(link.getAttribute('href')).toBe('/inscripciones?idProducto=20&idProceso=200');
+    expect(link.getAttribute('href')).toBe(
+      '/inscripciones?idProducto=20&idProceso=200&estado=En%20proceso'
+    );
   });
 
   it('clears the transient context when opening a detail action', async () => {
@@ -114,7 +118,7 @@ describe('DashboardQuickActions', () => {
 
     expect(inscriptions.reactivate).toHaveBeenCalledWith([100]);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
-      queryParams: { idProducto: 20, idProceso: 200, modo: 'reactivar' },
+      queryParams: { idProducto: 20, idProceso: 200, estado: 'Dada de baja', modo: 'reactivar' },
     });
     const store = TestBed.inject(InscriptionResumeContextStore);
     expect(store.read(20, 200)).toEqual({

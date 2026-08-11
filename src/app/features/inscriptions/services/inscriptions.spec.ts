@@ -204,9 +204,9 @@ describe('Inscripciones', () => {
   });
 
   it('delegates inscription detail loading', () => {
-    service.getDetail(20, 200).subscribe();
+    service.getDetail(20, 200, 'Pago pendiente').subscribe();
 
-    expect(endpointMock.getDetail).toHaveBeenCalledWith(20, 200);
+    expect(endpointMock.getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
   });
 
   it('delegates student regulation acceptance loading', () => {

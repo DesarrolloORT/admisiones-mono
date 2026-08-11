@@ -420,8 +420,10 @@ export class InscripcionPaymentFacade {
     );
     if (idProducto === null || idProceso === null) return;
 
+    const estado = this.route.snapshot.queryParamMap.get('estado');
+
     this.inscriptions
-      .getDetail(idProducto, idProceso)
+      .getDetail(idProducto, idProceso, estado)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: detail => apply(detail),

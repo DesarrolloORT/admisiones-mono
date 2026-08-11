@@ -29,7 +29,7 @@ describe('DashboardCard', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
-      '/inscripciones?idProducto=20&idProceso=200'
+      '/inscripciones?idProducto=20&idProceso=200&estado=Confirmada'
     );
   });
 
@@ -90,7 +90,7 @@ describe('DashboardCard', () => {
     expect(text).toContain('Anotado a 2 seminarios');
     expect(text).not.toContain('Comienzo');
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
-      '/inscripciones?idProducto=20&idProceso=200'
+      '/inscripciones?idProducto=20&idProceso=200&estado=Confirmada'
     );
   });
 

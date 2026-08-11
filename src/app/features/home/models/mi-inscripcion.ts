@@ -44,7 +44,7 @@ export interface PendingPaymentSummary {
   title: string;
   detail: string;
   navigable: boolean;
-  target: { idProducto: number; idProceso: number } | null;
+  target: { idProducto: number; idProceso: number; estado: string } | null;
 }
 
 /**
@@ -62,7 +62,11 @@ export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): Pend
 
   const navigable = pending.length === 1;
   const target = navigable
-    ? { idProducto: pending[0].idProducto, idProceso: pending[0].idProceso }
+    ? {
+        idProducto: pending[0].idProducto,
+        idProceso: pending[0].idProceso,
+        estado: pending[0].estado,
+      }
     : null;
   const title =
     pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Inscripciones pendientes de pago.';

@@ -53,10 +53,18 @@ import { buildPaymentPayload } from '../models/inscription-flow-mappers';
 export class InscripcionesEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail> {
+  public getDetail(
+    idProducto: number,
+    idProceso: number,
+    estado?: string | null
+  ): Observable<InscripcionDetail> {
     return this.api
       .request(getEnrollmentsDetailsEndpoint, {
-        queryParams: { productId: idProducto, admissionProcessId: idProceso },
+        queryParams: {
+          productId: idProducto,
+          admissionProcessId: idProceso,
+          ...(estado ? { status: estado } : {}),
+        },
         cache: false,
         showLoader: true,
       })

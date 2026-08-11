@@ -63,7 +63,16 @@ describe('inscriptionDetailResolver', () => {
       idOfertas: [],
       idNivelProducto: null,
     });
-    expect(getDetail).toHaveBeenCalledWith(20, 200);
+    expect(getDetail).toHaveBeenCalledWith(20, 200, null);
+  });
+
+  it('propagates the estado query param to the detail request', async () => {
+    const detail = createDetail('Pago pendiente');
+    getDetail.mockReturnValue(of(detail));
+
+    await resolve({ idProducto: '20', idProceso: '200', estado: 'Pago pendiente' });
+
+    expect(getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
   });
 
   it('resolves the product level from the careers catalog', async () => {
@@ -120,7 +129,7 @@ describe('inscriptionDetailResolver', () => {
       idOfertas: [],
       idNivelProducto: null,
     });
-    expect(getDetail).toHaveBeenCalledWith(20, 200);
+    expect(getDetail).toHaveBeenCalledWith(20, 200, null);
   });
 
   it('uses the transient reactivation response without loading detail', async () => {

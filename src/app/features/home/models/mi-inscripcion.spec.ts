@@ -24,7 +24,7 @@ describe('buildPendingPaymentSummary', () => {
       title: 'Inscripción pendiente de pago.',
       detail: 'Realizá el pago antes del 15/07/2026.',
       navigable: true,
-      target: { idProducto: 20, idProceso: 200 },
+      target: { idProducto: 20, idProceso: 200, estado: 'Pago pendiente' },
     });
   });
 
@@ -42,7 +42,7 @@ describe('buildPendingPaymentSummary', () => {
       title: 'Inscripción pendiente de pago.',
       detail: 'Consultá el detalle desde Mis carreras.',
       navigable: true,
-      target: { idProducto: 20, idProceso: 200 },
+      target: { idProducto: 20, idProceso: 200, estado: 'Pago pendiente' },
     });
   });
 

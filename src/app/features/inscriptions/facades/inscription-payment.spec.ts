@@ -284,7 +284,7 @@ describe('InscripcionPaymentFacade', () => {
     facade.requestConfirmation();
     facade.confirm();
 
-    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200);
+    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200, null);
     expect(facade.studentNumber()).toBe(412001);
     expect(facade.coordinators()).toEqual([
       {
@@ -318,6 +318,19 @@ describe('InscripcionPaymentFacade', () => {
     expect(facade.studentNumber()).toBe(412001);
   });
 
+  it('reads estado from the resume query params when retomando pago from the panel', () => {
+    configureFacade({
+      queryParams: { idProducto: '20', idProceso: '200', estado: 'Pago pendiente' },
+    });
+    inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
+    facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
+
+    facade.requestConfirmation();
+    facade.confirm();
+
+    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
+  });
+
   it('loads the reservation data after an Abitab reserva from the fresh flow', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
     forms.academicForm.controls.carrera.setValue('20');
@@ -342,7 +355,7 @@ describe('InscripcionPaymentFacade', () => {
     facade.confirm();
 
     expect(facade.outcome()).toBe('reserva');
-    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200);
+    expect(inscriptions.getDetail).toHaveBeenCalledWith(20, 200, null);
     expect(facade.reservationInstructions().items).toContainEqual({
       label: 'Cédula de identidad',
       value: '12345678',

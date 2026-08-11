@@ -28,10 +28,47 @@ test.describe('Inscripción inicial', () => {
     const url = new URL((await detailRequest).url());
     expect(url.searchParams.get('productId')).toBe('20');
     expect(url.searchParams.get('admissionProcessId')).toBe('200');
+    expect(url.searchParams.get('status')).toBe('Pago pendiente');
     await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
     await expect(page.getByText('$ 15.500')).toBeVisible();
     await expect(page.getByText(/04\/03\/2027/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Pagar' })).toHaveCount(0);
+  });
+
+  test('dos tarjetas con mismo producto+proceso y distinto estado abren detalles distintos @regression', async ({
+    page,
+  }) => {
+    await mockApi(page, { inscriptionDetail: 'duplicate-status' });
+    await addAuthenticatedSession(page);
+    await page.goto('/inicio');
+
+    const pendingRequest = page.waitForRequest(request => {
+      const url = new URL(request.url());
+      return (
+        request.method() === 'GET' &&
+        decodeURIComponent(url.pathname) === '/enrollments/details' &&
+        url.searchParams.get('status') === 'Pago pendiente'
+      );
+    });
+    await page.getByRole('link', { name: /Ver instrucciones de pago/ }).click();
+    const pendingUrl = new URL((await pendingRequest).url());
+    expect(pendingUrl.searchParams.get('productId')).toBe('20');
+    expect(pendingUrl.searchParams.get('admissionProcessId')).toBe('200');
+    await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
+
+    await page.goto('/inicio');
+    const confirmedRequest = page.waitForRequest(request => {
+      const url = new URL(request.url());
+      return (
+        request.method() === 'GET' &&
+        decodeURIComponent(url.pathname) === '/enrollments/details' &&
+        url.searchParams.get('status') === 'Confirmada'
+      );
+    });
+    await page.getByRole('link', { name: /Ver detalle/ }).click();
+    const confirmedUrl = new URL((await confirmedRequest).url());
+    expect(confirmedUrl.searchParams.get('productId')).toBe('20');
+    expect(confirmedUrl.searchParams.get('admissionProcessId')).toBe('200');
   });
 
   // Actualización profesional nunca postea EncuestaInicial: "Continuar inscripción"
@@ -52,7 +89,7 @@ test.describe('Inscripción inicial', () => {
       page.getByRole('heading', { name: 'Información personal', exact: true })
     ).toBeVisible();
     const resumeUrl = new URL(page.url());
-    expect(resumeUrl.searchParams.toString()).toBe('idProducto=40&idProceso=210');
+    expect(resumeUrl.searchParams.toString()).toBe('idProducto=40&idProceso=210&estado=En+proceso');
     // Sin vuelta atrás al paso 1 y con el flujo reducido de AP.
     await expect(page.getByRole('button', { name: /Volver/ })).toHaveCount(0);
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);

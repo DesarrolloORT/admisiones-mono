@@ -56,7 +56,7 @@ describe('InscripcionesEndpoint', () => {
       })
     );
 
-    await expect(firstValueFrom(endpoint.getDetail(20, 200))).resolves.toEqual({
+    await expect(firstValueFrom(endpoint.getDetail(20, 200, 'Confirmada'))).resolves.toEqual({
       estado: 'Confirmada',
       detalle: null,
       intereses: [],
@@ -87,6 +87,18 @@ describe('InscripcionesEndpoint', () => {
         ],
       },
     });
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsDetailsEndpoint, {
+      queryParams: { productId: 20, admissionProcessId: 200, status: 'Confirmada' },
+      cache: false,
+      showLoader: true,
+    });
+  });
+
+  it('omits the status query param when no estado is known', async () => {
+    apiMock.request.mockReturnValueOnce(of({}));
+
+    await firstValueFrom(endpoint.getDetail(20, 200));
+
     expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsDetailsEndpoint, {
       queryParams: { productId: 20, admissionProcessId: 200 },
       cache: false,

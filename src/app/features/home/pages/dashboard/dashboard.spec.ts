@@ -74,7 +74,7 @@ describe('Dashboard', () => {
     actionButton?.click();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
-      queryParams: { idProducto: 1, idProceso: 4 },
+      queryParams: { idProducto: 1, idProceso: 4, estado: 'Pago pendiente' },
     });
   });
 

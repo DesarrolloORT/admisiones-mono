@@ -29,8 +29,12 @@ export interface InscripcionIdentityPreload {
 export class Inscripciones {
   private readonly endpoint = inject(InscripcionesEndpoint);
 
-  public getDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail> {
-    return this.endpoint.getDetail(idProducto, idProceso);
+  public getDetail(
+    idProducto: number,
+    idProceso: number,
+    estado?: string | null
+  ): Observable<InscripcionDetail> {
+    return this.endpoint.getDetail(idProducto, idProceso, estado);
   }
 
   public getIdentityPreload(): Observable<InscripcionIdentityPreload> {

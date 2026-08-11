@@ -17,7 +17,13 @@ import { Inscripciones } from '../services/inscriptions';
  */
 type EntryRequest =
   | { intent: 'nueva' }
-  | { intent: 'retomar' | 'reactivar'; idProducto: number; idProceso: number; idOfertas: number[] };
+  | {
+      intent: 'retomar' | 'reactivar';
+      idProducto: number;
+      idProceso: number;
+      idOfertas: number[];
+      estado: string | null;
+    };
 
 export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = route => {
   const request = readEntryRequest(route.queryParamMap);
@@ -38,7 +44,7 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
     intent === 'reactivar' ? resumeContext.takeReactivation(idProducto, idProceso) : null;
 
   // 3. Las dos cargas son opcionales: degradan a null/[] para que el flujo abra igual.
-  const detail$ = preEnrollment ? of(null) : loadDetail(idProducto, idProceso);
+  const detail$ = preEnrollment ? of(null) : loadDetail(idProducto, idProceso, request.estado);
   const careers$ = loadCareers();
 
   return forkJoin({ detail: detail$, careers: careers$ }).pipe(
@@ -70,6 +76,7 @@ export function readEntryRequest(params: ParamMap): EntryRequest {
     idProducto,
     idProceso,
     idOfertas: toPositiveIntegers(params.getAll('idOferta')),
+    estado: toNonEmptyString(params.get('estado')),
   };
 }
 
@@ -77,9 +84,13 @@ export const resolveEntryIntent = (params: ParamMap): InscripcionEntryResolved['
   readEntryRequest(params).intent;
 
 /** El Detalle es informativo: si falla, el paso 2 sigue con lo que aporta la URL. */
-function loadDetail(idProducto: number, idProceso: number): Observable<InscripcionDetail | null> {
+function loadDetail(
+  idProducto: number,
+  idProceso: number,
+  estado: string | null
+): Observable<InscripcionDetail | null> {
   return inject(Inscripciones)
-    .getDetail(idProducto, idProceso)
+    .getDetail(idProducto, idProceso, estado)
     .pipe(catchError(() => of(null)));
 }
 
@@ -105,4 +116,9 @@ function toPositiveInteger(value: string | null): number | null {
 
 function toPositiveIntegers(values: string[]): number[] {
   return [...new Set(values.map(toPositiveInteger).filter((id): id is number => id !== null))];
+}
+
+function toNonEmptyString(value: string | null): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 }
