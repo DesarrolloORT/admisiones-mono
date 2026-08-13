@@ -180,7 +180,7 @@ describe('ApiHttpClient', () => {
     });
     const response = new Blob(['photo'], { type: 'image/png' });
 
-    api.request(endpoint, { cache: false, responseType: 'blob' }).subscribe(blob => {
+    api.request(endpoint, { responseType: 'blob' }).subscribe(blob => {
       expect(blob.size).toBe(response.size);
       expect(blob.type).toBe('image/png');
     });
@@ -191,7 +191,10 @@ describe('ApiHttpClient', () => {
     expect(request.request.responseType).toBe('blob');
     request.flush(response);
   });
-  it('should cache GET endpoints without params by default', () => {
+  // El cliente no cachea: cada GET va a la red y devuelve el dato vigente. Antes existía un
+  // `Map` de respuestas, pero solo se activaba para endpoints sin `requiresAuth` y todos los
+  // generados que la app consume son autenticados, así que nunca acertaba en producción.
+  it('should re-request GET endpoints instead of caching them', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;
       queryParams: never;
@@ -206,69 +209,14 @@ describe('ApiHttpClient', () => {
     const responses: string[][] = [];
 
     api.list(endpoint).subscribe(data => responses.push(data));
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    const request = httpController.expectOne(expectedUrl);
-    request.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
-
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    httpController.expectNone(expectedUrl);
-    expect(responses).toEqual([['Uruguay'], ['Uruguay'], ['Uruguay']]);
-  });
-
-  it('should not cache GET endpoints with query params by default', () => {
-    const endpoint = defineEndpoint<{
-      pathParams: never;
-      queryParams: { estado: string };
-      request: never;
-      response: string[];
-    }>({
-      operationId: 'BuscarEstados',
-      method: 'GET',
-      path: '/estados',
-    });
-    const expectedUrl = new URL('/estados', environment.API_URL).toString();
-
-    api.request(endpoint, { queryParams: { estado: 'activo' } }).subscribe();
-
-    const firstRequest = httpController.expectOne(
-      req => req.url === expectedUrl && req.params.get('estado') === 'activo'
-    );
-    firstRequest.flush([]);
-
-    api.request(endpoint, { queryParams: { estado: 'activo' } }).subscribe();
-
-    const secondRequest = httpController.expectOne(
-      req => req.url === expectedUrl && req.params.get('estado') === 'activo'
-    );
-    secondRequest.flush([]);
-  });
-
-  it('should clear cached GET responses', () => {
-    const endpoint = defineEndpoint<{
-      pathParams: never;
-      queryParams: never;
-      request: never;
-      response: { success?: boolean; httpCode?: number; data: string[] };
-    }>({
-      operationId: 'ListarPaises',
-      method: 'GET',
-      path: '/paises',
-    });
-    const expectedUrl = new URL('/paises', environment.API_URL).toString();
-    const responses: string[][] = [];
+    httpController
+      .expectOne(expectedUrl)
+      .flush({ success: true, httpCode: 200, data: ['Uruguay'] });
 
     api.list(endpoint).subscribe(data => responses.push(data));
-
-    const firstRequest = httpController.expectOne(expectedUrl);
-    firstRequest.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
-
-    api.clearCache();
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    const secondRequest = httpController.expectOne(expectedUrl);
-    secondRequest.flush({ success: true, httpCode: 200, data: ['Argentina'] });
+    httpController
+      .expectOne(expectedUrl)
+      .flush({ success: true, httpCode: 200, data: ['Argentina'] });
 
     expect(responses).toEqual([['Uruguay'], ['Argentina']]);
   });
