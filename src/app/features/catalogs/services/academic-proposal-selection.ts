@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type FormGroup, Validators } from '@angular/forms';
 import { of, Subscription } from 'rxjs';
@@ -60,6 +60,14 @@ export class AcademicProposalSelection {
       this.careersState().find(career => career.idProducto === this.seminarsProgramId())
         ?.tieneSeminario === true
   );
+  public readonly seminarLabel = computed(() =>
+    this.allowsMultipleSeminars() ? this.terminology().startLabel : 'Horario'
+  );
+  public readonly seminarErrorText = computed(() =>
+    this.allowsMultipleSeminars()
+      ? this.terminology().startErrorText
+      : `Seleccioná un ${this.seminarLabel().toLocaleLowerCase('es-UY')}`
+  );
   public readonly careersLoadingMessage = computed(() =>
     this.loadingCareers() ? this.terminology().careerLoadingMessage : ''
   );
@@ -84,6 +92,22 @@ export class AcademicProposalSelection {
   });
 
   constructor() {
+    // Una sola opción no se elige: se precarga sin pisar una selección existente.
+    // Los catálogos se leen antes del guard a propósito: si el efecto corriera sin
+    // form y sin leerlos, quedaría sin dependencias y no volvería a correr nunca.
+    effect(() => {
+      const start = singleOptionValue(this.startOptions());
+      const shift = singleOptionValue(this.shiftOptions());
+      const seminar = singleOptionValue(this.seminarOptions());
+      const controls = this.form?.controls;
+      if (!controls) return;
+
+      if (start && !controls.comienzo.value) controls.comienzo.setValue(start);
+      if (shift && !controls.turno.value) controls.turno.setValue(shift);
+      if (seminar && controls.seminarios.value.length === 0)
+        controls.seminarios.setValue([seminar]);
+    });
+
     this.destroyRef.onDestroy(() => {
       this.formSubscriptions.unsubscribe();
       this.careersSubscription.unsubscribe();
@@ -359,6 +383,10 @@ function getOptionLabel(
   fallback: string
 ): string {
   return options.find(option => option.value === value)?.label ?? fallback;
+}
+
+function singleOptionValue(options: readonly AcademicProposalOption[]): string | null {
+  return options.length === 1 ? (options[0]?.value ?? null) : null;
 }
 
 function toNullableNumber(value: string | number | null | undefined): number | null {

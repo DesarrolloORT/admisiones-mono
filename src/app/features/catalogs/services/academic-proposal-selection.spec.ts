@@ -181,6 +181,79 @@ describe('AcademicProposalSelection', () => {
     expect(form.controls.turno.hasError('required')).toBe(true);
     expect(form.controls.seminarios.hasError('required')).toBe(false);
   });
+
+  // Sin `tieneSeminario` la oferta del programa es un horario y el select es simple.
+  it('names the AP offering field after the seminars flag of the program', () => {
+    form.controls.tipoPropuesta.setValue('3');
+    form.controls.carrera.setValue('30');
+
+    expect(selection.allowsMultipleSeminars()).toBe(false);
+    expect(selection.seminarLabel()).toBe('Horario');
+    expect(selection.seminarErrorText()).toBe('Seleccioná un horario');
+
+    getCareers.mockReturnValue(
+      of([
+        {
+          idProceso: 200,
+          idProducto: 30,
+          idNivelProducto: 3,
+          nombreProducto: 'Programa de Asesoramiento Financiero',
+          nombreNivelProducto: 'Actualización profesional',
+          tieneSeminario: true,
+        },
+      ])
+    );
+    selection.setProposalType('3');
+    form.controls.carrera.setValue('30');
+
+    expect(selection.seminarLabel()).toBe('Seminario');
+    expect(selection.seminarErrorText()).toBe('Seleccioná al menos un seminario');
+  });
+
+  it('preselects the only option of each catalog without touching an existing selection', () => {
+    form.controls.tipoPropuesta.setValue('1');
+    form.controls.carrera.setValue('10');
+    TestBed.tick();
+
+    // Un solo comienzo se precarga y encadena el turno, que también viene solo.
+    expect(form.controls.comienzo.value).toBe('200');
+    expect(form.controls.turno.value).toBe('300');
+
+    getComienzos.mockReturnValue(
+      of([
+        { idProceso: 200, nombreProceso: 'Agosto' },
+        { idProceso: 201, nombreProceso: 'Marzo' },
+      ])
+    );
+    form.controls.carrera.setValue('20');
+    TestBed.tick();
+
+    expect(form.controls.comienzo.value).toBe('');
+  });
+
+  it('preselects a single seminar but keeps the seminars restored on resume', () => {
+    getSeminarios.mockReturnValue(
+      of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }])
+    );
+    form.controls.tipoPropuesta.setValue('3');
+    form.controls.carrera.setValue('30');
+    TestBed.tick();
+
+    expect(form.controls.seminarios.value).toEqual(['300']);
+
+    const resumedForm = createForm();
+    resumedForm.setValue({
+      tipoPropuesta: '3',
+      carrera: '30',
+      comienzo: '',
+      turno: '',
+      seminarios: ['301'],
+    });
+    selection.connect(resumedForm);
+    TestBed.tick();
+
+    expect(resumedForm.controls.seminarios.value).toEqual(['301']);
+  });
 });
 
 function createForm(): FormGroup<AcademicProposalForm> {
