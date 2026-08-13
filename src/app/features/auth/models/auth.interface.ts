@@ -1,3 +1,5 @@
+import type { PhoneNumberValue } from 'src/app/shared/forms/phone';
+
 // Frontend input for login form/use case. Mapped to LoginPayload in AuthSessionService.
 export interface AuthLoginRequest {
   documentType: string;
@@ -17,10 +19,7 @@ export interface AuthIdentityData {
   documentNumber: string;
 }
 
-export interface AuthPhoneNumber {
-  nationalNumber: string;
-  iso2: string | null;
-}
+export type AuthPhoneNumber = PhoneNumberValue;
 
 export interface AuthRegisterPersonalData {
   primerNombre: string;

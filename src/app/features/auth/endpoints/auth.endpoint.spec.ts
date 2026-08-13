@@ -11,7 +11,7 @@ import {
 } from '@desarrolloort/ngx-utils';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
-import { ApiHttpClient, SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
+import { SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
 import type { DocumentRecognitionData } from '../models/document-recognition.interface';
 import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
 
@@ -578,7 +578,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('logout', () => {
-    it('should clear backend cookies and invalidate the API cache', () => {
+    it('should clear backend cookies', () => {
       endpoint.logout().subscribe(result => {
         expect(result).toBeUndefined();
       });
@@ -589,13 +589,6 @@ describe('AuthEndpoint', () => {
 
       expect(req.request.withCredentials).toBe(true);
       req.flush({ success: true, httpCode: 200, data: null });
-
-      const api = TestBed.inject(ApiHttpClient);
-      const clearCache = vi.spyOn(api, 'clearCache');
-
-      endpoint.clearCache();
-
-      expect(clearCache).toHaveBeenCalledOnce();
     });
   });
 

@@ -1,10 +1,10 @@
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
+import { toBackendPhone } from 'src/app/shared/forms/phone';
 
 import { LocationValue } from '../../catalogs/models/location-value';
 import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
 import {
   AuthIdentityData,
-  AuthPhoneNumber,
   AuthRegisterPersonalData,
   AuthRegisterRequest,
 } from '../models/auth.interface';
@@ -47,13 +47,6 @@ export function toAuthRegisterPersonalData(
     telefono1: toBackendPhone(value.telefono1),
     mail: value.mail.trim().toLowerCase(),
     verificacionMail: value.verificacionMail.trim().toLowerCase(),
-  };
-}
-
-function toBackendPhone(value: OrtPhoneInputValue | null): AuthPhoneNumber {
-  return {
-    nationalNumber: value?.number.trim() ?? '',
-    iso2: value?.iso2 || null,
   };
 }
 

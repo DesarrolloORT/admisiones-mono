@@ -422,10 +422,6 @@ export class AuthEndpoint {
       .pipe(map(() => undefined));
   }
 
-  public clearCache(): void {
-    this.api.clearCache();
-  }
-
   /**
    * Refresh the access token using the HttpOnly refresh-token cookie.
    *
