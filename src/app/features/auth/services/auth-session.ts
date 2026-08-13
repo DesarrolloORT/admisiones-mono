@@ -108,7 +108,6 @@ export class AuthSessionService {
   public clearSession(): void {
     this.sessionState.set(null);
     this.pendingTwoFactorContext = null;
-    this.endpoint.clearCache();
   }
 
   public logout(): void {

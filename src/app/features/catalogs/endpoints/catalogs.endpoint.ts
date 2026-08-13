@@ -165,10 +165,6 @@ export class CatalogsEndpoint {
       );
   }
 
-  public clearCache(): void {
-    this.api.clearCache();
-  }
-
   private toCareers(nivel: DegreeProgramsByLevelResponse): Career[] {
     return (nivel.schools ?? []).flatMap(escuela => {
       const groups = escuela.seminars?.length

@@ -12,7 +12,6 @@ describe('AuthSessionService', () => {
   let endpointMock: {
     login: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
     refreshToken: ReturnType<typeof vi.fn>;
     resendTwoFactorCode: ReturnType<typeof vi.fn>;
     verifyTwoFactorCode: ReturnType<typeof vi.fn>;
@@ -28,7 +27,6 @@ describe('AuthSessionService', () => {
         .fn()
         .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
       logout: vi.fn().mockReturnValue(of(undefined)),
-      clearCache: vi.fn(),
       refreshToken: vi.fn().mockReturnValue(of(undefined)),
       resendTwoFactorCode: vi.fn().mockReturnValue(
         of({
@@ -261,7 +259,6 @@ describe('AuthSessionService', () => {
 
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem('auth-session')).toBeNull();
-    expect(endpointMock.clearCache).toHaveBeenCalled();
   });
 
   it('should delegate access token refresh without changing local session', () => {
@@ -280,7 +277,6 @@ describe('AuthSessionService', () => {
     expect(endpointMock.logout).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(false);
     expect(window.localStorage.getItem('auth-session')).toBeNull();
-    expect(endpointMock.clearCache).toHaveBeenCalled();
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/iniciar-sesion');
   });
 

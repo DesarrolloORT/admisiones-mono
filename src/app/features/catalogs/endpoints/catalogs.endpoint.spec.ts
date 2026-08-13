@@ -9,13 +9,11 @@ describe('CatalogsEndpoint', () => {
   let endpoint: CatalogsEndpoint;
   let apiMock: {
     request: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     apiMock = {
       request: vi.fn().mockReturnValue(of([])),
-      clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -196,11 +194,5 @@ describe('CatalogsEndpoint', () => {
         },
       ]);
     });
-  });
-
-  it('should delegate cache clearing', () => {
-    endpoint.clearCache();
-
-    expect(apiMock.clearCache).toHaveBeenCalled();
   });
 });
