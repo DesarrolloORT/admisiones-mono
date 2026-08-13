@@ -16,7 +16,6 @@ describe('Catalogs', () => {
     getBancos: ReturnType<typeof vi.fn>;
     getInstituciones: ReturnType<typeof vi.fn>;
     getTurnos: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -29,7 +28,6 @@ describe('Catalogs', () => {
       getBancos: vi.fn(),
       getInstituciones: vi.fn(),
       getTurnos: vi.fn(),
-      clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -184,11 +182,5 @@ describe('Catalogs', () => {
         },
       ]);
     });
-  });
-
-  it('should delegate clearCache to the endpoint', () => {
-    service.clearCache();
-
-    expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });

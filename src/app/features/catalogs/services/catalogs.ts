@@ -80,8 +80,4 @@ export class Catalogs {
       )
     );
   }
-
-  public clearCache(): void {
-    this.endpoint.clearCache();
-  }
 }
