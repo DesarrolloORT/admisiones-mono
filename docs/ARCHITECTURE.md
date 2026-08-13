@@ -99,11 +99,14 @@ Reglas:
   `generated`, `unknown`, `any` ni casts `as unknown as`.
 - usar `npm run update-api` para regenerar endpoints y validar adapters.
 
-`ApiHttpClient` cachea por defecto los `GET` sin `pathParams` ni
-`queryParams`. Esto cubre catálogos y datos de referencia sin agregar
-`shareReplay` en cada service. Los `GET` con parámetros no se cachean
-automáticamente porque normalmente dependen del filtro recibido. Para invalidar
-el cache compartido, llamar a `api.clearCache()` desde el service que corresponda.
+`ApiHttpClient` no cachea: cada request va a la red. Existió un `Map` de respuestas
+`GET` con `shareReplay`, pero solo se activaba para endpoints con
+`requiresAuth: false` y todos los endpoints generados que la app consume son
+autenticados, así que nunca acertaba. Se eliminó junto con `clearCache()` y las
+opciones `cache` en lugar de dejar código que aparentaba cachear sin hacerlo. Si
+en el futuro hace falta deduplicar, el patrón a seguir es el de
+`getSharedRefreshRequest` en `core/interceptors/http.ts`, que sí funciona: un
+observable compartido en vuelo con `shareReplay` y reset en `finalize`.
 
 ## Decisiones tecnicas vigentes
 
@@ -157,8 +160,9 @@ módulos transversales que exponen datos o utilidades a múltiples features.
 
 Agrupa endpoints de datos de referencia (países, bachilleratos, instituciones, etc.).
 Cualquier feature puede inyectar `Catalogs` (service) para obtener listas de
-catálogos. El cache lo aplica `ApiHttpClient` automáticamente porque estos
-endpoints son `GET` sin parámetros.
+catálogos. No hay cache: cada consulta va a la red, así que conviene pedir el
+catálogo una sola vez por pantalla y guardarlo en un signal de la facade (patrón
+`catalogsRequested` en `inscription-survey-options.ts`).
 
 Estructura:
 
@@ -177,8 +181,8 @@ private catalogs = inject(Catalogs);
 this.catalogs.getCountries().subscribe(countries => ...);
 ```
 
-Si necesitás invalidar el cache compartido (por ejemplo después de un cambio de
-sesión), llamá a `catalogs.clearCache()`.
+No hace falta invalidar nada después de un cambio de sesión: sin cache, la
+siguiente consulta ya trae el dato vigente.
 
 ## Referencias relacionadas
 

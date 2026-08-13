@@ -45,9 +45,9 @@ Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servid
   la identidad del usuario autenticado. El backend obtiene `personId` del JWT/cookie;
   nunca acepta la persona desde el request.
 - `InscripcionesEndpoint` es la frontera anticorrupción del front: traduce los modelos
-  generados en inglés a tipos propios de la feature y limpia la caché HTTP después de
-  mutaciones. Las consultas de detalle, identidad, encuesta y reglamento se fuerzan sin
-  caché.
+  generados en inglés a tipos propios de la feature. No hay caché HTTP que invalidar:
+  `ApiHttpClient` manda cada request a la red, así que detalle, identidad, encuesta y
+  reglamento siempre leen el estado vigente.
 - Oracle persiste interés, encuesta, aceptación del reglamento, imágenes, inscripciones
   y método de reserva. La cola de Tivenos se registra en la misma transacción que el
   interés o la actualización de bachillerato; la entrega efectiva ocurre fuera del
@@ -119,7 +119,7 @@ matriz es su lectura de negocio.
   llegar con producto y proceso válidos **ya prueba que la inscripción existe**, así
   que el interés está registrado y el **Paso 1 nunca se muestra**. Al hacer clic en
   "Continuar inscripción", la tarjeta guarda sus `idOferta` e `idInscripcion` en
-  `sessionStorage`; la URL conserva únicamente producto y proceso. El Paso 1 queda precargado y
+  `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel`. El Paso 1 queda precargado y
   deshabilitado (no se vuelve a enviar `InteresProducto`) y el flujo arranca en el Paso
   2 o en la pantalla que corresponda al estado.
 
@@ -204,6 +204,14 @@ lo propaga por el query param `estado` en la URL de `/inscripciones` (mismo meca
 que `idProducto`/`idProceso`/`modo`), leído por `inscriptionDetailResolver` y por
 `InscripcionPaymentFacade` al retomar el pago desde el panel.
 
+`nivel` viaja por el mismo mecanismo y con la misma regla de opcionalidad: es el
+`productLevelId` que ya devuelve `GET /person/enrollments`, y existe para que el
+resolver no reconstruya el nivel del producto consultando los tres tipos de propuesta.
+No se envía al backend: solo alimenta `idNivelProducto` del read model de entrada. El
+resolver lo descarta si no corresponde a un tipo conocido y cae al catálogo, así que un
+valor manipulado no puede hacer más que elegir la rama de UI equivocada; la pertenencia
+de los IDs la revalida el backend igual que siempre.
+
 | Estado                               | Bloque                                                       | Fuente               |
 | ------------------------------------ | ------------------------------------------------------------ | -------------------- |
 | `En proceso`                         | `inProgress` con intereses/ofertas                           | Oracle               |
@@ -280,6 +288,13 @@ usa el `idProceso` como string, proveniente de
 `admissionProcessId`. `turno` usa el `idOferta` como string, proveniente de
 `GET /catalogs/shifts?degreeProgramId=<carrera>&admissionProcessId=<comienzo>`,
 y el adapter lo envía dentro de `offeringIds`.
+
+Cuando un catálogo devuelve **una sola opción**, el campo se precarga: no hay elección real
+que pedir. Aplica a `comienzo`, `turno` y al campo de seminarios/horario de AP; `carrera` no
+se precarga, porque dispararía toda la cascada de catálogos sin intención del usuario. La
+precarga vive en un `effect` de `AcademicProposalSelection` y nunca pisa un valor ya elegido,
+así que el prefill de una encuesta previa y el de retomar quedan intactos. Precargar
+`comienzo` sí encadena `GET /catalogs/shifts`, igual que si lo hubiera elegido la persona.
 
 Al continuar se llama a `POST /enrollments/product-interest` con:
 
@@ -410,6 +425,11 @@ Actualización profesional con más de una anotación.
   un **select simple** de una sola oferta
   (`AcademicProposalSelection.allowsMultipleSeminars`). El control `seminarios`
   guarda siempre `string[]`, así que el resto del flujo no cambia.
+- `tieneSeminario` decide además la terminología del campo
+  (`AcademicProposalSelection.seminarLabel` / `seminarErrorText`, que también alimentan el
+  resumen de errores del paso): con seminarios se rotula **Seminario** y el error es
+  "Seleccioná al menos un seminario"; sin seminarios las ofertas del programa son horarios,
+  así que el campo se rotula **Horario** y el error va en singular.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /catalogs/shifts`; el resultado llena el multiselect de seminarios.
 - Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.
@@ -455,11 +475,15 @@ falla): el paso 2 se abre igual, pero el tipo de propuesta queda vacío hasta qu
 catálogo resuelva el nivel, así que las secciones visibles pueden arrancar como las del
 flujo tradicional.
 
-El resolver de entrada cruza el Detalle contra `GET /catalogs/degree-programs` para
-resolver `idNivelProducto`, que decide el tipo de propuesta del paso 1 y, con eso,
-las secciones visibles del paso 2. Si el catálogo falla queda `null`: el paso 2
-igual se abre y `AcademicProposalSelection` completa el tipo cuando el catálogo
-carga. `InscripcionProcessFacade` aplica el `academicPrefill` después del slice de
+`idNivelProducto` decide el tipo de propuesta del paso 1 y, con eso, las secciones
+visibles del paso 2. Al retomar desde el panel llega por el query param `nivel`: la
+tarjeta ya lo recibió como `productLevelId` en `GET /person/enrollments`, así que el
+resolver lo usa directo y **no** consulta el catálogo. Solo cuando ese param falta o
+no corresponde a un tipo conocido (link viejo, entrada directa, valor manipulado) el
+resolver cruza el Detalle contra `GET /catalogs/degree-programs` para reconstruirlo,
+lo que cuesta una consulta por tipo de propuesta. Si el catálogo falla queda `null`:
+el paso 2 igual se abre y `AcademicProposalSelection` completa el tipo cuando el
+catálogo carga. `InscripcionProcessFacade` aplica el `academicPrefill` después del slice de
 encuesta y bloquea el paso 1 (`disableForResume`).
 
 El Detalle no informa si la inscripción es corporativa, por lo que al retomar un
@@ -899,8 +923,9 @@ pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 - Carreras: el ingreso nuevo espera la elección de tipo y hace una sola llamada a
   `GET /catalogs/degree-programs?academicOffer=<1|2|3>` con el valor elegido. Aplana
   `productos` para niveles 1/2 y `seminarios[].productos` para niveles 3/4,
-  conservando `tieneSeminario` del grupo. Al retomar, mientras Detalle no informe
-  el nivel del producto, el resolver consulta los tres tipos para reconstruirlo.
+  conservando `tieneSeminario` del grupo. Al retomar, el nivel llega por el query
+  param `nivel` y el resolver no consulta el catálogo; solo si ese param falta o es
+  inválido consulta los tres tipos para reconstruirlo.
 - Comienzos: `GET /catalogs/intakes?degreeProgramId=<idProducto>`
 - Turnos: `GET /catalogs/shifts?degreeProgramId=<idProducto>&admissionProcessId=<idProceso>`
 - Encuesta inicial: `GET /catalogs/initial-survey`

@@ -85,7 +85,7 @@ sequenceDiagram
 | Ver confirmacion de codigo | `/confirmacion-correo/verificar-codigo` usa `TWO_FACTOR_EMAIL_CONFIRMATION` | Contexto 2FA queda en `AuthSessionService` | Respuesta 202 con `sessionId` y `maskedEmail` | Email con codigo 2FA                |
 | Ingresar codigo            | `TwoFactorValidationPage.verify()` y componente `TwoFactorValidation`       | `completeTwoFactor(...)`                   | `verifyTwoFactorCode(...)`                    | `POST /auth/verify-two-factor-code` |
 | Reenviar codigo            | `TwoFactorValidationPage.resend()`                                          | `resendTwoFactorCode(sessionId)`           | `resendTwoFactorCode(...)`                    | `POST /auth/resend-two-factor-code` |
-| Entrar a ruta protegida    | `authGuard` / `authMatchGuard`                                              | `ensureAuthenticatedSession()`             | `AccountService.getPersonalData()`            | Cookies HttpOnly vigentes           |
+| Entrar a ruta protegida    | `authMatchGuard` (`canMatch`, único guard)                                  | `ensureAuthenticatedSession()`             | `AccountService.getPersonalData()`            | Cookies HttpOnly vigentes           |
 | Refresh automatico         | `authRefreshInterceptor`                                                    | `refreshAccessToken()`                     | `refreshToken()`                              | `POST /auth/refresh-token`          |
 | Cerrar sesion              | Layout de home llama `AuthSessionService.logout()`                          | `logout()` limpia estado local             | `logout()`                                    | `POST /auth/logout`                 |
 
@@ -99,7 +99,7 @@ La UI usa tipos propios de la feature y no consume DTOs generados directamente. 
 | `twoFactorRequired` | `POST /auth/login` 202                            | Guarda `sessionId`, documento y correo enmascarado en memoria | Navega a confirmacion de correo               |
 | Sesion hidratada    | Guard en ruta protegida                           | `ensureAuthenticatedSession()` consulta datos personales      | Permite `/inicio`, `/inscripciones`, `/becas` |
 | Token refrescado    | 401 en request con credenciales fuera de `/auth/` | Refresh compartido con `shareReplay`                          | Reintenta el request original una vez         |
-| Sesion invalida     | Refresh falla o guard no hidrata                  | Limpia `AuthSession`, cache y drafts de inscripcion           | Redirige a login o rechaza navegacion         |
+| Sesion invalida     | Refresh falla o guard no hidrata                  | Limpia `AuthSession` y drafts de inscripcion                  | Redirige a login o rechaza navegacion         |
 
 Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend solo mantiene estado de presentacion (`AuthSession`) para guards, cabecera y mensajes.
 

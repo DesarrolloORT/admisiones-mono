@@ -179,6 +179,28 @@ como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste 
 formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son
 informativos y el servidor los recalcula o ignora.
 
+El mapeo del teléfono es único para registro y para la edición de datos
+personales, y vive en `src/app/shared/forms/phone.ts`:
+
+- `toBackendPhone` arma el `primaryPhone` del request.
+- `toPhoneValidationValue` arma el body de `POST /person/validate-phone-number`,
+  resolviendo el prefijo del país a partir del `iso2`.
+- `toPhoneInputValue` reconstruye el valor de `ort-phone-input` a partir de lo
+  almacenado. `GET /person/details` devuelve `primaryPhone` como objeto: cuando
+  `isValid` es `true` el servidor ya lo desarmó y se usan `nationalNumber` e
+  `iso2` tal cual. Cuando es `false` el número quedó sin resolver —dato previo a
+  la migración o una línea fija— y llega crudo, sin país: ahí se reprocesa el
+  texto asumiendo `UY` si no viene en internacional (`+` o `00`), descartando el
+  `0` de salida nacional. Un número internacional cuyo prefijo no se reconoce
+  **no** se re-etiqueta: se envía tal cual con `iso2` nulo, que el contrato acepta.
+
+Como ese default por país es una suposición, el formulario de datos personales
+revalida el teléfono contra el servidor apenas lo carga y marca el campo en error
+si lo rechaza, en lugar de persistir un número extranjero como uruguayo.
+Por el mismo motivo, registro y edición esperan a que termine la validación
+asíncrona antes de enviar: mientras está pendiente el formulario no es `invalid`
+y el envío se saltearía el chequeo del número.
+
 `EvaluarDocumento`, `VerificarIdentidad`, `AnalizarAdjunto`,
 `ConfirmarNuevaPersona` y `ConfirmarSolicitudAlta` son públicos y están
 protegidos por captcha. La sesión, el captcha y la cookie de activación son
