@@ -51,6 +51,7 @@ export class DashboardQuickActions {
   readonly cardType = input<CardType>('careers');
   readonly idProducto = input<number | null>(null);
   readonly idProceso = input<number | null>(null);
+  readonly idNivelProducto = input<number | null>(null);
   readonly idInscripciones = input<readonly number[]>([]);
   readonly idOfertas = input<readonly number[]>([]);
   private readonly isReactivating = signal(false);
@@ -64,6 +65,7 @@ export class DashboardQuickActions {
     idProducto: this.idProducto(),
     idProceso: this.idProceso(),
     estado: this.status(),
+    nivel: this.idNivelProducto(),
   }));
 
   protected readonly resumesFlow = computed(

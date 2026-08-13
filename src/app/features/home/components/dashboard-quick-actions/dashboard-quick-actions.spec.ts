@@ -54,7 +54,7 @@ describe('DashboardQuickActions', () => {
 
       const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
       expect(link.getAttribute('href')).toBe(
-        `/inscripciones?idProducto=20&idProceso=200&estado=${encodeURIComponent(status)}`
+        `/inscripciones?idProducto=20&idProceso=200&estado=${encodeURIComponent(status)}&nivel=1`
       );
     }
   );
@@ -74,7 +74,7 @@ describe('DashboardQuickActions', () => {
       idInscripciones: [7010, 7011],
     });
     expect(link.getAttribute('href')).toBe(
-      '/inscripciones?idProducto=20&idProceso=200&estado=En%20proceso'
+      '/inscripciones?idProducto=20&idProceso=200&estado=En%20proceso&nivel=1'
     );
   });
 
@@ -118,7 +118,13 @@ describe('DashboardQuickActions', () => {
 
     expect(inscriptions.reactivate).toHaveBeenCalledWith([100]);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
-      queryParams: { idProducto: 20, idProceso: 200, estado: 'Dada de baja', modo: 'reactivar' },
+      queryParams: {
+        idProducto: 20,
+        idProceso: 200,
+        estado: 'Dada de baja',
+        nivel: 1,
+        modo: 'reactivar',
+      },
     });
     const store = TestBed.inject(InscriptionResumeContextStore);
     expect(store.read(20, 200)).toEqual({
@@ -162,6 +168,7 @@ describe('DashboardQuickActions', () => {
     fixture.componentRef.setInput('careerName', 'Sistemas');
     fixture.componentRef.setInput('idProducto', 20);
     fixture.componentRef.setInput('idProceso', 200);
+    fixture.componentRef.setInput('idNivelProducto', 1);
     fixture.componentRef.setInput('idInscripciones', idInscripciones);
     fixture.componentRef.setInput('idOfertas', idOfertas);
     return fixture;
