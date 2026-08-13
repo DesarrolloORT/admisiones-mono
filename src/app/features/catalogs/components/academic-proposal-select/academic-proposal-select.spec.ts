@@ -8,6 +8,7 @@ import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive
 import { vi } from 'vitest';
 
 import type { AcademicProposalForm } from '../../models/academic-proposal';
+import { AcademicProposalSelection } from '../../services/academic-proposal-selection';
 import { Catalogs } from '../../services/catalogs';
 import { AcademicProposalSelect } from './academic-proposal-select';
 
@@ -44,6 +45,7 @@ describe('AcademicProposalSelect', () => {
     TestBed.configureTestingModule({
       imports: [AcademicProposalSelect],
       providers: [
+        AcademicProposalSelection,
         { provide: BreakpointService, useValue: { breakpoint } },
         {
           provide: Catalogs,
@@ -93,6 +95,7 @@ describe('AcademicProposalSelect', () => {
     form = createForm();
     fixture = TestBed.createComponent(AcademicProposalSelect);
     fixture.componentRef.setInput('form', form);
+    fixture.componentRef.setInput('selection', TestBed.inject(AcademicProposalSelection));
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -180,12 +183,29 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.nativeElement.querySelector('#academic-proposal-start-mobile')).toBeNull();
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
 
-    form.controls.carrera.setValue('40');
+    form.controls.carrera.setValue('41');
     fixture.detectChanges();
 
     expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Seminario');
     expect(fixture.nativeElement.querySelector('#academic-proposal-start-mobile')).toBeNull();
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
+  });
+
+  // Sin `tieneSeminario` las ofertas del programa son horarios, no seminarios.
+  it('labels the AP offering select as Horario when the program has no seminars', () => {
+    form.controls.tipoPropuesta.setValue('3');
+    form.controls.carrera.setValue('40');
+    fixture.detectChanges();
+
+    expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Horario');
+  });
+
+  it('preselects the only offering the AP program has', () => {
+    form.controls.tipoPropuesta.setValue('3');
+    form.controls.carrera.setValue('40');
+    TestBed.tick();
+
+    expect(form.controls.seminarios.value).toEqual(['300']);
   });
 
   it('only allows multiple seminars when the AP program has them', () => {

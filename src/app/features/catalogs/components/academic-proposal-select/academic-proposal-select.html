@@ -73,10 +73,10 @@
         <app-responsive-select
           formControlName="seminarios"
           id="academic-proposal-seminars"
-          [aria-label]="selection().terminology().startLabel"
+          [aria-label]="selection().seminarLabel()"
           [disabled]="!selection().canSelectSeminars()"
-          [errorText]="selection().terminology().startErrorText"
-          [label]="selection().terminology().startLabel"
+          [errorText]="selection().seminarErrorText()"
+          [label]="selection().seminarLabel()"
           [multiple]="selection().allowsMultipleSeminars()"
           [options]="selection().seminarOptions()" />
         } } @else {
