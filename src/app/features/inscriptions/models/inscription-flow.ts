@@ -107,11 +107,6 @@ export interface InscripcionInitialSurveyPayload {
 export interface InscripcionConfirmPreEnrollmentPayload {
   aceptoReglamento: boolean;
   esInscripcionCorporativa: boolean;
-  /**
-   * Ofertas confirmadas. Los tipos 1/2 envían una sola; Actualización profesional
-   * envía una por seminario cuando el backend habilite el array (hoy el adapter
-   * manda la primera).
-   */
   idOfertasSeleccionadas: number[];
 }
 
