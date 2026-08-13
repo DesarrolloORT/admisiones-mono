@@ -89,7 +89,11 @@ test.describe('Inscripción inicial', () => {
       page.getByRole('heading', { name: 'Información personal', exact: true })
     ).toBeVisible();
     const resumeUrl = new URL(page.url());
-    expect(resumeUrl.searchParams.toString()).toBe('idProducto=40&idProceso=210&estado=En+proceso');
+    // `nivel` viaja desde la tarjeta (productLevelId 3 = Actualización profesional) para que
+    // el resolver no reconstruya el nivel consultando los tres tipos de propuesta.
+    expect(resumeUrl.searchParams.toString()).toBe(
+      'idProducto=40&idProceso=210&estado=En+proceso&nivel=3'
+    );
     // Sin vuelta atrás al paso 1 y con el flujo reducido de AP.
     await expect(page.getByRole('button', { name: /Volver/ })).toHaveCount(0);
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);

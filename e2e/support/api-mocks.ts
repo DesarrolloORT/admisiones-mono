@@ -622,7 +622,13 @@ function profileData(): unknown {
     stateId: 10,
     cityId: 100,
     address: 'Av. 18 de Julio 1360',
-    primaryPhone: '99123456',
+    primaryPhone: {
+      isValid: true,
+      e164: '+59899123456',
+      iso2: 'UY',
+      countryCode: 598,
+      nationalNumber: '99123456',
+    },
     email: 'gabrielaortiz@example.com',
     emailConfirmation: 'gabrielaortiz@example.com',
   };
