@@ -8,10 +8,10 @@ import { HomeEndpoint } from './home.endpoint';
 
 describe('HomeEndpoint', () => {
   let endpoint: HomeEndpoint;
-  let api: { request: ReturnType<typeof vi.fn>; clearCache: ReturnType<typeof vi.fn> };
+  let api: { request: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    api = { request: vi.fn(), clearCache: vi.fn() };
+    api = { request: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [HomeEndpoint, { provide: ApiHttpClient, useValue: api }],
@@ -45,6 +45,7 @@ describe('HomeEndpoint', () => {
 
     await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
       {
+        idNivelProducto: 1,
         idInscripto: 100,
         idOfertas: [300],
         idProducto: 10,
@@ -101,6 +102,7 @@ describe('HomeEndpoint', () => {
         idOfertas: [1, 2],
         idProducto: 15,
         idProceso: 26,
+        idNivelProducto: 3,
         idComienzo: 21,
         idTurno: 31,
         nombreProducto: 'Programa de Asesoramiento Financiero',

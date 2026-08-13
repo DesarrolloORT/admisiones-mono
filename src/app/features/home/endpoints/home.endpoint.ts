@@ -41,6 +41,7 @@ export class HomeEndpoint {
 
     const nombreProducto = group.productFullName ?? '';
     const estado = group.enrollmentStatus ?? '';
+    const idNivelProducto = group.productLevelId ?? null;
 
     if (isProfessionalUpdateLevel(group.productLevelId)) {
       const primero = items[0];
@@ -50,6 +51,7 @@ export class HomeEndpoint {
           idOfertas: [...new Set(items.map(item => item.offeringId).filter(isPositiveInteger))],
           idProducto: group.productId ?? 0,
           idProceso: group.admissionProcessId ?? 0,
+          idNivelProducto,
           idComienzo: primero?.intakeId ?? 0,
           idTurno: primero?.shiftId ?? 0,
           nombreProducto,
@@ -75,6 +77,7 @@ export class HomeEndpoint {
       idOfertas: isPositiveInteger(item.offeringId) ? [item.offeringId] : [],
       idProducto: group.productId ?? 0,
       idProceso: group.admissionProcessId ?? 0,
+      idNivelProducto,
       idComienzo: item.intakeId ?? 0,
       idTurno: item.shiftId ?? 0,
       nombreProducto,
