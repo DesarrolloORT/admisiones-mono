@@ -43,7 +43,7 @@ export class InscripcionProposalFacade {
       { controlName: 'carrera', fieldId: '', label: terminology.careerLabel },
       { controlName: 'comienzo', fieldId: '', label: terminology.startLabel },
       { controlName: 'turno', fieldId: '', label: 'Turno' },
-      { controlName: 'seminarios', fieldId: '', label: terminology.startLabel },
+      { controlName: 'seminarios', fieldId: '', label: this.selection.seminarLabel() },
     ]);
     const interestError = this.productInterestError();
     return interestError ? [...formErrors, { message: interestError }] : formErrors;

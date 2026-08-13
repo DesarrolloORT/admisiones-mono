@@ -39,6 +39,7 @@ describe('InscripcionProposalFacade', () => {
                   idProceso: 200,
                   nombreProducto: 'Programa de Asesoramiento Financiero',
                   nombreNivelProducto: 'Actualización profesional',
+                  tieneSeminario: true,
                 },
               ]),
             getComienzos: () => of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }]),
