@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -43,8 +44,13 @@ public class PersonDetailsResponse
     /// <summary>Dirección del domicilio.</summary>
     public string Address { get; set; } = string.Empty;
 
-    /// <summary>Teléfono principal de contacto.</summary>
-    public string PrimaryPhone { get; set; } = string.Empty;
+    /// <summary>
+    /// Teléfono principal de contacto, desglosado para precargar el selector de país sin parsear el
+    /// E.164. Con <see cref="PhoneNumber.IsValid"/> en <c>false</c> el número guardado no se pudo
+    /// desarmar (dato legacy en formato local, o un fijo): solo viene
+    /// <see cref="PhoneNumber.NationalNumber"/> crudo y el front tiene que volver a pedir el país.
+    /// </summary>
+    public PhoneNumber PrimaryPhone { get; set; } = new();
 
     /// <summary>Mail de contacto.</summary>
     public string Email { get; set; } = string.Empty;

@@ -4,8 +4,8 @@
   "conventions": {
     "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio esta en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla.",
     "storage": "El servidor guarda el telefono en E.164 (+59899333222) en CREADOR.T_PERSONA.TELEFONO1, la misma columna que escribe api-fdp (Ficha de Persona). Arma el E.164 el mismo con nationalNumber + iso2: lo que venga en e164/countryCode/isValid se ignora al guardar.",
-    "breakingChange": "Antes 'primaryPhone' era un string ('99333222'). Ahora es un objeto PhoneNumber. Requiere despliegue coordinado del front.",
-    "legacyData": "Los telefonos guardados antes de este cambio NO se migraron: al leer una persona vieja 'primaryPhone' puede venir todavia en formato local, sin '+'. El front no debe asumir que siempre empieza con '+'."
+    "breakingChange": "Antes 'primaryPhone' era un string ('99333222'), tanto al guardar como al leer. Ahora es un objeto PhoneNumber en los dos sentidos. Requiere despliegue coordinado del front.",
+    "legacyData": "Los telefonos guardados antes de este cambio NO se migraron: una persona vieja puede tener todavia el formato local, sin '+'. Al leerla, el servidor no puede desarmar el numero y devuelve 'primaryPhone' con isValid=false y solo nationalNumber crudo. El front no debe asumir que iso2 siempre viene."
   },
   "types": {
     "PhoneNumber": {
@@ -163,11 +163,17 @@
       "dataDto": "PersonDetailsResponse",
       "data": {
         "primaryPhone": {
-          "type": "string",
-          "desc": "El telefono en E.164 ('+59899333222'). Sigue siendo string, no PhoneNumber: para rearmar el request se puede mandar tal cual en nationalNumber."
+          "type": "PhoneNumber",
+          "desc": "El mismo objeto que se manda al guardar, ya desglosado: nationalNumber sin prefijo, iso2, countryCode y e164. El pais lo saca el servidor del prefijo del numero guardado, asi el front precarga el selector de pais sin parsear."
         }
       },
-      "frontHint": "Ver 'legacyData' en conventions: una persona vieja puede devolver todavia el formato local."
+      "example": {
+        "primaryPhone": { "isValid": true, "e164": "+59899333222", "iso2": "UY", "countryCode": 598, "nationalNumber": "99333222" }
+      },
+      "exampleLegacy": {
+        "primaryPhone": { "isValid": false, "e164": null, "iso2": null, "countryCode": 0, "nationalNumber": "099333222" }
+      },
+      "frontHint": "Mirar 'isValid': en false el numero guardado no se pudo desarmar (dato legacy en formato local, o un fijo) y solo viene nationalNumber crudo — hay que pedirle el pais al usuario antes del PUT, o cae PER_ADP_07. En true se puede reenviar nationalNumber + iso2 tal cual."
     }
   }
 }

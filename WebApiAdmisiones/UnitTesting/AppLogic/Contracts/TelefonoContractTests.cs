@@ -55,13 +55,34 @@ namespace UnitTesting.AppLogic.Contracts
         }
 
         [Fact]
-        public void TelefonoContract_ElTelefonoDeLaRespuestaEsString()
+        public void TelefonoContract_ElTelefonoDeLaRespuestaEsUnPhoneNumber()
         {
             var declarado = Endpoint("obtenerDatosPersona")["data"]!["primaryPhone"]!["type"]!.GetValue<string>();
             var real = typeof(PersonDetailsResponse).GetProperty(nameof(PersonDetailsResponse.PrimaryPhone))!.PropertyType;
 
-            Assert.Equal("string", declarado);
-            Assert.Equal(typeof(string), real);
+            Assert.Equal(nameof(PhoneNumber), declarado);
+            Assert.Equal(typeof(PhoneNumber), real);
+        }
+
+        /// <summary>
+        /// Los dos ejemplos de la respuesta tienen que deserializar en el DTO real: si a
+        /// <c>PhoneNumber</c> le cambian un campo, el ejemplo del contrato queda en evidencia.
+        /// </summary>
+        [Theory]
+        [InlineData("example", true, "UY")]
+        [InlineData("exampleLegacy", false, null)]
+        public void TelefonoContract_LosEjemplosDeLaRespuestaDeserializan(
+            string exampleKey,
+            bool esperadoValido,
+            string? esperadoIso2)
+        {
+            var example = Endpoint("obtenerDatosPersona")[exampleKey]!["primaryPhone"]!.ToJsonString();
+
+            var phone = JsonSerializer.Deserialize<PhoneNumber>(example, CamelCase);
+
+            Assert.Equal(esperadoValido, phone!.IsValid);
+            Assert.Equal(esperadoIso2, phone.Iso2);
+            Assert.False(string.IsNullOrWhiteSpace(phone.NationalNumber));
         }
 
         [Fact]

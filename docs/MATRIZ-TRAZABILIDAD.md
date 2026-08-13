@@ -134,14 +134,20 @@ Ahora admisiones normaliza con `PhoneNormalization` (wrapper de `Core/Utilities/
 que ya era idéntico en los dos repos) en los tres puntos de escritura: `PUT person/details`,
 `T_SOLICITUD_ALTA` y el alta de `T_PERSONA`.
 
-**El teléfono pasa a ser un objeto en el request**, como el `DtoTelefono` de FDP: el servidor arma el
-E.164 con `nationalNumber` + `iso2` e ignora lo que venga en `e164` / `countryCode`. Es un breaking
-change y necesita despliegue coordinado con el front.
+**El teléfono pasa a ser un objeto**, como el `DtoTelefono` de FDP, en los dos sentidos. Al guardar, el
+servidor arma el E.164 con `nationalNumber` + `iso2` e ignora lo que venga en `e164` / `countryCode`.
+Al leer devuelve el mismo objeto ya desglosado, para que el front precargue el selector de país sin
+parsear el E.164: el país sale del prefijo del número guardado, así que no hace falta leer
+`T_CARACTERISTICA_PAIS`. Es un breaking change y necesita despliegue coordinado con el front.
+
+Un teléfono legacy en formato local (o un fijo) no valida como celular al leerlo: vuelve crudo en
+`nationalNumber` con `isValid: false`. Esa es la señal para que el front pida el país de nuevo, en vez
+de descubrir el problema recién con un `PER_ADP_07` al hacer el `PUT`.
 
 | | Antes | Ahora |
 |---|---|---|
 | `PUT person/details` y `POST person/register` request | `{"primaryPhone": "99333222"}` | `{"primaryPhone": {"nationalNumber": "99333222", "iso2": "UY"}}` |
-| `GET person/details` response | `{"primaryPhone": "99333222"}` | `{"primaryPhone": "+59899333222"}` (sigue siendo string) |
+| `GET person/details` response | `{"primaryPhone": "99333222"}` | `{"primaryPhone": {"isValid": true, "e164": "+59899333222", "iso2": "UY", "countryCode": 598, "nationalNumber": "99333222"}}` |
 | Sin teléfono | se guardaba `NULL` | `400` (`PER_ADP_03` en el update, `REG_TEL_02` en el registro) |
 | Teléfono inválido | se guardaba igual | `400` (`PER_ADP_07` / `REG_TEL_01`) |
 | País sin fila en `T_CARACTERISTICA_PAIS` | no se consultaba | `400` (`PER_ADP_08` / `REG_TEL_03`), como el `DP_PC_00` de FDP |

@@ -550,10 +550,46 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(2, result.Data.StateId);
             Assert.Equal(3, result.Data.CityId);
             Assert.Equal("18 de julio 1234", result.Data.Address);
-            Assert.Equal("24001234", result.Data.PrimaryPhone);
             Assert.Equal("ana@test.com", result.Data.Email);
             Assert.Equal("ana@test.com", result.Data.EmailConfirmation);
             Assert.False(result.Data.HasRestrictedIdentity);
+        }
+
+        [Fact]
+        public void ObtenerDatosPersona_TelefonoEnE164_DevuelveElObjetoDesglosado()
+        {
+            _personaRepositoryMock
+                .Setup(r => r.GetByKey(123))
+                .Returns(new Persona { CodigoPersona = 123, Telefono1 = "+59899333222" });
+
+            var phone = _service.Details.Execute(123).Data!.PrimaryPhone;
+
+            Assert.True(phone.IsValid);
+            Assert.Equal("+59899333222", phone.E164);
+            Assert.Equal("UY", phone.Iso2);
+            Assert.Equal(598, phone.CountryCode);
+            Assert.Equal("99333222", phone.NationalNumber);
+        }
+
+        /// <summary>
+        /// Un teléfono legacy en formato local (acá además un fijo) no se puede desarmar sin país:
+        /// vuelve crudo con IsValid en false para que el front pida el país antes del PUT.
+        /// </summary>
+        [Theory]
+        [InlineData("24001234")]
+        [InlineData("099333222")]
+        public void ObtenerDatosPersona_TelefonoLegacy_VuelveCrudoYNoValido(string almacenado)
+        {
+            _personaRepositoryMock
+                .Setup(r => r.GetByKey(123))
+                .Returns(new Persona { CodigoPersona = 123, Telefono1 = almacenado });
+
+            var phone = _service.Details.Execute(123).Data!.PrimaryPhone;
+
+            Assert.False(phone.IsValid);
+            Assert.Equal(almacenado, phone.NationalNumber);
+            Assert.Null(phone.Iso2);
+            Assert.Null(phone.E164);
         }
 
         [Theory]
