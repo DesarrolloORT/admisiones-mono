@@ -1,3 +1,4 @@
+using AppLogic.Contracts.Dtos;
 using AppLogic.Contracts.Text;
 using AppLogic.People.Dtos;
 using BusinessLogic.Entities;
@@ -27,10 +28,35 @@ internal static class PersonMapper
             StateId = person.CodigoEstado ?? 0,
             CityId = person.CodigoCiudad ?? 0,
             Address = TextNormalization.Trim(person.Direccion),
-            PrimaryPhone = TextNormalization.Trim(person.Telefono1),
+            PrimaryPhone = ToPhoneNumber(person.Telefono1),
             Email = mail,
             EmailConfirmation = mail,
             HasRestrictedIdentity = identidadRestringida
         };
+    }
+
+    /// <summary>
+    /// Desglosa el teléfono guardado en el mismo <c>PhoneNumber</c> que el front manda al actualizar,
+    /// para que pueda precargar el selector de país sin parsear el E.164. El país sale del prefijo del
+    /// número, así que no hace falta la fila de <c>T_CARACTERISTICA_PAIS</c>.
+    /// Un dato legacy en formato local (sin '+') o un fijo no valida como celular: vuelve crudo en
+    /// <c>NationalNumber</c> con <c>IsValid = false</c>, que es la señal de que el front tiene que
+    /// volver a pedir el país antes de guardar, en vez de comerse un PER_ADP_07 al hacer el PUT.
+    /// </summary>
+    private static PhoneNumber ToPhoneNumber(string? stored)
+    {
+        var raw = TextNormalization.Trim(stored);
+        var phone = PhoneNormalization.Validate(raw, isPrimaryPhone: true, iso2: null);
+
+        return phone?.TelefonoValido != true
+            ? new PhoneNumber { NationalNumber = raw }
+            : new PhoneNumber
+            {
+                IsValid = true,
+                E164 = phone.TelefonoE164,
+                Iso2 = phone.Iso2,
+                CountryCode = phone.Caracteristica,
+                NationalNumber = phone.TelefonoSimple
+            };
     }
 }
