@@ -55,7 +55,7 @@ export class DashboardCardSummary {
         return [
           { icon: 'school', label: 'Carrera', value: this.careerName() },
           { icon: 'fact_check', label: 'Resultado de prueba', value: this.examResult() },
-          { icon: 'percent', label: 'Beneficio', value: this.benefit() },
+          { icon: 'percent', label: 'Resultado de postulación', value: this.benefit() },
         ];
       case 'Estudio':
         return [
