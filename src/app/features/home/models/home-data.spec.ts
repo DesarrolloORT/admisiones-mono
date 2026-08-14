@@ -2,8 +2,8 @@ import type { HomeData } from './home-data';
 
 describe('HomeData', () => {
   it('groups inscriptions and scholarships', () => {
-    const data: HomeData = { inscripciones: [], becas: [] };
+    const data: HomeData = { enrollments: [], scholarships: [] };
 
-    expect(data).toEqual({ inscripciones: [], becas: [] });
+    expect(data).toEqual({ enrollments: [], scholarships: [] });
   });
 });

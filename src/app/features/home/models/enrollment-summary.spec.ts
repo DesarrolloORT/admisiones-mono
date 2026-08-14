@@ -1,10 +1,10 @@
-import { buildPendingPaymentSummary, MiInscripcion } from './mi-inscripcion';
+import { buildPendingPaymentSummary, EnrollmentSummary } from './enrollment-summary';
 
-describe('MiInscripcion', () => {
+describe('EnrollmentSummary', () => {
   it('keeps the process identifier required by the detail endpoint', () => {
-    const inscription = createEnrollment({ estado: 'Pago pendiente' });
+    const enrollment = createEnrollment({ status: 'Pago pendiente' });
 
-    expect(inscription.idProceso).toBe(200);
+    expect(enrollment.admissionProcessId).toBe(200);
   });
 });
 
@@ -12,12 +12,12 @@ describe('buildPendingPaymentSummary', () => {
   it('asks for the payment before the deadline of the only pending enrollment and allows navigation', () => {
     const summary = buildPendingPaymentSummary([
       createEnrollment({
-        estado: 'Pago pendiente',
-        fechaVencimientoPago: '2026-07-15',
-        idProducto: 20,
-        idProceso: 200,
+        status: 'Pago pendiente',
+        paymentDueDate: '2026-07-15',
+        productId: 20,
+        admissionProcessId: 200,
       }),
-      createEnrollment({ estado: 'Confirmada', fechaVencimientoPago: '2026-08-01' }),
+      createEnrollment({ status: 'Confirmada', paymentDueDate: '2026-08-01' }),
     ]);
 
     expect(summary).toEqual({
@@ -31,10 +31,10 @@ describe('buildPendingPaymentSummary', () => {
   it('allows navigation for the only pending enrollment even without a usable deadline', () => {
     const summary = buildPendingPaymentSummary([
       createEnrollment({
-        estado: 'Pago pendiente',
-        fechaVencimientoPago: null,
-        idProducto: 20,
-        idProceso: 200,
+        status: 'Pago pendiente',
+        paymentDueDate: null,
+        productId: 20,
+        admissionProcessId: 200,
       }),
     ]);
 
@@ -49,21 +49,21 @@ describe('buildPendingPaymentSummary', () => {
   it('collapses a repeated deadline into a single date but still pluralizes the title and blocks navigation', () => {
     const summary = buildPendingPaymentSummary([
       createEnrollment({
-        estado: 'Pago pendiente',
-        fechaVencimientoPago: '2026-07-15',
-        idProducto: 20,
-        idProceso: 200,
+        status: 'Pago pendiente',
+        paymentDueDate: '2026-07-15',
+        productId: 20,
+        admissionProcessId: 200,
       }),
       createEnrollment({
-        estado: 'Pago pendiente',
-        fechaVencimientoPago: '2026-07-15',
-        idProducto: 30,
-        idProceso: 300,
+        status: 'Pago pendiente',
+        paymentDueDate: '2026-07-15',
+        productId: 30,
+        admissionProcessId: 300,
       }),
     ]);
 
     expect(summary).toEqual({
-      title: 'Enrollments pendientes de pago.',
+      title: 'Inscripciones pendientes de pago.',
       detail: 'Las mismas vencerán el 15/07/2026.',
       navigable: false,
       target: null,
@@ -72,12 +72,12 @@ describe('buildPendingPaymentSummary', () => {
 
   it('lists both deadlines and pluralizes the title when two enrollments have distinct dates', () => {
     const summary = buildPendingPaymentSummary([
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-15' }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-20' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-15' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-20' }),
     ]);
 
     expect(summary).toEqual({
-      title: 'Enrollments pendientes de pago.',
+      title: 'Inscripciones pendientes de pago.',
       detail: 'Las mismas vencerán los días 15/07/2026 y 20/07/2026.',
       navigable: false,
       target: null,
@@ -86,9 +86,9 @@ describe('buildPendingPaymentSummary', () => {
 
   it('lists every deadline when more than two enrollments are pending', () => {
     const summary = buildPendingPaymentSummary([
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-15' }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-20' }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-25' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-15' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-20' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-25' }),
     ]);
 
     expect(summary.detail).toBe(
@@ -99,9 +99,9 @@ describe('buildPendingPaymentSummary', () => {
 
   it('ignores pending enrollments without a usable deadline when listing dates', () => {
     const summary = buildPendingPaymentSummary([
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: null }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: 'not-a-date' }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: '2026-07-15' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: null }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: 'not-a-date' }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: '2026-07-15' }),
     ]);
 
     expect(summary.detail).toBe('Las mismas vencerán el 15/07/2026.');
@@ -110,31 +110,31 @@ describe('buildPendingPaymentSummary', () => {
 
   it('falls back to the generic detail when no deadline is informed for multiple pending enrollments', () => {
     const summary = buildPendingPaymentSummary([
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: null }),
-      createEnrollment({ estado: 'Pago pendiente', fechaVencimientoPago: null }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: null }),
+      createEnrollment({ status: 'Pago pendiente', paymentDueDate: null }),
     ]);
 
-    expect(summary.title).toBe('Enrollments pendientes de pago.');
+    expect(summary.title).toBe('Inscripciones pendientes de pago.');
     expect(summary.detail).toBe('Consultá el detalle desde Mis carreras.');
     expect(summary.navigable).toBe(false);
   });
 });
 
-function createEnrollment(overrides: Partial<MiInscripcion>): MiInscripcion {
+function createEnrollment(overrides: Partial<EnrollmentSummary>): EnrollmentSummary {
   return {
-    idInscripto: 100,
-    idOfertas: [300],
-    idProducto: 20,
-    idProceso: 200,
-    idNivelProducto: 1,
-    idComienzo: 2,
-    idTurno: 3,
-    nombreProducto: 'Sistemas',
-    nombreComienzo: 'Marzo 2027',
-    nombreTurno: 'Noche',
-    estado: 'Confirmada',
-    fechaVencimientoPago: null,
-    seminarios: [],
+    enrollmentId: 100,
+    offeringIds: [300],
+    productId: 20,
+    admissionProcessId: 200,
+    productLevelId: 1,
+    intakeId: 2,
+    shiftId: 3,
+    degreeProgramName: 'Sistemas',
+    intakeName: 'Marzo 2027',
+    shiftName: 'Noche',
+    status: 'Confirmada',
+    paymentDueDate: null,
+    seminars: [],
     ...overrides,
   };
 }

@@ -20,12 +20,12 @@ const HOME_DESCRIPTION = 'Aquí podés gestionar tu inscripción y postulación 
 
 const ACTION_CARDS: HomeActionCard[] = [
   {
-    id: 'career',
+    id: 'enrollment',
     title: 'Inscripción a carrera',
     description: 'Iniciá tu inscripción y reservá tu lugar para el próximo inicio.',
     icon: 'school',
     ctaLabel: 'Comenzar inscripción',
-    imageSrc: 'assets/home/inscripcion-card.png',
+    imageSrc: 'assets/home/enrollment-card.png',
     route: '/inscripciones',
   },
   {
@@ -53,7 +53,7 @@ export class Home {
 
   protected readonly hasActivity = computed(() => {
     const data = this.homeData();
-    return !!data && (data.inscripciones.length > 0 || data.becas.length > 0);
+    return !!data && (data.enrollments.length > 0 || data.scholarships.length > 0);
   });
   protected readonly description = HOME_DESCRIPTION;
   protected readonly actionCards = ACTION_CARDS;

@@ -3,43 +3,43 @@
 
   @if (showChip()) {
   <div class="dashboard-card__chip">
-    <app-dashboard-career-status-chip [status]="estado()" />
+    <app-dashboard-enrollment-status-chip [status]="status()" />
   </div>
   }
 
   <h3 class="dashboard-card__title" [id]="titleId">{{ title() }}</h3>
 
   <div class="dashboard-card__meta">
-    @if (variant() === 'careers') { @if (enrollmentsCount() === 1) {
+    @if (variant() === 'enrollments') { @if (enrollmentsCount() === 1) {
     <app-dashboard-card-summary
-      variant="careers"
-      [startDate]="inscripcion()?.nombreComienzo ?? ''" />
+      variant="enrollments"
+      [startDate]="enrollment()?.intakeName ?? ''" />
     } @else {
     <p class="dashboard-card__seminars">Anotado a {{ enrollmentsCount() }} seminarios</p>
     } } @else {
     <app-dashboard-card-summary
       variant="scholarships"
-      [applicationDeadline]="beca()?.cierrePostulacion ?? ''"
-      [benefit]="beca()?.beneficio ?? ''"
-      [careerName]="beca()?.nombreCarrera ?? ''"
-      [examDate]="beca()?.fechaPrueba ?? ''"
-      [examResult]="beca()?.resultadoPrueba ?? ''"
-      [resultsDate]="beca()?.fechaResultados ?? ''"
-      [status]="estado()" />
+      [applicationDeadline]="scholarship()?.applicationDeadline ?? ''"
+      [benefit]="scholarship()?.benefit ?? ''"
+      [degreeProgramName]="scholarship()?.degreeProgramName ?? ''"
+      [examDate]="scholarship()?.examDate ?? ''"
+      [examResult]="scholarship()?.examResult ?? ''"
+      [resultsDate]="scholarship()?.resultsDate ?? ''"
+      [status]="status()" />
     }
   </div>
 
   @if (showActions()) {
   <div class="dashboard-card__actions">
     <app-dashboard-quick-actions
-      [admissionProcessId]="inscripcion()?.idProceso ?? null"
+      [admissionProcessId]="enrollment()?.admissionProcessId ?? null"
       [cardType]="variant()"
-      [careerName]="title()"
-      [enrollmentIds]="idsInscripcion()"
-      [offeringIds]="inscripcion()?.idOfertas ?? []"
-      [productId]="inscripcion()?.idProducto ?? null"
-      [productLevelId]="inscripcion()?.idNivelProducto ?? null"
-      [status]="estado()" />
+      [degreeProgramName]="title()"
+      [enrollmentIds]="enrollmentIds()"
+      [offeringIds]="enrollment()?.offeringIds ?? []"
+      [productId]="enrollment()?.productId ?? null"
+      [productLevelId]="enrollment()?.productLevelId ?? null"
+      [status]="status()" />
   </div>
   }
 </article>

@@ -330,8 +330,8 @@ cada elemento trae `productId`, `productFullName`, `admissionProcessId`,
 `enrollments[]` con las ofertas concretas (`enrollmentId`, `offeringId`,
 `offeringDescription`, `shiftId`, `intakeId`, `intakeStartDate`, `intakeName`,
 `shiftName`, `referenceDate`).
-`HomeEndpoint.toMisEnrollments()` mapea cada grupo a uno o más
-`MiInscripcion`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
+`HomeEndpoint.toEnrollmentSummaries()` mapea cada grupo a uno o más
+`EnrollmentSummary`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
 (`src/app/features/catalogs/models/academic-proposal.ts`).
 
 Los grupos cuyo `enrollments[]` llega vacío o `null` no representan una
@@ -341,44 +341,44 @@ el estado inicial con las dos cards ilustradas.
 Un `404` de `GET /person/enrollments` significa que la persona no tiene registros y
 se normaliza a una colección vacía. Los demás errores conservan el estado de error
 de la home. `GET /person/scholarships` fue eliminado del contrato: la home ya no lo
-consulta y compone `becas: []`.
+consulta y compone `scholarships: []`.
 
 > **Drift detectado:** testing devuelve `404` cuando no hay inscripciones, pero el
 > endpoint generado solo documenta respuestas `200` y `400`.
 
 - **Niveles 1 y 2:** sin cambios funcionales. Una tarjeta por inscripción (un
-  `MiInscripcion` por item de `inscripciones[]`), título = `nombreExtensoProducto`,
-  fila "Comienzo" y el CTA por `estadoInscripcion` vía `DashboardQuickActions`.
+  `EnrollmentSummary` por item de `enrollments[]`), título = `degreeProgramName`,
+  fila "Comienzo" y el CTA por `status` vía `DashboardQuickActions`.
 - **Niveles 3 y 4 (Actualización profesional):** una tarjeta **por paquete** (un
-  `MiInscripcion` por grupo). El título sigue siendo `nombreExtensoProducto`.
-  `DashboardCard.enrollmentsCount()` (`inscripcion.seminarios.length || 1`) decide
+  `EnrollmentSummary` por grupo). El título sigue siendo `degreeProgramName`.
+  `DashboardCard.enrollmentsCount()` (`enrollment.seminars.length || 1`) decide
   qué se muestra debajo del título: con un solo seminario (o sin seminarios, niveles
-  1/2) se muestra la fila "Comienzo" con su `nombreComienzo`; con 2+ seminarios se
+  1/2) se muestra la fila "Comienzo" con su `intakeName`; con 2+ seminarios se
   reemplaza por el texto `"Anotado a N seminarios"`, sin desglose por seminario.
 
 > Reemplaza la regla anterior: antes la tarjeta de niveles 3/4 usaba
 > `descripcionOferta` del primer item como título. Ese comportamiento queda
-> superado por `nombreExtensoProducto` + conteo de seminarios.
+> superado por `degreeProgramName` + conteo de seminarios.
 
 ### Alert de pago pendiente y fecha límite
 
-`MiInscripcion` incluye `fechaVencimientoPago: string | null` (fecha cruda de la
+`EnrollmentSummary` incluye `paymentDueDate: string | null` (fecha cruda de la
 API; el formateo a `dd/MM/yyyy` se hace en la UI reutilizando
 `formatPaymentDeadline`). El alert del dashboard se muestra cuando alguna
 inscripción está en `Pago pendiente` y su título/detalle/navegación los arma
-`buildPendingPaymentSummary()` (`src/app/features/home/models/mi-inscripcion.ts`).
+`buildPendingPaymentSummary()` (`src/app/features/home/models/enrollment-summary.ts`).
 El título va en plural apenas hay **más de una inscripción pendiente**, sin
 importar si comparten fecha. El detalle, en cambio, deduplica fechas repetidas
 (`Set`) y menciona cada fecha distinta una sola vez:
 
-| Enrollments pendientes | Fechas distintas usables | Título                            | Detalle del alert                                                  |
-| ---------------------- | ------------------------ | --------------------------------- | ------------------------------------------------------------------ |
-| 1                      | 1                        | `Inscripción pendiente de pago.`  | `Realizá el pago antes del 15/07/2026.`                            |
-| 1                      | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`  | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
-| 2+                     | 1 (misma fecha)          | `Enrollments pendientes de pago.` | `Las mismas vencerán el 15/07/2026.`                               |
-| 2+                     | 2                        | `Enrollments pendientes de pago.` | `Las mismas vencerán los días 15/07/2026 y 20/07/2026.`            |
-| 2+                     | 3+                       | `Enrollments pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`) |
-| 2+                     | 0 (sin fecha informada)  | `Enrollments pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
+| Inscripciones pendientes | Fechas distintas usables | Título                              | Detalle del alert                                                  |
+| ------------------------ | ------------------------ | ----------------------------------- | ------------------------------------------------------------------ |
+| 1                        | 1                        | `Inscripción pendiente de pago.`    | `Realizá el pago antes del 15/07/2026.`                            |
+| 1                        | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`    | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
+| 2+                       | 1 (misma fecha)          | `Inscripciones pendientes de pago.` | `Las mismas vencerán el 15/07/2026.`                               |
+| 2+                       | 2                        | `Inscripciones pendientes de pago.` | `Las mismas vencerán los días 15/07/2026 y 20/07/2026.`            |
+| 2+                       | 3+                       | `Inscripciones pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`) |
+| 2+                       | 0 (sin fecha informada)  | `Inscripciones pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
 
 La flecha del alert (`actionIcon`, evento `actionTriggered`) sólo se renderiza y
 navega a `/inscripciones?idProducto=&idProceso=` cuando hay **una única**
@@ -392,17 +392,17 @@ título depende únicamente de `enrollmentsCount()`, ver sección anterior.
 
 `GET /person/enrollments` expone la fecha únicamente como
 `MyEnrollmentsResponse.paymentDueDate`, a nivel de grupo. El adapter la mapea a
-`MiInscripcion.fechaVencimientoPago`; si no viene, resuelve a `null` y el alert usa
+`EnrollmentSummary.paymentDueDate`; si no viene, resuelve a `null` y el alert usa
 el texto genérico.
 
 ### Drift detectado (resuelto)
 
-El adapter (`HomeEndpoint.toMisEnrollments()`) mapeaba la forma plana vieja
+El adapter (`HomeEndpoint.toEnrollmentSummaries()`) mapeaba la forma plana vieja
 contra `MyEnrollmentsResponse`, el contrato agrupado que el backend
 ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
 nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
-`idInscripto`, `idComienzo`, `idTurno`, `nombreComienzo`, `nombreTurno` y
-`descripcionOferta` habían pasado al item interno (`inscripciones[]`) y
+`idInscripto`, `idComienzo`, `idTurno`, `intakeName`, `nombreTurno` y
+`descripcionOferta` habían pasado al item interno (`enrollments[]`) y
 resolvían a `undefined` → `0`/`''`. Efecto observable: el botón "Reactivar
 inscripción" quedaba inerte y la fila "Comienzo" salía vacía. Resuelto por el
 mapeo agrupado descrito arriba.
@@ -987,5 +987,5 @@ Resumen operativo de reintentos:
 
 ## Evidencia automatizada
 
-- Frontend: <SourceLink repo="frontend" path="src/app/features/enrollments/models/enrollment-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/mi-inscripcion.spec.ts">dashboard/pagos pendientes</SourceLink>.
+- Frontend: <SourceLink repo="frontend" path="src/app/features/enrollments/models/enrollment-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/enrollment-summary.spec.ts">dashboard/pagos pendientes</SourceLink>.
 - Backend: <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/EnrollmentUseCasesTests.cs">casos de uso</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/InitialSurveyServiceTests.cs">encuesta</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/IdentityDocumentServiceTests.cs">identidad</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/InscripcionDetalleContractTests.cs">detalle</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/EnrollmentsAndPaymentsWireContractTests.cs">contrato remoto</SourceLink>.

@@ -1,41 +1,41 @@
 import { formatPaymentDeadline } from '../../enrollments/models/enrollment-flow-view';
 
-export type InscripcionEstado = string;
+export type EnrollmentStatus = string;
 
 export const PENDING_PAYMENT_STATUS = 'Pago pendiente';
 
-export interface MiInscripcionSeminario {
-  idInscripto: number;
-  idOferta: number;
-  descripcionOferta: string;
-  idComienzo: number;
-  idTurno: number;
-  nombreComienzo: string;
-  nombreTurno: string;
+export interface EnrollmentSeminarSummary {
+  enrollmentId: number;
+  offeringId: number;
+  offeringDescription: string;
+  intakeId: number;
+  shiftId: number;
+  intakeName: string;
+  shiftName: string;
 }
 
-export interface MiInscripcion {
-  idInscripto: number;
-  idOfertas: number[];
-  idProducto: number;
-  idProceso: number;
-  idNivelProducto: number | null;
-  idComienzo: number;
-  idTurno: number;
-  nombreProducto: string;
-  nombreComienzo: string;
-  nombreTurno: string;
-  estado: InscripcionEstado;
+export interface EnrollmentSummary {
+  enrollmentId: number;
+  offeringIds: number[];
+  productId: number;
+  admissionProcessId: number;
+  productLevelId: number | null;
+  intakeId: number;
+  shiftId: number;
+  degreeProgramName: string;
+  intakeName: string;
+  shiftName: string;
+  status: EnrollmentStatus;
   /** Fecha de vencimiento del pago pendiente, tal como llega de la API. `null` si no se informa. */
-  fechaVencimientoPago: string | null;
-  seminarios: MiInscripcionSeminario[];
+  paymentDueDate: string | null;
+  seminars: EnrollmentSeminarSummary[];
 }
 
 /**
  * Fecha de vencimiento lista para mostrar (`dd/MM/yyyy`) o `''` cuando no hay dato usable.
  * `formatPaymentDeadline` devuelve el centinela `'No informado'`, que aquí no queremos mostrar.
  */
-export function formatFechaVencimientoPago(value: string | null | undefined): string {
+export function formatPaymentDueDate(value: string | null | undefined): string {
   const deadline = formatPaymentDeadline(value);
 
   return deadline === 'No informado' ? '' : deadline;
@@ -56,26 +56,26 @@ export interface PendingPaymentSummary {
  * pendiente en total: con 2+ pendientes (aunque compartan fecha) no hay un destino de pago único
  * al que navegar, así que la flecha queda oculta.
  */
-export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): PendingPaymentSummary {
-  const pending = inscripciones.filter(
-    inscripcion => inscripcion.estado === PENDING_PAYMENT_STATUS
-  );
+export function buildPendingPaymentSummary(
+  enrollments: EnrollmentSummary[]
+): PendingPaymentSummary {
+  const pending = enrollments.filter(enrollment => enrollment.status === PENDING_PAYMENT_STATUS);
 
   const navigable = pending.length === 1;
   const target = navigable
     ? {
-        idProducto: pending[0].idProducto,
-        idProceso: pending[0].idProceso,
-        estado: pending[0].estado,
+        idProducto: pending[0].productId,
+        idProceso: pending[0].admissionProcessId,
+        estado: pending[0].status,
       }
     : null;
   const title =
-    pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Enrollments pendientes de pago.';
+    pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Inscripciones pendientes de pago.';
 
   const uniqueDeadlines = [
     ...new Set(
       pending
-        .map(inscripcion => formatFechaVencimientoPago(inscripcion.fechaVencimientoPago))
+        .map(enrollment => formatPaymentDueDate(enrollment.paymentDueDate))
         .filter(deadline => deadline !== '')
     ),
   ];

@@ -43,21 +43,21 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([
+    await expect(firstValueFrom(endpoint.getMyEnrollments())).resolves.toEqual([
       {
-        idNivelProducto: 1,
-        idInscripto: 100,
-        idOfertas: [300],
-        idProducto: 10,
-        idProceso: 25,
-        idComienzo: 20,
-        idTurno: 30,
-        nombreProducto: 'Analista Programador',
-        nombreComienzo: 'Marzo 2027',
-        nombreTurno: 'Noche',
-        estado: 'Confirmada',
-        fechaVencimientoPago: null,
-        seminarios: [],
+        productLevelId: 1,
+        enrollmentId: 100,
+        offeringIds: [300],
+        productId: 10,
+        admissionProcessId: 25,
+        intakeId: 20,
+        shiftId: 30,
+        degreeProgramName: 'Analista Programador',
+        intakeName: 'Marzo 2027',
+        shiftName: 'Noche',
+        status: 'Confirmada',
+        paymentDueDate: null,
+        seminars: [],
       },
     ]);
     expect(api.request).toHaveBeenCalledWith(getPersonEnrollmentsEndpoint);
@@ -96,38 +96,38 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([
+    await expect(firstValueFrom(endpoint.getMyEnrollments())).resolves.toEqual([
       {
-        idInscripto: 200,
-        idOfertas: [1, 2],
-        idProducto: 15,
-        idProceso: 26,
-        idNivelProducto: 3,
-        idComienzo: 21,
-        idTurno: 31,
-        nombreProducto: 'Programa de Asesoramiento Financiero',
-        nombreComienzo: 'Abril 2027',
-        nombreTurno: 'Tarde',
-        estado: 'Confirmada',
-        fechaVencimientoPago: null,
-        seminarios: [
+        enrollmentId: 200,
+        offeringIds: [1, 2],
+        productId: 15,
+        admissionProcessId: 26,
+        productLevelId: 3,
+        intakeId: 21,
+        shiftId: 31,
+        degreeProgramName: 'Programa de Asesoramiento Financiero',
+        intakeName: 'Abril 2027',
+        shiftName: 'Tarde',
+        status: 'Confirmada',
+        paymentDueDate: null,
+        seminars: [
           {
-            idInscripto: 200,
-            idOferta: 1,
-            descripcionOferta: 'Marco legal y tributario',
-            idComienzo: 21,
-            idTurno: 31,
-            nombreComienzo: 'Abril 2027',
-            nombreTurno: 'Tarde',
+            enrollmentId: 200,
+            offeringId: 1,
+            offeringDescription: 'Marco legal y tributario',
+            intakeId: 21,
+            shiftId: 31,
+            intakeName: 'Abril 2027',
+            shiftName: 'Tarde',
           },
           {
-            idInscripto: 201,
-            idOferta: 2,
-            descripcionOferta: 'Renta fija y renta variable',
-            idComienzo: 22,
-            idTurno: 32,
-            nombreComienzo: 'Mayo 2027',
-            nombreTurno: 'Noche',
+            enrollmentId: 201,
+            offeringId: 2,
+            offeringDescription: 'Renta fija y renta variable',
+            intakeId: 22,
+            shiftId: 32,
+            intakeName: 'Mayo 2027',
+            shiftName: 'Noche',
           },
         ],
       },
@@ -163,11 +163,11 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisEnrollments());
+    const result = await firstValueFrom(endpoint.getMyEnrollments());
 
     expect(result).toHaveLength(2);
-    expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
-    expect(result.map(inscripcion => inscripcion.idOfertas)).toEqual([[300], [301]]);
+    expect(result.every(enrollment => enrollment.seminars.length === 0)).toBe(true);
+    expect(result.map(enrollment => enrollment.offeringIds)).toEqual([[300], [301]]);
   });
 
   it('keeps only unique positive offer ids in an AP package', async () => {
@@ -187,9 +187,9 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisEnrollments());
+    const result = await firstValueFrom(endpoint.getMyEnrollments());
 
-    expect(result[0]?.idOfertas).toEqual([310]);
+    expect(result[0]?.offeringIds).toEqual([310]);
   });
 
   it('reads the payment deadline from the group', async () => {
@@ -206,9 +206,9 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisEnrollments());
+    const result = await firstValueFrom(endpoint.getMyEnrollments());
 
-    expect(result[0]?.fechaVencimientoPago).toBe('2026-07-18');
+    expect(result[0]?.paymentDueDate).toBe('2026-07-18');
   });
 
   it('should ignore groups without enrollments', async () => {
@@ -233,7 +233,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisEnrollments());
+    const result = await firstValueFrom(endpoint.getMyEnrollments());
 
     expect(result).toEqual([]);
   });
@@ -241,6 +241,6 @@ describe('HomeEndpoint', () => {
   it('should treat a 404 response as no enrollments', async () => {
     api.request.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
 
-    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([]);
+    await expect(firstValueFrom(endpoint.getMyEnrollments())).resolves.toEqual([]);
   });
 });

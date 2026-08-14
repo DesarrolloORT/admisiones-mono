@@ -6,7 +6,7 @@ import type { EnrollmentPreEnrollmentResponse } from '../../../enrollments/model
 import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
 import { Enrollments } from '../../../enrollments/services/enrollments';
 
-type CardType = 'careers' | 'scholarships';
+type CardType = 'enrollments' | 'scholarships';
 
 interface ActionConfig {
   type: 'primary' | 'secondary' | 'text';
@@ -14,7 +14,7 @@ interface ActionConfig {
   icon?: string;
 }
 
-const CAREER_ACTIONS: Record<string, ActionConfig> = {
+const ENROLLMENT_ACTIONS: Record<string, ActionConfig> = {
   'En proceso': { type: 'primary', label: 'Continuar inscripción' },
   Pendiente: { type: 'secondary', label: 'Ver instrucciones de pago' },
   'Pago pendiente': { type: 'secondary', label: 'Ver instrucciones de pago' },
@@ -47,8 +47,8 @@ export class DashboardQuickActions {
   private readonly resumeContext = inject(EnrollmentResumeContextStore);
 
   readonly status = input.required<string>();
-  readonly careerName = input.required<string>();
-  readonly cardType = input<CardType>('careers');
+  readonly degreeProgramName = input.required<string>();
+  readonly cardType = input<CardType>('enrollments');
   readonly productId = input<number | null>(null);
   readonly admissionProcessId = input<number | null>(null);
   readonly productLevelId = input<number | null>(null);
@@ -57,10 +57,12 @@ export class DashboardQuickActions {
   private readonly isReactivating = signal(false);
 
   protected readonly action = computed<ActionConfig>(() => {
-    const map = this.cardType() === 'scholarships' ? SCHOLARSHIP_ACTIONS : CAREER_ACTIONS;
+    const map = this.cardType() === 'scholarships' ? SCHOLARSHIP_ACTIONS : ENROLLMENT_ACTIONS;
     return map[this.status()] ?? DEFAULT_ACTION;
   });
-  protected readonly ariaLabel = computed(() => `${this.action().label} - ${this.careerName()}`);
+  protected readonly ariaLabel = computed(
+    () => `${this.action().label} - ${this.degreeProgramName()}`
+  );
   protected readonly resumeQueryParams = computed(() => ({
     idProducto: this.productId(),
     idProceso: this.admissionProcessId(),
@@ -70,7 +72,7 @@ export class DashboardQuickActions {
 
   protected readonly resumesFlow = computed(
     () =>
-      this.cardType() === 'careers' &&
+      this.cardType() === 'enrollments' &&
       ['En proceso', 'Pendiente', 'Pago pendiente', 'Confirmada'].includes(this.status()) &&
       Number.isSafeInteger(this.productId()) &&
       Number.isSafeInteger(this.admissionProcessId()) &&
@@ -81,7 +83,7 @@ export class DashboardQuickActions {
   // reactivan juntas; carrera simple trae una sola. La tarjeta ya manda el set completo.
   protected readonly reactivatesFlow = computed(
     () =>
-      this.cardType() === 'careers' &&
+      this.cardType() === 'enrollments' &&
       this.status() === 'Dada de baja' &&
       this.enrollmentIds().length > 0 &&
       Number.isSafeInteger(this.productId()) &&

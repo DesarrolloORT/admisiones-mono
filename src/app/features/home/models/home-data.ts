@@ -1,7 +1,7 @@
-import { MiBeca } from './mi-beca';
-import { MiInscripcion } from './mi-inscripcion';
+import { EnrollmentSummary } from './enrollment-summary';
+import { ScholarshipSummary } from './scholarship-summary';
 
 export interface HomeData {
-  inscripciones: MiInscripcion[];
-  becas: MiBeca[];
+  enrollments: EnrollmentSummary[];
+  scholarships: ScholarshipSummary[];
 }

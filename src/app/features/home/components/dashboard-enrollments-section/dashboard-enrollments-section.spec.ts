@@ -2,15 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, RouterLink } from '@angular/router';
 
-import { MiInscripcion } from '../../models/mi-inscripcion';
-import { DashboardCareersSection } from './dashboard-careers-section';
+import { EnrollmentSummary } from '../../models/enrollment-summary';
+import { DashboardEnrollmentsSection } from './dashboard-enrollments-section';
 
 describe('DashboardCareersSection', () => {
-  let fixture: ComponentFixture<DashboardCareersSection>;
+  let fixture: ComponentFixture<DashboardEnrollmentsSection>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [DashboardCareersSection],
+      imports: [DashboardEnrollmentsSection],
       providers: [provideRouter([])],
     });
   });
@@ -55,29 +55,29 @@ describe('DashboardCareersSection', () => {
   });
 
   function createComponent(
-    inscripciones: MiInscripcion[]
-  ): ComponentFixture<DashboardCareersSection> {
-    const componentFixture = TestBed.createComponent(DashboardCareersSection);
-    componentFixture.componentRef.setInput('inscripciones', inscripciones);
+    enrollments: EnrollmentSummary[]
+  ): ComponentFixture<DashboardEnrollmentsSection> {
+    const componentFixture = TestBed.createComponent(DashboardEnrollmentsSection);
+    componentFixture.componentRef.setInput('enrollments', enrollments);
     componentFixture.componentRef.setInput('singleRow', false);
     return componentFixture;
   }
 
-  function createEnrollment(idProducto: number, idProceso = 4): MiInscripcion {
+  function createEnrollment(productId: number, admissionProcessId = 4): EnrollmentSummary {
     return {
-      idInscripto: idProducto,
-      idOfertas: [idProducto],
-      idProducto,
-      idProceso,
-      idNivelProducto: 1,
-      idComienzo: 2,
-      idTurno: 3,
-      nombreProducto: `Carrera ${idProducto}`,
-      nombreComienzo: 'Marzo 2027',
-      nombreTurno: 'Noche',
-      estado: 'Confirmada',
-      fechaVencimientoPago: null,
-      seminarios: [],
+      enrollmentId: productId,
+      offeringIds: [productId],
+      productId,
+      admissionProcessId,
+      productLevelId: 1,
+      intakeId: 2,
+      shiftId: 3,
+      degreeProgramName: `Carrera ${productId}`,
+      intakeName: 'Marzo 2027',
+      shiftName: 'Noche',
+      status: 'Confirmada',
+      paymentDueDate: null,
+      seminars: [],
     };
   }
 });

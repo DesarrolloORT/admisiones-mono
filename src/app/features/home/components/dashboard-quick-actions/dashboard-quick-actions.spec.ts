@@ -7,41 +7,41 @@ import { Enrollments } from '../../../enrollments/services/enrollments';
 import { DashboardQuickActions } from './dashboard-quick-actions';
 
 const REACTIVATION_RESPONSE = {
-  confirmada: false,
-  enEspera: false,
+  confirmed: false,
+  isWaiting: false,
   idEnrollment: 7010,
-  fechaVencimientoPago: '2027-03-04',
-  seniaInscripcion: 15500,
-  saldoCuenta: 1200,
-  resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
-  seminarios: [
+  paymentDueDate: '2027-03-04',
+  enrollmentDeposit: 15500,
+  accountBalance: 1200,
+  summary: { degreeProgram: 'Sistemas', intake: 'Marzo 2027', shift: 'Noche' },
+  seminars: [
     {
       idEnrollment: 7010,
-      idOferta: 310,
-      nombre: 'Seminario de Liderazgo',
-      comienzo: 'Marzo 2027',
-      turno: 'Noche',
+      offeringId: 310,
+      name: 'Seminario de Liderazgo',
+      intake: 'Marzo 2027',
+      shift: 'Noche',
     },
     {
       idEnrollment: 7011,
-      idOferta: 311,
-      nombre: 'Seminario de Finanzas',
-      comienzo: 'Abril 2027',
-      turno: 'Noche',
+      offeringId: 311,
+      name: 'Seminario de Finanzas',
+      intake: 'Abril 2027',
+      shift: 'Noche',
     },
   ],
 };
 
 describe('DashboardQuickActions', () => {
-  let inscriptions: { reactivate: ReturnType<typeof vi.fn> };
+  let enrollments: { reactivate: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     sessionStorage.clear();
-    inscriptions = { reactivate: vi.fn().mockReturnValue(of(REACTIVATION_RESPONSE)) };
+    enrollments = { reactivate: vi.fn().mockReturnValue(of(REACTIVATION_RESPONSE)) };
 
     TestBed.configureTestingModule({
       imports: [DashboardQuickActions],
-      providers: [provideRouter([]), { provide: Enrollments, useValue: inscriptions }],
+      providers: [provideRouter([]), { provide: Enrollments, useValue: enrollments }],
     });
   });
 
@@ -116,11 +116,11 @@ describe('DashboardQuickActions', () => {
     expect(button).not.toBeNull();
     button.click();
 
-    expect(inscriptions.reactivate).toHaveBeenCalledWith([100]);
+    expect(enrollments.reactivate).toHaveBeenCalledWith([100]);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
       queryParams: {
-        productId: 20,
-        admissionProcessId: 200,
+        idProducto: 20,
+        idProceso: 200,
         estado: 'Dada de baja',
         nivel: 1,
         modo: 'reactivar',
@@ -144,7 +144,7 @@ describe('DashboardQuickActions', () => {
     await fixture.whenStable();
     (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
 
-    expect(inscriptions.reactivate).toHaveBeenCalledWith([7010, 7011]);
+    expect(enrollments.reactivate).toHaveBeenCalledWith([7010, 7011]);
   });
 
   it('keeps Dada de baja inert without enrollment ids', async () => {
@@ -155,7 +155,7 @@ describe('DashboardQuickActions', () => {
     expect(fixture.nativeElement.querySelector('button')).not.toBeNull();
     fixture.nativeElement.querySelector('button')?.click();
 
-    expect(inscriptions.reactivate).not.toHaveBeenCalled();
+    expect(enrollments.reactivate).not.toHaveBeenCalled();
   });
 
   function createComponent(
@@ -165,12 +165,12 @@ describe('DashboardQuickActions', () => {
   ): ComponentFixture<DashboardQuickActions> {
     const fixture = TestBed.createComponent(DashboardQuickActions);
     fixture.componentRef.setInput('status', status);
-    fixture.componentRef.setInput('careerName', 'Sistemas');
-    fixture.componentRef.setInput('idProducto', 20);
-    fixture.componentRef.setInput('idProceso', 200);
-    fixture.componentRef.setInput('idNivelProducto', 1);
-    fixture.componentRef.setInput('idEnrollments', enrollmentIds);
-    fixture.componentRef.setInput('idOfertas', offeringIds);
+    fixture.componentRef.setInput('degreeProgramName', 'Sistemas');
+    fixture.componentRef.setInput('productId', 20);
+    fixture.componentRef.setInput('admissionProcessId', 200);
+    fixture.componentRef.setInput('productLevelId', 1);
+    fixture.componentRef.setInput('enrollmentIds', enrollmentIds);
+    fixture.componentRef.setInput('offeringIds', offeringIds);
     return fixture;
   }
 

@@ -15,13 +15,13 @@ const VARIANT_MAP: Record<string, ChipVariant> = {
 const DEFAULT_VARIANT: ChipVariant = 'information';
 
 @Component({
-  selector: 'app-dashboard-career-status-chip',
+  selector: 'app-dashboard-enrollment-status-chip',
   imports: [OrtChipModule],
-  templateUrl: './dashboard-career-status-chip.html',
-  styleUrl: './dashboard-career-status-chip.scss',
+  templateUrl: './dashboard-enrollment-status-chip.html',
+  styleUrl: './dashboard-enrollment-status-chip.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardCareerStatusChip {
+export class DashboardEnrollmentStatusChip {
   readonly status = input.required<string>();
 
   protected readonly variant = computed<ChipVariant>(

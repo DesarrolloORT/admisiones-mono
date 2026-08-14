@@ -7,7 +7,7 @@ import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
 
-import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion';
+import { EnrollmentSeminarSummary, EnrollmentSummary } from '../models/enrollment-summary';
 
 @Injectable({
   providedIn: 'root',
@@ -15,77 +15,77 @@ import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion'
 export class HomeEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getMisEnrollments(): Observable<MiInscripcion[]> {
+  public getMyEnrollments(): Observable<EnrollmentSummary[]> {
     return this.api.request(getPersonEnrollmentsEndpoint).pipe(
       catchError((error: HttpErrorResponse) =>
         error.status === 404 ? of([]) : throwError(() => error)
       ),
-      map(data => this.toMisEnrollments(data))
+      map(data => this.toEnrollmentSummaries(data))
     );
   }
 
-  private toMisEnrollments(
+  private toEnrollmentSummaries(
     data: { data: MyEnrollmentsResponse[] | null } | MyEnrollmentsResponse[] | null | undefined
-  ): MiInscripcion[] {
+  ): EnrollmentSummary[] {
     const groups = Array.isArray(data) ? data : (data?.data ?? []);
 
-    return groups.flatMap(group => this.toMisEnrollmentsFromGroup(group));
+    return groups.flatMap(group => this.toEnrollmentSummariesFromGroup(group));
   }
 
-  private toMisEnrollmentsFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
+  private toEnrollmentSummariesFromGroup(group: MyEnrollmentsResponse): EnrollmentSummary[] {
     const items = group.enrollments ?? [];
 
     if (items.length === 0) {
       return [];
     }
 
-    const nombreProducto = group.productFullName ?? '';
-    const estado = group.enrollmentStatus ?? '';
-    const idNivelProducto = group.productLevelId ?? null;
+    const degreeProgramName = group.productFullName ?? '';
+    const status = group.enrollmentStatus ?? '';
+    const productLevelId = group.productLevelId ?? null;
 
     if (isProfessionalUpdateLevel(group.productLevelId)) {
-      const primero = items[0];
+      const first = items[0];
       return [
         {
-          idInscripto: primero?.enrollmentId ?? 0,
-          idOfertas: [...new Set(items.map(item => item.offeringId).filter(isPositiveInteger))],
-          idProducto: group.productId ?? 0,
-          idProceso: group.admissionProcessId ?? 0,
-          idNivelProducto,
-          idComienzo: primero?.intakeId ?? 0,
-          idTurno: primero?.shiftId ?? 0,
-          nombreProducto,
-          nombreComienzo: primero?.intakeName ?? '',
-          nombreTurno: primero?.shiftName ?? '',
-          estado,
-          fechaVencimientoPago: readFechaVencimientoPago(group),
-          seminarios: items.map((item): MiInscripcionSeminario => ({
-            idInscripto: item.enrollmentId ?? 0,
-            idOferta: item.offeringId ?? 0,
-            descripcionOferta: item.offeringDescription ?? '',
-            idComienzo: item.intakeId ?? 0,
-            idTurno: item.shiftId ?? 0,
-            nombreComienzo: item.intakeName ?? '',
-            nombreTurno: item.shiftName ?? '',
+          enrollmentId: first?.enrollmentId ?? 0,
+          offeringIds: [...new Set(items.map(item => item.offeringId).filter(isPositiveInteger))],
+          productId: group.productId ?? 0,
+          admissionProcessId: group.admissionProcessId ?? 0,
+          productLevelId,
+          intakeId: first?.intakeId ?? 0,
+          shiftId: first?.shiftId ?? 0,
+          degreeProgramName,
+          intakeName: first?.intakeName ?? '',
+          shiftName: first?.shiftName ?? '',
+          status,
+          paymentDueDate: readPaymentDueDate(group),
+          seminars: items.map((item): EnrollmentSeminarSummary => ({
+            enrollmentId: item.enrollmentId ?? 0,
+            offeringId: item.offeringId ?? 0,
+            offeringDescription: item.offeringDescription ?? '',
+            intakeId: item.intakeId ?? 0,
+            shiftId: item.shiftId ?? 0,
+            intakeName: item.intakeName ?? '',
+            shiftName: item.shiftName ?? '',
           })),
         },
       ];
     }
 
     return items.map(item => ({
-      idInscripto: item.enrollmentId ?? 0,
-      idOfertas: isPositiveInteger(item.offeringId) ? [item.offeringId] : [],
-      idProducto: group.productId ?? 0,
-      idProceso: group.admissionProcessId ?? 0,
-      idNivelProducto,
-      idComienzo: item.intakeId ?? 0,
-      idTurno: item.shiftId ?? 0,
-      nombreProducto,
-      nombreComienzo: item.intakeName ?? '',
-      nombreTurno: item.shiftName ?? '',
-      estado,
-      fechaVencimientoPago: readFechaVencimientoPago(group),
-      seminarios: [],
+      enrollmentId: item.enrollmentId ?? 0,
+      offeringIds: isPositiveInteger(item.offeringId) ? [item.offeringId] : [],
+      productId: group.productId ?? 0,
+      admissionProcessId: group.admissionProcessId ?? 0,
+      productLevelId,
+      intakeId: item.intakeId ?? 0,
+      shiftId: item.shiftId ?? 0,
+      degreeProgramName,
+      intakeName: item.intakeName ?? '',
+      shiftName: item.shiftName ?? '',
+      status,
+      paymentDueDate: readPaymentDueDate(group),
+      seminars: [],
     }));
   }
 }
@@ -94,6 +94,6 @@ function isPositiveInteger(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 
-function readFechaVencimientoPago(group: MyEnrollmentsResponse): string | null {
+function readPaymentDueDate(group: MyEnrollmentsResponse): string | null {
   return group.paymentDueDate ?? null;
 }
