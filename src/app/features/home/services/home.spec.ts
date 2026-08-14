@@ -7,12 +7,12 @@ import { HomeService } from './home';
 describe('HomeService', () => {
   let service: HomeService;
   let endpointMock: {
-    getMisInscripciones: ReturnType<typeof vi.fn>;
+    getMisEnrollments: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
-      getMisInscripciones: vi.fn().mockReturnValue(of([])),
+      getMisEnrollments: vi.fn().mockReturnValue(of([])),
     };
 
     TestBed.configureTestingModule({
@@ -22,7 +22,7 @@ describe('HomeService', () => {
     service = TestBed.inject(HomeService);
   });
 
-  it('delegates getMisInscripciones to the endpoint', async () => {
+  it('delegates getMisEnrollments to the endpoint', async () => {
     const inscripciones = [
       {
         idInscripto: 100,
@@ -37,9 +37,9 @@ describe('HomeService', () => {
         estado: 'Confirmada',
       },
     ];
-    endpointMock.getMisInscripciones.mockReturnValue(of(inscripciones));
+    endpointMock.getMisEnrollments.mockReturnValue(of(inscripciones));
 
-    await expect(firstValueFrom(service.getMisInscripciones())).resolves.toEqual(inscripciones);
-    expect(endpointMock.getMisInscripciones).toHaveBeenCalled();
+    await expect(firstValueFrom(service.getMisEnrollments())).resolves.toEqual(inscripciones);
+    expect(endpointMock.getMisEnrollments).toHaveBeenCalled();
   });
 });

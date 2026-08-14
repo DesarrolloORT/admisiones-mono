@@ -1,0 +1,267 @@
+.enrollment-screen--success {
+  gap: var(--ort-sys-spacing-24);
+}
+
+.enrollment-success-heading {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  justify-items: center;
+  padding-top: var(--ort-sys-spacing-48);
+  text-align: center;
+}
+
+.enrollment-success-heading h1,
+.enrollment-success-heading h2 {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-weight: 700;
+  font-size: var(--ort-sys-heading-level4-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.enrollment-success-heading p {
+  margin: 0;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.enrollment-alert {
+  display: flex;
+  gap: var(--ort-sys-alert-content-gap);
+  align-items: center;
+  margin: 0;
+  padding: var(--ort-sys-alert-padding-block) var(--ort-sys-alert-padding-inline);
+  border: var(--ort-sys-alert-border-width) solid var(--ort-sys-alert-border-color-information);
+  border-radius: var(--ort-sys-alert-border-radius-rounded);
+  background: var(--ort-sys-alert-background-information);
+  color: var(--ort-sys-alert-message-information);
+  font-size: var(--ort-sys-alert-message-font-size);
+  line-height: var(--ort-sys-alert-message-line-height);
+}
+
+.enrollment-alert ort-icon {
+  display: none;
+  flex: 0 0 auto;
+}
+
+.enrollment-alert--info ort-icon {
+  color: var(--ort-sys-alert-title-color-information);
+}
+
+.enrollment-alert span {
+  display: grid;
+  gap: var(--ort-sys-spacing-2);
+}
+
+.enrollment-alert strong {
+  color: var(--ort-sys-alert-title-color-information);
+  font-size: var(--ort-sys-alert-title-font-size);
+  line-height: var(--ort-sys-alert-title-line-height);
+}
+
+.enrollment-summary-list {
+  display: grid;
+  gap: var(--ort-sys-spacing-8);
+  margin: 0;
+}
+
+.enrollment-summary-list__item,
+.enrollment-summary-list__item dt {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0 var(--ort-sys-list-gap);
+}
+
+.enrollment-summary-list__item dt {
+  grid-column: 1 / -1;
+  align-items: center;
+}
+
+.enrollment-summary-list__item dt ort-icon {
+  grid-row: span 2;
+  color: var(--ort-sys-base-icon-color);
+  font-size: 1.5rem;
+}
+
+.enrollment-summary-list__item dt span {
+  grid-column: 2;
+  color: var(--ort-sys-list-overline-color);
+  font-size: var(--ort-sys-list-overline-font-size);
+  line-height: var(--ort-sys-list-overline-line-height);
+}
+
+.enrollment-summary-list__item dd {
+  grid-column: 2;
+  margin: 0;
+  color: var(--ort-sys-list-title-color);
+  font-weight: 600;
+  font-size: var(--ort-sys-list-title-font-size);
+  line-height: var(--ort-sys-list-title-line-height);
+}
+
+.enrollment-contact-list,
+.enrollment-services,
+.enrollment-services__links,
+.enrollment-subject-list {
+  display: grid;
+}
+
+.enrollment-contact-list {
+  gap: var(--ort-sys-spacing-12);
+}
+
+.enrollment-contact {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: var(--ort-sys-list-gap);
+  align-items: center;
+}
+
+.enrollment-contact__avatar {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  object-fit: cover;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--ort-sys-avatar-border-radius);
+  background: var(--ort-sys-avatar-background);
+  color: var(--ort-sys-base-surface-primary-background);
+}
+
+.enrollment-contact h3,
+.enrollment-contact p {
+  margin: 0;
+  color: var(--ort-sys-list-title-color);
+  font-weight: var(--ort-sys-font-weight-semibold);
+  font-size: var(--ort-sys-font-size-16);
+  font-family: var(--ort-sys-body-font-family);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.enrollment-contact p,
+.enrollment-contact a {
+  color: var(--ort-sys-base-text-color-body);
+  font-weight: 400;
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+.enrollment-contact a {
+  color: var(--ort-sys-base-text-primary-color);
+}
+
+ort-card h3 {
+  margin: var(--ort-sys-spacing-8) 0 0;
+  color: var(--ort-sys-base-text-color-headline);
+  font-size: var(--ort-sys-font-size-20);
+  line-height: var(--ort-sys-line-height-30);
+}
+
+.enrollment-subject-list {
+  gap: var(--ort-sys-spacing-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.enrollment-subject-list li {
+  display: flex;
+  gap: var(--ort-sys-spacing-8);
+  align-items: center;
+  color: var(--ort-sys-base-text-color-body);
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.enrollment-subject-list ort-icon {
+  color: var(--ort-sys-base-surface-primary-background);
+  font-size: 1.125rem;
+}
+
+.enrollment-santander {
+  color: var(--ort-sys-color-error);
+}
+
+.enrollment-santander-content {
+  display: grid;
+  grid-template-areas:
+    'title'
+    'body'
+    'button';
+  gap: var(--ort-sys-spacing-16);
+}
+
+.enrollment-santander-content h3 {
+  grid-area: title;
+}
+
+.enrollment-santander-content p {
+  grid-area: body;
+}
+
+.enrollment-santander-cta {
+  grid-area: button;
+}
+
+.enrollment-services {
+  gap: var(--ort-sys-spacing-12);
+}
+
+.enrollment-services__links {
+  gap: var(--ort-sys-spacing-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.enrollment-services__links a {
+  display: inline-flex;
+  gap: var(--ort-sys-spacing-8);
+  width: 100%;
+}
+
+#career-subject-list-title {
+  margin-top: var(--ort-sys-spacing-16);
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(-ort-sys-font-size-16);
+  font-family: var(--ort-sys-body-font-family);
+  line-height: var(--ort-sys-line-height-24);
+}
+
+.enrollment-santander-content ort-icon {
+  width: 8rem;
+}
+@media (width >= 52.5rem) {
+  .enrollment-screen--success {
+    width: min(100%, 40.875rem);
+    margin-inline: auto;
+  }
+
+  .enrollment-screen--success .enrollment-contact-list,
+  .enrollment-screen--success .enrollment-summary-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .enrollment-services__links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .enrollment-services__links a[ort-secondary-button] {
+    width: 100%;
+  }
+
+  .enrollment-alert ort-icon {
+    display: block;
+  }
+
+  .enrollment-santander-content {
+    grid-template-areas:
+      'title button'
+      'body body';
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}

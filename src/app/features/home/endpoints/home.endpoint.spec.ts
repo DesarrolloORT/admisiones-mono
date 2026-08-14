@@ -20,7 +20,7 @@ describe('HomeEndpoint', () => {
     endpoint = TestBed.inject(HomeEndpoint);
   });
 
-  it('should map Persona/Inscripciones into dashboard cards', async () => {
+  it('should map Persona/Enrollments into dashboard cards', async () => {
     api.request.mockReturnValueOnce(
       of([
         {
@@ -43,7 +43,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
+    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([
       {
         idNivelProducto: 1,
         idInscripto: 100,
@@ -96,7 +96,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([
+    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([
       {
         idInscripto: 200,
         idOfertas: [1, 2],
@@ -163,7 +163,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisInscripciones());
+    const result = await firstValueFrom(endpoint.getMisEnrollments());
 
     expect(result).toHaveLength(2);
     expect(result.every(inscripcion => inscripcion.seminarios.length === 0)).toBe(true);
@@ -187,7 +187,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisInscripciones());
+    const result = await firstValueFrom(endpoint.getMisEnrollments());
 
     expect(result[0]?.idOfertas).toEqual([310]);
   });
@@ -206,7 +206,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisInscripciones());
+    const result = await firstValueFrom(endpoint.getMisEnrollments());
 
     expect(result[0]?.fechaVencimientoPago).toBe('2026-07-18');
   });
@@ -233,7 +233,7 @@ describe('HomeEndpoint', () => {
       ])
     );
 
-    const result = await firstValueFrom(endpoint.getMisInscripciones());
+    const result = await firstValueFrom(endpoint.getMisEnrollments());
 
     expect(result).toEqual([]);
   });
@@ -241,6 +241,6 @@ describe('HomeEndpoint', () => {
   it('should treat a 404 response as no enrollments', async () => {
     api.request.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
 
-    await expect(firstValueFrom(endpoint.getMisInscripciones())).resolves.toEqual([]);
+    await expect(firstValueFrom(endpoint.getMisEnrollments())).resolves.toEqual([]);
   });
 });

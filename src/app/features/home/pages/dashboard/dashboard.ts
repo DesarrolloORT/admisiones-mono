@@ -17,7 +17,7 @@ import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
+import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
 import { DashboardActionCard } from '../../components/dashboard-action-card/dashboard-action-card';
 import { DashboardCareersSection } from '../../components/dashboard-careers-section/dashboard-careers-section';
 import { DashboardScholarshipsSection } from '../../components/dashboard-scholarships-section/dashboard-scholarships-section';
@@ -48,7 +48,7 @@ export class Dashboard implements AfterViewInit, OnDestroy {
   private readonly authSession = inject(AuthSessionService);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly router = inject(Router);
-  private readonly resumeContext = inject(InscriptionResumeContextStore);
+  private readonly resumeContext = inject(EnrollmentResumeContextStore);
   private readonly swipers: Swiper[] = [];
 
   readonly inscripciones = input.required<MiInscripcion[]>();

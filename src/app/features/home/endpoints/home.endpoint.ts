@@ -15,24 +15,24 @@ import { MiInscripcion, MiInscripcionSeminario } from '../models/mi-inscripcion'
 export class HomeEndpoint {
   private readonly api = inject(ApiHttpClient);
 
-  public getMisInscripciones(): Observable<MiInscripcion[]> {
+  public getMisEnrollments(): Observable<MiInscripcion[]> {
     return this.api.request(getPersonEnrollmentsEndpoint).pipe(
       catchError((error: HttpErrorResponse) =>
         error.status === 404 ? of([]) : throwError(() => error)
       ),
-      map(data => this.toMisInscripciones(data))
+      map(data => this.toMisEnrollments(data))
     );
   }
 
-  private toMisInscripciones(
+  private toMisEnrollments(
     data: { data: MyEnrollmentsResponse[] | null } | MyEnrollmentsResponse[] | null | undefined
   ): MiInscripcion[] {
     const groups = Array.isArray(data) ? data : (data?.data ?? []);
 
-    return groups.flatMap(group => this.toMisInscripcionesFromGroup(group));
+    return groups.flatMap(group => this.toMisEnrollmentsFromGroup(group));
   }
 
-  private toMisInscripcionesFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
+  private toMisEnrollmentsFromGroup(group: MyEnrollmentsResponse): MiInscripcion[] {
     const items = group.enrollments ?? [];
 
     if (items.length === 0) {

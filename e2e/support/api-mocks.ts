@@ -6,7 +6,7 @@ import { REGISTER_SCENARIOS, RegisterScenario } from './test-data/register-scena
 export interface MockApiOptions {
   initialSurvey?: 'empty' | 'partial' | 'complete' | 'no-right';
   identityPreload?: 'none' | 'complete';
-  inscriptionDetail?: 'offers-missing' | 'pending-payment' | 'duplicate-status';
+  enrollmentDetail?: 'offers-missing' | 'pending-payment' | 'duplicate-status' | 'in-progress';
   registerFlow?: RegisterFlowKind;
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
@@ -216,7 +216,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     if (path === '/person/enrollments' && request.method() === 'GET') {
       // Misma tarjeta producto+proceso, dos tarjetas: sin `status` en el Detalle,
       // ambas resolverían a la misma inscripción.
-      if (options.inscriptionDetail === 'duplicate-status') {
+      if (options.enrollmentDetail === 'duplicate-status') {
         return fulfillOperation(route, [
           {
             productId: 20,
@@ -266,7 +266,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
       return fulfillOperation(
         route,
-        options.inscriptionDetail
+        options.enrollmentDetail
           ? [
               {
                 productId: 20,
@@ -342,6 +342,22 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
         return fulfillApiError(route, 'No se encontró la inscripción.');
       }
 
+      if (options.enrollmentDetail === 'in-progress') {
+        return fulfillOperation(route, {
+          status: 'En proceso',
+          inProgress: {
+            summary: { productId: 20, degreeProgram: 'Licenciatura en Diseño Gráfico' },
+            interests: [
+              {
+                offeringId: 300,
+                offeringDescription: 'Licenciatura en Diseño Gráfico',
+                intake: 'Marzo 2027',
+                shift: 'Matutino',
+              },
+            ],
+          },
+        });
+      }
       // Mismo productId+admissionProcessId, dos tarjetas: solo `status` las distingue.
       if (
         url.searchParams.get('productId') === '20' &&
@@ -375,7 +391,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
           inProgress: {
             summary: { productId: 40, degreeProgram: 'Programa de Asesoramiento Financiero' },
             interests:
-              options.inscriptionDetail === 'offers-missing'
+              options.enrollmentDetail === 'offers-missing'
                 ? []
                 : [
                     {
@@ -431,30 +447,48 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (path === '/enrollments/start-payment') {
-      return fulfillOperation(route, { result: 'Confirmada' });
+      const body = request.postDataJSON() as { paymentType?: string };
+      const result = ['ABITAB', 'PAGANZA'].includes(body.paymentType ?? '')
+        ? 'Reservada'
+        : 'Confirmada';
+      return fulfillOperation(route, { result });
     }
 
     if (path === '/enrollments/confirm-pre-enrollment') {
+      const body = request.postDataJSON() as {
+        isCorporateEnrollment?: boolean;
+        selectedOfferingIds?: number[];
+      };
+      const selectedOfferingIds = body.selectedOfferingIds ?? [];
+      const professionalUpdate = selectedOfferingIds.some(id => id === 310 || id === 311);
+      const offerings = selectedOfferingIds.map(offeringId => ({
+        enrollmentId: offeringId === 310 ? 7010 : offeringId === 311 ? 7011 : 7001,
+        offeringId,
+        offeringDescription:
+          offeringId === 310
+            ? 'Marco legal y tributario'
+            : offeringId === 311
+              ? 'Renta fija y renta variable'
+              : 'Licenciatura en Diseño Gráfico',
+        intake: 'Marzo 2027',
+        shift: offeringId === 311 ? 'Nocturno' : 'Matutino',
+      }));
+
       return fulfillOperation(route, {
         confirmed: true,
+        waiting: body.isCorporateEnrollment === true,
         depositAmount: 15500,
         currentAccount: { currentBalance: 20000 },
-        enrollments: [
-          {
-            enrollmentId: 7001,
-            offeringId: 300,
-            intake: 'Marzo 2027',
-            shift: 'Matutino',
-          },
-        ],
+        enrollments: offerings,
         summary: {
-          productId: 20,
-          degreeProgram: 'Licenciatura en Diseño Gráfico',
+          productId: professionalUpdate ? 40 : 20,
+          degreeProgram: professionalUpdate
+            ? 'Programa de Asesoramiento Financiero'
+            : 'Licenciatura en Diseño Gráfico',
           paymentDueDate: '2027-03-04',
         },
       });
     }
-
     if (path === '/registration/evaluate-document') {
       return fulfillRegisterEvaluation(route, registerScenario);
     }
@@ -679,12 +713,18 @@ function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unkn
     surveyId: 1,
     degreeProgramId: 20,
     admissionProcessId: 200,
-    status: kind === 'complete' ? 'completa' : 'decision-academica',
+    status: kind === 'complete' ? 'completa' : 'educacion',
     currentlyInSecondary: true,
-    secondaryInstitutionId: 1,
+    highSchoolTrackId: 12,
+    highSchoolYear: 11,
+    repeatsHighSchoolYear: false,
+    lastSecondaryYearLocationId: 1,
+    secondaryInstitutionId: 500,
     previousHigherEducationId: 3,
-    motherEducationLevelId: 4,
-    fatherEducationLevelId: 4,
+    motherEducationLevelId: 5,
+    fatherEducationLevelId: 5,
+    motherIsOrtGraduate: false,
+    fatherIsOrtGraduate: false,
     ...(kind === 'complete'
       ? {
           careerDecisionYearId: 1,

@@ -1,4 +1,4 @@
-import { formatPaymentDeadline } from '../../inscriptions/models/inscription-flow-view';
+import { formatPaymentDeadline } from '../../enrollments/models/enrollment-flow-view';
 
 export type InscripcionEstado = string;
 
@@ -70,7 +70,7 @@ export function buildPendingPaymentSummary(inscripciones: MiInscripcion[]): Pend
       }
     : null;
   const title =
-    pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Inscripciones pendientes de pago.';
+    pending.length <= 1 ? 'Inscripción pendiente de pago.' : 'Enrollments pendientes de pago.';
 
   const uniqueDeadlines = [
     ...new Set(

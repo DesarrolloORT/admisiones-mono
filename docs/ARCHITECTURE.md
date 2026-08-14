@@ -162,7 +162,7 @@ Agrupa endpoints de datos de referencia (países, bachilleratos, instituciones, 
 Cualquier feature puede inyectar `Catalogs` (service) para obtener listas de
 catálogos. No hay cache: cada consulta va a la red, así que conviene pedir el
 catálogo una sola vez por pantalla y guardarlo en un signal de la facade (patrón
-`catalogsRequested` en `inscription-survey-options.ts`).
+`catalogsRequested` en `enrollment-survey-options.ts`).
 
 Estructura:
 

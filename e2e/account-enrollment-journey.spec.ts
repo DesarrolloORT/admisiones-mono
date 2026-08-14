@@ -1,8 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
 
 import { mockApi } from './support/api-mocks';
+import { EnrollmentPage } from './support/pages/enrollment-page';
 import { HomePage } from './support/pages/home-page';
-import { InscripcionPage } from './support/pages/inscripcion-page';
 import { LoginPage } from './support/pages/login-page';
 import { RegisterPage } from './support/pages/register-page';
 import { personalData, REGISTER_SCENARIOS } from './support/test-data/register-scenarios';
@@ -68,23 +68,23 @@ test.describe('Account to enrollment journey', () => {
 
     await page.getByRole('link', { name: 'Comenzar inscripción' }).click();
 
-    const inscription = new InscripcionPage(page);
+    const enrollment = new EnrollmentPage(page);
     const productInterestRequest = waitForPost(page, '/enrollments/product-interest');
-    await inscription.fillAcademicProposal();
+    await enrollment.fillAcademicProposal();
     expect((await productInterestRequest).postDataJSON()).toEqual({
       admissionProcessId: 200,
       productId: 20,
       offeringIds: [300],
     });
 
-    await inscription.fillEducation();
-    await inscription.fillAcademicDecision();
-    await inscription.fillOrtExperience();
-    await inscription.fillIdentity();
+    await enrollment.fillEducation();
+    await enrollment.fillAcademicDecision();
+    await enrollment.fillOrtExperience();
+    await enrollment.fillIdentity();
 
     const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
     const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
-    await inscription.acceptRegulation();
+    await enrollment.acceptRegulation();
     expect((await surveyRequest).postDataJSON()).toMatchObject({
       degreeProgramId: 20,
       admissionProcessId: 200,
@@ -95,8 +95,8 @@ test.describe('Account to enrollment journey', () => {
       selectedOfferingIds: [300],
     });
 
-    await inscription.selectPayment('cuenta-personal');
-    await inscription.confirmPayment();
+    await enrollment.selectPayment('personal-account');
+    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();

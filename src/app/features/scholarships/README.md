@@ -9,7 +9,7 @@ cada cosa). Acá solo se documenta el **estado actual de becas** y **qué falta*
 
 ## Mapa de equivalencias con inscripciones
 
-| Concepto             | Inscripciones                                         | Becas                                                       |
+| Concepto             | Enrollments                                           | Becas                                                       |
 | -------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
 | Definición de pasos  | `models/inscripcion-process.ts` (`INSCRIPCION_STEPS`) | `models/scholarship-process.ts` (`SCHOLARSHIP_STEPS`) ✅    |
 | Motor de pasos       | `shared/process-flow/process-flow.ts` (compartido)    | el mismo ✅                                                 |

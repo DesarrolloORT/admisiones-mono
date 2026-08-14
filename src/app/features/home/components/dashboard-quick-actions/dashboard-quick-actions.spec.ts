@@ -2,28 +2,28 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
-import { InscriptionResumeContextStore } from '../../../inscriptions/services/inscription-resume-context';
-import { Inscripciones } from '../../../inscriptions/services/inscriptions';
+import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
+import { Enrollments } from '../../../enrollments/services/enrollments';
 import { DashboardQuickActions } from './dashboard-quick-actions';
 
 const REACTIVATION_RESPONSE = {
   confirmada: false,
   enEspera: false,
-  idInscripcion: 7010,
+  idEnrollment: 7010,
   fechaVencimientoPago: '2027-03-04',
   seniaInscripcion: 15500,
   saldoCuenta: 1200,
   resumen: { carrera: 'Sistemas', comienzo: 'Marzo 2027', turno: 'Noche' },
   seminarios: [
     {
-      idInscripcion: 7010,
+      idEnrollment: 7010,
       idOferta: 310,
       nombre: 'Seminario de Liderazgo',
       comienzo: 'Marzo 2027',
       turno: 'Noche',
     },
     {
-      idInscripcion: 7011,
+      idEnrollment: 7011,
       idOferta: 311,
       nombre: 'Seminario de Finanzas',
       comienzo: 'Abril 2027',
@@ -41,7 +41,7 @@ describe('DashboardQuickActions', () => {
 
     TestBed.configureTestingModule({
       imports: [DashboardQuickActions],
-      providers: [provideRouter([]), { provide: Inscripciones, useValue: inscriptions }],
+      providers: [provideRouter([]), { provide: Enrollments, useValue: inscriptions }],
     });
   });
 
@@ -67,11 +67,11 @@ describe('DashboardQuickActions', () => {
     const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
     prepareNavigation(fixture);
 
-    expect(TestBed.inject(InscriptionResumeContextStore).read(20, 200)).toEqual({
-      idProducto: 20,
-      idProceso: 200,
-      idOfertas: [310, 311],
-      idInscripciones: [7010, 7011],
+    expect(TestBed.inject(EnrollmentResumeContextStore).read(20, 200)).toEqual({
+      productId: 20,
+      admissionProcessId: 200,
+      offeringIds: [310, 311],
+      enrollmentIds: [7010, 7011],
     });
     expect(link.getAttribute('href')).toBe(
       '/inscripciones?idProducto=20&idProceso=200&estado=En%20proceso&nivel=1'
@@ -79,12 +79,12 @@ describe('DashboardQuickActions', () => {
   });
 
   it('clears the transient context when opening a detail action', async () => {
-    const store = TestBed.inject(InscriptionResumeContextStore);
+    const store = TestBed.inject(EnrollmentResumeContextStore);
     store.save({
-      idProducto: 20,
-      idProceso: 200,
-      idOfertas: [300],
-      idInscripciones: [100],
+      productId: 20,
+      admissionProcessId: 200,
+      offeringIds: [300],
+      enrollmentIds: [100],
     });
     const fixture = createComponent('Confirmada');
 
@@ -119,19 +119,19 @@ describe('DashboardQuickActions', () => {
     expect(inscriptions.reactivate).toHaveBeenCalledWith([100]);
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
       queryParams: {
-        idProducto: 20,
-        idProceso: 200,
+        productId: 20,
+        admissionProcessId: 200,
         estado: 'Dada de baja',
         nivel: 1,
         modo: 'reactivar',
       },
     });
-    const store = TestBed.inject(InscriptionResumeContextStore);
+    const store = TestBed.inject(EnrollmentResumeContextStore);
     expect(store.read(20, 200)).toEqual({
-      idProducto: 20,
-      idProceso: 200,
-      idOfertas: [310, 311],
-      idInscripciones: [7010, 7011],
+      productId: 20,
+      admissionProcessId: 200,
+      offeringIds: [310, 311],
+      enrollmentIds: [7010, 7011],
     });
     expect(store.takeReactivation(20, 200)).toEqual(REACTIVATION_RESPONSE);
     expect(store.takeReactivation(20, 200)).toBeNull();
@@ -160,8 +160,8 @@ describe('DashboardQuickActions', () => {
 
   function createComponent(
     status: string,
-    idOfertas: readonly number[] = [300],
-    idInscripciones: readonly number[] = [100]
+    offeringIds: readonly number[] = [300],
+    enrollmentIds: readonly number[] = [100]
   ): ComponentFixture<DashboardQuickActions> {
     const fixture = TestBed.createComponent(DashboardQuickActions);
     fixture.componentRef.setInput('status', status);
@@ -169,8 +169,8 @@ describe('DashboardQuickActions', () => {
     fixture.componentRef.setInput('idProducto', 20);
     fixture.componentRef.setInput('idProceso', 200);
     fixture.componentRef.setInput('idNivelProducto', 1);
-    fixture.componentRef.setInput('idInscripciones', idInscripciones);
-    fixture.componentRef.setInput('idOfertas', idOfertas);
+    fixture.componentRef.setInput('idEnrollments', enrollmentIds);
+    fixture.componentRef.setInput('idOfertas', offeringIds);
     return fixture;
   }
 

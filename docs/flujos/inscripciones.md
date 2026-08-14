@@ -4,7 +4,7 @@ title: Flujo de inscripciones
 description: Pasos, campos condicionales, payloads y casos borde de la inscripción.
 businessId: admisiones.inscripciones
 sourcePaths:
-  - src/app/features/inscriptions/
+  - src/app/features/enrollments/
   - src/app/features/catalogs/
   - src/app/features/home/pages/dashboard/
   - src/app/features/home/components/
@@ -15,27 +15,27 @@ sourcePaths:
 
 import SourceLink from '@site/src/components/SourceLink';
 
-# Inscripciones de punta a punta
+# Enrollments de punta a punta
 
 > Tipo: reference
 
-Fuentes de verdad: `src/app/features/inscriptions/**` y
+Fuentes de verdad: `src/app/features/enrollments/**` y
 `api-admisiones/WebApiAdmisiones/AppLogic/AppLogic.Enrollments/**`. Este documento
 describe el comportamiento desplegado del frontend y del backend conectado a esta
 rama: entrada desde el dashboard, encuesta, identidad, confirmación, reactivación,
 pago, persistencia e integraciones. No uses el raw value de los formularios como
-contrato: el payload HTTP sale de `inscription-flow-mappers.ts` y OpenAPI es la
+contrato: el payload HTTP sale de `enrollment-flow-mappers.ts` y OpenAPI es la
 autoridad del wire contract.
 
 ## Acciones y evidencia end-to-end
 
-| Acción visible               | Frontend                                                                                                                                                                                                                                                           | HTTP                                                                   | Backend                                                                                                                                                                                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Cargar Mis carreras          | <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                                                                                                                      | `GET /person/enrollments`                                              | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/UseCases/GetMyEnrollments.cs">GetMyEnrollments</SourceLink> → vistas Fresco 1/2 y 3/4                                                                                       |
-| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-proposal.ts">InscriptionProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/RegisterProductInterest.cs">RegisterProductInterest</SourceLink> → Oracle + cola Tivenos                                                                      |
-| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.ts">InscriptionSurveyFacade</SourceLink> → adapter                                                                                                                      | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/">People</SourceLink> + <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ConfirmPreEnrollment.cs">ConfirmPreEnrollment</SourceLink> |
-| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.ts">InscriptionPaymentFacade</SourceLink> → adapter                                                                                                                    | `POST /enrollments/start-payment`                                      | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/Payments/StartEnrollmentPayment.cs">StartEnrollmentPayment</SourceLink> → API interna de Inscripciones y Pagos                                                |
-| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/components/dashboard-quick-actions/dashboard-quick-actions.ts">DashboardQuickActions</SourceLink>                                                                                                          | `POST /enrollments/reactivate`                                         | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ReactivateEnrollment.cs">ReactivateEnrollment</SourceLink> → `ConfirmPreEnrollment`                                                                           |
+| Acción visible               | Frontend                                                                                                                                                                                                                                                      | HTTP                                                                   | Backend                                                                                                                                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cargar Mis carreras          | <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                                                                                                                 | `GET /person/enrollments`                                              | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/UseCases/GetMyEnrollments.cs">GetMyEnrollments</SourceLink> → vistas Fresco 1/2 y 3/4                                                                                       |
+| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-proposal.ts">EnrollmentProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/RegisterProductInterest.cs">RegisterProductInterest</SourceLink> → Oracle + cola Tivenos                                                                      |
+| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.ts">EnrollmentSurveyFacade</SourceLink> → adapter                                                                                                                    | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/">People</SourceLink> + <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ConfirmPreEnrollment.cs">ConfirmPreEnrollment</SourceLink> |
+| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.ts">EnrollmentPaymentFacade</SourceLink> → adapter                                                                                                                  | `POST /enrollments/start-payment`                                      | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/Payments/StartEnrollmentPayment.cs">StartEnrollmentPayment</SourceLink> → API interna de Enrollments y Pagos                                                  |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/components/dashboard-quick-actions/dashboard-quick-actions.ts">DashboardQuickActions</SourceLink>                                                                                                     | `POST /enrollments/reactivate`                                         | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ReactivateEnrollment.cs">ReactivateEnrollment</SourceLink> → `ConfirmPreEnrollment`                                                                           |
 
 Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
@@ -44,7 +44,7 @@ Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servid
 - Todos los endpoints de `person`, `enrollments` y `catalogs` usados aquí requieren
   la identidad del usuario autenticado. El backend obtiene `personId` del JWT/cookie;
   nunca acepta la persona desde el request.
-- `InscripcionesEndpoint` es la frontera anticorrupción del front: traduce los modelos
+- `EnrollmentsEndpoint` es la frontera anticorrupción del front: traduce los modelos
   generados en inglés a tipos propios de la feature. No hay caché HTTP que invalidar:
   `ApiHttpClient` manda cada request a la red, así que detalle, identidad, encuesta y
   reglamento siempre leen el estado vigente.
@@ -52,7 +52,7 @@ Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servid
   y método de reserva. La cola de Tivenos se registra en la misma transacción que el
   interés o la actualización de bachillerato; la entrega efectiva ocurre fuera del
   request.
-- La API interna de **Inscripciones y Pagos** confirma preinscripciones, consulta
+- La API interna de **Enrollments y Pagos** confirma preinscripciones, consulta
   carritos, cobra cuenta personal y genera URLs de pasarela. Su handler agrega las
   credenciales de servicio. Admisiones traduce fallos de red a `API_NETWORK`/503,
   timeout mayor a dos minutos a `API_TIMEOUT`/504 y fallos inesperados a
@@ -108,7 +108,7 @@ Cómo arranca el flujo depende de la **intención de entrada** (decidida por la 
 no por el backend) combinada con el estado de la inscripción (`Detalle` o respuesta
 de `Reactivar`) y el de la
 encuesta inicial (`EncuestaInicial`, que es **por persona**). La derivación es pura
-y está fijada por la tabla ejecutable `models/inscription-entry.spec.ts`; esta
+y está fijada por la tabla ejecutable `models/enrollment-entry.spec.ts`; esta
 matriz es su lectura de negocio.
 
 - **Nueva** (`/inscripciones`, sin params): el Paso 1 arranca **siempre virgen y
@@ -201,8 +201,8 @@ inscripción confirmada y una reactivación posterior del mismo producto/proceso
 front lo manda siempre que lo conoce, pero el param sigue siendo opcional: un link
 viejo sin `estado` se llama sin `status` y el backend resuelve como antes. El frontend
 lo propaga por el query param `estado` en la URL de `/inscripciones` (mismo mecanismo
-que `idProducto`/`idProceso`/`modo`), leído por `inscriptionDetailResolver` y por
-`InscripcionPaymentFacade` al retomar el pago desde el panel.
+que `idProducto`/`idProceso`/`modo`), leído por `enrollmentDetailResolver` y por
+`EnrollmentPaymentFacade` al retomar el pago desde el panel.
 
 `nivel` viaja por el mismo mecanismo y con la misma regla de opcionalidad: es el
 `productLevelId` que ya devuelve `GET /person/enrollments`, y existe para que el
@@ -330,7 +330,7 @@ cada elemento trae `productId`, `productFullName`, `admissionProcessId`,
 `enrollments[]` con las ofertas concretas (`enrollmentId`, `offeringId`,
 `offeringDescription`, `shiftId`, `intakeId`, `intakeStartDate`, `intakeName`,
 `shiftName`, `referenceDate`).
-`HomeEndpoint.toMisInscripciones()` mapea cada grupo a uno o más
+`HomeEndpoint.toMisEnrollments()` mapea cada grupo a uno o más
 `MiInscripcion`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
 (`src/app/features/catalogs/models/academic-proposal.ts`).
 
@@ -371,14 +371,14 @@ El título va en plural apenas hay **más de una inscripción pendiente**, sin
 importar si comparten fecha. El detalle, en cambio, deduplica fechas repetidas
 (`Set`) y menciona cada fecha distinta una sola vez:
 
-| Inscripciones pendientes | Fechas distintas usables | Título                              | Detalle del alert                                                  |
-| ------------------------ | ------------------------ | ----------------------------------- | ------------------------------------------------------------------ |
-| 1                        | 1                        | `Inscripción pendiente de pago.`    | `Realizá el pago antes del 15/07/2026.`                            |
-| 1                        | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`    | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
-| 2+                       | 1 (misma fecha)          | `Inscripciones pendientes de pago.` | `Las mismas vencerán el 15/07/2026.`                               |
-| 2+                       | 2                        | `Inscripciones pendientes de pago.` | `Las mismas vencerán los días 15/07/2026 y 20/07/2026.`            |
-| 2+                       | 3+                       | `Inscripciones pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`) |
-| 2+                       | 0 (sin fecha informada)  | `Inscripciones pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
+| Enrollments pendientes | Fechas distintas usables | Título                            | Detalle del alert                                                  |
+| ---------------------- | ------------------------ | --------------------------------- | ------------------------------------------------------------------ |
+| 1                      | 1                        | `Inscripción pendiente de pago.`  | `Realizá el pago antes del 15/07/2026.`                            |
+| 1                      | 0 (sin fecha informada)  | `Inscripción pendiente de pago.`  | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
+| 2+                     | 1 (misma fecha)          | `Enrollments pendientes de pago.` | `Las mismas vencerán el 15/07/2026.`                               |
+| 2+                     | 2                        | `Enrollments pendientes de pago.` | `Las mismas vencerán los días 15/07/2026 y 20/07/2026.`            |
+| 2+                     | 3+                       | `Enrollments pendientes de pago.` | igual, unido con `, ` y `y` antes de la última (`Intl.ListFormat`) |
+| 2+                     | 0 (sin fecha informada)  | `Enrollments pendientes de pago.` | `Consultá el detalle desde Mis carreras.` (texto genérico)         |
 
 La flecha del alert (`actionIcon`, evento `actionTriggered`) sólo se renderiza y
 navega a `/inscripciones?idProducto=&idProceso=` cuando hay **una única**
@@ -397,7 +397,7 @@ el texto genérico.
 
 ### Drift detectado (resuelto)
 
-El adapter (`HomeEndpoint.toMisInscripciones()`) mapeaba la forma plana vieja
+El adapter (`HomeEndpoint.toMisEnrollments()`) mapeaba la forma plana vieja
 contra `MyEnrollmentsResponse`, el contrato agrupado que el backend
 ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
 nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
@@ -409,7 +409,7 @@ mapeo agrupado descrito arriba.
 
 Un segundo drift dejó el mismo botón inerte después de ese arreglo: la tarjeta
 dejó de pasarle `idInscripto` a `DashboardQuickActions`, que era la condición de
-`reactivatesFlow`. Resuelto unificando la reactivación sobre `idInscripciones`
+`reactivatesFlow`. Resuelto unificando la reactivación sobre `idEnrollments`
 (el set que la tarjeta ya calculaba), que además cubre los paquetes de
 Actualización profesional con más de una anotación.
 
@@ -447,7 +447,7 @@ intersección con `SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL`
 (`situacion-laboral`, `identidad`, `reglamento`). Las tres se muestran siempre
 para AP, incluso sin derecho a encuesta o con una encuesta completa, para
 preguntar en todos los casos si la inscripción es corporativa. Un clamp en
-`InscripcionSurveyFacade` reposiciona la sección activa si dejó de ser visible o
+`EnrollmentSurveyFacade` reposiciona la sección activa si dejó de ser visible o
 cambió la primera sección aplicable.
 
 La sección `situacion-laboral` contiene una sola pregunta,
@@ -483,7 +483,7 @@ no corresponde a un tipo conocido (link viejo, entrada directa, valor manipulado
 resolver cruza el Detalle contra `GET /catalogs/degree-programs` para reconstruirlo,
 lo que cuesta una consulta por tipo de propuesta. Si el catálogo falla queda `null`:
 el paso 2 igual se abre y `AcademicProposalSelection` completa el tipo cuando el
-catálogo carga. `InscripcionProcessFacade` aplica el `academicPrefill` después del slice de
+catálogo carga. `EnrollmentProcessFacade` aplica el `academicPrefill` después del slice de
 encuesta y bloquea el paso 1 (`disableForResume`).
 
 El Detalle no informa si la inscripción es corporativa, por lo que al retomar un
@@ -495,20 +495,20 @@ estado pendiente se mantiene la pantalla genérica "Inscripción en proceso".
 `pendingPayment` devuelven un array `enrollments[]` (`EnrollmentOffering`:
 `enrollmentId`, `offeringId`, `intake`, `shift`, `offeringDescription`) junto al
 `summary` plano (`EnrollmentHeader`: `productId`, `degreeProgram`,
-`paymentDueDate`). El adapter (`InscripcionesEndpoint.toSeminarios()`) mapea ese
-array completo a `InscripcionPreEnrollmentResponse.seminarios` (y a
-`InscripcionPendingPaymentDetail.seminarios` para "retomar"), además de seguir
+`paymentDueDate`). El adapter (`EnrollmentsEndpoint.toSeminarios()`) mapea ese
+array completo a `EnrollmentPreEnrollmentResponse.seminarios` (y a
+`EnrollmentPendingPaymentDetail.seminarios` para "retomar"), además de seguir
 colapsando `inscripciones?.[0]` en los campos planos (`resumen`, `idInscripcion`) que
 usa el resto del flujo.
 
 `POST /enrollments/start-payment` recibe `enrollmentIds: number[]`, así que el pago cobra el
-paquete completo: `InscripcionPaymentFacade.paymentInscriptionIds()` prioriza los
+paquete completo: `EnrollmentPaymentFacade.paymentEnrollmentIds()` prioriza los
 `seminarios[].idInscripcion` y el `idInscripcion` plano de la respuesta. Si ambos faltan
 al retomar, usa los `idInscripcion` positivos y deduplicados guardados por la tarjeta
 en `sessionStorage`. Si tampoco quedan IDs válidos, el pago no se envía y la pantalla
 muestra "No pudimos identificar la inscripción pendiente.".
 
-En la pantalla de pago (`inscription-confirmation-step`), el "Resumen de inscripción"
+En la pantalla de pago (`enrollment-confirmation-step`), el "Resumen de inscripción"
 usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
 
 - **Niveles 1 y 2:** las 3 filas de siempre (Carrera, Comienzo, Turno), sin cambios.
@@ -517,7 +517,7 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
   elemento de `seminarios[]` (nombre, comienzo, turno). Si la confirmación omite ese
   array, se usan como fallback las ofertas seleccionadas del catálogo de seminarios.
   Esta lista vive fuera de `summaryItems()` para no romper
-  `inscription-success-step.html`, que usa `summaryItems()[0]` como título y
+  `enrollment-success-step.html`, que usa `summaryItems()[0]` como título y
   `summaryItems().slice(1)` para el resto.
 - **Niveles 3 y 4 (AP) con un solo seminario:** no hay nada que desglosar, así que el
   resumen se lee como los niveles 1/2: filas **Programa** + **Comienzo** (el `comienzo`
@@ -738,7 +738,7 @@ nunca aceptó, `false` devuelve `INS_CPI_02`/400. Esta escritura ocurre antes de
 a la API interna, por lo que queda persistida aunque la confirmación remota falle.
 
 La rama normal llama una sola vez a
-`ORTSecure/Inscripciones/ConfirmarPreInscripcionMultiple` y mapea su éxito —incluido
+`ORTSecure/Enrollments/ConfirmarPreInscripcionMultiple` y mapea su éxito —incluido
 un posible resultado parcial del sistema remoto— al response propio. No envía clave de
 idempotencia: ante timeout o respuesta incierta, no se debe asumir que reintentar sea
 seguro sin consultar primero `GET /enrollments/details` o el dashboard.
@@ -759,10 +759,10 @@ el check de completada.
 
 ### "Guardar y salir" no vuelve a postear la encuesta ya confirmada
 
-`InscripcionSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
+`EnrollmentSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
 al confirmar el modal "¿Querés salir de la inscripción?") solo llama a
 `POST /enrollments/initial-survey` si la persona tiene derecho a encuesta, no
-es AP, **y** `InscripcionProcessStore.preEnrollmentResponse` sigue en `null`.
+es AP, **y** `EnrollmentProcessStore.preEnrollmentResponse` sigue en `null`.
 Una vez que `confirmPreEnrollment` respondio con éxito (paso 3, pago) ese
 signal deja de ser `null` y `savePartial()` retorna `true` sin llamar al
 backend: la encuesta ya quedo guardada como parte de la confirmacion y
@@ -773,7 +773,7 @@ reintentar el POST no aporta nada, solo puede fallar y bloquear la salida.
 El paso llama a `POST /enrollments/start-payment`. El adapter traduce los métodos propios de la UI al contrato backend y la fachada decide si termina confirmado, reservado o pendiente en una pasarela externa.
 
 `GET /catalogs/banks` se difiere hasta entrar al paso de pago editable; no se
-consulta al abrir Inscripciones ni para reservas o inscripciones ya confirmadas.
+consulta al abrir Enrollments ni para reservas o inscripciones ya confirmadas.
 
 ## Pago: detalle operativo
 
@@ -860,16 +860,16 @@ como fallback si la respuesta no trae `confirmada`.
 confirmada y su propio `comienzo`/`turno`/`materiasPrimerSemestre`: en niveles 3 y 4
 vienen varias, una por seminario. Ya no existe el bloque plano `confirmada.resumen`
 ni un `confirmada.materiasPrimerSemestre` único. El adapter arma
-`InscripcionConfirmedDetail.resumen` con la cabecera más el comienzo/turno de
+`EnrollmentConfirmedDetail.resumen` con la cabecera más el comienzo/turno de
 `inscripciones[0]` (mismo colapso que usa `pagoPendiente`) y expone el array completo
-en `InscripcionConfirmedDetail.inscripciones`;
-`InscripcionPaymentFacade.subjects()` lista las materias de **todos** los seminarios
+en `EnrollmentConfirmedDetail.inscripciones`;
+`EnrollmentPaymentFacade.subjects()` lista las materias de **todos** los seminarios
 sin repetir las compartidas.
 
 ## Estados frontend
 
 - `processing`: solo mientras responde `/enrollments/start-payment`.
-- `inscription-confirmada`: pago confirmado por backend. Usa `confirmada` de la
+- `enrollment-confirmada`: pago confirmado por backend. Usa `confirmada` de la
   respuesta de Pagar; si no vino, cae al `getDetail`.
 - `reserva`: Abitab o Paganza quedan con instrucciones de pago. Se muestran la
   cédula (Abitab), el número de estudiante y el monto que informa `seniaMinima`.
@@ -878,8 +878,8 @@ sin repetir las compartidas.
 - `reserva` con seña 0: si `seniaInscripcion` (o `seniaMinima.senia`/
   `pagoPendiente.senia` al retomar) es exactamente `0`, no hay nada que cobrar, así
   que no corresponde mostrar el paso de pago ni llamar a `Pagar`. El front fuerza el
-  outcome `reserva` directo y corta la navegación (en `InscripcionSurveyFacade.finishSurveyStep` para el
-  flujo fresco, en `InscripcionProcessFacade.applyPaymentInit` para el caso
+  outcome `reserva` directo y corta la navegación (en `EnrollmentSurveyFacade.finishSurveyStep` para el
+  flujo fresco, en `EnrollmentProcessFacade.applyPaymentInit` para el caso
   `awaiting-method` al retomar) y `buildReservationInstructions` reemplaza fecha
   límite, cédula, monto y el texto de acreditación por un mensaje que indica
   comunicarse con la oficina de Admisiones; la resolución queda en manos de la
@@ -961,7 +961,7 @@ paso editable y usa un mensaje recuperable. Los códigos estables para diagnóst
 | Confirmación        | `INS_CPI_*`                                       | ofertas, encuesta, reglamento, identidad, vigencia y compatibilidad               |
 | Reactivación        | `INS_REA_00..02`                                  | request, pertenencia o inscripción no dada de baja                                |
 | Pago                | `INS_PAG_*`, `INS_PC_*`, `INS_MP_*`, `INS_UF_*`   | tipo, IDs, pertenencia, reserva repetida o banco                                  |
-| Detalle/integración | `INS_DET_*`, `API_*` y códigos del cliente remoto | estado no encontrado o fallo de Inscripciones y Pagos                             |
+| Detalle/integración | `INS_DET_*`, `API_*` y códigos del cliente remoto | estado no encontrado o fallo de Enrollments y Pagos                               |
 
 Resumen operativo de reintentos:
 
@@ -987,5 +987,5 @@ Resumen operativo de reintentos:
 
 ## Evidencia automatizada
 
-- Frontend: <SourceLink repo="frontend" path="src/app/features/inscriptions/models/inscription-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/facades/inscription-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/inscriptions/endpoints/inscriptions.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/mi-inscripcion.spec.ts">dashboard/pagos pendientes</SourceLink>.
+- Frontend: <SourceLink repo="frontend" path="src/app/features/enrollments/models/enrollment-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/mi-inscripcion.spec.ts">dashboard/pagos pendientes</SourceLink>.
 - Backend: <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/EnrollmentUseCasesTests.cs">casos de uso</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/InitialSurveyServiceTests.cs">encuesta</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/IdentityDocumentServiceTests.cs">identidad</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/InscripcionDetalleContractTests.cs">detalle</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/EnrollmentsAndPaymentsWireContractTests.cs">contrato remoto</SourceLink>.

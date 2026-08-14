@@ -10,7 +10,7 @@ import { MiInscripcion } from '../models/mi-inscripcion';
 export class HomeService {
   private readonly endpoint = inject(HomeEndpoint);
 
-  public getMisInscripciones(): Observable<MiInscripcion[]> {
-    return this.endpoint.getMisInscripciones();
+  public getMisEnrollments(): Observable<MiInscripcion[]> {
+    return this.endpoint.getMisEnrollments();
   }
 }

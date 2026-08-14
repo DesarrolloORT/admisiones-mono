@@ -32,13 +32,13 @@
   @if (showActions()) {
   <div class="dashboard-card__actions">
     <app-dashboard-quick-actions
+      [admissionProcessId]="inscripcion()?.idProceso ?? null"
       [cardType]="variant()"
       [careerName]="title()"
-      [idInscripciones]="idsInscripcion()"
-      [idNivelProducto]="inscripcion()?.idNivelProducto ?? null"
-      [idOfertas]="inscripcion()?.idOfertas ?? []"
-      [idProceso]="inscripcion()?.idProceso ?? null"
-      [idProducto]="inscripcion()?.idProducto ?? null"
+      [enrollmentIds]="idsInscripcion()"
+      [offeringIds]="inscripcion()?.idOfertas ?? []"
+      [productId]="inscripcion()?.idProducto ?? null"
+      [productLevelId]="inscripcion()?.idNivelProducto ?? null"
       [status]="estado()" />
   </div>
   }
