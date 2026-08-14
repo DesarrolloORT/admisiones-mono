@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
@@ -10,46 +9,44 @@ const SCHOLARSHIPS = [
     title: 'Beca de Reválidas',
     description:
       'Dirigida a estudiantes que solicitan reválida de materias cursadas en otras universidades, nacionales o extranjeras.',
-    test: false,
+    requiresExam: false,
     route: '/becas/fbr',
   },
   {
     title: 'Excelencia Académica',
     description:
       'Dirigida a estudiantes que comienzan una carrera y cuentan con un destacado desempeño académico en secundaria.',
-    test: true,
+    requiresExam: true,
     route: '',
   },
   {
     title: 'Becas Concursables',
     description:
       'Dirigidas a estudiantes que comienzan una carrera y han aprobado bachillerato o tienen exámenes de 6.º año pendientes.',
-    test: true,
+    requiresExam: true,
     route: '',
   },
   {
     title: 'Carreras Cortas / Capacitación Laboral',
     description:
       'Dirigida a estudiantes que desean cursar una carrera corta y cuentan con al menos 4.º año de secundaria aprobado.',
-    test: false,
+    requiresExam: false,
     route: '',
   },
 ];
 
 @Component({
-  selector: 'app-becas',
+  selector: 'app-scholarships',
   imports: [ScholarshipCard, HomeHeader],
-  templateUrl: './becas.html',
-  styleUrl: './becas.scss',
+  templateUrl: './scholarships.html',
+  styleUrl: './scholarships.scss',
 
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Becas {
-  private readonly router = inject(Router);
+export class Scholarships {
+  protected readonly scholarships = signal(SCHOLARSHIPS);
 
-  protected readonly becas = signal(SCHOLARSHIPS);
-
-  protected inscripto = signal(false);
+  protected isEnrolled = signal(false);
 
   private readonly breakpointService = inject(BreakpointService);
 

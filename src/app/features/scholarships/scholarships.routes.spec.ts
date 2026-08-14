@@ -1,10 +1,10 @@
-import { routes } from './becas.routes';
-import { Becas } from './pages/becas/becas';
 import { Fbr } from './pages/fbr/fbr';
+import { Scholarships } from './pages/scholarships/scholarships';
+import { routes } from './scholarships.routes';
 
-describe('becas routes', () => {
+describe('scholarships routes', () => {
   it('maps the empty path to the scholarships shell', () => {
-    expect(routes).toContainEqual({ path: '', component: Becas });
+    expect(routes).toContainEqual({ path: '', component: Scholarships });
   });
 
   it('maps the fbr path to the scholarship process page', () => {

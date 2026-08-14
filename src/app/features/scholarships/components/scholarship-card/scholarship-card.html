@@ -4,19 +4,19 @@
   [class.scholarship-card--single]="single()">
   <div class="scholarship-card__header">
     <span class="scholarship-card__title-span">Fondo</span>
-    <h2 class="scholarship-card__title" id="scholarship-card-title">{{ beca().title }}</h2>
+    <h2 class="scholarship-card__title" id="scholarship-card-title">{{ scholarship().title }}</h2>
   </div>
 
-  <p class="scholarship-card__description">{{ beca().description }}</p>
+  <p class="scholarship-card__description">{{ scholarship().description }}</p>
 
-  @if (beca().test) {
+  @if (scholarship().requiresExam) {
   <ort-chip label="Requiere rendir prueba" type="status" variant="primary" />
-  } @if (inscripto() || beca().title === 'Beca de Reválidas') {
+  } @if (isEnrolled() || scholarship().title === 'Beca de Reválidas') {
   <a
     class="scholarship-card__btn"
     ort-primary-button
-    [attr.aria-label]="'Postularme a Fondo ' + beca().title"
-    [routerLink]="beca().route">
+    [attr.aria-label]="'Postularme a Fondo ' + scholarship().title"
+    [routerLink]="scholarship().route">
     Postularme
   </a>
   }

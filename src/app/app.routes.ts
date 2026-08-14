@@ -16,7 +16,7 @@ export const routes: Routes = [
   {
     path: 'becas',
     canMatch: [authMatchGuard],
-    loadChildren: () => import('./features/becas/becas.routes').then(m => m.routes),
+    loadChildren: () => import('./features/scholarships/scholarships.routes').then(m => m.routes),
   },
   {
     path: '',

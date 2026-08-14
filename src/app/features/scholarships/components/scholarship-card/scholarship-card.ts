@@ -5,7 +5,7 @@ import { OrtButtonModule, OrtChipModule } from '@desarrolloort/components';
 interface ScholarshipCardModel {
   title: string;
   description: string;
-  test: boolean;
+  requiresExam: boolean;
   route: string;
 }
 
@@ -17,7 +17,7 @@ interface ScholarshipCardModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipCard {
-  readonly beca = input.required<ScholarshipCardModel>();
-  readonly inscripto = input.required<boolean>();
+  readonly scholarship = input.required<ScholarshipCardModel>();
+  readonly isEnrolled = input.required<boolean>();
   readonly single = input<boolean>(false);
 }

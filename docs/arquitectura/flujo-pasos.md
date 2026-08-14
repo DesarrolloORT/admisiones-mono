@@ -7,7 +7,7 @@ description: Responsabilidades de stores, fachadas y componentes en una inscripc
 # Inscripciones — anatomía del flujo paso a paso
 
 Esta feature es la **referencia** del patrón de "proceso paso a paso" del repo.
-Si vas a trabajar en otro flujo multi‑paso (p. ej. [becas](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/src/app/features/becas/README.md)),
+Si vas a trabajar en otro flujo multi‑paso (p. ej. [becas](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/src/app/features/scholarships/README.md)),
 leé esto primero: explica qué hace cada capa, cómo se pasa de un paso al
 siguiente y dónde tocar para cada tipo de cambio.
 

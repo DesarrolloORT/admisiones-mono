@@ -1,35 +1,41 @@
 <app-home-header [showBack]="showBack()" />
-<main class="becas-main">
+<main class="scholarships-main">
   <section aria-labelledby="scholarships-title" class="scholarships-screen">
     <div class="scholarships-screen__header">
       <h1 class="scholarships-title">Postulación a becas</h1>
       <p class="scholarships-description">Conocé las becas disponibles y sus requisitos.</p>
     </div>
 
-    @if (inscripto()) {
+    @if (isEnrolled()) {
     <ul class="scholarship-list">
-      @for (beca of becas(); track $index) {
+      @for (scholarship of scholarships(); track $index) {
       <li>
-        <app-scholarship-card [beca]="beca" [inscripto]="inscripto()" />
+        <app-scholarship-card [isEnrolled]="isEnrolled()" [scholarship]="scholarship" />
       </li>
       }
     </ul>
     } @else{
-    <app-scholarship-card [beca]="becas()[0]" [inscripto]="inscripto()" [single]="true" />
-    <div class="with-inscription__container">
-      <div class="inscription-separation__container">
-        <div class="inscription-separation">
+    <app-scholarship-card
+      [isEnrolled]="isEnrolled()"
+      [scholarship]="scholarships()[0]"
+      [single]="true" />
+    <div class="with-enrollment__container">
+      <div class="enrollment-separation__container">
+        <div class="enrollment-separation">
           <span>Con inscripción previa</span>
         </div>
-        <p class="inscription-separation__text">
+        <p class="enrollment-separation__text">
           La postulación a estas becas requiere que hayas completado el proceso de inscripción y
           abonado la seña.
         </p>
       </div>
       <ul class="scholarship-list scholarship-list__grid">
-        @for (beca of becas().slice(1); track $index) {
+        @for (scholarship of scholarships().slice(1); track $index) {
         <li>
-          <app-scholarship-card [beca]="beca" [inscripto]="inscripto()" [style.opacity]="0.75" />
+          <app-scholarship-card
+            [isEnrolled]="isEnrolled()"
+            [scholarship]="scholarship"
+            [style.opacity]="0.75" />
         </li>
         }
       </ul>

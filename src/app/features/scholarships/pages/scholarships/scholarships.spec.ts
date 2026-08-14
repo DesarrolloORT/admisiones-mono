@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { Becas } from './becas';
+import { Scholarships } from './scholarships';
 
-describe('Becas', () => {
-  let fixture: ComponentFixture<Becas>;
+describe('Scholarships', () => {
+  let fixture: ComponentFixture<Scholarships>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [Becas],
+      imports: [Scholarships],
       providers: [provideRouter([])],
     });
 
-    fixture = TestBed.createComponent(Becas);
+    fixture = TestBed.createComponent(Scholarships);
   });
 
   it('renders the scholarships catalogue', () => {
