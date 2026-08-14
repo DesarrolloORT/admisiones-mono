@@ -126,6 +126,7 @@ function createEnrollment(overrides: Partial<MiInscripcion>): MiInscripcion {
     idOfertas: [300],
     idProducto: 20,
     idProceso: 200,
+    idNivelProducto: 1,
     idComienzo: 2,
     idTurno: 3,
     nombreProducto: 'Sistemas',

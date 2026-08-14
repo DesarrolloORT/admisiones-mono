@@ -3,7 +3,10 @@ import { ParamMap, ResolveFn } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
-import { ACADEMIC_PROPOSAL_TYPE_IDS } from '../../catalogs/models/academic-proposal';
+import {
+  ACADEMIC_PROPOSAL_TYPE_IDS,
+  getAcademicProposalTypeByLevel,
+} from '../../catalogs/models/academic-proposal';
 import type { Career } from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionDetail } from '../models/inscription-detail';
@@ -23,6 +26,7 @@ type EntryRequest =
       idProceso: number;
       idOfertas: number[];
       estado: string | null;
+      idNivelProducto: number | null;
     };
 
 export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = route => {
@@ -45,7 +49,9 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
 
   // 3. Las dos cargas son opcionales: degradan a null/[] para que el flujo abra igual.
   const detail$ = preEnrollment ? of(null) : loadDetail(idProducto, idProceso, request.estado);
-  const careers$ = loadCareers();
+  // El panel ya mandó el nivel por `nivel`; solo cuando falta hay que reconstruirlo, y eso
+  // cuesta una consulta por tipo de propuesta.
+  const careers$ = request.idNivelProducto === null ? loadCareers() : of<Career[]>([]);
 
   return forkJoin({ detail: detail$, careers: careers$ }).pipe(
     map(({ detail, careers }) => {
@@ -54,7 +60,9 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
         idProducto,
         idProceso,
         idOfertas,
-        idNivelProducto: findProductLevel(careers, detail?.detalle?.idProducto ?? idProducto),
+        idNivelProducto:
+          request.idNivelProducto ??
+          findProductLevel(careers, detail?.detalle?.idProducto ?? idProducto),
       };
 
       return intent === 'reactivar' ? { ...entry, intent, preEnrollment } : { ...entry, intent };
@@ -77,7 +85,13 @@ export function readEntryRequest(params: ParamMap): EntryRequest {
     idProceso,
     idOfertas: toPositiveIntegers(params.getAll('idOferta')),
     estado: toNonEmptyString(params.get('estado')),
+    idNivelProducto: toKnownProductLevel(params.get('nivel')),
   };
+}
+
+function toKnownProductLevel(value: string | null): number | null {
+  const level = toPositiveInteger(value);
+  return level !== null && getAcademicProposalTypeByLevel(level) ? level : null;
 }
 
 export const resolveEntryIntent = (params: ParamMap): InscripcionEntryResolved['intent'] =>

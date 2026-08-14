@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import {
   getEnrollmentsDetailsEndpoint,
@@ -65,7 +65,6 @@ export class InscripcionesEndpoint {
           admissionProcessId: idProceso,
           ...(estado ? { status: estado } : {}),
         },
-        cache: false,
         showLoader: true,
       })
       .pipe(
@@ -103,7 +102,7 @@ export class InscripcionesEndpoint {
   }
 
   public getIdentityDocument(): Observable<InscripcionIdentityDocument> {
-    return this.api.request(getPersonIdentityDocumentEndpoint, { cache: false }).pipe(
+    return this.api.request(getPersonIdentityDocumentEndpoint).pipe(
       map(document => ({
         frente: document.front
           ? {
@@ -123,40 +122,36 @@ export class InscripcionesEndpoint {
   }
 
   public getIdentityPhoto(): Observable<Blob> {
-    return this.api.request(getPersonPhotoEndpoint, { cache: false, responseType: 'blob' });
+    return this.api.request(getPersonPhotoEndpoint, { responseType: 'blob' });
   }
 
   public uploadIdentityDocument(
     payload: InscripcionIdentityDocumentUploadPayload
   ): Observable<boolean> {
-    return this.api
-      .request(postPersonIdentityDocumentEndpoint, {
-        body: {
-          expirationDate: payload.fecha,
-          front: { fileName: payload.frente.nombreArchivo, content: payload.frente.archivo },
-          back: { fileName: payload.dorso.nombreArchivo, content: payload.dorso.archivo },
-        },
-        showLoader: true,
-      })
-      .pipe(tap(() => this.api.clearCache()));
+    return this.api.request(postPersonIdentityDocumentEndpoint, {
+      body: {
+        expirationDate: payload.fecha,
+        front: { fileName: payload.frente.nombreArchivo, content: payload.frente.archivo },
+        back: { fileName: payload.dorso.nombreArchivo, content: payload.dorso.archivo },
+      },
+      showLoader: true,
+    });
   }
 
   public uploadIdentityPhoto(payload: InscripcionIdentityPhotoUploadPayload): Observable<boolean> {
-    return this.api
-      .request(postPersonPhotoEndpoint, {
-        body: {
-          file: {
-            fileName: payload.archivoAdjunto.nombreArchivo,
-            content: payload.archivoAdjunto.archivo,
-          },
+    return this.api.request(postPersonPhotoEndpoint, {
+      body: {
+        file: {
+          fileName: payload.archivoAdjunto.nombreArchivo,
+          content: payload.archivoAdjunto.archivo,
         },
-        showLoader: true,
-      })
-      .pipe(tap(() => this.api.clearCache()));
+      },
+      showLoader: true,
+    });
   }
 
   public getInitialSurvey(): Observable<InscripcionInitialSurveyResponse> {
-    return this.api.request(getEnrollmentsInitialSurveyEndpoint, { cache: false }).pipe(
+    return this.api.request(getEnrollmentsInitialSurveyEndpoint).pipe(
       map(response => {
         const survey = response.survey;
 
@@ -173,6 +168,7 @@ export class InscripcionesEndpoint {
       })
     );
   }
+
   public saveInitialSurvey(payload: InscripcionInitialSurveyPayload): Observable<boolean> {
     const body = {
       degreeProgramId: payload.carreraId,
@@ -217,14 +213,11 @@ export class InscripcionesEndpoint {
         body,
         showLoader: true,
       })
-      .pipe(
-        map(() => true),
-        tap(() => this.api.clearCache())
-      );
+      .pipe(map(() => true));
   }
 
   public getStudentRegulationAcceptance(): Observable<InscripcionStudentRegulationAcceptance> {
-    return this.api.request(getEnrollmentsStudentRegulationsEndpoint, { cache: false }).pipe(
+    return this.api.request(getEnrollmentsStudentRegulationsEndpoint).pipe(
       map(acceptance => ({
         aceptoReglamentoEstudiantil: acceptance.acceptedStudentRegulations === true,
         fechaAceptacion: acceptance.acceptanceDate ?? null,
@@ -244,10 +237,7 @@ export class InscripcionesEndpoint {
         },
         showLoader: true,
       })
-      .pipe(
-        map(response => this.toPreEnrollmentResponse(response)),
-        tap(() => this.api.clearCache())
-      );
+      .pipe(map(response => this.toPreEnrollmentResponse(response)));
   }
 
   // Actualización profesional (nivel 3/4) da de baja el paquete entero: se reactivan
@@ -258,10 +248,7 @@ export class InscripcionesEndpoint {
         body: { enrollmentIds: idsInscripcion },
         showLoader: true,
       })
-      .pipe(
-        map(response => this.toPreEnrollmentResponse(response)),
-        tap(() => this.api.clearCache())
-      );
+      .pipe(map(response => this.toPreEnrollmentResponse(response)));
   }
 
   public pay(payload: InscripcionPaymentPayload): Observable<InscripcionPaymentResponse> {
@@ -284,8 +271,7 @@ export class InscripcionesEndpoint {
           confirmada: this.toConfirmedDetail(response.confirmed),
           message: null,
           errorCode: null,
-        })),
-        tap(() => this.api.clearCache())
+        }))
       );
   }
 
