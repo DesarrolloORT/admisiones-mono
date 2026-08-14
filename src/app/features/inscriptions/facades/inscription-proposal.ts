@@ -23,8 +23,8 @@ export class InscripcionProposalFacade {
   public readonly selection = inject(AcademicProposalSelection);
   public readonly academicForm = this.formsStore.academicForm;
   public readonly proposalOptions = this.selection.proposalOptions;
-  public readonly careerOptions = this.selection.careerOptions;
-  public readonly startOptions = this.selection.startOptions;
+  public readonly careerOptions = this.selection.degreeProgramOptions;
+  public readonly startOptions = this.selection.intakeOptions;
   public readonly turnoOptions = this.selection.shiftOptions;
   public readonly catalogError = this.selection.catalogError;
   public readonly initialized = this.selection.initialized;
@@ -39,11 +39,11 @@ export class InscripcionProposalFacade {
 
     const terminology = this.selection.terminology();
     const formErrors = buildFormErrors(this.academicForm, [
-      { controlName: 'tipoPropuesta', fieldId: '', label: 'Propuesta académica' },
-      { controlName: 'carrera', fieldId: '', label: terminology.careerLabel },
-      { controlName: 'comienzo', fieldId: '', label: terminology.startLabel },
-      { controlName: 'turno', fieldId: '', label: 'Turno' },
-      { controlName: 'seminarios', fieldId: '', label: this.selection.seminarLabel() },
+      { controlName: 'proposalType', fieldId: '', label: 'Propuesta académica' },
+      { controlName: 'degreeProgram', fieldId: '', label: terminology.degreeProgramLabel },
+      { controlName: 'intake', fieldId: '', label: terminology.startLabel },
+      { controlName: 'shift', fieldId: '', label: 'Turno' },
+      { controlName: 'seminars', fieldId: '', label: this.selection.seminarLabel() },
     ]);
     const interestError = this.productInterestError();
     return interestError ? [...formErrors, { message: interestError }] : formErrors;
@@ -105,7 +105,7 @@ export class InscripcionProposalFacade {
   }
 
   public careers() {
-    return this.selection.careers();
+    return this.selection.degreePrograms();
   }
 
   public setProposalType(value: string): void {
@@ -126,25 +126,25 @@ export class InscripcionProposalFacade {
     idProcesoSeleccionado: number;
     idProducto: number;
   } | null {
-    const idProducto = toNullableNumber(this.academicForm.controls.carrera.value);
+    const idProducto = toNullableNumber(this.academicForm.controls.degreeProgram.value);
     if (idProducto === null) return null;
 
     if (this.selection.isProfessionalUpdate()) {
       const seminars = this.selection.seminars();
-      const selected = this.academicForm.controls.seminarios.value
-        .map(value => seminars.find(seminar => seminar.idOferta.toString() === value))
+      const selected = this.academicForm.controls.seminars.value
+        .map(value => seminars.find(seminar => seminar.offeringId.toString() === value))
         .filter(seminar => seminar !== undefined);
       if (selected.length === 0) return null;
 
       return {
-        idOfertas: selected.map(seminar => seminar!.idOferta),
-        idProcesoSeleccionado: selected[0]!.idProceso,
+        idOfertas: selected.map(seminar => seminar!.offeringId),
+        idProcesoSeleccionado: selected[0]!.admissionProcessId,
         idProducto,
       };
     }
 
-    const idProcesoSeleccionado = toNullableNumber(this.academicForm.controls.comienzo.value);
-    const idOferta = toNullableNumber(this.academicForm.controls.turno.value);
+    const idProcesoSeleccionado = toNullableNumber(this.academicForm.controls.intake.value);
+    const idOferta = toNullableNumber(this.academicForm.controls.shift.value);
     return idProcesoSeleccionado === null || idOferta === null
       ? null
       : { idOfertas: [idOferta], idProcesoSeleccionado, idProducto };

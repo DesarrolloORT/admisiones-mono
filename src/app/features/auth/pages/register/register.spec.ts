@@ -259,7 +259,7 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     segundoApellido: 'Pereira',
     fechaNacimiento: '2000-01-01',
     sexo: 'F',
-    location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
+    location: { countryCode: 1, stateCode: 10, cityCode: 100 },
     direccion: 'Mercedes 1234',
     telefono1: {
       iso2: 'UY',

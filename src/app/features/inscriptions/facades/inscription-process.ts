@@ -162,11 +162,11 @@ export class InscripcionProcessFacade {
 
   private applyAcademicPrefill(prefill: InscripcionAcademicPrefill): void {
     const controls = this.proposal.academicForm.controls;
-    controls.tipoPropuesta.setValue(prefill.tipoPropuesta, { emitEvent: false });
-    controls.carrera.setValue(prefill.carrera, { emitEvent: false });
-    controls.comienzo.setValue(prefill.comienzo, { emitEvent: false });
-    controls.turno.setValue(prefill.turno, { emitEvent: false });
-    controls.seminarios.setValue([...prefill.seminarios], { emitEvent: false });
+    controls.proposalType.setValue(prefill.tipoPropuesta, { emitEvent: false });
+    controls.degreeProgram.setValue(prefill.carrera, { emitEvent: false });
+    controls.intake.setValue(prefill.comienzo, { emitEvent: false });
+    controls.shift.setValue(prefill.turno, { emitEvent: false });
+    controls.seminars.setValue([...prefill.seminarios], { emitEvent: false });
     this.proposal.setProposalType(prefill.tipoPropuesta);
     const idPrograma = Number(prefill.carrera);
     if (Number.isFinite(idPrograma) && this.proposal.selection.isProfessionalUpdate()) {

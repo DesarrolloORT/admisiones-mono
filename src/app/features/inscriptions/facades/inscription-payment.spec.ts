@@ -60,7 +60,7 @@ const CONFIRMED_DETAIL = {
 describe('InscripcionPaymentFacade', () => {
   let facade: InscripcionPaymentFacade;
   let process: InscripcionProcessStore;
-  let getBancos: ReturnType<typeof vi.fn>;
+  let getBanks: ReturnType<typeof vi.fn>;
   let inscriptions: { pay: ReturnType<typeof vi.fn>; getDetail: ReturnType<typeof vi.fn> };
   let externalPaymentSubmitter: { submit: ReturnType<typeof vi.fn> };
 
@@ -91,7 +91,7 @@ describe('InscripcionPaymentFacade', () => {
       bancos?: Observable<readonly { id: number; label: string; code: string }[]>;
     } = {}
   ): void {
-    getBancos = vi
+    getBanks = vi
       .fn()
       .mockReturnValue(options.bancos ?? of([{ id: 1, label: 'BROU', code: 'brou' }]));
     TestBed.resetTestingModule();
@@ -109,10 +109,10 @@ describe('InscripcionPaymentFacade', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () => of([]),
-            getComienzos: () => of([]),
-            getTurnos: () => of([]),
-            getBancos,
+            getDegreePrograms: () => of([]),
+            getIntakes: () => of([]),
+            getShifts: () => of([]),
+            getBanks,
           },
         },
         { provide: Inscripciones, useValue: inscriptions },
@@ -262,13 +262,13 @@ describe('InscripcionPaymentFacade', () => {
   });
 
   it('loads bank options only after entering the payment step', () => {
-    expect(getBancos).not.toHaveBeenCalled();
+    expect(getBanks).not.toHaveBeenCalled();
     expect(facade.bankOptions()).toEqual([]);
 
     process.flow.goTo('pago');
     TestBed.tick();
 
-    expect(getBancos).toHaveBeenCalledOnce();
+    expect(getBanks).toHaveBeenCalledOnce();
     expect(facade.bankOptions()).toEqual([
       { value: 'brou', label: 'BROU', icon: 'assets/banks/brou.svg' },
     ]);
@@ -276,8 +276,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('loads the confirmed detail after a confirmed payment', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
-    forms.academicForm.controls.carrera.setValue('20');
-    forms.academicForm.controls.comienzo.setValue('200');
+    forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.academicForm.controls.intake.setValue('200');
     inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
     facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
 
@@ -303,8 +303,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('uses the confirmed detail from the pay response without re-fetching', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
-    forms.academicForm.controls.carrera.setValue('20');
-    forms.academicForm.controls.comienzo.setValue('200');
+    forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.academicForm.controls.intake.setValue('200');
     inscriptions.pay.mockReturnValueOnce(
       of({ ...PAYMENT_OK, resultado: 'confirmada', confirmada: CONFIRMED_DETAIL })
     );
@@ -333,8 +333,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('loads the reservation data after an Abitab reserva from the fresh flow', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
-    forms.academicForm.controls.carrera.setValue('20');
-    forms.academicForm.controls.comienzo.setValue('200');
+    forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.academicForm.controls.intake.setValue('200');
     inscriptions.getDetail.mockReturnValueOnce(
       of({
         estado: 'Pago pendiente',
@@ -368,8 +368,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('degrades to the amount-only reservation when getDetail fails on a reserva', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
-    forms.academicForm.controls.carrera.setValue('20');
-    forms.academicForm.controls.comienzo.setValue('200');
+    forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.academicForm.controls.intake.setValue('200');
     inscriptions.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.metodoPago.setValue('abitab');
 
@@ -385,8 +385,8 @@ describe('InscripcionPaymentFacade', () => {
 
   it('keeps the success screen without detail sections when getDetail fails', () => {
     const forms = TestBed.inject(InscripcionFormsStore);
-    forms.academicForm.controls.carrera.setValue('20');
-    forms.academicForm.controls.comienzo.setValue('200');
+    forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.academicForm.controls.intake.setValue('200');
     inscriptions.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, resultado: 'confirmada' }));
     inscriptions.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.metodoPago.setValue('cuenta-personal');
@@ -657,14 +657,14 @@ describe('InscripcionPaymentFacade', () => {
     selection.setProposalType('3');
     vi.spyOn(selection, 'seminars').mockReturnValue([
       {
-        idOferta: 10,
-        idProceso: 210,
-        nombre: 'Seminario A',
-        fechaComienzo: '2027-03-04T00:00:00',
+        offeringId: 10,
+        admissionProcessId: 210,
+        name: 'Seminario A',
+        startDate: '2027-03-04T00:00:00',
       },
-      { idOferta: 11, idProceso: 210, nombre: 'Seminario B', fechaComienzo: null },
+      { offeringId: 11, admissionProcessId: 210, name: 'Seminario B', startDate: null },
     ]);
-    proposal.academicForm.controls.seminarios.setValue(['10', '11']);
+    proposal.academicForm.controls.seminars.setValue(['10', '11']);
     process.preEnrollmentResponse.update(response => ({ ...response!, seminarios: [] }));
 
     expect(facade.seminariosResumen()).toEqual([
@@ -689,13 +689,13 @@ describe('InscripcionPaymentFacade', () => {
     selection.setProposalType('3');
     vi.spyOn(selection, 'seminars').mockReturnValue([
       {
-        idOferta: 10,
-        idProceso: 210,
-        nombre: 'Seminario A',
-        fechaComienzo: '2027-03-04T00:00:00',
+        offeringId: 10,
+        admissionProcessId: 210,
+        name: 'Seminario A',
+        startDate: '2027-03-04T00:00:00',
       },
     ]);
-    proposal.academicForm.controls.seminarios.setValue(['10']);
+    proposal.academicForm.controls.seminars.setValue(['10']);
     process.preEnrollmentResponse.update(response => ({ ...response!, seminarios: [] }));
 
     expect(facade.summaryItems().at(-1)).toEqual({

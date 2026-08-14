@@ -306,11 +306,11 @@ export class InscripcionSurveyFacade {
   }
 
   public isUniversityCareer(): boolean {
-    const selectedCareer = this.formsStore.academicForm.controls.carrera.value;
+    const selectedCareer = this.formsStore.academicForm.controls.degreeProgram.value;
     if (!selectedCareer) return false;
     const nivel = this.proposal
       .careers()
-      .find(career => career.idProducto.toString() === selectedCareer)?.idNivelProducto;
+      .find(career => career.productId.toString() === selectedCareer)?.productLevelId;
     return nivel === NIVEL_UNIVERSITARIO;
   }
 
@@ -543,8 +543,8 @@ export class InscripcionSurveyFacade {
 
   private configureConditionalValidators(): void {
     merge(
-      this.formsStore.academicForm.controls.tipoPropuesta.valueChanges,
-      this.formsStore.academicForm.controls.carrera.valueChanges,
+      this.formsStore.academicForm.controls.proposalType.valueChanges,
+      this.formsStore.academicForm.controls.degreeProgram.valueChanges,
       this.educationForm.controls.anioSecundaria.valueChanges,
       this.educationForm.controls.cursaSecundaria.valueChanges,
       this.educationForm.controls.lugarSecundaria.valueChanges,

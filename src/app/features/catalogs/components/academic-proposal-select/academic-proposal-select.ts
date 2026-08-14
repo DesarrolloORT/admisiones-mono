@@ -41,8 +41,8 @@ export class AcademicProposalSelect implements OnInit {
     return breakpoint.isXSmall || breakpoint.isSmall;
   });
 
-  protected readonly careerOptionGroups = computed(() =>
-    groupCareerOptions(this.selection().careerOptions())
+  protected readonly degreeProgramOptionGroups = computed(() =>
+    groupDegreeProgramOptions(this.selection().degreeProgramOptions())
   );
 
   ngOnInit(): void {
@@ -51,11 +51,11 @@ export class AcademicProposalSelect implements OnInit {
 
   // El selector de Actualización profesional (AP) permanece oculto hasta elegir un programa.
   protected hasProgramSelected(): boolean {
-    return !!this.form().controls.carrera.value;
+    return !!this.form().controls.degreeProgram.value;
   }
 
   protected proposalTypeErrorId(): string | null {
-    const control = this.form().controls.tipoPropuesta;
+    const control = this.form().controls.proposalType;
     return control.touched && control.hasError('required') ? 'academic-proposal-type-error' : null;
   }
 
@@ -70,7 +70,7 @@ export class AcademicProposalSelect implements OnInit {
   }
 }
 
-function groupCareerOptions(
+function groupDegreeProgramOptions(
   options: readonly AcademicProposalOption[]
 ): readonly ResponsiveSelectOptionGroup[] {
   const groups = new Map<string, AcademicProposalOption[]>();

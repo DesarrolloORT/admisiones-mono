@@ -146,7 +146,7 @@ export class PersonalData implements OnInit {
       return [];
     }
 
-    return this.locations().find(country => country.codigoPais === countryCode)?.estado ?? [];
+    return this.locations().find(country => country.countryCode === countryCode)?.states ?? [];
   });
   protected readonly errorSummary = computed(() => {
     if (!this.submitted()) {

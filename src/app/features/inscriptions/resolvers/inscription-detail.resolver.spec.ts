@@ -36,17 +36,17 @@ const REACTIVATION_RESPONSE = {
 
 describe('inscriptionDetailResolver', () => {
   let getDetail: ReturnType<typeof vi.fn>;
-  let getCareers: ReturnType<typeof vi.fn>;
+  let getDegreePrograms: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     sessionStorage.clear();
     getDetail = vi.fn();
-    getCareers = vi.fn().mockReturnValue(of([]));
+    getDegreePrograms = vi.fn().mockReturnValue(of([]));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: Inscripciones, useValue: { getDetail } },
-        { provide: Catalogs, useValue: { getCareers } },
+        { provide: Catalogs, useValue: { getDegreePrograms } },
       ],
     });
   });
@@ -78,13 +78,13 @@ describe('inscriptionDetailResolver', () => {
   it('resolves the product level from the careers catalog', async () => {
     const detail = createDetail('En proceso', 21);
     getDetail.mockReturnValue(of(detail));
-    getCareers.mockReturnValue(
+    getDegreePrograms.mockReturnValue(
       of([
         {
-          idProducto: 21,
-          idNivelProducto: 3,
-          nombreProducto: 'Programa de Asesoramiento Financiero',
-          nombreNivelProducto: 'Actualización profesional',
+          productId: 21,
+          productLevelId: 3,
+          productName: 'Programa de Asesoramiento Financiero',
+          productLevelName: 'Actualización profesional',
         },
       ])
     );
@@ -106,7 +106,7 @@ describe('inscriptionDetailResolver', () => {
     await expect(
       resolve({ idProducto: '21', idProceso: '200', nivel: '3' })
     ).resolves.toMatchObject({ idNivelProducto: 3 });
-    expect(getCareers).not.toHaveBeenCalled();
+    expect(getDegreePrograms).not.toHaveBeenCalled();
   });
 
   it.each(['0', 'abc', '99'])(
@@ -114,21 +114,21 @@ describe('inscriptionDetailResolver', () => {
     async nivel => {
       const detail = createDetail('En proceso', 21);
       getDetail.mockReturnValue(of(detail));
-      getCareers.mockReturnValue(
-        of([{ idProducto: 21, idNivelProducto: 2, nombreProducto: 'Tecnicatura' }])
+      getDegreePrograms.mockReturnValue(
+        of([{ productId: 21, productLevelId: 2, productName: 'Tecnicatura' }])
       );
 
       await expect(resolve({ idProducto: '21', idProceso: '200', nivel })).resolves.toMatchObject({
         idNivelProducto: 2,
       });
-      expect(getCareers).toHaveBeenCalled();
+      expect(getDegreePrograms).toHaveBeenCalled();
     }
   );
 
   it('keeps a null level when the careers catalog fails', async () => {
     const detail = createDetail('En proceso', 21);
     getDetail.mockReturnValue(of(detail));
-    getCareers.mockReturnValue(throwError(() => new Error('failed')));
+    getDegreePrograms.mockReturnValue(throwError(() => new Error('failed')));
 
     await expect(resolve({ idProducto: '21', idProceso: '200' })).resolves.toEqual({
       intent: 'retomar',
@@ -209,13 +209,13 @@ describe('inscriptionDetailResolver', () => {
   // que el paso 2 arranca con el tipo de propuesta correcto.
   it('resolves the product level from the URL param when the detail fails', async () => {
     getDetail.mockReturnValue(throwError(() => new Error('failed')));
-    getCareers.mockReturnValue(
+    getDegreePrograms.mockReturnValue(
       of([
         {
-          idProducto: 21,
-          idNivelProducto: 3,
-          nombreProducto: 'Programa de Asesoramiento Financiero',
-          nombreNivelProducto: 'Actualización profesional',
+          productId: 21,
+          productLevelId: 3,
+          productName: 'Programa de Asesoramiento Financiero',
+          productLevelName: 'Actualización profesional',
         },
       ])
     );

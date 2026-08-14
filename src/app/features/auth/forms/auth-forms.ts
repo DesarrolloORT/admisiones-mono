@@ -124,7 +124,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
       }),
       sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       location: new FormControl<LocationValue>(
-        { codigoPais: null, codigoEstado: null, codigoCiudad: null },
+        { countryCode: null, stateCode: null, cityCode: null },
         { nonNullable: true }
       ),
       direccion: new FormControl('', {

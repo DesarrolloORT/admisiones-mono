@@ -58,9 +58,9 @@ export function resolveStateCodeFromBirthplace(
     return null;
   }
 
-  const country = locations.find(c => c.codigoPais === countryCode);
-  const state = country?.estado?.find(s => s.nombre.toUpperCase() === departmentName);
-  return state?.codigoEstado ?? null;
+  const country = locations.find(c => c.countryCode === countryCode);
+  const state = country?.states?.find(s => s.name.toUpperCase() === departmentName);
+  return state?.stateCode ?? null;
 }
 
 export function getCountryCodeFromBirthplace(birthplace: string | null | undefined): number | null {

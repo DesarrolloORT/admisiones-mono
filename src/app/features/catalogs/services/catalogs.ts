@@ -6,15 +6,15 @@ import { CatalogsEndpoint } from '../endpoints/catalogs.endpoint';
 import type { AcademicProposalTypeId } from '../models/academic-proposal';
 import {
   Bank,
-  Career,
-  Comienzo,
   Country,
+  DegreeProgram,
   DocumentType,
   EducationalInstitution,
   InitialSurveyCatalogs,
+  Intake,
   LocationCountry,
-  Seminario,
-  Turno,
+  Seminar,
+  Shift,
 } from '../models/catalog.interface';
 
 const DOCUMENT_TYPES: DocumentType[] = [
@@ -41,41 +41,41 @@ export class Catalogs {
     return this.endpoint.getCountryLocations();
   }
 
-  public getCareers(propuestaAcademica: AcademicProposalTypeId): Observable<Career[]> {
-    return this.endpoint.getCareers(propuestaAcademica);
+  public getDegreePrograms(academicProposal: AcademicProposalTypeId): Observable<DegreeProgram[]> {
+    return this.endpoint.getDegreePrograms(academicProposal);
   }
 
-  public getComienzos(idCarrera: number): Observable<Comienzo[]> {
-    return this.endpoint.getComienzos(idCarrera);
+  public getIntakes(degreeProgramId: number): Observable<Intake[]> {
+    return this.endpoint.getIntakes(degreeProgramId);
   }
 
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
     return this.endpoint.getInitialSurveyCatalogs();
   }
 
-  public getBancos(): Observable<Bank[]> {
-    return this.endpoint.getBancos();
+  public getBanks(): Observable<Bank[]> {
+    return this.endpoint.getBanks();
   }
 
-  public getInstituciones(
-    codigoPais: number,
-    codigoEstado: number
+  public getInstitutions(
+    countryCode: number,
+    stateCode: number
   ): Observable<EducationalInstitution[]> {
-    return this.endpoint.getInstituciones(codigoPais, codigoEstado);
+    return this.endpoint.getInstitutions(countryCode, stateCode);
   }
 
-  public getTurnos(idCarrera: number, idProceso: number): Observable<Turno[]> {
-    return this.endpoint.getTurnos(idCarrera, idProceso);
+  public getShifts(degreeProgramId: number, admissionProcessId: number): Observable<Shift[]> {
+    return this.endpoint.getShifts(degreeProgramId, admissionProcessId);
   }
 
-  public getSeminarios(idPrograma: number, idProceso: number): Observable<Seminario[]> {
-    return this.endpoint.getTurnos(idPrograma, idProceso).pipe(
-      map(turnos =>
-        turnos.map(turno => ({
-          idOferta: turno.idOferta,
-          idProceso,
-          nombre: turno.descripcionOferta,
-          fechaComienzo: turno.fechaReferencia,
+  public getSeminars(degreeProgramId: number, admissionProcessId: number): Observable<Seminar[]> {
+    return this.endpoint.getShifts(degreeProgramId, admissionProcessId).pipe(
+      map(shifts =>
+        shifts.map(shift => ({
+          offeringId: shift.offeringId,
+          admissionProcessId: admissionProcessId,
+          name: shift.offeringDescription,
+          startDate: shift.referenceDate,
         }))
       )
     );

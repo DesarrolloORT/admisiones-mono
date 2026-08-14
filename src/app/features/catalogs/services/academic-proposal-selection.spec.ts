@@ -8,53 +8,55 @@ import { AcademicProposalSelection } from './academic-proposal-selection';
 import { Catalogs } from './catalogs';
 
 describe('AcademicProposalSelection', () => {
-  const getCareers = vi.fn();
-  const getComienzos = vi.fn();
-  const getTurnos = vi.fn();
-  const getSeminarios = vi.fn();
+  const getDegreePrograms = vi.fn();
+  const getIntakes = vi.fn();
+  const getShifts = vi.fn();
+  const getSeminars = vi.fn();
   let form: FormGroup<AcademicProposalForm>;
   let selection: AcademicProposalSelection;
 
   beforeEach(() => {
-    getCareers.mockReset().mockReturnValue(
+    getDegreePrograms.mockReset().mockReturnValue(
       of([
         {
-          idProducto: 10,
-          idNivelProducto: 1,
-          nombreProducto: 'Ingeniería',
-          nombreNivelProducto: 'Carrera universitaria',
+          productId: 10,
+          productLevelId: 1,
+          productName: 'Ingeniería',
+          productLevelName: 'Carrera universitaria',
         },
         {
-          idProducto: 20,
-          idNivelProducto: 2,
-          nombreProducto: 'Analista Programador',
-          nombreNivelProducto: 'Tecnicatura',
-          nombreEscuela: 'Facultad de Ingeniería',
+          productId: 20,
+          productLevelId: 2,
+          productName: 'Analista Programador',
+          productLevelName: 'Tecnicatura',
+          schoolName: 'Facultad de Ingeniería',
         },
         {
-          idProceso: 200,
-          idProducto: 30,
-          idNivelProducto: 3,
-          nombreProducto: 'Programa de Asesoramiento Financiero',
-          nombreNivelProducto: 'Actualización profesional',
+          admissionProcessId: 200,
+          productId: 30,
+          productLevelId: 3,
+          productName: 'Programa de Asesoramiento Financiero',
+          productLevelName: 'Actualización profesional',
         },
       ])
     );
-    getComienzos.mockReset().mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto' }]));
-    getTurnos.mockReset().mockReturnValue(
+    getIntakes
+      .mockReset()
+      .mockReturnValue(of([{ admissionProcessId: 200, admissionProcessName: 'Agosto' }]));
+    getShifts.mockReset().mockReturnValue(
       of([
         {
-          idOferta: 300,
-          idTurno: 30,
-          nombreTurno: 'Nocturno',
-          horarioReferencia: '19:00 a 23:00',
+          offeringId: 300,
+          shiftId: 30,
+          shiftName: 'Nocturno',
+          referenceSchedule: '19:00 a 23:00',
         },
       ])
     );
-    getSeminarios.mockReset().mockReturnValue(
+    getSeminars.mockReset().mockReturnValue(
       of([
-        { idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: '19/05/2026' },
-        { idOferta: 301, idProceso: 201, nombre: 'Renta fija', fechaComienzo: null },
+        { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: '19/05/2026' },
+        { offeringId: 301, admissionProcessId: 201, name: 'Renta fija', startDate: null },
       ])
     );
     TestBed.configureTestingModule({
@@ -63,10 +65,10 @@ describe('AcademicProposalSelection', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers,
-            getComienzos,
-            getTurnos,
-            getSeminarios,
+            getDegreePrograms,
+            getIntakes,
+            getShifts,
+            getSeminars,
           },
         },
       ],
@@ -78,60 +80,60 @@ describe('AcademicProposalSelection', () => {
 
   it('loads options following the proposal, career and start cascade', () => {
     expect(selection.proposalOptions().map(option => option.value)).toEqual(['1', '2', '3']);
-    expect(getCareers).not.toHaveBeenCalled();
+    expect(getDegreePrograms).not.toHaveBeenCalled();
 
-    form.controls.tipoPropuesta.setValue('2');
-    expect(getCareers).toHaveBeenCalledWith(2);
-    expect(selection.careerOptions()).toEqual([
+    form.controls.proposalType.setValue('2');
+    expect(getDegreePrograms).toHaveBeenCalledWith(2);
+    expect(selection.degreeProgramOptions()).toEqual([
       { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);
 
-    form.controls.carrera.setValue('20');
-    expect(getComienzos).toHaveBeenCalledWith(20);
-    expect(selection.startOptions()).toEqual([{ value: '200', label: 'Agosto' }]);
+    form.controls.degreeProgram.setValue('20');
+    expect(getIntakes).toHaveBeenCalledWith(20);
+    expect(selection.intakeOptions()).toEqual([{ value: '200', label: 'Agosto' }]);
 
-    form.controls.comienzo.setValue('200');
-    expect(getTurnos).toHaveBeenCalledWith(20, 200);
+    form.controls.intake.setValue('200');
+    expect(getShifts).toHaveBeenCalledWith(20, 200);
     expect(selection.shiftOptions()[0]?.value).toBe('300');
   });
 
   it('clears dependent controls when the proposal changes', () => {
     form.setValue({
-      tipoPropuesta: '1',
-      carrera: '10',
-      comienzo: '200',
-      turno: '300',
-      seminarios: [],
+      proposalType: '1',
+      degreeProgram: '10',
+      intake: '200',
+      shift: '300',
+      seminars: [],
     });
 
-    form.controls.tipoPropuesta.setValue('2');
+    form.controls.proposalType.setValue('2');
 
     expect(form.getRawValue()).toEqual({
-      tipoPropuesta: '2',
-      carrera: '',
-      comienzo: '',
-      turno: '',
-      seminarios: [],
+      proposalType: '2',
+      degreeProgram: '',
+      intake: '',
+      shift: '',
+      seminars: [],
     });
   });
 
   it('exposes the AP terminology only for the professional update proposal', () => {
     expect(selection.isProfessionalUpdate()).toBe(false);
-    expect(selection.terminology().careerLabel).toBe('Carrera');
+    expect(selection.terminology().degreeProgramLabel).toBe('Carrera');
 
-    form.controls.tipoPropuesta.setValue('3');
+    form.controls.proposalType.setValue('3');
 
     expect(selection.isProfessionalUpdate()).toBe(true);
-    expect(selection.terminology().careerLabel).toBe('Programa');
+    expect(selection.terminology().degreeProgramLabel).toBe('Programa');
     expect(selection.terminology().startLabel).toBe('Seminario');
   });
 
   it('loads seminars instead of starts when an AP program is selected', () => {
-    form.controls.tipoPropuesta.setValue('3');
-    form.controls.carrera.setValue('30');
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('30');
 
-    expect(getSeminarios).toHaveBeenCalledWith(30, 200);
-    expect(getComienzos).not.toHaveBeenCalled();
+    expect(getSeminars).toHaveBeenCalledWith(30, 200);
+    expect(getIntakes).not.toHaveBeenCalled();
     expect(selection.seminarOptions()).toEqual([
       { value: '300', label: 'Marco legal', description: '19/05/2026' },
       { value: '301', label: 'Renta fija', description: undefined },
@@ -142,126 +144,126 @@ describe('AcademicProposalSelection', () => {
   it('loads seminars when an AP program was prefilled before catalogs arrived', () => {
     const resumedForm = createForm();
     resumedForm.setValue({
-      tipoPropuesta: '3',
-      carrera: '30',
-      comienzo: '200',
-      turno: '300',
-      seminarios: ['300', '301'],
+      proposalType: '3',
+      degreeProgram: '30',
+      intake: '200',
+      shift: '300',
+      seminars: ['300', '301'],
     });
-    getSeminarios.mockClear();
+    getSeminars.mockClear();
 
     selection.connect(resumedForm);
 
-    expect(getSeminarios).toHaveBeenCalledWith(30, 200);
+    expect(getSeminars).toHaveBeenCalledWith(30, 200);
     expect(selection.seminarOptions()).toHaveLength(2);
   });
 
   it('clears the selected seminars when the program changes', () => {
-    form.controls.tipoPropuesta.setValue('3');
-    form.controls.carrera.setValue('30');
-    form.controls.seminarios.setValue(['300']);
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('30');
+    form.controls.seminars.setValue(['300']);
 
-    form.controls.carrera.setValue('');
+    form.controls.degreeProgram.setValue('');
 
-    expect(form.controls.seminarios.value).toEqual([]);
+    expect(form.controls.seminars.value).toEqual([]);
     expect(selection.seminarOptions()).toEqual([]);
   });
 
   it('swaps required validators between start/shift and seminars per proposal type', () => {
-    form.controls.tipoPropuesta.setValue('3');
+    form.controls.proposalType.setValue('3');
 
-    expect(form.controls.comienzo.hasValidator).toBeDefined();
-    expect(form.controls.comienzo.valid).toBe(true);
-    expect(form.controls.turno.valid).toBe(true);
-    expect(form.controls.seminarios.hasError('required')).toBe(true);
+    expect(form.controls.intake.hasValidator).toBeDefined();
+    expect(form.controls.intake.valid).toBe(true);
+    expect(form.controls.shift.valid).toBe(true);
+    expect(form.controls.seminars.hasError('required')).toBe(true);
 
-    form.controls.tipoPropuesta.setValue('1');
+    form.controls.proposalType.setValue('1');
 
-    expect(form.controls.comienzo.hasError('required')).toBe(true);
-    expect(form.controls.turno.hasError('required')).toBe(true);
-    expect(form.controls.seminarios.hasError('required')).toBe(false);
+    expect(form.controls.intake.hasError('required')).toBe(true);
+    expect(form.controls.shift.hasError('required')).toBe(true);
+    expect(form.controls.seminars.hasError('required')).toBe(false);
   });
 
   // Sin `tieneSeminario` la oferta del programa es un horario y el select es simple.
   it('names the AP offering field after the seminars flag of the program', () => {
-    form.controls.tipoPropuesta.setValue('3');
-    form.controls.carrera.setValue('30');
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('30');
 
     expect(selection.allowsMultipleSeminars()).toBe(false);
     expect(selection.seminarLabel()).toBe('Horario');
     expect(selection.seminarErrorText()).toBe('Seleccioná un horario');
 
-    getCareers.mockReturnValue(
+    getDegreePrograms.mockReturnValue(
       of([
         {
-          idProceso: 200,
-          idProducto: 30,
-          idNivelProducto: 3,
-          nombreProducto: 'Programa de Asesoramiento Financiero',
-          nombreNivelProducto: 'Actualización profesional',
-          tieneSeminario: true,
+          admissionProcessId: 200,
+          productId: 30,
+          productLevelId: 3,
+          productName: 'Programa de Asesoramiento Financiero',
+          productLevelName: 'Actualización profesional',
+          hasSeminar: true,
         },
       ])
     );
     selection.setProposalType('3');
-    form.controls.carrera.setValue('30');
+    form.controls.degreeProgram.setValue('30');
 
     expect(selection.seminarLabel()).toBe('Seminario');
     expect(selection.seminarErrorText()).toBe('Seleccioná al menos un seminario');
   });
 
   it('preselects the only option of each catalog without touching an existing selection', () => {
-    form.controls.tipoPropuesta.setValue('1');
-    form.controls.carrera.setValue('10');
+    form.controls.proposalType.setValue('1');
+    form.controls.degreeProgram.setValue('10');
     TestBed.tick();
 
     // Un solo comienzo se precarga y encadena el turno, que también viene solo.
-    expect(form.controls.comienzo.value).toBe('200');
-    expect(form.controls.turno.value).toBe('300');
+    expect(form.controls.intake.value).toBe('200');
+    expect(form.controls.shift.value).toBe('300');
 
-    getComienzos.mockReturnValue(
+    getIntakes.mockReturnValue(
       of([
-        { idProceso: 200, nombreProceso: 'Agosto' },
-        { idProceso: 201, nombreProceso: 'Marzo' },
+        { admissionProcessId: 200, admissionProcessName: 'Agosto' },
+        { admissionProcessId: 201, admissionProcessName: 'Marzo' },
       ])
     );
-    form.controls.carrera.setValue('20');
+    form.controls.degreeProgram.setValue('20');
     TestBed.tick();
 
-    expect(form.controls.comienzo.value).toBe('');
+    expect(form.controls.intake.value).toBe('');
   });
 
   it('preselects a single seminar but keeps the seminars restored on resume', () => {
-    getSeminarios.mockReturnValue(
-      of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }])
+    getSeminars.mockReturnValue(
+      of([{ offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null }])
     );
-    form.controls.tipoPropuesta.setValue('3');
-    form.controls.carrera.setValue('30');
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('30');
     TestBed.tick();
 
-    expect(form.controls.seminarios.value).toEqual(['300']);
+    expect(form.controls.seminars.value).toEqual(['300']);
 
     const resumedForm = createForm();
     resumedForm.setValue({
-      tipoPropuesta: '3',
-      carrera: '30',
-      comienzo: '',
-      turno: '',
-      seminarios: ['301'],
+      proposalType: '3',
+      degreeProgram: '30',
+      intake: '',
+      shift: '',
+      seminars: ['301'],
     });
     selection.connect(resumedForm);
     TestBed.tick();
 
-    expect(resumedForm.controls.seminarios.value).toEqual(['301']);
+    expect(resumedForm.controls.seminars.value).toEqual(['301']);
   });
 });
 
 function createForm(): FormGroup<AcademicProposalForm> {
   return new FormGroup<AcademicProposalForm>({
-    tipoPropuesta: new FormControl('', { nonNullable: true }),
-    carrera: new FormControl('', { nonNullable: true }),
-    comienzo: new FormControl('', { nonNullable: true }),
-    turno: new FormControl('', { nonNullable: true }),
-    seminarios: new FormControl<string[]>([], { nonNullable: true }),
+    proposalType: new FormControl('', { nonNullable: true }),
+    degreeProgram: new FormControl('', { nonNullable: true }),
+    intake: new FormControl('', { nonNullable: true }),
+    shift: new FormControl('', { nonNullable: true }),
+    seminars: new FormControl<string[]>([], { nonNullable: true }),
   });
 }

@@ -1,5 +1,5 @@
 import {
-  getAcademicCareerOptions,
+  getAcademicDegreeProgramOptions,
   getAcademicProposalTerminology,
   getAcademicProposalTypes,
   isProfessionalUpdateLevel,
@@ -8,19 +8,19 @@ import {
 } from './academic-proposal';
 
 describe('academic proposal options', () => {
-  const careers = [
+  const degreePrograms = [
     {
-      idProducto: 10,
-      idNivelProducto: 1,
-      nombreProducto: 'Ingeniería',
-      nombreNivelProducto: 'Carrera universitaria',
+      productId: 10,
+      productLevelId: 1,
+      productName: 'Ingeniería',
+      productLevelName: 'Carrera universitaria',
     },
     {
-      idProducto: 20,
-      idNivelProducto: 2,
-      nombreProducto: 'Analista Programador',
-      nombreNivelProducto: 'Tecnicatura',
-      nombreEscuela: 'Facultad de Ingeniería',
+      productId: 20,
+      productLevelId: 2,
+      productName: 'Analista Programador',
+      productLevelName: 'Tecnicatura',
+      schoolName: 'Facultad de Ingeniería',
     },
   ];
 
@@ -29,7 +29,7 @@ describe('academic proposal options', () => {
   });
 
   it('filters careers by proposal type', () => {
-    expect(getAcademicCareerOptions(careers, '2')).toEqual([
+    expect(getAcademicDegreeProgramOptions(degreePrograms, '2')).toEqual([
       { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);
   });
@@ -45,10 +45,10 @@ describe('academic proposal options', () => {
   });
 
   it('uses Programa/Seminario terminology only for professional update', () => {
-    expect(getAcademicProposalTerminology('3').careerLabel).toBe('Programa');
+    expect(getAcademicProposalTerminology('3').degreeProgramLabel).toBe('Programa');
     expect(getAcademicProposalTerminology('3').startLabel).toBe('Seminario');
     for (const value of ['1', '2', '', '9']) {
-      expect(getAcademicProposalTerminology(value).careerLabel).toBe('Carrera');
+      expect(getAcademicProposalTerminology(value).degreeProgramLabel).toBe('Carrera');
       expect(getAcademicProposalTerminology(value).startLabel).toBe('Comienzo');
     }
   });
@@ -56,10 +56,10 @@ describe('academic proposal options', () => {
   it('maps a seminar to a select option with its start date as description', () => {
     expect(
       toAcademicSeminarOption({
-        idOferta: 300,
-        idProceso: 200,
-        nombre: 'Marco legal y tributario',
-        fechaComienzo: '19/05/2026',
+        offeringId: 300,
+        admissionProcessId: 200,
+        name: 'Marco legal y tributario',
+        startDate: '19/05/2026',
       })
     ).toEqual({ value: '300', label: 'Marco legal y tributario', description: '19/05/2026' });
   });
@@ -67,10 +67,10 @@ describe('academic proposal options', () => {
   it('shows only the date when the catalog sends an ISO date with time', () => {
     expect(
       toAcademicSeminarOption({
-        idOferta: 300,
-        idProceso: 200,
-        nombre: 'Taller de equipos y liderazgo',
-        fechaComienzo: '2026-10-16T00:00:00',
+        offeringId: 300,
+        admissionProcessId: 200,
+        name: 'Taller de equipos y liderazgo',
+        startDate: '2026-10-16T00:00:00',
       }).description
     ).toBe('16/10/2026');
   });
@@ -78,10 +78,10 @@ describe('academic proposal options', () => {
   it('omits the description when the seminar has no start date', () => {
     expect(
       toAcademicSeminarOption({
-        idOferta: 300,
-        idProceso: 200,
-        nombre: 'Renta fija',
-        fechaComienzo: null,
+        offeringId: 300,
+        admissionProcessId: 200,
+        name: 'Renta fija',
+        startDate: null,
       }).description
     ).toBeUndefined();
   });

@@ -136,46 +136,46 @@ export class InscripcionSurveyOptionsFacade {
         error: () => {
           this.catalogError.set('No se pudieron cargar los catálogos de encuesta inicial.');
           this.applyInitialSurveyCatalogs({
-            educacion: {
-              ubicacionesUltimoAnioSecundaria: [],
-              aniosBachillerato: [],
-              estadosEducacionSuperiorPrevia: [],
-              universidades: [],
-              nivelesFormacionTutores: [],
+            education: {
+              lastSecondaryYearLocations: [],
+              highSchoolYears: [],
+              previousHigherEducationOptions: [],
+              universities: [],
+              guardianEducationLevels: [],
             },
-            decisionAcademica: {
-              aniosEducacionMediaSuperior: [],
-              apoyosDecision: [],
-              nivelesDecision: [],
-              universidades: [],
-              motivosEleccionOrt: [],
+            academicDecision: {
+              upperSecondaryYears: [],
+              decisionSupports: [],
+              decisionLevels: [],
+              universities: [],
+              ortChoiceReasons: [],
             },
-            experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+            ortExperience: { ratings: [], ortAdvertisements: [] },
           });
         },
       });
   }
 
   private applyInitialSurveyCatalogs(catalogs: InitialSurveyCatalogs): void {
-    const education = catalogs.educacion;
-    const decision = catalogs.decisionAcademica;
-    const experience = catalogs.experienciaOrt;
+    const education = catalogs.education;
+    const decision = catalogs.academicDecision;
+    const experience = catalogs.ortExperience;
 
-    this.previousCareerOptions.set(toCatalogOptions(education.estadosEducacionSuperiorPrevia));
-    this.educationLevelOptions.set(toCatalogOptions(education.nivelesFormacionTutores));
-    this.schoolPlaceOptions.set(toCatalogOptions(education.ubicacionesUltimoAnioSecundaria));
-    this.supportOptions.set(toCatalogOptions(decision.apoyosDecision));
-    this.decisionYearOptions.set(toCatalogOptions(decision.aniosEducacionMediaSuperior));
-    this.decisionLevelOptions.set(toCatalogOptions(decision.nivelesDecision));
-    this.motivesOptions.set(toCatalogOptions(decision.motivosEleccionOrt));
-    this.universityOptions.set(toCatalogOptions(decision.universidades));
-    this.higherEducationUniversityOptions.set(toCatalogOptions(education.universidades));
-    this.advertisingOptions.set(toCatalogOptions(experience.publicidadesOrt));
-    this.baccalaureateYears.set(education.aniosBachillerato);
-    if (experience.valoraciones.length > 0) {
+    this.previousCareerOptions.set(toCatalogOptions(education.previousHigherEducationOptions));
+    this.educationLevelOptions.set(toCatalogOptions(education.guardianEducationLevels));
+    this.schoolPlaceOptions.set(toCatalogOptions(education.lastSecondaryYearLocations));
+    this.supportOptions.set(toCatalogOptions(decision.decisionSupports));
+    this.decisionYearOptions.set(toCatalogOptions(decision.upperSecondaryYears));
+    this.decisionLevelOptions.set(toCatalogOptions(decision.decisionLevels));
+    this.motivesOptions.set(toCatalogOptions(decision.ortChoiceReasons));
+    this.universityOptions.set(toCatalogOptions(decision.universities));
+    this.higherEducationUniversityOptions.set(toCatalogOptions(education.universities));
+    this.advertisingOptions.set(toCatalogOptions(experience.ortAdvertisements));
+    this.baccalaureateYears.set(education.highSchoolYears);
+    if (experience.ratings.length > 0) {
       this.ratingLabels.set(
         Object.fromEntries(
-          experience.valoraciones.map(({ id, label }) => [
+          experience.ratings.map(({ id, label }) => [
             Number(id),
             `${id} ${Number(id) === 1 ? 'estrella' : 'estrellas'}: ${label}`,
           ])
@@ -197,12 +197,12 @@ export class InscripcionSurveyOptionsFacade {
   }
 
   private applyDepartmentOptions(countries: readonly LocationCountry[]): void {
-    const uruguay = countries.find(country => country.codigoPais === URUGUAY_COUNTRY_CODE) ?? null;
-    this.uruguayCountryCode = uruguay?.codigoPais ?? null;
+    const uruguay = countries.find(country => country.countryCode === URUGUAY_COUNTRY_CODE) ?? null;
+    this.uruguayCountryCode = uruguay?.countryCode ?? null;
     this.departmentOptions.set(
-      (uruguay?.estado ?? []).map(state => ({
-        value: state.codigoEstado.toString(),
-        label: state.nombre,
+      (uruguay?.states ?? []).map(state => ({
+        value: state.stateCode.toString(),
+        label: state.name,
       }))
     );
     this.callbacks.onOptionsChanged();
@@ -217,7 +217,7 @@ export class InscripcionSurveyOptionsFacade {
       return;
     }
     this.catalogs
-      .getInstituciones(this.uruguayCountryCode, codigoEstado)
+      .getInstitutions(this.uruguayCountryCode, codigoEstado)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: institutions => {

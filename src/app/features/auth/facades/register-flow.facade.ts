@@ -339,9 +339,9 @@ export class RegisterFlowFacade {
       sexo: '',
     });
     this.personalForm.controls.location.setValue({
-      codigoPais: null,
-      codigoEstado: null,
-      codigoCiudad: null,
+      countryCode: null,
+      stateCode: null,
+      cityCode: null,
     });
   }
 

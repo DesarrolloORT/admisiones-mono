@@ -137,9 +137,9 @@ export class InscripcionPaymentFacade {
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
-      selectedCareer: this.proposal.academicForm.controls.carrera.value,
-      selectedStart: this.proposal.academicForm.controls.comienzo.value,
-      selectedTurno: this.proposal.academicForm.controls.turno.value,
+      selectedCareer: this.proposal.academicForm.controls.degreeProgram.value,
+      selectedStart: this.proposal.academicForm.controls.intake.value,
+      selectedTurno: this.proposal.academicForm.controls.shift.value,
       careerOptions: this.proposal.careerOptions(),
       startOptions: this.proposal.startOptions(),
       turnoOptions: this.proposal.turnoOptions(),
@@ -191,7 +191,7 @@ export class InscripcionPaymentFacade {
     this.banksRequested = true;
     this.loadingBanks.set(true);
     this.catalogs
-      .getBancos()
+      .getBanks()
       .pipe(
         finalize(() => this.loadingBanks.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -296,15 +296,15 @@ export class InscripcionPaymentFacade {
     if (responseSummary.length) return responseSummary;
 
     const selectedOffers = new Set(
-      this.proposal.academicForm.controls.seminarios.value.map(Number).filter(isPositiveInteger)
+      this.proposal.academicForm.controls.seminars.value.map(Number).filter(isPositiveInteger)
     );
     return this.proposal.selection
       .seminars()
-      .filter(seminario => selectedOffers.has(seminario.idOferta))
+      .filter(seminario => selectedOffers.has(seminario.offeringId))
       .map(seminario => ({
         idInscripcion: null,
-        nombre: seminario.nombre,
-        comienzo: formatPaymentDeadline(seminario.fechaComienzo),
+        nombre: seminario.name,
+        comienzo: formatPaymentDeadline(seminario.startDate),
         turno: 'No informado',
       }));
   }
@@ -411,11 +411,11 @@ export class InscripcionPaymentFacade {
   // pantalla degrada a lo que ya tenga.
   private loadDetail(apply: (detail: InscripcionDetail) => void): void {
     const idProducto = this.resolveCatalogId(
-      this.proposal.academicForm.controls.carrera.value,
+      this.proposal.academicForm.controls.degreeProgram.value,
       'idProducto'
     );
     const idProceso = this.resolveCatalogId(
-      this.proposal.academicForm.controls.comienzo.value,
+      this.proposal.academicForm.controls.intake.value,
       'idProceso'
     );
     if (idProducto === null || idProceso === null) return;

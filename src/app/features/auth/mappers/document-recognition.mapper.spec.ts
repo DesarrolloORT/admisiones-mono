@@ -33,9 +33,9 @@ describe('document recognition mapper', () => {
       resolveStateCodeFromBirthplace(
         [
           {
-            codigoPais: 1,
-            nombre: 'Uruguay',
-            estado: [{ codigoPais: 1, codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 10, name: 'MONTEVIDEO' }],
           },
         ],
         1,
@@ -90,9 +90,9 @@ describe('document recognition mapper', () => {
       resolveStateCodeFromBirthplace(
         [
           {
-            codigoPais: 1,
-            nombre: 'Uruguay',
-            estado: [{ codigoPais: 1, codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 10, name: 'MONTEVIDEO' }],
           },
         ],
         1,

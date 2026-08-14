@@ -22,11 +22,11 @@ describe('ScholarshipProposalFacade', () => {
     expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('info-postulacion');
 
     facade.academicForm.setValue({
-      tipoPropuesta: '1',
-      carrera: '20',
-      comienzo: '200',
-      turno: '300',
-      seminarios: [],
+      proposalType: '1',
+      degreeProgram: '20',
+      intake: '200',
+      shift: '300',
+      seminars: [],
     });
     facade.continue();
 

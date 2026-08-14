@@ -197,10 +197,10 @@ describe('InscripcionProcessFacade', () => {
 
     TestBed.tick();
 
-    expect(proposal.academicForm.controls.tipoPropuesta.value).toBe('3');
-    expect(proposal.academicForm.controls.carrera.value).toBe('21');
-    expect(proposal.academicForm.controls.turno.value).toBe('310');
-    expect(proposal.academicForm.controls.seminarios.value).toEqual(['310', '311']);
+    expect(proposal.academicForm.controls.proposalType.value).toBe('3');
+    expect(proposal.academicForm.controls.degreeProgram.value).toBe('21');
+    expect(proposal.academicForm.controls.shift.value).toBe('310');
+    expect(proposal.academicForm.controls.seminars.value).toEqual(['310', '311']);
     expect(proposal.setProposalType).toHaveBeenCalledWith('3');
     expect(proposal.selection.loadSeminars).toHaveBeenCalledWith(21);
     expect(proposal.disableForResume).toHaveBeenCalledOnce();
@@ -498,17 +498,17 @@ function createFacade(
     initialized: signal(initialized),
     catalogError: signal<string | null>(null),
     academicForm: new FormGroup({
-      tipoPropuesta: new FormControl('', { nonNullable: true }),
-      carrera: new FormControl('', { nonNullable: true }),
-      comienzo: new FormControl('', { nonNullable: true }),
-      turno: new FormControl('', { nonNullable: true }),
-      seminarios: new FormControl<string[]>([], { nonNullable: true }),
+      proposalType: new FormControl('', { nonNullable: true }),
+      degreeProgram: new FormControl('', { nonNullable: true }),
+      intake: new FormControl('', { nonNullable: true }),
+      shift: new FormControl('', { nonNullable: true }),
+      seminars: new FormControl<string[]>([], { nonNullable: true }),
     }),
     setProposalType: vi.fn(),
     selection: {
       loadSeminars: vi.fn(),
       // Refleja al servicio real: el tipo de propuesta del form manda.
-      isProfessionalUpdate: () => proposal.academicForm.controls.tipoPropuesta.value === '3',
+      isProfessionalUpdate: () => proposal.academicForm.controls.proposalType.value === '3',
     },
     continue: vi.fn(),
     disableForResume: vi.fn(),

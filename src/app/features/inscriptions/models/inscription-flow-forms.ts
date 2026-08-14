@@ -47,15 +47,15 @@ export function disallowedBachilleratoForUniversity(
 export function createInscripcionForms() {
   return {
     academicForm: new FormGroup({
-      tipoPropuesta: new FormControl('', {
+      proposalType: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
-      carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
-      comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
-      turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      degreeProgram: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      intake: new FormControl('', { nonNullable: true, validators: Validators.required }),
+      shift: new FormControl('', { nonNullable: true, validators: Validators.required }),
       // Solo aplica a Actualización profesional
-      seminarios: new FormControl<string[]>([], { nonNullable: true }),
+      seminars: new FormControl<string[]>([], { nonNullable: true }),
     }),
     educationForm: new FormGroup({
       cursaSecundaria: new FormControl('', {

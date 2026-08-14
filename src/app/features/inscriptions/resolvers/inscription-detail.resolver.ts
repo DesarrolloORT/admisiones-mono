@@ -7,7 +7,7 @@ import {
   ACADEMIC_PROPOSAL_TYPE_IDS,
   getAcademicProposalTypeByLevel,
 } from '../../catalogs/models/academic-proposal';
-import type { Career } from '../../catalogs/models/catalog.interface';
+import type { DegreeProgram } from '../../catalogs/models/catalog.interface';
 import { Catalogs } from '../../catalogs/services/catalogs';
 import type { InscripcionDetail } from '../models/inscription-detail';
 import type { InscripcionEntryResolved } from '../models/inscription-entry';
@@ -51,7 +51,7 @@ export const inscriptionDetailResolver: ResolveFn<InscripcionEntryResolved> = ro
   const detail$ = preEnrollment ? of(null) : loadDetail(idProducto, idProceso, request.estado);
   // El panel ya mandó el nivel por `nivel`; solo cuando falta hay que reconstruirlo, y eso
   // cuesta una consulta por tipo de propuesta.
-  const careers$ = request.idNivelProducto === null ? loadCareers() : of<Career[]>([]);
+  const careers$ = request.idNivelProducto === null ? loadCareers() : of<DegreeProgram[]>([]);
 
   return forkJoin({ detail: detail$, careers: careers$ }).pipe(
     map(({ detail, careers }) => {
@@ -109,17 +109,17 @@ function loadDetail(
 }
 
 /** Carreras de todas las propuestas, solo para deducir el nivel del producto. */
-function loadCareers(): Observable<Career[]> {
+function loadCareers(): Observable<DegreeProgram[]> {
   const catalogs = inject(Catalogs);
-  return forkJoin(ACADEMIC_PROPOSAL_TYPE_IDS.map(type => catalogs.getCareers(type))).pipe(
+  return forkJoin(ACADEMIC_PROPOSAL_TYPE_IDS.map(type => catalogs.getDegreePrograms(type))).pipe(
     map(groups => groups.flat()),
     catchError(() => of([]))
   );
 }
 
 /** El Detalle es la fuente preferida del producto; con el Detalle caído, el param. */
-function findProductLevel(careers: Career[], idProducto: number): number | null {
-  return careers.find(career => career.idProducto === idProducto)?.idNivelProducto ?? null;
+function findProductLevel(careers: DegreeProgram[], idProducto: number): number | null {
+  return careers.find(career => career.productId === idProducto)?.productLevelId ?? null;
 }
 
 function toPositiveInteger(value: string | null): number | null {

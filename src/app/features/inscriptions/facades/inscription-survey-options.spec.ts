@@ -14,7 +14,7 @@ import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 describe('InscripcionSurveyOptionsFacade', () => {
   const getInitialSurveyCatalogs = vi.fn();
   const getCountryLocations = vi.fn();
-  const getInstituciones = vi.fn();
+  const getInstitutions = vi.fn();
   const onOptionsChanged = vi.fn();
   const onInitialCatalogsApplied = vi.fn();
   let isSurveyStepActive: WritableSignal<boolean>;
@@ -23,7 +23,7 @@ describe('InscripcionSurveyOptionsFacade', () => {
     isSurveyStepActive = signal(true);
     getInitialSurveyCatalogs.mockReset().mockReturnValue(of(emptyCatalogs()));
     getCountryLocations.mockReset().mockReturnValue(of([]));
-    getInstituciones.mockReset().mockReturnValue(of([]));
+    getInstitutions.mockReset().mockReturnValue(of([]));
     onOptionsChanged.mockReset();
     onInitialCatalogsApplied.mockReset();
   });
@@ -32,9 +32,9 @@ describe('InscripcionSurveyOptionsFacade', () => {
     getInitialSurveyCatalogs.mockReturnValue(
       of({
         ...emptyCatalogs(),
-        experienciaOrt: {
-          valoraciones: [{ id: '1', label: 'Malo' }],
-          publicidadesOrt: [{ id: 7, label: 'Redes' }],
+        ortExperience: {
+          ratings: [{ id: '1', label: 'Malo' }],
+          ortAdvertisements: [{ id: 7, label: 'Redes' }],
         },
       })
     );
@@ -65,18 +65,18 @@ describe('InscripcionSurveyOptionsFacade', () => {
     getCountryLocations.mockReturnValue(
       of([
         {
-          codigoPais: 1,
-          nombre: 'Uruguay',
-          estado: [{ codigoPais: 1, codigoEstado: 5, nombre: 'Montevideo' }],
+          countryCode: 1,
+          name: 'Uruguay',
+          states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
         },
         {
-          codigoPais: 2,
-          nombre: 'Argentina',
-          estado: [{ codigoPais: 2, codigoEstado: 9, nombre: 'Buenos Aires' }],
+          countryCode: 2,
+          name: 'Argentina',
+          states: [{ countryCode: 2, stateCode: 9, name: 'Buenos Aires' }],
         },
       ] satisfies LocationCountry[])
     );
-    getInstituciones.mockReturnValue(of([{ id: 9, label: 'Liceo 1' }]));
+    getInstitutions.mockReturnValue(of([{ id: 9, label: 'Liceo 1' }]));
 
     const options = createFacade();
     const educationForm = TestBed.inject(InscripcionFormsStore).educationForm;
@@ -86,7 +86,7 @@ describe('InscripcionSurveyOptionsFacade', () => {
     educationForm.controls.institucionEducativa.setValue('999');
     educationForm.controls.departamento.setValue('5');
 
-    expect(getInstituciones).toHaveBeenCalledWith(1, 5);
+    expect(getInstitutions).toHaveBeenCalledWith(1, 5);
     expect(options.institutionOptions()).toEqual([{ value: '9', label: 'Liceo 1' }]);
     expect(educationForm.controls.institucionEducativa.value).toBe('');
   });
@@ -129,7 +129,7 @@ describe('InscripcionSurveyOptionsFacade', () => {
         InscripcionSurveyOptionsFacade,
         {
           provide: Catalogs,
-          useValue: { getInitialSurveyCatalogs, getCountryLocations, getInstituciones },
+          useValue: { getInitialSurveyCatalogs, getCountryLocations, getInstitutions },
         },
       ],
     });
@@ -141,21 +141,21 @@ describe('InscripcionSurveyOptionsFacade', () => {
 
   function emptyCatalogs(): InitialSurveyCatalogs {
     return {
-      educacion: {
-        ubicacionesUltimoAnioSecundaria: [],
-        aniosBachillerato: [],
-        estadosEducacionSuperiorPrevia: [],
-        universidades: [],
-        nivelesFormacionTutores: [],
+      education: {
+        lastSecondaryYearLocations: [],
+        highSchoolYears: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
       },
-      decisionAcademica: {
-        aniosEducacionMediaSuperior: [],
-        apoyosDecision: [],
-        nivelesDecision: [],
-        universidades: [],
-        motivosEleccionOrt: [],
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
       },
-      experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
     };
   }
 });

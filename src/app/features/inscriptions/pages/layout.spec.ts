@@ -50,49 +50,51 @@ describe('Layout', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: vi.fn().mockReturnValue(
+            getDegreePrograms: vi.fn().mockReturnValue(
               of([
                 {
-                  idProducto: 20,
-                  idNivelProducto: 1,
-                  nombreProducto: 'Ingeniería en Sistemas',
-                  nombreNivelProducto: 'Carrera universitaria',
+                  productId: 20,
+                  productLevelId: 1,
+                  productName: 'Ingeniería en Sistemas',
+                  productLevelName: 'Carrera universitaria',
                 },
               ])
             ),
-            getComienzos: vi
+            getIntakes: vi
               .fn()
-              .mockReturnValue(of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }])),
+              .mockReturnValue(
+                of([{ admissionProcessId: 200, admissionProcessName: 'Agosto 2026' }])
+              ),
             getCountryLocations: vi.fn().mockReturnValue(of([])),
-            getBancos: vi.fn().mockReturnValue(of([])),
+            getBanks: vi.fn().mockReturnValue(of([])),
             getInitialSurveyCatalogs: vi.fn().mockReturnValue(
               of({
-                educacion: {
-                  ubicacionesUltimoAnioSecundaria: [],
-                  aniosBachillerato: [],
-                  estadosEducacionSuperiorPrevia: [
+                education: {
+                  lastSecondaryYearLocations: [],
+                  highSchoolYears: [],
+                  previousHigherEducationOptions: [
                     { id: 3, label: 'No cursé estudios superiores' },
                   ],
-                  universidades: [],
-                  nivelesFormacionTutores: [{ id: 5, label: 'Universitaria completa' }],
+                  universities: [],
+                  guardianEducationLevels: [{ id: 5, label: 'Universitaria completa' }],
                 },
-                decisionAcademica: {
-                  aniosEducacionMediaSuperior: [{ id: 2, label: 'Prestigio académico' }],
-                  apoyosDecision: [{ id: 5, label: 'Familia' }],
-                  nivelesDecision: [],
-                  universidades: [],
-                  motivosEleccionOrt: [],
+                academicDecision: {
+                  upperSecondaryYears: [{ id: 2, label: 'Prestigio académico' }],
+                  decisionSupports: [{ id: 5, label: 'Familia' }],
+                  decisionLevels: [],
+                  universities: [],
+                  ortChoiceReasons: [],
                 },
-                experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+                ortExperience: { ratings: [], ortAdvertisements: [] },
               })
             ),
-            getTurnos: vi.fn().mockReturnValue(
+            getShifts: vi.fn().mockReturnValue(
               of([
                 {
-                  idOferta: 300,
-                  idTurno: 10,
-                  nombreTurno: 'Nocturno',
-                  horarioReferencia: '19:00 a 23:00',
+                  offeringId: 300,
+                  shiftId: 10,
+                  shiftName: 'Nocturno',
+                  referenceSchedule: '19:00 a 23:00',
                 },
               ])
             ),

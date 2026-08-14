@@ -79,19 +79,19 @@ describe('PersonalData', () => {
             getCountryLocations: vi.fn().mockReturnValue(
               of([
                 {
-                  codigoPais: 1,
-                  nombre: 'Uruguay',
-                  estado: [
+                  countryCode: 1,
+                  name: 'Uruguay',
+                  states: [
                     {
-                      codigoPais: 1,
-                      codigoEstado: 10,
-                      nombre: 'Montevideo',
-                      ciudad: [
+                      countryCode: 1,
+                      stateCode: 10,
+                      name: 'Montevideo',
+                      cities: [
                         {
-                          codigoPais: 1,
-                          codigoEstado: 10,
-                          codigoCiudad: 100,
-                          nombre: 'Montevideo',
+                          countryCode: 1,
+                          stateCode: 10,
+                          cityCode: 100,
+                          name: 'Montevideo',
                         },
                       ],
                     },

@@ -62,7 +62,7 @@ const emptySurvey: InscripcionInitialSurvey = {
 describe('inscription flow mappers', () => {
   it('maps every initial survey contract field when building the payload', () => {
     const forms = createInscripcionForms();
-    forms.academicForm.patchValue({ carrera: '20', comienzo: '200' });
+    forms.academicForm.patchValue({ degreeProgram: '20', intake: '200' });
     forms.educationForm.patchValue({
       cursaSecundaria: 'cursando',
       anioSecundaria: '11',
@@ -309,7 +309,7 @@ describe('inscription flow mappers', () => {
 
     expect(buildConfirmPreEnrollmentPayload(forms)).toBeNull();
 
-    forms.academicForm.controls.turno.setValue('300');
+    forms.academicForm.controls.shift.setValue('300');
     forms.regulationForm.controls.aceptaReglamento.setValue(true);
 
     expect(buildConfirmPreEnrollmentPayload(forms)).toEqual({
@@ -325,7 +325,7 @@ describe('inscription flow mappers', () => {
 
     expect(buildConfirmPreEnrollmentPayload(forms, true)).toBeNull();
 
-    forms.academicForm.controls.seminarios.setValue(['300', '301']);
+    forms.academicForm.controls.seminars.setValue(['300', '301']);
     forms.workForm.controls.isCorporate.setValue(isCorporate);
 
     expect(buildConfirmPreEnrollmentPayload(forms, true)).toEqual({
@@ -400,15 +400,15 @@ describe('inscription flow mappers', () => {
     );
 
     // El paso 1 queda virgen; el resto de la encuesta sí se patchea.
-    expect(forms.academicForm.controls.carrera.value).toBe('');
-    expect(forms.academicForm.controls.comienzo.value).toBe('');
-    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('');
+    expect(forms.academicForm.controls.degreeProgram.value).toBe('');
+    expect(forms.academicForm.controls.intake.value).toBe('');
+    expect(forms.academicForm.controls.proposalType.value).toBe('');
     expect(forms.educationForm.controls.anioSecundaria.value).toBe('6');
   });
 
   it('keeps the current proposal type when the survey level cannot be resolved', () => {
     const forms = createInscripcionForms();
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.proposalType.setValue('3');
 
     const proposalType = patchBackendSurveyForms(
       { ...emptySurvey, carreraId: 20 },
@@ -417,8 +417,8 @@ describe('inscription flow mappers', () => {
     );
 
     expect(proposalType).toBe('3');
-    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('3');
-    expect(forms.academicForm.controls.carrera.value).toBe('20');
+    expect(forms.academicForm.controls.proposalType.value).toBe('3');
+    expect(forms.academicForm.controls.degreeProgram.value).toBe('20');
   });
 
   it('derives the proposal type from the careers catalog when the survey has no level', () => {
@@ -431,27 +431,27 @@ describe('inscription flow mappers', () => {
         forms,
         careers: [
           {
-            idProducto: 20,
-            idNivelProducto: 2,
-            nombreProducto: 'Tecnicatura',
-            nombreNivelProducto: 'Terciaria',
+            productId: 20,
+            productLevelId: 2,
+            productName: 'Tecnicatura',
+            productLevelName: 'Terciaria',
           },
         ],
       }
     );
 
     expect(proposalType).toBe('2');
-    expect(forms.academicForm.controls.tipoPropuesta.value).toBe('2');
+    expect(forms.academicForm.controls.proposalType.value).toBe('2');
   });
 
   it('prefers the survey level over the careers catalog and blanks unknown levels', () => {
     const forms = createInscripcionForms();
     const careers = [
       {
-        idProducto: 20,
-        idNivelProducto: 2,
-        nombreProducto: 'Tecnicatura',
-        nombreNivelProducto: 'Terciaria',
+        productId: 20,
+        productLevelId: 2,
+        productName: 'Tecnicatura',
+        productLevelName: 'Terciaria',
       },
     ];
 

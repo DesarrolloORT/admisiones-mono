@@ -121,8 +121,8 @@
         [id]="'profile-country'"
         (selectionChange)="onCountryChange()">
         <ort-option value="">Seleccioná...</ort-option>
-        @for (country of locations(); track country.codigoPais) {
-        <ort-option [value]="country.codigoPais.toString()">{{ country.nombre }}</ort-option>
+        @for (country of locations(); track country.countryCode) {
+        <ort-option [value]="country.countryCode.toString()">{{ country.name }}</ort-option>
         }
       </ort-select>
       @if (form.controls.countryCode.touched && form.controls.countryCode.hasError('required')) {
@@ -137,8 +137,8 @@
         [id]="'profile-state'"
         (selectionChange)="onStateChange()">
         <ort-option value="">Seleccioná...</ort-option>
-        @for (state of states(); track state.codigoEstado) {
-        <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
+        @for (state of states(); track state.stateCode) {
+        <ort-option [value]="state.stateCode.toString()">{{ state.name }}</ort-option>
         }
       </ort-select>
       @if (form.controls.stateCode.touched && form.controls.stateCode.hasError('required')) {

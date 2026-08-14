@@ -25,37 +25,38 @@ describe('InscripcionProposalFacade', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () =>
+            getDegreePrograms: () =>
               of([
                 {
-                  idProducto: 20,
-                  idNivelProducto: 1,
-                  nombreProducto: 'Ingeniería en Sistemas',
-                  nombreNivelProducto: 'Carrera universitaria',
+                  productId: 20,
+                  productLevelId: 1,
+                  productName: 'Ingeniería en Sistemas',
+                  productLevelName: 'Carrera universitaria',
                 },
                 {
-                  idProducto: 21,
-                  idNivelProducto: 3,
-                  idProceso: 200,
-                  nombreProducto: 'Programa de Asesoramiento Financiero',
-                  nombreNivelProducto: 'Actualización profesional',
-                  tieneSeminario: true,
-                },
-              ]),
-            getComienzos: () => of([{ idProceso: 200, nombreProceso: 'Agosto 2026' }]),
-            getTurnos: () =>
-              of([
-                {
-                  idOferta: 300,
-                  idTurno: 10,
-                  nombreTurno: 'Nocturno',
-                  horarioReferencia: '19:00 a 23:00',
+                  productId: 21,
+                  productLevelId: 3,
+                  admissionProcessId: 200,
+                  productName: 'Programa de Asesoramiento Financiero',
+                  productLevelName: 'Actualización profesional',
+                  hasSeminar: true,
                 },
               ]),
-            getSeminarios: () =>
+            getIntakes: () =>
+              of([{ admissionProcessId: 200, admissionProcessName: 'Agosto 2026' }]),
+            getShifts: () =>
               of([
-                { idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null },
-                { idOferta: 301, idProceso: 200, nombre: 'Renta fija', fechaComienzo: null },
+                {
+                  offeringId: 300,
+                  shiftId: 10,
+                  shiftName: 'Nocturno',
+                  referenceSchedule: '19:00 a 23:00',
+                },
+              ]),
+            getSeminars: () =>
+              of([
+                { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null },
+                { offeringId: 301, admissionProcessId: 200, name: 'Renta fija', startDate: null },
               ]),
           },
         },
@@ -80,9 +81,9 @@ describe('InscripcionProposalFacade', () => {
   });
 
   it('registers all selected seminars for a professional update proposal', () => {
-    facade.academicForm.controls.tipoPropuesta.setValue('3');
-    facade.academicForm.controls.carrera.setValue('21');
-    facade.academicForm.controls.seminarios.setValue(['300', '301']);
+    facade.academicForm.controls.proposalType.setValue('3');
+    facade.academicForm.controls.degreeProgram.setValue('21');
+    facade.academicForm.controls.seminars.setValue(['300', '301']);
 
     facade.continue();
 
@@ -95,8 +96,8 @@ describe('InscripcionProposalFacade', () => {
   });
 
   it('requires at least one seminar with AP terminology in the error summary', () => {
-    facade.academicForm.controls.tipoPropuesta.setValue('3');
-    facade.academicForm.controls.carrera.setValue('21');
+    facade.academicForm.controls.proposalType.setValue('3');
+    facade.academicForm.controls.degreeProgram.setValue('21');
 
     facade.continue();
 
@@ -125,9 +126,9 @@ describe('InscripcionProposalFacade', () => {
     facade.disableForResume();
 
     expect(facade.academicForm.disabled).toBe(true);
-    expect(facade.academicForm.controls.carrera.value).toBe('20');
-    expect(facade.academicForm.controls.comienzo.value).toBe('200');
-    expect(facade.academicForm.controls.turno.value).toBe('300');
+    expect(facade.academicForm.controls.degreeProgram.value).toBe('20');
+    expect(facade.academicForm.controls.intake.value).toBe('200');
+    expect(facade.academicForm.controls.shift.value).toBe('300');
 
     facade.continue();
 
@@ -137,8 +138,8 @@ describe('InscripcionProposalFacade', () => {
 });
 
 function setValidProposal(facade: InscripcionProposalFacade): void {
-  facade.academicForm.controls.tipoPropuesta.setValue('1');
-  facade.academicForm.controls.carrera.setValue('20');
-  facade.academicForm.controls.comienzo.setValue('200');
-  facade.academicForm.controls.turno.setValue('300');
+  facade.academicForm.controls.proposalType.setValue('1');
+  facade.academicForm.controls.degreeProgram.setValue('20');
+  facade.academicForm.controls.intake.setValue('200');
+  facade.academicForm.controls.shift.setValue('300');
 }

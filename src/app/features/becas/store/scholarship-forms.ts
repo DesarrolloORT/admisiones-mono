@@ -12,10 +12,10 @@ import type { AcademicProposalForm } from '../../catalogs/models/academic-propos
  */
 export class ScholarshipFormsStore {
   public readonly academicForm = new FormGroup<AcademicProposalForm>({
-    tipoPropuesta: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    seminarios: new FormControl<string[]>([], { nonNullable: true }),
+    proposalType: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    degreeProgram: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    intake: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    shift: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    seminars: new FormControl<string[]>([], { nonNullable: true }),
   });
 }

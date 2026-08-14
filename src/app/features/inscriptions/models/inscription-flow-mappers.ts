@@ -1,5 +1,5 @@
 import { getAcademicProposalTypeByLevel } from '../../catalogs/models/academic-proposal';
-import type { Career } from '../../catalogs/models/catalog.interface';
+import type { DegreeProgram } from '../../catalogs/models/catalog.interface';
 import type {
   InscripcionInitialSurvey,
   InscripcionInitialSurveyResponse,
@@ -15,7 +15,7 @@ const OTHER_OPTION_VALUE = '0';
 
 export interface BackendSurveyPatchContext {
   forms: InscripcionForms;
-  careers: readonly Career[];
+  careers: readonly DegreeProgram[];
   /**
    * Si es `false`, NO se patchea la selección académica desde una encuesta previa.
    * Se usa en `nueva`, donde el Paso 1 debe quedar virgen.
@@ -33,10 +33,10 @@ export function patchBackendSurveyForms(
   const processId = toFormValue(survey.comienzoId);
   const levelId =
     survey.nivelProductoId ??
-    context.careers.find(career => career.idProducto === survey.carreraId)?.idNivelProducto;
+    context.careers.find(career => career.productId === survey.carreraId)?.productLevelId;
   const proposalType =
     levelId === undefined
-      ? forms.academicForm.controls.tipoPropuesta.value
+      ? forms.academicForm.controls.proposalType.value
       : (getAcademicProposalTypeByLevel(levelId)?.value ?? '');
   const schoolInstitution =
     survey.institucionSecundariaId ?? survey.nombreInstitucionSecundaria ?? '';
@@ -44,9 +44,9 @@ export function patchBackendSurveyForms(
   if (context.includeAcademicSelection !== false) {
     forms.academicForm.patchValue(
       {
-        tipoPropuesta: proposalType,
-        carrera: productId,
-        comienzo: processId,
+        proposalType,
+        degreeProgram: productId,
+        intake: processId,
       },
       { emitEvent: false }
     );
@@ -125,8 +125,8 @@ export function buildInitialSurveyPayload(forms: InscripcionForms) {
   const remembersAdvertising = experience.recuerdaPublicidad.value === 'si';
 
   return {
-    carreraId: toNullableNumber(forms.academicForm.controls.carrera.value),
-    comienzoId: toNullableNumber(forms.academicForm.controls.comienzo.value),
+    carreraId: toNullableNumber(forms.academicForm.controls.degreeProgram.value),
+    comienzoId: toNullableNumber(forms.academicForm.controls.intake.value),
     orientacionBachilleratoId: currentlyInSchool
       ? toNullableNumber(education.orientacion.value)
       : null,
@@ -199,8 +199,8 @@ export function buildConfirmPreEnrollmentPayload(
   actualizacionProfesional = false
 ) {
   const idOfertasSeleccionadas = actualizacionProfesional
-    ? (toNumberArray(forms.academicForm.controls.seminarios.value) ?? [])
-    : [toNullableNumber(forms.academicForm.controls.turno.value)].filter(
+    ? (toNumberArray(forms.academicForm.controls.seminars.value) ?? [])
+    : [toNullableNumber(forms.academicForm.controls.shift.value)].filter(
         (oferta): oferta is number => oferta !== null
       );
   if (idOfertasSeleccionadas.length === 0) return null;

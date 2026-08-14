@@ -31,35 +31,35 @@ describe('LocationSelect', () => {
     success: true,
     data: [
       {
-        codigoPais: 1,
-        nombre: 'Uruguay',
-        estado: [
+        countryCode: 1,
+        name: 'Uruguay',
+        states: [
           {
-            codigoPais: 1,
-            codigoEstado: 10,
-            nombre: 'Montevideo',
-            ciudad: [
-              { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100, nombre: 'Montevideo' },
-              { codigoPais: 1, codigoEstado: 10, codigoCiudad: 101, nombre: 'Ciudad de la Costa' },
+            countryCode: 1,
+            stateCode: 10,
+            name: 'Montevideo',
+            cities: [
+              { countryCode: 1, stateCode: 10, cityCode: 100, name: 'Montevideo' },
+              { countryCode: 1, stateCode: 10, cityCode: 101, name: 'Ciudad de la Costa' },
             ],
           },
           {
-            codigoPais: 1,
-            codigoEstado: 11,
-            nombre: 'Canelones',
-            ciudad: [{ codigoPais: 1, codigoEstado: 11, codigoCiudad: 110, nombre: 'Canelones' }],
+            countryCode: 1,
+            stateCode: 11,
+            name: 'Canelones',
+            cities: [{ countryCode: 1, stateCode: 11, cityCode: 110, name: 'Canelones' }],
           },
         ],
       },
       {
-        codigoPais: 2,
-        nombre: 'Argentina',
-        estado: [
+        countryCode: 2,
+        name: 'Argentina',
+        states: [
           {
-            codigoPais: 2,
-            codigoEstado: 20,
-            nombre: 'Buenos Aires',
-            ciudad: [{ codigoPais: 2, codigoEstado: 20, codigoCiudad: 200, nombre: 'CABA' }],
+            countryCode: 2,
+            stateCode: 20,
+            name: 'Buenos Aires',
+            cities: [{ countryCode: 2, stateCode: 20, cityCode: 200, name: 'CABA' }],
           },
         ],
       },
@@ -173,14 +173,14 @@ describe('LocationSelect', () => {
     component['onCityChange']();
 
     expect(onChangeSpy).toHaveBeenLastCalledWith({
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: 100,
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: 100,
     });
   });
 
   it('should write value from parent form', () => {
-    component.writeValue({ codigoPais: 2, codigoEstado: 20, codigoCiudad: 200 });
+    component.writeValue({ countryCode: 2, stateCode: 20, cityCode: 200 });
 
     expect(component['selectedCountryCode']()).toBe(2);
     expect(component['selectedStateCode']()).toBe(20);

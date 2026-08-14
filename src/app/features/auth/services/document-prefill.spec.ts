@@ -42,9 +42,9 @@ describe('DocumentPrefillService', () => {
             getCountryLocations: vi.fn().mockReturnValue(
               of([
                 {
-                  codigoPais: 1,
-                  nombre: 'Uruguay',
-                  estado: [{ codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+                  countryCode: 1,
+                  name: 'Uruguay',
+                  states: [{ stateCode: 10, name: 'MONTEVIDEO' }],
                 },
               ])
             ),
@@ -70,9 +70,9 @@ describe('DocumentPrefillService', () => {
     expect(result.patch?.identity).toEqual({ documentType: 'CI', documentNumber: '11111111' });
     expect(result.patch?.personal).toEqual({ primerNombre: 'Ana', primerApellido: 'Silva' });
     expect(result.location).toEqual({
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: null,
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: null,
     });
   });
 });

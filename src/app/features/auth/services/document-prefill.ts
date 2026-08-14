@@ -44,9 +44,9 @@ export class DocumentPrefillService {
     );
 
     return {
-      codigoPais: patch.countryCode,
-      codigoEstado: stateCode,
-      codigoCiudad: null,
+      countryCode: patch.countryCode,
+      stateCode: stateCode,
+      cityCode: null,
     };
   }
 

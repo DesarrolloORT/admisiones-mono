@@ -22,10 +22,10 @@ import { InscripcionSurveyOptionsFacade } from './inscription-survey-options';
 
 const AP_CAREERS = [
   {
-    idProducto: 30,
-    idNivelProducto: 3,
-    nombreProducto: 'Programa de Asesoramiento Financiero',
-    nombreNivelProducto: 'Actualización profesional',
+    productId: 30,
+    productLevelId: 3,
+    productName: 'Programa de Asesoramiento Financiero',
+    productLevelName: 'Actualización profesional',
   },
 ];
 
@@ -103,8 +103,8 @@ describe('InscripcionSurveyFacade', () => {
 
     expect(survey.activeSection()).toBe('educacion');
 
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
-    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.proposalType.setValue('3');
+    forms.academicForm.controls.degreeProgram.setValue('30');
     TestBed.tick();
 
     expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
@@ -121,8 +121,8 @@ describe('InscripcionSurveyFacade', () => {
 
     expect(survey.activeSection()).toBe('identidad');
 
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
-    forms.academicForm.controls.carrera.setValue('30');
+    forms.academicForm.controls.proposalType.setValue('3');
+    forms.academicForm.controls.degreeProgram.setValue('30');
     TestBed.tick();
 
     expect(survey.visibleSections()).toEqual(['situacion-laboral', 'identidad', 'reglamento']);
@@ -131,7 +131,7 @@ describe('InscripcionSurveyFacade', () => {
 
   it('does not persist the initial survey for AP even with survey rights', async () => {
     const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
+    forms.academicForm.controls.proposalType.setValue('3');
 
     await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
     expect(saveInitialSurvey).not.toHaveBeenCalled();
@@ -139,9 +139,9 @@ describe('InscripcionSurveyFacade', () => {
 
   it('confirms a personal AP pre-enrollment and advances to payment', () => {
     const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
-    forms.academicForm.controls.carrera.setValue('30');
-    forms.academicForm.controls.seminarios.setValue(['300']);
+    forms.academicForm.controls.proposalType.setValue('3');
+    forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.academicForm.controls.seminars.setValue(['300']);
     process.flow.goTo('encuesta');
     TestBed.tick();
 
@@ -173,9 +173,9 @@ describe('InscripcionSurveyFacade', () => {
 
   it('finishes a corporate AP pre-enrollment without opening payment', () => {
     const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.tipoPropuesta.setValue('3');
-    forms.academicForm.controls.carrera.setValue('30');
-    forms.academicForm.controls.seminarios.setValue(['300']);
+    forms.academicForm.controls.proposalType.setValue('3');
+    forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.academicForm.controls.seminars.setValue(['300']);
     forms.workForm.controls.isCorporate.setValue(true);
     process.flow.goTo('encuesta');
     TestBed.tick();
@@ -256,7 +256,7 @@ describe('InscripcionSurveyFacade', () => {
     survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
-    forms.academicForm.controls.turno.setValue('300');
+    forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -296,7 +296,7 @@ describe('InscripcionSurveyFacade', () => {
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
-    forms.academicForm.controls.turno.setValue('300');
+    forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -332,7 +332,7 @@ describe('InscripcionSurveyFacade', () => {
     survey.identityForm.controls.vencimientoDocumento.markAsDirty();
     survey.identityForm.controls.identidadCorrecta.setValue(true);
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
-    forms.academicForm.controls.turno.setValue('300');
+    forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -389,7 +389,7 @@ describe('InscripcionSurveyFacade', () => {
     survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
     survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     survey.regulationForm.controls.aceptaReglamento.setValue(true);
-    forms.academicForm.controls.turno.setValue('300');
+    forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -595,12 +595,12 @@ describe('InscripcionSurveyFacade', () => {
         opcionesPublicidadSeleccionadas: [],
       },
       {
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [],
-          estadosEducacionSuperiorPrevia: [],
-          universidades: [],
-          nivelesFormacionTutores: [],
-          aniosBachillerato: [
+        education: {
+          lastSecondaryYearLocations: [],
+          previousHigherEducationOptions: [],
+          universities: [],
+          guardianEducationLevels: [],
+          highSchoolYears: [
             { id: 10, label: '1 EMS', baccalaureates: [] },
             {
               id: 11,
@@ -654,25 +654,25 @@ describe('InscripcionSurveyFacade', () => {
         opcionesPublicidadSeleccionadas: [],
       },
       {
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [],
-          aniosBachillerato: [],
-          estadosEducacionSuperiorPrevia: [],
-          universidades: [
+        education: {
+          lastSecondaryYearLocations: [],
+          highSchoolYears: [],
+          previousHigherEducationOptions: [],
+          universities: [
             { id: 0, label: 'Otra' },
             { id: 10, label: 'Udelar' },
           ],
-          nivelesFormacionTutores: [],
+          guardianEducationLevels: [],
         },
-        decisionAcademica: {
-          aniosEducacionMediaSuperior: [],
-          apoyosDecision: [],
-          nivelesDecision: [],
-          universidades: [
+        academicDecision: {
+          upperSecondaryYears: [],
+          decisionSupports: [],
+          decisionLevels: [],
+          universities: [
             { id: 0, label: 'Otra' },
             { id: 11, label: 'UCU' },
           ],
-          motivosEleccionOrt: [],
+          ortChoiceReasons: [],
         },
       }
     );
@@ -722,12 +722,12 @@ describe('InscripcionSurveyFacade', () => {
         opcionesPublicidadSeleccionadas: [],
       },
       {
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [],
-          estadosEducacionSuperiorPrevia: [],
-          universidades: [],
-          nivelesFormacionTutores: [],
-          aniosBachillerato: [
+        education: {
+          lastSecondaryYearLocations: [],
+          previousHigherEducationOptions: [],
+          universities: [],
+          guardianEducationLevels: [],
+          highSchoolYears: [
             { id: 4, label: '4º año', baccalaureates: [] },
             { id: 5, label: '5º año', baccalaureates: [] },
           ],
@@ -735,16 +735,16 @@ describe('InscripcionSurveyFacade', () => {
       },
       [
         {
-          idProducto: 100,
-          idNivelProducto: 1,
-          nombreProducto: 'Ingeniería',
-          nombreNivelProducto: 'Universitaria',
+          productId: 100,
+          productLevelId: 1,
+          productName: 'Ingeniería',
+          productLevelName: 'Universitaria',
         },
       ]
     );
 
-    forms.academicForm.controls.tipoPropuesta.setValue('1');
-    forms.academicForm.controls.carrera.setValue('100');
+    forms.academicForm.controls.proposalType.setValue('1');
+    forms.academicForm.controls.degreeProgram.setValue('100');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
 
@@ -772,26 +772,26 @@ describe('InscripcionSurveyFacade', () => {
         opcionesPublicidadSeleccionadas: [],
       },
       {
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [],
-          estadosEducacionSuperiorPrevia: [],
-          universidades: [],
-          nivelesFormacionTutores: [],
-          aniosBachillerato: [{ id: 4, label: '4º año', baccalaureates: [] }],
+        education: {
+          lastSecondaryYearLocations: [],
+          previousHigherEducationOptions: [],
+          universities: [],
+          guardianEducationLevels: [],
+          highSchoolYears: [{ id: 4, label: '4º año', baccalaureates: [] }],
         },
       },
       [
         {
-          idProducto: 200,
-          idNivelProducto: 2,
-          nombreProducto: 'Tecnicatura',
-          nombreNivelProducto: 'Terciaria',
+          productId: 200,
+          productLevelId: 2,
+          productName: 'Tecnicatura',
+          productLevelName: 'Terciaria',
         },
       ]
     );
 
-    forms.academicForm.controls.tipoPropuesta.setValue('2');
-    forms.academicForm.controls.carrera.setValue('200');
+    forms.academicForm.controls.proposalType.setValue('2');
+    forms.academicForm.controls.degreeProgram.setValue('200');
     survey.educationForm.controls.cursaSecundaria.setValue('cursando');
     survey.educationForm.controls.anioSecundaria.setValue('4');
 
@@ -818,7 +818,7 @@ describe('InscripcionSurveyFacade', () => {
 
   it('reports an error instead of confirming when no shift is selected', () => {
     const { survey, forms } = prepareFinalizableSurvey();
-    forms.academicForm.controls.turno.setValue('');
+    forms.academicForm.controls.shift.setValue('');
 
     survey.continue();
 
@@ -1019,30 +1019,32 @@ describe('InscripcionSurveyFacade', () => {
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () => of(careers),
-            getComienzos: () => of([]),
-            getTurnos: () => of([]),
-            getSeminarios: () =>
-              of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }]),
+            getDegreePrograms: () => of(careers),
+            getIntakes: () => of([]),
+            getShifts: () => of([]),
+            getSeminars: () =>
+              of([
+                { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null },
+              ]),
             getCountryLocations: () => of([]),
-            getInstituciones: () => of([]),
+            getInstitutions: () => of([]),
             getInitialSurveyCatalogs: () =>
               of({
-                educacion: {
-                  ubicacionesUltimoAnioSecundaria: [],
-                  aniosBachillerato: [],
-                  estadosEducacionSuperiorPrevia: [],
-                  universidades: [],
-                  nivelesFormacionTutores: [],
+                education: {
+                  lastSecondaryYearLocations: [],
+                  highSchoolYears: [],
+                  previousHigherEducationOptions: [],
+                  universities: [],
+                  guardianEducationLevels: [],
                 },
-                decisionAcademica: {
-                  aniosEducacionMediaSuperior: [],
-                  apoyosDecision: [],
-                  nivelesDecision: [],
-                  universidades: [],
-                  motivosEleccionOrt: [],
+                academicDecision: {
+                  upperSecondaryYears: [],
+                  decisionSupports: [],
+                  decisionLevels: [],
+                  universities: [],
+                  ortChoiceReasons: [],
                 },
-                experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+                ortExperience: { ratings: [], ortAdvertisements: [] },
                 ...catalogOverrides,
               }),
           },
@@ -1113,7 +1115,7 @@ describe('InscripcionSurveyFacade', () => {
     result.survey.identity.updateIdentityFile('dorso', fileEvent(dorso));
     result.survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     result.survey.regulationForm.controls.aceptaReglamento.setValue(true);
-    result.forms.academicForm.controls.turno.setValue('300');
+    result.forms.academicForm.controls.shift.setValue('300');
 
     return { ...result, frente, dorso, selfie };
   }
