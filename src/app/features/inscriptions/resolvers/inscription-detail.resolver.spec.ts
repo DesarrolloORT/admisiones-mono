@@ -99,6 +99,32 @@ describe('inscriptionDetailResolver', () => {
     });
   });
 
+  it('takes the product level from the nivel param without querying the catalog', async () => {
+    const detail = createDetail('En proceso', 21);
+    getDetail.mockReturnValue(of(detail));
+
+    await expect(
+      resolve({ idProducto: '21', idProceso: '200', nivel: '3' })
+    ).resolves.toMatchObject({ idNivelProducto: 3 });
+    expect(getCareers).not.toHaveBeenCalled();
+  });
+
+  it.each(['0', 'abc', '99'])(
+    'falls back to the catalog when the nivel param is %s',
+    async nivel => {
+      const detail = createDetail('En proceso', 21);
+      getDetail.mockReturnValue(of(detail));
+      getCareers.mockReturnValue(
+        of([{ idProducto: 21, idNivelProducto: 2, nombreProducto: 'Tecnicatura' }])
+      );
+
+      await expect(resolve({ idProducto: '21', idProceso: '200', nivel })).resolves.toMatchObject({
+        idNivelProducto: 2,
+      });
+      expect(getCareers).toHaveBeenCalled();
+    }
+  );
+
   it('keeps a null level when the careers catalog fails', async () => {
     const detail = createDetail('En proceso', 21);
     getDetail.mockReturnValue(of(detail));
