@@ -49,6 +49,7 @@ describe('Home', () => {
           idOfertas: [300],
           idProducto: 1,
           idProceso: 4,
+          idNivelProducto: 1,
           idComienzo: 2,
           idTurno: 3,
           nombreProducto: 'Analista Programador',

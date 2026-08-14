@@ -17,8 +17,6 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  findCountryByIso2,
-  getIso2Codes,
   OrtButtonModule,
   OrtFormFieldModule,
   OrtIconModule,
@@ -29,8 +27,7 @@ import {
   OrtSkeletonModule,
 } from '@desarrolloort/components';
 import { forkJoin, of } from 'rxjs';
-import { catchError, finalize, map } from 'rxjs/operators';
-import type { AuthPhoneNumber } from 'src/app/features/auth/models/auth.interface';
+import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
@@ -41,9 +38,14 @@ import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
+import {
+  toBackendPhone,
+  toPhoneInputValue,
+  toPhoneValidationValue,
+} from 'src/app/shared/forms/phone';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
-import type { PersonalDataRecord, PhoneValidationPayload } from '../../../auth/services/account';
+import type { PersonalDataRecord } from '../../../auth/services/account';
 import { AccountService } from '../../../auth/services/account';
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
 
@@ -190,6 +192,28 @@ export class PersonalData implements OnInit {
     this.form.markAllAsTouched();
     this.form.updateValueAndValidity();
 
+    // El telefono es el unico control validado contra el servidor: mientras esa validacion
+    // esta pendiente el form no es `invalid` y el guardado se saltearia el chequeo.
+    const phone = this.form.controls.phone;
+
+    if (phone.pending) {
+      phone.statusChanges
+        .pipe(
+          filter(status => status !== 'PENDING'),
+          take(1)
+        )
+        .subscribe(() => this.save());
+
+      // La validacion en curso pudo dispararse sin emitEvent (el control es updateOn:
+      // 'blur'), asi que se relanza para garantizar la notificacion.
+      phone.updateValueAndValidity();
+      return;
+    }
+
+    this.save();
+  }
+
+  private save(): void {
     if (this.form.invalid) {
       this.snackbar.error('Completá todos los datos obligatorios con un formato válido.');
       return;
@@ -208,7 +232,7 @@ export class PersonalData implements OnInit {
         stateCode: this.toOptionalNumber(value.stateCode),
         cityCode: this.toOptionalNumber(value.cityCode),
         address: value.address.trim(),
-        phone: this.toBackendPhone(value.phone),
+        phone: toBackendPhone(value.phone),
         email: value.email.trim(),
         emailVerification: value.emailConfirmation.trim(),
       })
@@ -270,12 +294,37 @@ export class PersonalData implements OnInit {
         stateCode: this.toControlValue(data.stateCode),
         cityCode: this.toControlValue(data.cityCode),
         address: data.address,
-        phone: this.toPhoneInputValue(data.phone),
+        phone: toPhoneInputValue(data.phone),
         email: data.email,
         emailConfirmation: data.emailVerification,
       },
       { emitEvent: false }
     );
+
+    this.validateLoadedPhone();
+  }
+
+  /**
+   * Los telefonos previos a la migracion no traen pais y se cargan asumiendo Uruguay: se
+   * valida contra el servidor para que un numero extranjero no quede re-etiquetado en
+   * silencio. Solo se marca `touched` si falla, para no abrir el formulario en rojo.
+   */
+  private validateLoadedPhone(): void {
+    const phone = this.form.controls.phone;
+
+    // La suscripcion va antes: si el validador resuelve de forma sincronica el cambio de
+    // estado se emite dentro de updateValueAndValidity.
+    phone.statusChanges
+      .pipe(
+        filter(status => status !== 'PENDING'),
+        take(1)
+      )
+      .subscribe(status => {
+        if (status === 'INVALID') {
+          phone.markAsTouched();
+        }
+      });
+    phone.updateValueAndValidity();
   }
 
   private toControlValue(value: number | null): string {
@@ -290,34 +339,6 @@ export class PersonalData implements OnInit {
     return value ? Number(value) : undefined;
   }
 
-  private toPhoneInputValue(value: string): OrtPhoneInputValue | null {
-    const trimmed = value.trim();
-
-    if (!trimmed) {
-      return null;
-    }
-
-    if (trimmed.startsWith('+')) {
-      const digits = trimmed.replaceAll(/\D/g, '');
-      const country = this.findPhoneCountryByPrefix(digits);
-
-      if (country) {
-        const number = digits.slice(country.prefix.toString().length);
-        return { iso2: country.iso2, number, numberE164: `+${digits}` };
-      }
-    }
-
-    const number = trimmed.replaceAll(/\D/g, '');
-    return { iso2: 'UY', number, numberE164: `+598${number}` };
-  }
-
-  private toBackendPhone(value: OrtPhoneInputValue | null): AuthPhoneNumber {
-    return {
-      nationalNumber: value?.number.trim() ?? '',
-      iso2: value?.iso2 || null,
-    };
-  }
-
   private phoneValidator(): AsyncValidatorFn {
     return control => {
       const value = control.value as OrtPhoneInputValue | null;
@@ -325,36 +346,11 @@ export class PersonalData implements OnInit {
         return of(null);
       }
 
-      return this.account.validatePhone(this.toPhoneValidationPayload(value)).pipe(
+      return this.account.validatePhone(toPhoneValidationValue(value)).pipe(
         map(isValid => (isValid ? null : { phone: true })),
         catchError(() => of(null))
       );
     };
-  }
-
-  private toPhoneValidationPayload(value: OrtPhoneInputValue): PhoneValidationPayload {
-    const iso2 = value.iso2 || null;
-    const country = this.findPhoneCountryByIso2(iso2);
-
-    return {
-      iso2,
-      countryPrefix: country?.prefix ?? null,
-      number: value.number.trim(),
-      numberE164: value.numberE164?.trim() || null,
-    };
-  }
-
-  private findPhoneCountryByIso2(iso2: string | null) {
-    const code = getIso2Codes().find(item => item === iso2);
-    return code ? findCountryByIso2(code) : undefined;
-  }
-
-  private findPhoneCountryByPrefix(digits: string) {
-    return getIso2Codes()
-      .map(iso2 => findCountryByIso2(iso2))
-      .filter(country => !!country)
-      .sort((a, b) => b.prefix - a.prefix)
-      .find(country => digits.startsWith(country.prefix.toString()));
   }
 
   private formatDocumentType(value: string): string {

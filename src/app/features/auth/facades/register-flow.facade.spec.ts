@@ -26,8 +26,10 @@ describe('RegisterFlowFacade', () => {
     navigate: ReturnType<typeof vi.fn>;
     navigateByUrl: ReturnType<typeof vi.fn>;
   };
+  let accountMock: { validatePhone: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    accountMock = { validatePhone: vi.fn().mockReturnValue(of(true)) };
     registrationMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
@@ -69,7 +71,7 @@ describe('RegisterFlowFacade', () => {
         },
         {
           provide: AccountService,
-          useValue: { validatePhone: vi.fn().mockReturnValue(of(true)) },
+          useValue: accountMock,
         },
         {
           provide: SnackbarHandler,
@@ -265,6 +267,16 @@ describe('RegisterFlowFacade', () => {
       })
     );
   }
+  it('should validate the phone with the resolved country prefix', () => {
+    setValidPersonalForm(facade);
+
+    expect(accountMock.validatePhone).toHaveBeenCalledWith({
+      iso2: 'UY',
+      countryPrefix: 598,
+      number: '099123456',
+      numberE164: '+59899123456',
+    });
+  });
 });
 
 function setValidPersonalForm(facade: RegisterFlowFacade): void {

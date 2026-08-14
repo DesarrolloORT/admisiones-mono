@@ -69,6 +69,7 @@ describe('DashboardCareersSection', () => {
       idOfertas: [idProducto],
       idProducto,
       idProceso,
+      idNivelProducto: 1,
       idComienzo: 2,
       idTurno: 3,
       nombreProducto: `Carrera ${idProducto}`,

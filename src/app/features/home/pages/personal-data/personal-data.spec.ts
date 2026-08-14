@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
-import { NEVER, of } from 'rxjs';
+import { NEVER, of, Subject } from 'rxjs';
 import { AccountService } from 'src/app/features/auth/services/account';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
@@ -32,6 +32,24 @@ type TestPersonalDataComponent = PersonalData & {
   submit: () => void;
 };
 
+const basePersonalData = {
+  documentType: 'CI',
+  documentNumber: '4123456-9',
+  firstName: 'Gabriela',
+  secondName: '',
+  firstLastName: 'Ortiz',
+  secondLastName: 'Morales',
+  birthDate: '1988-05-31',
+  sex: 'F',
+  countryCode: 1,
+  stateCode: 10,
+  cityCode: 100,
+  address: 'Av. 18 de Julio 1360',
+  phone: { nationalNumber: '99123456', iso2: 'UY', e164: '+59899123456', isValid: true },
+  email: 'gabrielaortiz@gmail.com',
+  emailVerification: 'gabrielaortiz@gmail.com',
+};
+
 describe('PersonalData', () => {
   let fixture: ComponentFixture<PersonalData>;
   let component: TestPersonalDataComponent;
@@ -40,33 +58,15 @@ describe('PersonalData', () => {
     updatePersonalData: ReturnType<typeof vi.fn>;
     validatePhone: ReturnType<typeof vi.fn>;
   };
-  let snackbar: { success: ReturnType<typeof vi.fn> };
+  let snackbar: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     service = {
-      getPersonalData: vi.fn().mockReturnValue(
-        of({
-          documentType: 'CI',
-          documentNumber: '4123456-9',
-          firstName: 'Gabriela',
-          secondName: '',
-          firstLastName: 'Ortiz',
-          secondLastName: 'Morales',
-          birthDate: '1988-05-31',
-          sex: 'F',
-          countryCode: 1,
-          stateCode: 10,
-          cityCode: 100,
-          address: 'Av. 18 de Julio 1360',
-          phone: '99123456',
-          email: 'gabrielaortiz@gmail.com',
-          emailVerification: 'gabrielaortiz@gmail.com',
-        })
-      ),
+      getPersonalData: vi.fn().mockReturnValue(of(basePersonalData)),
       updatePersonalData: vi.fn().mockReturnValue(of(true)),
       validatePhone: vi.fn().mockReturnValue(of(true)),
     };
-    snackbar = { success: vi.fn() };
+    snackbar = { success: vi.fn(), error: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [PersonalData],
@@ -128,26 +128,7 @@ describe('PersonalData', () => {
   }, 10_000);
 
   it('should render the fdp organism when the identity is restricted', () => {
-    service.getPersonalData.mockReturnValue(
-      of({
-        documentType: 'CI',
-        documentNumber: '4123456-9',
-        firstName: 'Gabriela',
-        secondName: '',
-        firstLastName: 'Ortiz',
-        secondLastName: 'Morales',
-        birthDate: '1988-05-31',
-        sex: 'F',
-        countryCode: 1,
-        stateCode: 10,
-        cityCode: 100,
-        address: 'Av. 18 de Julio 1360',
-        phone: '99123456',
-        email: 'gabrielaortiz@gmail.com',
-        emailVerification: 'gabrielaortiz@gmail.com',
-        identityRestricted: true,
-      })
-    );
+    service.getPersonalData.mockReturnValue(of({ ...basePersonalData, identityRestricted: true }));
 
     fixture.detectChanges();
 
@@ -226,24 +207,77 @@ describe('PersonalData', () => {
     );
   });
 
+  it('should validate the loaded phone without waiting for user interaction', () => {
+    fixture.detectChanges();
+
+    expect(service.validatePhone).toHaveBeenCalledWith({
+      iso2: 'UY',
+      countryPrefix: 598,
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
+    expect(component.form.controls.phone.touched).toBe(false);
+  });
+
+  it('should flag the loaded phone when the backend rejects the assumed country', () => {
+    service.validatePhone.mockReturnValue(of(false));
+
+    fixture.detectChanges();
+
+    expect(component.form.controls.phone.touched).toBe(true);
+    expect(component.form.controls.phone.hasError('phone')).toBe(true);
+  });
+
+  it('should wait for the pending phone validation before submitting', () => {
+    const pending: Subject<boolean>[] = [];
+    service.validatePhone.mockImplementation(() => {
+      const validation = new Subject<boolean>();
+      pending.push(validation);
+      return validation;
+    });
+
+    fixture.detectChanges();
+    component.submit();
+
+    expect(component.form.controls.phone.status).toBe('PENDING');
+    expect(service.updatePersonalData).not.toHaveBeenCalled();
+
+    service.validatePhone.mockReturnValue(of(true));
+    pending.forEach(validation => {
+      validation.next(true);
+      validation.complete();
+    });
+
+    expect(service.updatePersonalData).toHaveBeenCalled();
+  });
+
+  it('should fall back to Uruguay when the backend could not resolve the stored phone', () => {
+    service.getPersonalData.mockReturnValue(
+      of({
+        ...basePersonalData,
+        phone: { nationalNumber: '099123456', iso2: null, e164: null, isValid: false },
+      })
+    );
+
+    fixture.detectChanges();
+
+    expect(component.form.controls.phone.value).toEqual({
+      iso2: 'UY',
+      number: '99123456',
+      numberE164: '+59899123456',
+    });
+  });
+
   it('should restore international phone numbers from backend values', () => {
     service.getPersonalData.mockReturnValue(
       of({
-        documentType: 'CI',
-        documentNumber: '4123456-9',
-        firstName: 'Gabriela',
-        secondName: '',
-        firstLastName: 'Ortiz',
-        secondLastName: 'Morales',
-        birthDate: '1988-05-31',
-        sex: 'F',
-        countryCode: 1,
-        stateCode: 10,
-        cityCode: 100,
-        address: 'Av. 18 de Julio 1360',
-        phone: '+5491123456789',
-        email: 'gabrielaortiz@gmail.com',
-        emailVerification: 'gabrielaortiz@gmail.com',
+        ...basePersonalData,
+        phone: {
+          nationalNumber: '91123456789',
+          iso2: 'AR',
+          e164: '+5491123456789',
+          isValid: true,
+        },
       })
     );
 

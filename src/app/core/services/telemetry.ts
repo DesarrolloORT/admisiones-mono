@@ -109,13 +109,6 @@ export class TelemetryService {
     });
   }
 
-  public trackCacheHit(request: HttpRequest<unknown>): void {
-    this.trackEvent('admisiones.http.cache_hit', {
-      http_method: request.method,
-      http_path: this.pathOnly(request.urlWithParams),
-    });
-  }
-
   public trackEvent(name: string, attributes: TelemetryAttributes = {}): void {
     const event: TelemetryEvent = {
       name,

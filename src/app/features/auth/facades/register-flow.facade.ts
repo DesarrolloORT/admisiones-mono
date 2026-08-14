@@ -4,8 +4,9 @@ import { AsyncValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { firstValueFrom, of } from 'rxjs';
-import { catchError, finalize, map } from 'rxjs/operators';
+import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 
+import { toPhoneValidationValue } from '../../../shared/forms/phone';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import {
   createIdentityForm,
@@ -184,6 +185,23 @@ export class RegisterFlowFacade {
       return;
     }
 
+    const telefono = this.personalForm.controls.telefono1;
+
+    if (telefono.pending) {
+      telefono.statusChanges
+        .pipe(
+          filter(status => status !== 'PENDING'),
+          take(1),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(() => this.submitFullRegistration(flow));
+
+      // La validacion en curso pudo dispararse sin emitEvent (el control es updateOn:
+      // 'blur'), asi que se relanza para garantizar la notificacion.
+      telefono.updateValueAndValidity();
+      return;
+    }
+
     if (this.personalForm.invalid) {
       this.personalForm.markAllAsTouched();
       return;
@@ -267,17 +285,10 @@ export class RegisterFlowFacade {
         return of(null);
       }
 
-      return this.account
-        .validatePhone({
-          iso2: value.iso2 ?? null,
-          countryPrefix: null,
-          number: value.number.trim(),
-          numberE164: value.numberE164?.trim() || null,
-        })
-        .pipe(
-          map(isValid => (isValid ? null : { phone: true })),
-          catchError(() => of(null))
-        );
+      return this.account.validatePhone(toPhoneValidationValue(value)).pipe(
+        map(isValid => (isValid ? null : { phone: true })),
+        catchError(() => of(null))
+      );
     };
   }
 

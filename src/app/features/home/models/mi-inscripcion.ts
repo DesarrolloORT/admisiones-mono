@@ -19,6 +19,7 @@ export interface MiInscripcion {
   idOfertas: number[];
   idProducto: number;
   idProceso: number;
+  idNivelProducto: number | null;
   idComienzo: number;
   idTurno: number;
   nombreProducto: string;

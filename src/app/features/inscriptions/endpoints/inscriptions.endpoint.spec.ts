@@ -27,13 +27,11 @@ describe('InscripcionesEndpoint', () => {
   let endpoint: InscripcionesEndpoint;
   let apiMock: {
     request: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     apiMock = {
       request: vi.fn().mockReturnValue(of(true)),
-      clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -89,7 +87,6 @@ describe('InscripcionesEndpoint', () => {
     });
     expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsDetailsEndpoint, {
       queryParams: { productId: 20, admissionProcessId: 200, status: 'Confirmada' },
-      cache: false,
       showLoader: true,
     });
   });
@@ -101,7 +98,6 @@ describe('InscripcionesEndpoint', () => {
 
     expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsDetailsEndpoint, {
       queryParams: { productId: 20, admissionProcessId: 200 },
-      cache: false,
       showLoader: true,
     });
   });
@@ -284,21 +280,18 @@ describe('InscripcionesEndpoint', () => {
       dorso: { archivo: null, nombreArchivo: null },
       fechaVencimiento: '2030-02-04',
     });
-    expect(apiMock.request).toHaveBeenCalledWith(getPersonIdentityDocumentEndpoint, {
-      cache: false,
-    });
+    expect(apiMock.request).toHaveBeenCalledWith(getPersonIdentityDocumentEndpoint);
   });
 
-  it('loads the identity photo as a blob without using the GET cache', () => {
+  it('loads the identity photo as a blob', () => {
     endpoint.getIdentityPhoto().subscribe();
 
     expect(apiMock.request).toHaveBeenCalledWith(getPersonPhotoEndpoint, {
-      cache: false,
       responseType: 'blob',
     });
   });
 
-  it('uploads identity document files and clears API cache', async () => {
+  it('uploads identity document files', async () => {
     const payload = {
       fecha: '2030-02-04',
       frente: { nombreArchivo: 'frente.png', archivo: 'front' },
@@ -315,10 +308,9 @@ describe('InscripcionesEndpoint', () => {
       },
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
-  it('uploads identity photo and clears API cache', async () => {
+  it('uploads identity photo', async () => {
     const payload = { archivoAdjunto: { nombreArchivo: 'selfie.png', archivo: 'photo' } };
 
     await expect(firstValueFrom(endpoint.uploadIdentityPhoto(payload))).resolves.toBe(true);
@@ -327,7 +319,6 @@ describe('InscripcionesEndpoint', () => {
       body: { file: { fileName: 'selfie.png', content: 'photo' } },
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
   it('maps the initial survey to the feature contract', async () => {
     apiMock.request.mockReturnValueOnce(
@@ -376,10 +367,9 @@ describe('InscripcionesEndpoint', () => {
         opcionesPublicidadSeleccionadas: [7],
       })
     );
-    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsInitialSurveyEndpoint, {
-      cache: false,
-    });
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsInitialSurveyEndpoint);
   });
+
   it('preserves the regulation acceptance date and normalizes missing values', async () => {
     apiMock.request.mockReturnValueOnce(
       of({ acceptedStudentRegulations: true, acceptanceDate: '2026-06-01' })
@@ -395,12 +385,10 @@ describe('InscripcionesEndpoint', () => {
       aceptoReglamentoEstudiantil: false,
       fechaAceptacion: null,
     });
-    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsStudentRegulationsEndpoint, {
-      cache: false,
-    });
+    expect(apiMock.request).toHaveBeenCalledWith(getEnrollmentsStudentRegulationsEndpoint);
   });
 
-  it('maps the survey payload and invalidates cached API responses', async () => {
+  it('maps the survey payload', async () => {
     const payload: InscripcionInitialSurveyPayload = {
       carreraId: 20,
       comienzoId: 200,
@@ -451,10 +439,9 @@ describe('InscripcionesEndpoint', () => {
       }),
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
-  it('maps pre-enrollment response and invalidates cached API responses', async () => {
+  it('maps pre-enrollment response', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
         confirmed: true,
@@ -493,7 +480,6 @@ describe('InscripcionesEndpoint', () => {
       },
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
   it('maps the Actualización profesional seminarios array from confirmarPreInscripcion', async () => {
@@ -546,7 +532,7 @@ describe('InscripcionesEndpoint', () => {
     ]);
   });
 
-  it('maps reactivation with the pre-enrollment contract and invalidates cache', async () => {
+  it('maps reactivation with the pre-enrollment contract', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
         confirmed: false,
@@ -592,7 +578,6 @@ describe('InscripcionesEndpoint', () => {
       body: { enrollmentIds: [100, 101] },
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
   it('maps bank account payment to Sistarbanc payload', async () => {
@@ -630,7 +615,6 @@ describe('InscripcionesEndpoint', () => {
         sistarbancBankId: 'brou',
       },
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
   it('maps the confirmada block when the backend confirms the payment inline', async () => {
@@ -763,7 +747,6 @@ describe('InscripcionesEndpoint', () => {
       apiMock.request.mockReturnValueOnce(throwError(() => failure));
       await expect(firstValueFrom(operation())).rejects.toBe(failure);
     }
-    expect(apiMock.clearCache).not.toHaveBeenCalled();
   });
 
   it('maps the complete survey body renaming comienzoId to procesoId', async () => {
@@ -811,7 +794,6 @@ describe('InscripcionesEndpoint', () => {
       },
       showLoader: true,
     });
-    expect(apiMock.clearCache).toHaveBeenCalledOnce();
   });
 
   it('normalizes a detail response without estado to nulls', async () => {
