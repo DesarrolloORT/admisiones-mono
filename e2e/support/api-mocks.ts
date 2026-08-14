@@ -521,11 +521,11 @@ function fulfillRegisterEvaluation(route: Route, scenario: RegisterScenario): Pr
   return fulfillOperation(
     route,
     {
-      userAlreadyRegistered: scenario.evaluation.usuarioExistente,
-      requiresIdentityVerification: scenario.evaluation.requiereVerificacion,
-      requiresPersonRegistration: scenario.evaluation.requiereAltaPersona,
-      requiresRegistrationRequest: scenario.evaluation.requiereAltaSolicitud,
-      registrationRequestPending: scenario.evaluation.solicitudAltaExistente,
+      userAlreadyRegistered: scenario.evaluation.userExists,
+      requiresIdentityVerification: scenario.evaluation.requiresVerification,
+      requiresPersonRegistration: scenario.evaluation.requiresPersonCreation,
+      requiresRegistrationRequest: scenario.evaluation.requiresApplicationCreation,
+      registrationRequestPending: scenario.evaluation.hasExistingApplication,
       flowId: scenario.flowId,
     },
     {

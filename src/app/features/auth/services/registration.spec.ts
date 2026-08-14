@@ -16,7 +16,7 @@ describe('RegistrationService', () => {
 
   beforeEach(() => {
     endpointMock = {
-      evaluateDocument: vi.fn().mockReturnValue(of({ usuarioExistente: false })),
+      evaluateDocument: vi.fn().mockReturnValue(of({ userExists: false })),
       verifyIdentity: vi.fn().mockReturnValue(of({ success: true })),
       register: vi.fn().mockReturnValue(of({ success: true })),
       confirmApplicationRequest: vi.fn().mockReturnValue(of({ success: true })),
@@ -37,8 +37,8 @@ describe('RegistrationService', () => {
     service.evaluateDocument({ documentType: 'CI', documentNumber: '12345678' }).subscribe();
 
     expect(endpointMock.evaluateDocument).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
+      documentType: 'CI',
+      documentNumber: '1234567-8',
     });
   });
 
@@ -47,17 +47,17 @@ describe('RegistrationService', () => {
       .verifyExistingPersonIdentity({
         flowId: 'flow-existing-person',
         identity: { documentType: 'CI', documentNumber: '12345678' },
-        primerApellido: 'Silva',
-        mail: 'ana@example.com',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
       })
       .subscribe();
 
     expect(endpointMock.verifyIdentity).toHaveBeenCalledWith(
       {
-        tipoDocumento: 'CI',
-        documento: '1234567-8',
-        primerApellido: 'Silva',
-        mail: 'ana@example.com',
+        documentType: 'CI',
+        documentNumber: '1234567-8',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
       },
       'flow-existing-person'
     );
@@ -70,28 +70,28 @@ describe('RegistrationService', () => {
         flowId: 'flow-new-person',
         identity: { documentType: 'CI', documentNumber: '12345678' },
         personal: {
-          primerNombre: 'Ana',
-          segundoNombre: '',
-          primerApellido: 'Silva',
-          segundoApellido: '',
-          fechaNacimiento: '2000-01-01',
-          sexo: 'F',
-          codigoPais: 1,
-          codigoEstado: 10,
-          codigoCiudad: 100,
-          direccion: 'Mercedes 1234',
-          telefono1: { nationalNumber: '099123456', iso2: 'UY' },
-          mail: 'ana@example.com',
-          verificacionMail: 'ana@example.com',
+          firstName: 'Ana',
+          middleName: '',
+          firstSurname: 'Silva',
+          secondSurname: '',
+          birthDate: '2000-01-01',
+          sex: 'F',
+          countryCode: 1,
+          stateCode: 10,
+          cityCode: 100,
+          address: 'Mercedes 1234',
+          primaryPhone: { nationalNumber: '099123456', iso2: 'UY' },
+          email: 'ana@example.com',
+          emailConfirmation: 'ana@example.com',
         },
       })
       .subscribe();
 
     expect(endpointMock.register).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipoDocumento: 'CI',
-        documento: '1234567-8',
-        primerNombre: 'Ana',
+        documentType: 'CI',
+        documentNumber: '1234567-8',
+        firstName: 'Ana',
       }),
       'flow-new-person'
     );
@@ -104,27 +104,27 @@ describe('RegistrationService', () => {
         flowId: 'flow-new-application',
         identity: { documentType: 'PS', documentNumber: 'AB123456' },
         personal: {
-          primerNombre: 'Ana',
-          segundoNombre: '',
-          primerApellido: 'Silva',
-          segundoApellido: '',
-          fechaNacimiento: '2000-01-01',
-          sexo: 'F',
-          codigoPais: 1,
-          codigoEstado: 10,
-          codigoCiudad: 100,
-          direccion: 'Mercedes 1234',
-          telefono1: { nationalNumber: '099123456', iso2: 'UY' },
-          mail: 'ana@example.com',
-          verificacionMail: 'ana@example.com',
+          firstName: 'Ana',
+          middleName: '',
+          firstSurname: 'Silva',
+          secondSurname: '',
+          birthDate: '2000-01-01',
+          sex: 'F',
+          countryCode: 1,
+          stateCode: 10,
+          cityCode: 100,
+          address: 'Mercedes 1234',
+          primaryPhone: { nationalNumber: '099123456', iso2: 'UY' },
+          email: 'ana@example.com',
+          emailConfirmation: 'ana@example.com',
         },
       })
       .subscribe();
 
     expect(endpointMock.confirmApplicationRequest).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipoDocumento: 'PS',
-        documento: 'AB123456',
+        documentType: 'PS',
+        documentNumber: 'AB123456',
       }),
       'flow-new-application'
     );

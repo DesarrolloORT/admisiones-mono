@@ -12,29 +12,29 @@ describe('auth forms', () => {
   });
 
   it('should validate phone on blur', () => {
-    expect(createPersonalForm().controls.telefono1.updateOn).toBe('blur');
+    expect(createPersonalForm().controls.primaryPhone.updateOn).toBe('blur');
   });
 
   it('should accept matching emails case-insensitively', () => {
     const form = createPersonalForm();
 
     form.patchValue({
-      mail: 'Ana@Example.com',
-      verificacionMail: 'ana@example.com',
+      email: 'Ana@Example.com',
+      emailConfirmation: 'ana@example.com',
     });
 
-    expect(form.controls.verificacionMail.hasError('emailMismatch')).toBe(false);
+    expect(form.controls.emailConfirmation.hasError('emailMismatch')).toBe(false);
   });
 
   it('should attach an email mismatch error to confirmation', () => {
     const form = createPersonalForm();
 
     form.patchValue({
-      mail: 'ana@example.com',
-      verificacionMail: 'otro@example.com',
+      email: 'ana@example.com',
+      emailConfirmation: 'otro@example.com',
     });
 
-    expect(form.controls.verificacionMail.hasError('emailMismatch')).toBe(true);
+    expect(form.controls.emailConfirmation.hasError('emailMismatch')).toBe(true);
   });
 
   it('should expose document validators by document type', () => {

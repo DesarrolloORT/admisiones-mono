@@ -11,42 +11,42 @@ import {
 import { formatDocumentForBackend } from '../models/document-number';
 
 export interface RegisterPersonalFormValue {
-  primerNombre: string;
-  segundoNombre: string;
-  primerApellido: string;
-  segundoApellido: string;
-  fechaNacimiento: string | Date | null;
-  sexo: string;
+  firstName: string;
+  middleName: string;
+  firstSurname: string;
+  secondSurname: string;
+  birthDate: string | Date | null;
+  sex: string;
   location: LocationValue;
-  direccion: string;
-  telefono1: OrtPhoneInputValue | null;
-  mail: string;
-  verificacionMail: string;
+  address: string;
+  primaryPhone: OrtPhoneInputValue | null;
+  email: string;
+  emailConfirmation: string;
 }
 
 export interface VerifyExistingPersonIdentityInput {
   identity: AuthIdentityData;
-  primerApellido: string;
-  mail: string;
+  firstSurname: string;
+  email: string;
 }
 
 export function toAuthRegisterPersonalData(
   value: RegisterPersonalFormValue
 ): AuthRegisterPersonalData {
   return {
-    primerNombre: value.primerNombre.trim(),
-    segundoNombre: value.segundoNombre.trim(),
-    primerApellido: value.primerApellido.trim(),
-    segundoApellido: value.segundoApellido.trim(),
-    fechaNacimiento: toIsoDateOnly(value.fechaNacimiento),
-    sexo: value.sexo,
-    codigoPais: value.location.countryCode,
-    codigoEstado: value.location.stateCode,
-    codigoCiudad: value.location.cityCode,
-    direccion: value.direccion.trim(),
-    telefono1: toBackendPhone(value.telefono1),
-    mail: value.mail.trim().toLowerCase(),
-    verificacionMail: value.verificacionMail.trim().toLowerCase(),
+    firstName: value.firstName.trim(),
+    middleName: value.middleName.trim(),
+    firstSurname: value.firstSurname.trim(),
+    secondSurname: value.secondSurname.trim(),
+    birthDate: toIsoDateOnly(value.birthDate),
+    sex: value.sex,
+    countryCode: value.location.countryCode,
+    stateCode: value.location.stateCode,
+    cityCode: value.location.cityCode,
+    address: value.address.trim(),
+    primaryPhone: toBackendPhone(value.primaryPhone),
+    email: value.email.trim().toLowerCase(),
+    emailConfirmation: value.emailConfirmation.trim().toLowerCase(),
   };
 }
 
@@ -85,21 +85,21 @@ export function toRegisterPayload(payload: AuthRegisterRequest): RegisterPayload
   const { identity, personal } = payload;
 
   return {
-    tipoDocumento: identity.documentType,
-    documento: formatDocumentForBackend(identity.documentType, identity.documentNumber),
-    primerNombre: personal.primerNombre,
-    segundoNombre: personal.segundoNombre || null,
-    primerApellido: personal.primerApellido,
-    segundoApellido: personal.segundoApellido || null,
-    fechaNacimiento: personal.fechaNacimiento,
-    sexo: personal.sexo,
-    direccion: personal.direccion,
-    telefono1: personal.telefono1,
-    mail: personal.mail,
-    verificacionMail: personal.verificacionMail,
-    codigoPais: personal.codigoPais ?? undefined,
-    codigoEstado: personal.codigoEstado ?? undefined,
-    codigoCiudad: personal.codigoCiudad ?? undefined,
+    documentType: identity.documentType,
+    documentNumber: formatDocumentForBackend(identity.documentType, identity.documentNumber),
+    firstName: personal.firstName,
+    middleName: personal.middleName || null,
+    firstSurname: personal.firstSurname,
+    secondSurname: personal.secondSurname || null,
+    birthDate: personal.birthDate,
+    sex: personal.sex,
+    address: personal.address,
+    primaryPhone: personal.primaryPhone,
+    email: personal.email,
+    emailConfirmation: personal.emailConfirmation,
+    countryCode: personal.countryCode ?? undefined,
+    stateCode: personal.stateCode ?? undefined,
+    cityCode: personal.cityCode ?? undefined,
   };
 }
 
@@ -107,9 +107,12 @@ export function toVerifyIdentityPayload(
   input: VerifyExistingPersonIdentityInput
 ): VerifyIdentityPayload {
   return {
-    tipoDocumento: input.identity.documentType,
-    documento: formatDocumentForBackend(input.identity.documentType, input.identity.documentNumber),
-    primerApellido: input.primerApellido.trim(),
-    mail: input.mail.trim().toLowerCase(),
+    documentType: input.identity.documentType,
+    documentNumber: formatDocumentForBackend(
+      input.identity.documentType,
+      input.identity.documentNumber
+    ),
+    firstSurname: input.firstSurname.trim(),
+    email: input.email.trim().toLowerCase(),
   };
 }

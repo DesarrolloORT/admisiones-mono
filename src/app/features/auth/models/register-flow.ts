@@ -9,36 +9,36 @@ export type RegisterContinuableFlowKind = Extract<
 export type RegisterPersonalMode = 'complete' | 'verification';
 
 export interface RegisterDocumentEvaluation {
-  requiereAltaPersona: boolean;
-  requiereAltaSolicitud: boolean;
-  requiereVerificacion: boolean;
-  solicitudAltaExistente: boolean;
-  usuarioExistente: boolean;
+  requiresPersonCreation: boolean;
+  requiresApplicationCreation: boolean;
+  requiresVerification: boolean;
+  hasExistingApplication: boolean;
+  userExists: boolean;
 }
 
 export function resolveRegisterFlow(
   documentType: string,
   evaluation: RegisterDocumentEvaluation
 ): RegisterFlowKind | null {
-  if (evaluation.usuarioExistente) {
+  if (evaluation.userExists) {
     return 'user-exists';
   }
 
-  if (evaluation.solicitudAltaExistente) {
+  if (evaluation.hasExistingApplication) {
     return 'application-exists';
   }
 
   if (documentType === 'CI') {
-    if (evaluation.requiereVerificacion) {
+    if (evaluation.requiresVerification) {
       return 'existing-person';
     }
 
-    if (evaluation.requiereAltaPersona) {
+    if (evaluation.requiresPersonCreation) {
       return 'new-person';
     }
   }
 
-  if (documentType !== 'CI' && evaluation.requiereAltaSolicitud) {
+  if (documentType !== 'CI' && evaluation.requiresApplicationCreation) {
     return 'new-application';
   }
 

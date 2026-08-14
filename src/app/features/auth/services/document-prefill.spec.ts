@@ -16,17 +16,17 @@ describe('DocumentPrefillService', () => {
   beforeEach(() => {
     documentRecognitionMock = {
       createRequestFromFile: vi.fn().mockResolvedValue({
-        tipoMime: 'application/pdf',
-        archivoAdjunto: { nombreArchivo: 'cedula.pdf', archivo: 'base64' },
+        mimeType: 'application/pdf',
+        attachment: { fileName: 'cedula.pdf', content: 'base64' },
       }),
       recognizeDocument: vi.fn().mockReturnValue(
         of({
-          campos: {
-            tipoDocumento: 'CI',
-            numeroDocumento: '11111111',
-            primerNombre: 'Ana',
-            primerApellido: 'Silva',
-            lugarNacimiento: 'Montevideo / URY',
+          fields: {
+            documentType: 'CI',
+            documentNumber: '11111111',
+            firstName: 'Ana',
+            firstSurname: 'Silva',
+            birthplace: 'Montevideo / URY',
           },
         })
       ),
@@ -68,7 +68,7 @@ describe('DocumentPrefillService', () => {
     expect(documentRecognitionMock.createRequestFromFile).toHaveBeenCalledWith(file);
     expect(documentRecognitionMock.recognizeDocument).toHaveBeenCalled();
     expect(result.patch?.identity).toEqual({ documentType: 'CI', documentNumber: '11111111' });
-    expect(result.patch?.personal).toEqual({ primerNombre: 'Ana', primerApellido: 'Silva' });
+    expect(result.patch?.personal).toEqual({ firstName: 'Ana', firstSurname: 'Silva' });
     expect(result.location).toEqual({
       countryCode: 1,
       stateCode: 10,

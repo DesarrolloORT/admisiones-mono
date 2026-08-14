@@ -8,16 +8,16 @@
     <section class="auth-form-section">
       <app-document-fields autocomplete="username" idPrefix="recover" [form]="form" />
 
-      <ort-form-field [hideRequiredMarker]="!!form.controls.primerApellido.value">
+      <ort-form-field [hideRequiredMarker]="!!form.controls.firstSurname.value">
         <ort-label>Primer apellido</ort-label>
         <input
           autocomplete="family-name"
-          formControlName="primerApellido"
+          formControlName="firstSurname"
           ortInput
           type="text"
           [id]="'recover-primer-apellido'" />
-        @if ( form.controls.primerApellido.touched &&
-        form.controls.primerApellido.hasError('required') ) {
+        @if ( form.controls.firstSurname.touched && form.controls.firstSurname.hasError('required')
+        ) {
         <ort-error>Este campo es obligatorio</ort-error>
         }
       </ort-form-field>

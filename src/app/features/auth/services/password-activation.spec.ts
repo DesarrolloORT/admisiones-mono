@@ -41,7 +41,7 @@ describe('PasswordActivationService', () => {
     service.completePassword('NuevaPassword1!').subscribe();
 
     expect(endpointMock.completePassword).toHaveBeenCalledWith({
-      passwordNueva: 'NuevaPassword1!',
+      newPassword: 'NuevaPassword1!',
     });
   });
 
@@ -49,7 +49,7 @@ describe('PasswordActivationService', () => {
     let completed = false;
 
     service
-      .recoverPassword({ tipoDocumento: 'CI', documento: '1234567-8', primerApellido: 'Silva' })
+      .recoverPassword({ documentType: 'CI', documentNumber: '1234567-8', firstSurname: 'Silva' })
       .subscribe({
         complete: () => {
           completed = true;
@@ -57,9 +57,9 @@ describe('PasswordActivationService', () => {
       });
 
     expect(endpointMock.recoverPassword).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      primerApellido: 'Silva',
+      documentType: 'CI',
+      documentNumber: '1234567-8',
+      firstSurname: 'Silva',
     });
     expect(completed).toBe(true);
   });
@@ -70,7 +70,7 @@ describe('PasswordActivationService', () => {
     let caught: unknown;
 
     service
-      .recoverPassword({ tipoDocumento: 'CI', documento: '1234567-8', primerApellido: 'Silva' })
+      .recoverPassword({ documentType: 'CI', documentNumber: '1234567-8', firstSurname: 'Silva' })
       .subscribe({
         error: error => {
           caught = error;

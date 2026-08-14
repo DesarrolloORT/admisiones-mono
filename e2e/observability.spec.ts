@@ -187,11 +187,11 @@ function realBackendScenario(testRunId: string): RegisterScenario {
       getE2eEnv('E2E_REAL_REGISTER_DOCUMENT_NUMBER') ?? `PW-${testRunId.slice(0, 24)}`,
     flowId: '',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: true,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: true,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: false,
     },
   };
 }

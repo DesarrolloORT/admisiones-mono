@@ -59,7 +59,7 @@ export class Home {
   protected readonly actionCards = ACTION_CARDS;
 
   protected readonly greeting = computed(() => {
-    const userName = this.authSession.session()?.primerNombre?.trim();
+    const userName = this.authSession.session()?.firstName?.trim();
 
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });

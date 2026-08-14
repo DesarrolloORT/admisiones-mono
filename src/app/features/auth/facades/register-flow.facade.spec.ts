@@ -34,11 +34,11 @@ describe('RegisterFlowFacade', () => {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
           flowId: 'flow-existing-person',
-          requiereAltaPersona: false,
-          requiereAltaSolicitud: false,
-          requiereVerificacion: true,
-          solicitudAltaExistente: false,
-          usuarioExistente: false,
+          requiresPersonCreation: false,
+          requiresApplicationCreation: false,
+          requiresVerification: true,
+          hasExistingApplication: false,
+          userExists: false,
           message: null,
         })
       ),
@@ -93,7 +93,7 @@ describe('RegisterFlowFacade', () => {
 
   it('should block identity step when document already has a user', async () => {
     mockEvaluation({
-      usuarioExistente: true,
+      userExists: true,
       message: 'Ya existe un usuario registrado con este documento.',
     });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
@@ -112,7 +112,7 @@ describe('RegisterFlowFacade', () => {
 
   it('should block identity step when application already exists', async () => {
     mockEvaluation({
-      solicitudAltaExistente: true,
+      hasExistingApplication: true,
       message: 'Ya existe una solicitud de alta pendiente para este documento.',
     });
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
@@ -130,7 +130,7 @@ describe('RegisterFlowFacade', () => {
   });
 
   it('should verify an existing CI person from the personal step', async () => {
-    mockEvaluation({ requiereVerificacion: true });
+    mockEvaluation({ requiresVerification: true });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
@@ -142,8 +142,8 @@ describe('RegisterFlowFacade', () => {
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
       flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
-      primerApellido: 'Silva',
-      mail: 'ana@example.com',
+      firstSurname: 'Silva',
+      email: 'ana@example.com',
     });
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
@@ -153,7 +153,7 @@ describe('RegisterFlowFacade', () => {
   });
 
   it('should collect full data and register a new CI person from the personal step', async () => {
-    mockEvaluation({ requiereAltaPersona: true, flowId: 'flow-new-person' });
+    mockEvaluation({ requiresPersonCreation: true, flowId: 'flow-new-person' });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
@@ -167,9 +167,9 @@ describe('RegisterFlowFacade', () => {
       flowId: 'flow-new-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
       personal: expect.objectContaining({
-        primerNombre: 'Ana',
-        primerApellido: 'Silva',
-        mail: 'ana@example.com',
+        firstName: 'Ana',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
       }),
     });
     expect(facade.step()).toBe('personal');
@@ -179,7 +179,7 @@ describe('RegisterFlowFacade', () => {
   });
 
   it('should block continuable registration when backend omits flowId', async () => {
-    mockEvaluation({ requiereAltaPersona: true, flowId: null });
+    mockEvaluation({ requiresPersonCreation: true, flowId: null });
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
 
     await facade.continueToPersonalData();
@@ -193,7 +193,7 @@ describe('RegisterFlowFacade', () => {
   });
 
   it('should collect full data and confirm a non-CI application request', async () => {
-    mockEvaluation({ requiereAltaSolicitud: true, flowId: 'flow-new-application' });
+    mockEvaluation({ requiresApplicationCreation: true, flowId: 'flow-new-application' });
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
     setValidPersonalForm(facade);
 
@@ -245,11 +245,11 @@ describe('RegisterFlowFacade', () => {
 
   function mockEvaluation(
     partial: Partial<{
-      requiereAltaPersona: boolean;
-      requiereAltaSolicitud: boolean;
-      requiereVerificacion: boolean;
-      solicitudAltaExistente: boolean;
-      usuarioExistente: boolean;
+      requiresPersonCreation: boolean;
+      requiresApplicationCreation: boolean;
+      requiresVerification: boolean;
+      hasExistingApplication: boolean;
+      userExists: boolean;
       flowId: string | null;
       message: string | null;
     }>
@@ -257,11 +257,11 @@ describe('RegisterFlowFacade', () => {
     registrationMock.evaluateDocument.mockReturnValue(
       of({
         flowId: 'flow-existing-person',
-        requiereAltaPersona: false,
-        requiereAltaSolicitud: false,
-        requiereVerificacion: false,
-        solicitudAltaExistente: false,
-        usuarioExistente: false,
+        requiresPersonCreation: false,
+        requiresApplicationCreation: false,
+        requiresVerification: false,
+        hasExistingApplication: false,
+        userExists: false,
         message: null,
         ...partial,
       })
@@ -281,20 +281,20 @@ describe('RegisterFlowFacade', () => {
 
 function setValidPersonalForm(facade: RegisterFlowFacade): void {
   facade.personalForm.setValue({
-    primerNombre: 'Ana',
-    segundoNombre: 'Maria',
-    primerApellido: 'Silva',
-    segundoApellido: 'Pereira',
-    fechaNacimiento: '2000-01-01',
-    sexo: 'F',
+    firstName: 'Ana',
+    middleName: 'Maria',
+    firstSurname: 'Silva',
+    secondSurname: 'Pereira',
+    birthDate: '2000-01-01',
+    sex: 'F',
     location: { countryCode: 1, stateCode: 10, cityCode: 100 },
-    direccion: 'Mercedes 1234',
-    telefono1: {
+    address: 'Mercedes 1234',
+    primaryPhone: {
       iso2: 'UY',
       number: '099123456',
       numberE164: '+59899123456',
     },
-    mail: 'ana@example.com',
-    verificacionMail: 'ana@example.com',
+    email: 'ana@example.com',
+    emailConfirmation: 'ana@example.com',
   });
 }

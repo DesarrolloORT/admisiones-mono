@@ -34,11 +34,11 @@ describe('Register', () => {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
           flowId: 'flow-existing-person',
-          requiereAltaPersona: false,
-          requiereAltaSolicitud: false,
-          requiereVerificacion: true,
-          solicitudAltaExistente: false,
-          usuarioExistente: false,
+          requiresPersonCreation: false,
+          requiresApplicationCreation: false,
+          requiresVerification: true,
+          hasExistingApplication: false,
+          userExists: false,
           message: null,
         })
       ),
@@ -50,20 +50,20 @@ describe('Register', () => {
         patch: {
           identity: { documentType: 'CI', documentNumber: '11111111' },
           personal: {
-            primerNombre: 'Ana',
-            segundoNombre: 'Maria',
-            primerApellido: 'Silva',
-            segundoApellido: 'Pereira',
-            fechaNacimiento: '2000-01-01',
-            sexo: 'F',
+            firstName: 'Ana',
+            middleName: 'Maria',
+            firstSurname: 'Silva',
+            secondSurname: 'Pereira',
+            birthDate: '2000-01-01',
+            sex: 'F',
           },
           countryCode: 1,
           birthplace: 'Montevideo / URY',
         },
         location: {
-          codigoPais: 1,
-          codigoEstado: 10,
-          codigoCiudad: null,
+          countryCode: 1,
+          stateCode: 10,
+          cityCode: null,
         },
       }),
     };
@@ -157,12 +157,12 @@ describe('Register', () => {
       documentType: 'CI',
       documentNumber: '11111111',
     });
-    expect(facade.personalForm.controls.primerNombre.value).toBe('Ana');
-    expect(facade.personalForm.controls.primerApellido.value).toBe('Silva');
+    expect(facade.personalForm.controls.firstName.value).toBe('Ana');
+    expect(facade.personalForm.controls.firstSurname.value).toBe('Silva');
     expect(facade.personalForm.controls.location.value).toEqual({
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: null,
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: null,
     });
     expect(snackbarMock.success).toHaveBeenCalledWith(
       'Datos precargados. Revisalos antes de continuar.'
@@ -183,8 +183,8 @@ describe('Register', () => {
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
       flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
-      primerApellido: 'Silva',
-      mail: 'ana@example.com',
+      firstSurname: 'Silva',
+      email: 'ana@example.com',
     });
     expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
@@ -193,14 +193,14 @@ describe('Register', () => {
     expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 
-  it('should still call verifyIdentity even if verificacionMail differs', async () => {
+  it('should still call verifyIdentity even if emailConfirmation differs', async () => {
     const facade = component['facade'];
     facade.identityForm.setValue({
       documentType: 'CI',
       documentNumber: '11111111',
     });
     setValidPersonalForm(facade);
-    facade.personalForm.patchValue({ verificacionMail: 'otra@example.com' });
+    facade.personalForm.patchValue({ emailConfirmation: 'otra@example.com' });
 
     await facade.continueToPersonalData();
     facade.submitPersonalData();
@@ -208,8 +208,8 @@ describe('Register', () => {
     expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
       flowId: 'flow-existing-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
-      primerApellido: 'Silva',
-      mail: 'ana@example.com',
+      firstSurname: 'Silva',
+      email: 'ana@example.com',
     });
   });
 
@@ -217,11 +217,11 @@ describe('Register', () => {
     registrationMock.evaluateDocument.mockReturnValue(
       of({
         flowId: 'flow-new-person',
-        requiereAltaPersona: true,
-        requiereAltaSolicitud: false,
-        requiereVerificacion: false,
-        solicitudAltaExistente: false,
-        usuarioExistente: false,
+        requiresPersonCreation: true,
+        requiresApplicationCreation: false,
+        requiresVerification: false,
+        hasExistingApplication: false,
+        userExists: false,
         message: null,
       })
     );
@@ -239,7 +239,7 @@ describe('Register', () => {
       flow: 'new-person',
       flowId: 'flow-new-person',
       identity: { documentType: 'CI', documentNumber: '11111111' },
-      personal: expect.objectContaining({ primerNombre: 'Ana' }),
+      personal: expect.objectContaining({ firstName: 'Ana' }),
     });
     expect(facade.isCompleted()).toBe(true);
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/registro');
@@ -253,20 +253,20 @@ describe('Register', () => {
 
 function setValidPersonalForm(facade: RegisterFlowFacade): void {
   facade.personalForm.setValue({
-    primerNombre: 'Ana',
-    segundoNombre: 'Maria',
-    primerApellido: 'Silva',
-    segundoApellido: 'Pereira',
-    fechaNacimiento: '2000-01-01',
-    sexo: 'F',
+    firstName: 'Ana',
+    middleName: 'Maria',
+    firstSurname: 'Silva',
+    secondSurname: 'Pereira',
+    birthDate: '2000-01-01',
+    sex: 'F',
     location: { countryCode: 1, stateCode: 10, cityCode: 100 },
-    direccion: 'Mercedes 1234',
-    telefono1: {
+    address: 'Mercedes 1234',
+    primaryPhone: {
       iso2: 'UY',
       number: '099123456',
       numberE164: '+59899123456',
     },
-    mail: 'ana@example.com',
-    verificacionMail: 'ana@example.com',
+    email: 'ana@example.com',
+    emailConfirmation: 'ana@example.com',
   });
 }

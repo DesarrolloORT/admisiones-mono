@@ -25,7 +25,9 @@ describe('AuthSessionService', () => {
     endpointMock = {
       login: vi
         .fn()
-        .mockReturnValue(of({ kind: 'authenticated', documento: '12345678', primerNombre: 'Ana' })),
+        .mockReturnValue(
+          of({ kind: 'authenticated', documentNumber: '12345678', firstName: 'Ana' })
+        ),
       logout: vi.fn().mockReturnValue(of(undefined)),
       refreshToken: vi.fn().mockReturnValue(of(undefined)),
       resendTwoFactorCode: vi.fn().mockReturnValue(
@@ -37,7 +39,7 @@ describe('AuthSessionService', () => {
       ),
       verifyTwoFactorCode: vi
         .fn()
-        .mockReturnValue(of({ documento: '12345678', primerNombre: 'Ana' })),
+        .mockReturnValue(of({ documentNumber: '12345678', firstName: 'Ana' })),
     };
     routerMock = { navigateByUrl: vi.fn() };
     accountMock = {
@@ -91,14 +93,14 @@ describe('AuthSessionService', () => {
         expect(outcome.kind).toBe('authenticated');
         if (outcome.kind === 'authenticated') {
           expect(outcome.session.documentNumber).toBe('12345678');
-          expect(outcome.session.primerNombre).toBe('Ana');
+          expect(outcome.session.firstName).toBe('Ana');
         }
         expect(service.isAuthenticated()).toBe(true);
       });
 
     expect(endpointMock.login).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
+      documentType: 'CI',
+      documentNumber: '1234567-8',
       password: 'secret',
     });
     expect(window.localStorage.getItem('auth-session')).toBeNull();
@@ -133,7 +135,7 @@ describe('AuthSessionService', () => {
   });
 
   it('should complete two-factor verification and persist the session in memory', () => {
-    let emitted: { documentType: string; documentNumber: string; primerNombre: string } | undefined;
+    let emitted: { documentType: string; documentNumber: string; firstName: string } | undefined;
 
     service
       .completeTwoFactor({
@@ -148,12 +150,12 @@ describe('AuthSessionService', () => {
 
     expect(endpointMock.verifyTwoFactorCode).toHaveBeenCalledWith({
       sessionId: 'session-123',
-      codigo: '123456',
+      code: '123456',
     });
     expect(emitted).toEqual({
       documentType: 'CI',
       documentNumber: '12345678',
-      primerNombre: 'Ana',
+      firstName: 'Ana',
     });
     expect(service.session()).toEqual(emitted);
     expect(service.isAuthenticated()).toBe(true);
@@ -161,7 +163,7 @@ describe('AuthSessionService', () => {
   });
 
   it('should fall back to the payload document when 2FA verification returns none', () => {
-    endpointMock.verifyTwoFactorCode.mockReturnValue(of({ documento: '', primerNombre: 'Ana' }));
+    endpointMock.verifyTwoFactorCode.mockReturnValue(of({ documentNumber: '', firstName: 'Ana' }));
 
     service
       .completeTwoFactor({
@@ -232,7 +234,7 @@ describe('AuthSessionService', () => {
   it('should hydrate an authenticated cookie session in memory', () => {
     service.hydrateAuthenticatedSession().subscribe(session => {
       expect(session.documentNumber).toBe('12345678');
-      expect(session.primerNombre).toBe('Ana');
+      expect(session.firstName).toBe('Ana');
     });
 
     expect(accountMock.getPersonalData).toHaveBeenCalled();

@@ -4,7 +4,7 @@ const authenticatedSession = {
   token: null,
   documentType: 'CI',
   documentNumber: '12345672',
-  primerNombre: 'Ana',
+  firstName: 'Ana',
   expiresAt: null,
 };
 

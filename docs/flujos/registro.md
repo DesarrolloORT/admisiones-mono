@@ -121,13 +121,13 @@ activación ni crea una cuenta.
 La UI no consume directamente los flags del servidor. `resolveRegisterFlow(...)`
 los traduce a un `RegisterFlowKind` estable y aplica esta prioridad:
 
-| Prioridad | Respuesta backend               | Flujo frontend       | Resultado                                 |
-| --------- | ------------------------------- | -------------------- | ----------------------------------------- |
-| 1         | `usuarioExistente`              | `user-exists`        | Informar y ofrecer login; no continúa     |
-| 2         | `solicitudAltaExistente`        | `application-exists` | Informar solicitud pendiente; no continúa |
-| 3         | CI + `requiereVerificacion`     | `existing-person`    | Pedir apellido y email                    |
-| 4         | CI + `requiereAltaPersona`      | `new-person`         | Pedir datos personales completos          |
-| 5         | No CI + `requiereAltaSolicitud` | `new-application`    | Crear solicitud de alta                   |
+| Prioridad | Respuesta backend                     | Flujo frontend       | Resultado                                 |
+| --------- | ------------------------------------- | -------------------- | ----------------------------------------- |
+| 1         | `userExists`                          | `user-exists`        | Informar y ofrecer login; no continúa     |
+| 2         | `hasExistingApplication`              | `application-exists` | Informar solicitud pendiente; no continúa |
+| 3         | CI + `requiresVerification`           | `existing-person`    | Pedir apellido y email                    |
+| 4         | CI + `requiresPersonCreation`         | `new-person`         | Pedir datos personales completos          |
+| 5         | No CI + `requiresApplicationCreation` | `new-application`    | Crear solicitud de alta                   |
 
 Una combinación desconocida devuelve `null`: la fachada muestra un error y no
 avanza.
@@ -135,7 +135,7 @@ avanza.
 ## Sesiones y activación
 
 Una evaluación exitosa crea una sesión Redis con estado `evaluado` siempre que
-`usuarioExistente` sea falso. Esto incluye `application-exists`, aunque el
+`userExists` sea falso. Esto incluye `application-exists`, aunque el
 frontend no usa ese `flowId` porque el flujo es terminal.
 
 | Dato                      | Duración predeterminada | Uso                                                                                                  |
@@ -232,7 +232,7 @@ solicitudes por minuto por usuario/IP y solo precarga el formulario. Nunca decid
 el flujo ni reemplaza `EvaluarDocumento`.
 
 - Un documento inválido se rechaza antes de consultar persona, solicitud o LDAP.
-- `usuarioExistente` corta el flujo aunque otros flags sean verdaderos.
+- `userExists` corta el flujo aunque otros flags sean verdaderos.
 - Volver al paso identidad limpia `RegisterFlowKind` y `flowId` en el frontend.
 - Un `flowId` ausente impide cualquier confirmación continuable.
 - Repetir una confirmación con estado `confirmado` falla por `FLOW_04`.

@@ -43,8 +43,8 @@ const LOGIN_ERROR_MESSAGES: Record<number, string> = {
 
 /** Input for login. Maps internally to generated `LoginPayload`. */
 export interface LoginPayload {
-  tipoDocumento: string;
-  documento: string;
+  documentType: string;
+  documentNumber: string;
   password: string;
 }
 
@@ -55,8 +55,8 @@ export interface LoginPayload {
 export type LoginResult =
   | {
       kind: 'authenticated';
-      documento: string;
-      primerNombre: string;
+      documentNumber: string;
+      firstName: string;
     }
   | {
       kind: 'twoFactorRequired';
@@ -67,21 +67,21 @@ export type LoginResult =
 
 /** Input for user registration. */
 export interface RegisterPayload {
-  tipoDocumento: string;
-  documento: string;
-  primerNombre: string;
-  segundoNombre?: string | null;
-  primerApellido: string;
-  segundoApellido?: string | null;
-  fechaNacimiento?: string;
-  sexo: string;
-  codigoPais?: number;
-  codigoEstado?: number;
-  codigoCiudad?: number;
-  direccion: string;
-  telefono1: AuthPhoneNumber;
-  mail: string;
-  verificacionMail: string;
+  documentType: string;
+  documentNumber: string;
+  firstName: string;
+  middleName?: string | null;
+  firstSurname: string;
+  secondSurname?: string | null;
+  birthDate?: string;
+  sex: string;
+  countryCode?: number;
+  stateCode?: number;
+  cityCode?: number;
+  address: string;
+  primaryPhone: AuthPhoneNumber;
+  email: string;
+  emailConfirmation: string;
 }
 
 /** Input for confirming an application request. */
@@ -89,10 +89,10 @@ export type ConfirmApplicationRequestPayload = RegisterPayload;
 
 /** Input for identity verification. */
 export interface VerifyIdentityPayload {
-  tipoDocumento: string;
-  documento: string;
-  primerApellido: string;
-  mail: string;
+  documentType: string;
+  documentNumber: string;
+  firstSurname: string;
+  email: string;
 }
 
 /** Stable output of identity verification. */
@@ -107,18 +107,18 @@ export interface RegisterResult {
 
 /** Input for document evaluation before registration. */
 export interface EvaluateDocumentPayload {
-  tipoDocumento: string;
-  documento: string;
+  documentType: string;
+  documentNumber: string;
 }
 
 /** Stable output of document evaluation. */
 export interface EvaluateDocumentResult {
   flowId: string | null;
-  requiereAltaPersona: boolean;
-  requiereAltaSolicitud: boolean;
-  requiereVerificacion: boolean;
-  solicitudAltaExistente: boolean;
-  usuarioExistente: boolean;
+  requiresPersonCreation: boolean;
+  requiresApplicationCreation: boolean;
+  requiresVerification: boolean;
+  hasExistingApplication: boolean;
+  userExists: boolean;
   message: string | null;
 }
 
@@ -129,20 +129,20 @@ export interface ActivatePasswordLinkPayload {
 
 /** Input for completing the password activation flow. */
 export interface CompletePasswordPayload {
-  passwordNueva: string;
+  newPassword: string;
 }
 
 /** Input for initiating password recovery. */
 export interface RecoverPasswordPayload {
-  tipoDocumento: string;
-  documento: string;
-  primerApellido: string;
+  documentType: string;
+  documentNumber: string;
+  firstSurname: string;
 }
 
 /** Input for verifying the two-factor authentication code. */
 export interface VerifyTwoFactorCodePayload {
   sessionId: string;
-  codigo: string;
+  code: string;
 }
 
 /** Input for resending the two-factor authentication code. */
@@ -159,8 +159,8 @@ export interface ResendTwoFactorCodeResult {
 
 /** Stable output of 2FA verification. Same shape as authenticated login. */
 export interface VerifyTwoFactorCodeResult {
-  documento: string;
-  primerNombre: string;
+  documentNumber: string;
+  firstName: string;
 }
 
 /**
@@ -196,8 +196,8 @@ export class AuthEndpoint {
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
     const body: GeneratedLoginPayload = {
-      documentType: payload.tipoDocumento,
-      documentNumber: payload.documento,
+      documentType: payload.documentType,
+      documentNumber: payload.documentNumber,
       password: payload.password,
     };
 
@@ -221,8 +221,8 @@ export class AuthEndpoint {
 
           return {
             kind: 'authenticated',
-            documento: response.person?.documentNumber ?? '',
-            primerNombre: response.person?.firstName ?? '',
+            documentNumber: response.person?.documentNumber ?? '',
+            firstName: response.person?.firstName ?? '',
           } satisfies LoginResult;
         })
       );
@@ -251,7 +251,7 @@ export class AuthEndpoint {
   public completePassword(payload: CompletePasswordPayload): Observable<void> {
     return this.api
       .request(postAuthCompleteInitialPasswordEndpoint, {
-        body: { newPassword: payload.passwordNueva },
+        body: { newPassword: payload.newPassword },
         withCredentials: true,
       })
       .pipe(map(() => undefined));
@@ -309,18 +309,18 @@ export class AuthEndpoint {
   public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
     return this.api
       .requestWithMessage(postRegistrationEvaluateDocumentEndpoint, {
-        body: { documentType: payload.tipoDocumento, documentNumber: payload.documento },
+        body: { documentType: payload.documentType, documentNumber: payload.documentNumber },
         withCredentials: true,
         captchaAction: 'EvaluateDocument',
       })
       .pipe(
         map(({ data, message }) => ({
           flowId: data.flowId ?? null,
-          requiereAltaPersona: data.requiresPersonRegistration ?? false,
-          requiereAltaSolicitud: data.requiresRegistrationRequest ?? false,
-          requiereVerificacion: data.requiresIdentityVerification ?? false,
-          solicitudAltaExistente: data.registrationRequestPending ?? false,
-          usuarioExistente: data.userAlreadyRegistered ?? false,
+          requiresPersonCreation: data.requiresPersonRegistration ?? false,
+          requiresApplicationCreation: data.requiresRegistrationRequest ?? false,
+          requiresVerification: data.requiresIdentityVerification ?? false,
+          hasExistingApplication: data.registrationRequestPending ?? false,
+          userExists: data.userAlreadyRegistered ?? false,
           message,
         }))
       );
@@ -338,10 +338,10 @@ export class AuthEndpoint {
     return this.api
       .request(postRegistrationAnalyzeAttachmentEndpoint, {
         body: {
-          mimeType: payload.tipoMime,
+          mimeType: payload.mimeType,
           file: {
-            fileName: payload.archivoAdjunto.nombreArchivo,
-            content: payload.archivoAdjunto.archivo,
+            fileName: payload.attachment.fileName,
+            content: payload.attachment.content,
           },
         },
         withCredentials: true,
@@ -349,17 +349,17 @@ export class AuthEndpoint {
       })
       .pipe(
         map(response => ({
-          campos: response?.fields
+          fields: response?.fields
             ? {
-                tipoDocumento: response.fields.documentType ?? null,
-                numeroDocumento: response.fields.documentNumber ?? null,
-                primerNombre: response.fields.firstName ?? null,
-                segundoNombre: response.fields.middleName ?? null,
-                primerApellido: response.fields.firstSurname ?? null,
-                segundoApellido: response.fields.secondSurname ?? null,
-                fechaNacimiento: response.fields.birthDate ?? null,
-                lugarNacimiento: response.fields.birthPlace ?? null,
-                sexo: response.fields.sex ?? null,
+                documentType: response.fields.documentType ?? null,
+                documentNumber: response.fields.documentNumber ?? null,
+                firstName: response.fields.firstName ?? null,
+                middleName: response.fields.middleName ?? null,
+                firstSurname: response.fields.firstSurname ?? null,
+                secondSurname: response.fields.secondSurname ?? null,
+                birthDate: response.fields.birthDate ?? null,
+                birthplace: response.fields.birthPlace ?? null,
+                sex: response.fields.sex ?? null,
               }
             : undefined,
         }))
@@ -379,10 +379,10 @@ export class AuthEndpoint {
     return this.api
       .request(postRegistrationVerifyIdentityEndpoint, {
         body: {
-          documentType: payload.tipoDocumento,
-          documentNumber: payload.documento,
-          firstSurname: payload.primerApellido,
-          email: payload.mail,
+          documentType: payload.documentType,
+          documentNumber: payload.documentNumber,
+          firstSurname: payload.firstSurname,
+          email: payload.email,
         },
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
@@ -401,9 +401,9 @@ export class AuthEndpoint {
     return this.api
       .request(postAuthRecoverPasswordEndpoint, {
         body: {
-          documentType: payload.tipoDocumento,
-          documentNumber: payload.documento,
-          firstSurname: payload.primerApellido,
+          documentType: payload.documentType,
+          documentNumber: payload.documentNumber,
+          firstSurname: payload.firstSurname,
         },
         withCredentials: true,
         captchaAction: 'RecoverPassword',
@@ -450,13 +450,13 @@ export class AuthEndpoint {
   ): Observable<VerifyTwoFactorCodeResult> {
     return this.api
       .data(postAuthVerifyTwoFactorCodeEndpoint, {
-        body: { sessionId: payload.sessionId, code: payload.codigo },
+        body: { sessionId: payload.sessionId, code: payload.code },
         withCredentials: true,
       })
       .pipe(
         map(response => ({
-          documento: response.person?.documentNumber ?? '',
-          primerNombre: response.person?.firstName ?? '',
+          documentNumber: response.person?.documentNumber ?? '',
+          firstName: response.person?.firstName ?? '',
         }))
       );
   }
@@ -490,24 +490,24 @@ export class AuthEndpoint {
 
   private toRegisterPersonRequest(payload: RegisterPayload) {
     return {
-      documentType: payload.tipoDocumento,
-      documentNumber: payload.documento,
-      firstName: payload.primerNombre,
-      middleName: payload.segundoNombre,
-      firstSurname: payload.primerApellido,
-      secondSurname: payload.segundoApellido,
-      birthDate: payload.fechaNacimiento,
-      sex: payload.sexo,
-      countryId: payload.codigoPais,
-      stateId: payload.codigoEstado,
-      cityId: payload.codigoCiudad,
-      address: payload.direccion,
+      documentType: payload.documentType,
+      documentNumber: payload.documentNumber,
+      firstName: payload.firstName,
+      middleName: payload.middleName,
+      firstSurname: payload.firstSurname,
+      secondSurname: payload.secondSurname,
+      birthDate: payload.birthDate,
+      sex: payload.sex,
+      countryId: payload.countryCode,
+      stateId: payload.stateCode,
+      cityId: payload.cityCode,
+      address: payload.address,
       primaryPhone: {
-        nationalNumber: payload.telefono1.nationalNumber,
-        iso2: payload.telefono1.iso2,
+        nationalNumber: payload.primaryPhone.nationalNumber,
+        iso2: payload.primaryPhone.iso2,
       },
-      email: payload.mail,
-      emailConfirmation: payload.verificacionMail,
+      email: payload.email,
+      emailConfirmation: payload.emailConfirmation,
     };
   }
 }

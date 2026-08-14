@@ -7,19 +7,19 @@ import {
 
 describe('register flow', () => {
   const emptyEvaluation: RegisterDocumentEvaluation = {
-    requiereAltaPersona: false,
-    requiereAltaSolicitud: false,
-    requiereVerificacion: false,
-    solicitudAltaExistente: false,
-    usuarioExistente: false,
+    requiresPersonCreation: false,
+    requiresApplicationCreation: false,
+    requiresVerification: false,
+    hasExistingApplication: false,
+    userExists: false,
   };
 
   it('should resolve an already registered user first', () => {
     expect(
       resolveRegisterFlow('CI', {
         ...emptyEvaluation,
-        requiereAltaPersona: true,
-        usuarioExistente: true,
+        requiresPersonCreation: true,
+        userExists: true,
       })
     ).toBe('user-exists');
   });
@@ -28,32 +28,34 @@ describe('register flow', () => {
     expect(
       resolveRegisterFlow('PS', {
         ...emptyEvaluation,
-        requiereAltaSolicitud: true,
-        solicitudAltaExistente: true,
+        requiresApplicationCreation: true,
+        hasExistingApplication: true,
       })
     ).toBe('application-exists');
   });
 
   it('should resolve existing CI person verification', () => {
-    expect(resolveRegisterFlow('CI', { ...emptyEvaluation, requiereVerificacion: true })).toBe(
+    expect(resolveRegisterFlow('CI', { ...emptyEvaluation, requiresVerification: true })).toBe(
       'existing-person'
     );
   });
 
   it('should resolve new CI person registration', () => {
-    expect(resolveRegisterFlow('CI', { ...emptyEvaluation, requiereAltaPersona: true })).toBe(
+    expect(resolveRegisterFlow('CI', { ...emptyEvaluation, requiresPersonCreation: true })).toBe(
       'new-person'
     );
   });
 
   it('should resolve new non-CI application registration', () => {
-    expect(resolveRegisterFlow('PS', { ...emptyEvaluation, requiereAltaSolicitud: true })).toBe(
-      'new-application'
-    );
+    expect(
+      resolveRegisterFlow('PS', { ...emptyEvaluation, requiresApplicationCreation: true })
+    ).toBe('new-application');
   });
 
   it('should return null when the backend flags do not map to a known flow', () => {
-    expect(resolveRegisterFlow('PS', { ...emptyEvaluation, requiereAltaPersona: true })).toBeNull();
+    expect(
+      resolveRegisterFlow('PS', { ...emptyEvaluation, requiresPersonCreation: true })
+    ).toBeNull();
   });
 
   it('should expose continuable flows and personal form mode', () => {

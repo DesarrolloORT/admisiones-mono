@@ -22,7 +22,7 @@ describe('Dashboard', () => {
             session: signal<AuthSession | null>({
               documentType: 'CI',
               documentNumber: '12345678',
-              primerNombre: 'Ana',
+              firstName: 'Ana',
             }),
           },
         },

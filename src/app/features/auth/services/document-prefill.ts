@@ -25,7 +25,7 @@ export class DocumentPrefillService {
   public async preload(file: File): Promise<DocumentPrefillResult> {
     const payload = await this.documentRecognition.createRequestFromFile(file);
     const response = await firstValueFrom(this.documentRecognition.recognizeDocument(payload));
-    const patch = toRecognizedFormPatch(response.campos);
+    const patch = toRecognizedFormPatch(response.fields);
 
     return {
       patch,

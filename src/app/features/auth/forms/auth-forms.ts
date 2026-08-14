@@ -26,23 +26,23 @@ export interface IdentityForm {
 }
 
 export interface PersonalForm {
-  primerNombre: FormControl<string>;
-  segundoNombre: FormControl<string>;
-  primerApellido: FormControl<string>;
-  segundoApellido: FormControl<string>;
-  fechaNacimiento: FormControl<string | Date | null>;
-  sexo: FormControl<string>;
+  firstName: FormControl<string>;
+  middleName: FormControl<string>;
+  firstSurname: FormControl<string>;
+  secondSurname: FormControl<string>;
+  birthDate: FormControl<string | Date | null>;
+  sex: FormControl<string>;
   location: FormControl<LocationValue>;
-  direccion: FormControl<string>;
-  telefono1: FormControl<OrtPhoneInputValue | null>;
-  mail: FormControl<string>;
-  verificacionMail: FormControl<string>;
+  address: FormControl<string>;
+  primaryPhone: FormControl<OrtPhoneInputValue | null>;
+  email: FormControl<string>;
+  emailConfirmation: FormControl<string>;
 }
 
 export interface RecoverAccessForm {
   documentType: FormControl<string>;
   documentNumber: FormControl<string>;
-  primerApellido: FormControl<string>;
+  firstSurname: FormControl<string>;
 }
 
 export function createLoginForm(): FormGroup<LoginForm> {
@@ -103,50 +103,50 @@ export function syncDocumentNumberValidators(
 export function createPersonalForm(): FormGroup<PersonalForm> {
   return new FormGroup<PersonalForm>(
     {
-      primerNombre: new FormControl('', {
+      firstName: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
       }),
-      segundoNombre: new FormControl('', {
+      middleName: new FormControl('', {
         nonNullable: true,
         validators: [Validators.maxLength(NAME_MAX_LENGTH)],
       }),
-      primerApellido: new FormControl('', {
+      firstSurname: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
       }),
-      segundoApellido: new FormControl('', {
+      secondSurname: new FormControl('', {
         nonNullable: true,
         validators: [Validators.maxLength(NAME_MAX_LENGTH)],
       }),
-      fechaNacimiento: new FormControl<string | Date | null>(null, {
+      birthDate: new FormControl<string | Date | null>(null, {
         validators: [Validators.required],
       }),
-      sexo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      sex: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       location: new FormControl<LocationValue>(
         { countryCode: null, stateCode: null, cityCode: null },
         { nonNullable: true }
       ),
-      direccion: new FormControl('', {
+      address: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.maxLength(ADDRESS_MAX_LENGTH)],
       }),
-      telefono1: new FormControl<OrtPhoneInputValue | null>(null, {
+      primaryPhone: new FormControl<OrtPhoneInputValue | null>(null, {
         validators: [Validators.required, ortPhoneValidator],
         updateOn: 'blur',
       }),
-      mail: new FormControl('', {
+      email: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX_LENGTH)],
       }),
-      verificacionMail: new FormControl('', {
+      emailConfirmation: new FormControl('', {
         nonNullable: true,
         validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX_LENGTH)],
       }),
     },
     {
       validators: [
-        matchingFieldsValidator('mail', 'verificacionMail', {
+        matchingFieldsValidator('email', 'emailConfirmation', {
           errorKey: 'emailMismatch',
           normalize: normalizeEmailValue,
         }),
@@ -165,7 +165,7 @@ export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
       nonNullable: true,
       validators: [Validators.required, ortCedulaValidator],
     }),
-    primerApellido: new FormControl('', {
+    firstSurname: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(NAME_MAX_LENGTH)],
     }),

@@ -1,11 +1,11 @@
 import type { RegisterFlowKind } from '../../../src/app/features/auth/models/register-flow';
 
 export interface RegisterDocumentEvaluationMock {
-  requiereAltaPersona: boolean;
-  requiereAltaSolicitud: boolean;
-  requiereVerificacion: boolean;
-  solicitudAltaExistente: boolean;
-  usuarioExistente: boolean;
+  requiresPersonCreation: boolean;
+  requiresApplicationCreation: boolean;
+  requiresVerification: boolean;
+  hasExistingApplication: boolean;
+  userExists: boolean;
 }
 
 export interface RegisterScenario {
@@ -24,11 +24,11 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: '12345672',
     flowId: 'flow-e2e-new-person',
     evaluation: {
-      requiereAltaPersona: true,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: true,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: false,
     },
   },
   'existing-person': {
@@ -37,11 +37,11 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: '12345672',
     flowId: 'flow-e2e-existing-person',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: true,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: true,
+      hasExistingApplication: false,
+      userExists: false,
     },
   },
   'new-application': {
@@ -50,11 +50,11 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: 'PS-123456',
     flowId: 'flow-e2e-new-application',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: true,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: true,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: false,
     },
   },
   'user-exists': {
@@ -64,11 +64,11 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     flowId: 'flow-e2e-user-exists',
     terminalMessage: 'Ya existe un usuario registrado con este documento.',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: true,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: true,
     },
   },
   'application-exists': {
@@ -78,11 +78,11 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     flowId: 'flow-e2e-application-exists',
     terminalMessage: 'Ya existe una solicitud de alta pendiente para este documento.',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: true,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: true,
+      userExists: false,
     },
   },
 };

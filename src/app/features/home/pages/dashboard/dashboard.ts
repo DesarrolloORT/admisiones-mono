@@ -55,7 +55,7 @@ export class Dashboard implements AfterViewInit, OnDestroy {
   readonly becas = input.required<MiBeca[]>();
 
   protected readonly greeting = computed(() => {
-    const name = this.authSession.session()?.primerNombre?.trim();
+    const name = this.authSession.session()?.firstName?.trim();
     return name ? `¡Hola ${name}!` : '¡Hola!';
   });
   protected readonly hasPendingPayment = computed(() =>

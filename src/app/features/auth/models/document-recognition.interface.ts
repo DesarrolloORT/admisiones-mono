@@ -1,23 +1,23 @@
 export interface DocumentRecognitionRequest {
-  tipoMime: string;
-  archivoAdjunto: {
-    nombreArchivo: string;
-    archivo: string;
+  mimeType: string;
+  attachment: {
+    fileName: string;
+    content: string;
   };
 }
 
 export interface DocumentRecognitionFields {
-  tipoDocumento?: string | null;
-  numeroDocumento?: string | null;
-  primerNombre?: string | null;
-  segundoNombre?: string | null;
-  primerApellido?: string | null;
-  segundoApellido?: string | null;
-  fechaNacimiento?: string | null;
-  lugarNacimiento?: string | null;
-  sexo?: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  firstSurname?: string | null;
+  secondSurname?: string | null;
+  birthDate?: string | null;
+  birthplace?: string | null;
+  sex?: string | null;
 }
 
 export interface DocumentRecognitionData {
-  campos?: DocumentRecognitionFields;
+  fields?: DocumentRecognitionFields;
 }

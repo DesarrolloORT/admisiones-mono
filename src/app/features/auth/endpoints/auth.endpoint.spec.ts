@@ -40,13 +40,13 @@ describe('AuthEndpoint', () => {
   });
 
   describe('login', () => {
-    it('should POST to /auth/login and return authenticated outcome with documento', () => {
+    it('should POST to /auth/login and return authenticated outcome with document data', () => {
       endpoint
-        .login({ tipoDocumento: 'CI', documento: '12345', password: 'pwd' })
+        .login({ documentType: 'CI', documentNumber: '12345', password: 'pwd' })
         .subscribe(result => {
           expect(result.kind).toBe('authenticated');
           if (result.kind === 'authenticated') {
-            expect(result.documento).toBe('12345678');
+            expect(result.documentNumber).toBe('12345678');
           }
         });
 
@@ -74,27 +74,31 @@ describe('AuthEndpoint', () => {
       });
     });
 
-    it('should return empty documento when authenticated response has no documento', () => {
-      endpoint.login({ tipoDocumento: 'CI', documento: '99', password: 'x' }).subscribe(result => {
-        expect(result.kind).toBe('authenticated');
-        if (result.kind === 'authenticated') {
-          expect(result.documento).toBe('');
-        }
-      });
+    it('should return empty document number when authenticated response has no person data', () => {
+      endpoint
+        .login({ documentType: 'CI', documentNumber: '99', password: 'x' })
+        .subscribe(result => {
+          expect(result.kind).toBe('authenticated');
+          if (result.kind === 'authenticated') {
+            expect(result.documentNumber).toBe('');
+          }
+        });
 
       const req = httpController.expectOne(r => r.url.includes('/auth/login'));
       req.flush({ success: true, httpCode: 200, data: { person: {} } });
     });
 
     it('should return twoFactorRequired outcome when response includes sessionId', () => {
-      endpoint.login({ tipoDocumento: 'CI', documento: '99', password: 'x' }).subscribe(result => {
-        expect(result.kind).toBe('twoFactorRequired');
-        if (result.kind === 'twoFactorRequired') {
-          expect(result.sessionId).toBe('ab4df653422a4c19be2867c08355fa27');
-          expect(result.maskedEmail).toBe('c******a@gmail.******');
-          expect(result.message).toContain('código de verificación');
-        }
-      });
+      endpoint
+        .login({ documentType: 'CI', documentNumber: '99', password: 'x' })
+        .subscribe(result => {
+          expect(result.kind).toBe('twoFactorRequired');
+          if (result.kind === 'twoFactorRequired') {
+            expect(result.sessionId).toBe('ab4df653422a4c19be2867c08355fa27');
+            expect(result.maskedEmail).toBe('c******a@gmail.******');
+            expect(result.message).toContain('código de verificación');
+          }
+        });
 
       const req = httpController.expectOne(r => r.url.includes('/auth/login'));
       req.flush(
@@ -112,7 +116,7 @@ describe('AuthEndpoint', () => {
     });
 
     it('should propagate normalized API failures', () => {
-      endpoint.login({ tipoDocumento: 'CI', documento: '1', password: 'bad' }).subscribe({
+      endpoint.login({ documentType: 'CI', documentNumber: '1', password: 'bad' }).subscribe({
         error: error => {
           expect(isNormalizedApiError(error)).toBe(true);
           if (!isNormalizedApiError(error)) {
@@ -147,7 +151,7 @@ describe('AuthEndpoint', () => {
     });
 
     it('should POST to /auth/complete-initial-password and return void', () => {
-      endpoint.completePassword({ passwordNueva: 'NuevaPassword1!' }).subscribe(result => {
+      endpoint.completePassword({ newPassword: 'NuevaPassword1!' }).subscribe(result => {
         expect(result).toBeUndefined();
       });
 
@@ -168,17 +172,19 @@ describe('AuthEndpoint', () => {
 
   describe('register', () => {
     it('should map document evaluation with flowId', () => {
-      endpoint.evaluateDocument({ tipoDocumento: 'CI', documento: '12345' }).subscribe(result => {
-        expect(result).toEqual({
-          flowId: 'flow-existing-person',
-          requiereAltaPersona: false,
-          requiereAltaSolicitud: false,
-          requiereVerificacion: true,
-          solicitudAltaExistente: false,
-          usuarioExistente: false,
-          message: null,
+      endpoint
+        .evaluateDocument({ documentType: 'CI', documentNumber: '12345' })
+        .subscribe(result => {
+          expect(result).toEqual({
+            flowId: 'flow-existing-person',
+            requiresPersonCreation: false,
+            requiresApplicationCreation: false,
+            requiresVerification: true,
+            hasExistingApplication: false,
+            userExists: false,
+            message: null,
+          });
         });
-      });
 
       const req = httpController.expectOne(
         r => r.url.includes('/registration/evaluate-document') && r.method === 'POST'
@@ -201,7 +207,7 @@ describe('AuthEndpoint', () => {
     it('should error when document evaluation returns a null data payload', () => {
       let caught: unknown;
 
-      endpoint.evaluateDocument({ tipoDocumento: 'CI', documento: '12345' }).subscribe({
+      endpoint.evaluateDocument({ documentType: 'CI', documentNumber: '12345' }).subscribe({
         error: error => {
           caught = error;
         },
@@ -220,18 +226,18 @@ describe('AuthEndpoint', () => {
 
     it('should POST to /registration/confirm-new-person and return success', () => {
       const payload = {
-        tipoDocumento: 'CI',
-        documento: '12345678',
-        primerNombre: 'Ana',
-        segundoNombre: null,
-        primerApellido: 'Silva',
-        segundoApellido: null,
-        fechaNacimiento: '2000-01-01',
-        sexo: 'F',
-        direccion: 'Mercedes 1234',
-        telefono1: { nationalNumber: '099123456', iso2: 'UY' },
-        mail: 'ana@example.com',
-        verificacionMail: 'ana@example.com',
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstName: 'Ana',
+        middleName: null,
+        firstSurname: 'Silva',
+        secondSurname: null,
+        birthDate: '2000-01-01',
+        sex: 'F',
+        address: 'Mercedes 1234',
+        primaryPhone: { nationalNumber: '099123456', iso2: 'UY' },
+        email: 'ana@example.com',
+        emailConfirmation: 'ana@example.com',
       };
 
       endpoint.register(payload, 'flow-new-person').subscribe(result => {
@@ -272,18 +278,18 @@ describe('AuthEndpoint', () => {
       endpoint
         .register(
           {
-            tipoDocumento: 'CI',
-            documento: '1',
-            primerNombre: 'X',
-            segundoNombre: null,
-            primerApellido: 'Y',
-            segundoApellido: null,
-            fechaNacimiento: '2000-01-01',
-            sexo: 'M',
-            direccion: '',
-            telefono1: { nationalNumber: '', iso2: null },
-            mail: '',
-            verificacionMail: '',
+            documentType: 'CI',
+            documentNumber: '1',
+            firstName: 'X',
+            middleName: null,
+            firstSurname: 'Y',
+            secondSurname: null,
+            birthDate: '2000-01-01',
+            sex: 'M',
+            address: '',
+            primaryPhone: { nationalNumber: '', iso2: null },
+            email: '',
+            emailConfirmation: '',
           },
           'flow-new-person'
         )
@@ -306,18 +312,18 @@ describe('AuthEndpoint', () => {
   describe('confirmApplicationRequest', () => {
     it('should POST to /registration/confirm-registration-request and return success', () => {
       const payload = {
-        tipoDocumento: 'PS',
-        documento: 'AB123456',
-        primerNombre: 'Ana',
-        segundoNombre: null,
-        primerApellido: 'Silva',
-        segundoApellido: null,
-        fechaNacimiento: '2000-01-01',
-        sexo: 'F',
-        direccion: 'Mercedes 1234',
-        telefono1: { nationalNumber: '099123456', iso2: 'UY' },
-        mail: 'ana@example.com',
-        verificacionMail: 'ana@example.com',
+        documentType: 'PS',
+        documentNumber: 'AB123456',
+        firstName: 'Ana',
+        middleName: null,
+        firstSurname: 'Silva',
+        secondSurname: null,
+        birthDate: '2000-01-01',
+        sex: 'F',
+        address: 'Mercedes 1234',
+        primaryPhone: { nationalNumber: '099123456', iso2: 'UY' },
+        email: 'ana@example.com',
+        emailConfirmation: 'ana@example.com',
       };
 
       endpoint.confirmApplicationRequest(payload, 'flow-new-application').subscribe(result => {
@@ -358,10 +364,10 @@ describe('AuthEndpoint', () => {
   describe('verifyIdentity', () => {
     it('should POST to /registration/verify-identity with X-Flow-Id and return success', () => {
       const payload = {
-        tipoDocumento: 'CI',
-        documento: '12345678',
-        primerApellido: 'Silva',
-        mail: 'ana@example.com',
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
       };
 
       endpoint.verifyIdentity(payload, 'flow-existing-person').subscribe(result => {
@@ -389,12 +395,12 @@ describe('AuthEndpoint', () => {
   describe('recognizeDocument', () => {
     it('should POST to /registration/analyze-attachment and return response', () => {
       const payload = {
-        tipoMime: 'application/pdf',
-        archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
+        mimeType: 'application/pdf',
+        attachment: { fileName: 'doc.pdf', content: 'base64data' },
       };
 
       endpoint.recognizeDocument(payload).subscribe(response => {
-        expect(response.campos?.primerNombre).toBe('Ana');
+        expect(response.fields?.firstName).toBe('Ana');
       });
 
       const req = httpController.expectOne(
@@ -416,8 +422,8 @@ describe('AuthEndpoint', () => {
 
       endpoint
         .recognizeDocument({
-          tipoMime: 'application/pdf',
-          archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
+          mimeType: 'application/pdf',
+          attachment: { fileName: 'doc.pdf', content: 'base64data' },
         })
         .subscribe(response => {
           result = response;
@@ -446,39 +452,39 @@ describe('AuthEndpoint', () => {
         },
       });
 
-      expect(result?.campos).toEqual({
-        tipoDocumento: 'CI',
-        numeroDocumento: '12345678',
-        primerNombre: 'Ana',
-        segundoNombre: 'María',
-        primerApellido: 'Silva',
-        segundoApellido: 'Pereira',
-        fechaNacimiento: '2000-01-01T00:00:00',
-        lugarNacimiento: 'Montevideo / URY',
-        sexo: 'F',
+      expect(result?.fields).toEqual({
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstName: 'Ana',
+        middleName: 'María',
+        firstSurname: 'Silva',
+        secondSurname: 'Pereira',
+        birthDate: '2000-01-01T00:00:00',
+        birthplace: 'Montevideo / URY',
+        sex: 'F',
       });
-      expect(result?.campos).not.toHaveProperty('departamento');
-      expect(result?.campos).not.toHaveProperty('fechaVencimiento');
-      expect(result?.campos).not.toHaveProperty('nacionalidad');
+      expect(result?.fields).not.toHaveProperty('state');
+      expect(result?.fields).not.toHaveProperty('expirationDate');
+      expect(result?.fields).not.toHaveProperty('nationality');
     });
 
     it('should map missing recognized fields to null', () => {
       endpoint
         .recognizeDocument({
-          tipoMime: 'application/pdf',
-          archivoAdjunto: { nombreArchivo: 'doc.pdf', archivo: 'base64data' },
+          mimeType: 'application/pdf',
+          attachment: { fileName: 'doc.pdf', content: 'base64data' },
         })
         .subscribe(response => {
-          expect(response.campos).toEqual({
-            tipoDocumento: 'CI',
-            numeroDocumento: null,
-            primerNombre: null,
-            segundoNombre: null,
-            primerApellido: null,
-            segundoApellido: null,
-            fechaNacimiento: null,
-            lugarNacimiento: null,
-            sexo: null,
+          expect(response.fields).toEqual({
+            documentType: 'CI',
+            documentNumber: null,
+            firstName: null,
+            middleName: null,
+            firstSurname: null,
+            secondSurname: null,
+            birthDate: null,
+            birthplace: null,
+            sex: null,
           });
         });
 
@@ -486,13 +492,13 @@ describe('AuthEndpoint', () => {
       req.flush({ success: true, httpCode: 200, data: { fields: { documentType: 'CI' } } });
     });
 
-    it('should return undefined campos when the response has no recognized fields', () => {
-      let result: { campos?: unknown } | undefined;
+    it('should return undefined fields when the response has no recognized fields', () => {
+      let result: { fields?: unknown } | undefined;
 
       endpoint
         .recognizeDocument({
-          tipoMime: 'image/png',
-          archivoAdjunto: { nombreArchivo: 'img.png', archivo: 'abc' },
+          mimeType: 'image/png',
+          attachment: { fileName: 'img.png', content: 'abc' },
         })
         .subscribe(response => {
           result = response;
@@ -502,14 +508,14 @@ describe('AuthEndpoint', () => {
       req.flush({ success: true, httpCode: 200, data: {} });
 
       expect(result).toBeDefined();
-      expect(result?.campos).toBeUndefined();
+      expect(result?.fields).toBeUndefined();
     });
 
     it('should propagate normalized API failures', () => {
       endpoint
         .recognizeDocument({
-          tipoMime: 'image/png',
-          archivoAdjunto: { nombreArchivo: 'img.png', archivo: 'abc' },
+          mimeType: 'image/png',
+          attachment: { fileName: 'img.png', content: 'abc' },
         })
         .subscribe({
           error: error => {
@@ -530,9 +536,9 @@ describe('AuthEndpoint', () => {
   describe('recoverPassword', () => {
     it('should POST to /auth/recover-password with captcha and return void', () => {
       const payload = {
-        tipoDocumento: 'CI',
-        documento: '12345678',
-        primerApellido: 'Silva',
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstSurname: 'Silva',
       };
 
       endpoint.recoverPassword(payload).subscribe(result => {
@@ -595,9 +601,9 @@ describe('AuthEndpoint', () => {
   describe('verifyTwoFactorCode', () => {
     it('should POST to /auth/verify-two-factor-code and map persona data', () => {
       endpoint
-        .verifyTwoFactorCode({ sessionId: 'session-123', codigo: '123456' })
+        .verifyTwoFactorCode({ sessionId: 'session-123', code: '123456' })
         .subscribe(result => {
-          expect(result).toEqual({ documento: '12345678', primerNombre: 'Ana' });
+          expect(result).toEqual({ documentNumber: '12345678', firstName: 'Ana' });
         });
 
       const req = httpController.expectOne(
@@ -617,9 +623,9 @@ describe('AuthEndpoint', () => {
 
     it('should return empty fields when the response has no persona', () => {
       endpoint
-        .verifyTwoFactorCode({ sessionId: 'session-123', codigo: '123456' })
+        .verifyTwoFactorCode({ sessionId: 'session-123', code: '123456' })
         .subscribe(result => {
-          expect(result).toEqual({ documento: '', primerNombre: '' });
+          expect(result).toEqual({ documentNumber: '', firstName: '' });
         });
 
       const req = httpController.expectOne(r => r.url.includes('/auth/verify-two-factor-code'));
@@ -629,7 +635,7 @@ describe('AuthEndpoint', () => {
     it('should propagate normalized API failures for invalid codes', () => {
       let caught: unknown;
 
-      endpoint.verifyTwoFactorCode({ sessionId: 'session-123', codigo: '000000' }).subscribe({
+      endpoint.verifyTwoFactorCode({ sessionId: 'session-123', code: '000000' }).subscribe({
         error: error => {
           caught = error;
         },

@@ -75,7 +75,7 @@ export class RegisterFlowFacade {
   });
 
   constructor() {
-    this.personalForm.controls.telefono1.addAsyncValidators(this.phoneValidator());
+    this.personalForm.controls.primaryPhone.addAsyncValidators(this.phoneValidator());
 
     effect(() => {
       syncDocumentNumberValidators(
@@ -185,10 +185,10 @@ export class RegisterFlowFacade {
       return;
     }
 
-    const telefono = this.personalForm.controls.telefono1;
+    const phone = this.personalForm.controls.primaryPhone;
 
-    if (telefono.pending) {
-      telefono.statusChanges
+    if (phone.pending) {
+      phone.statusChanges
         .pipe(
           filter(status => status !== 'PENDING'),
           take(1),
@@ -198,7 +198,7 @@ export class RegisterFlowFacade {
 
       // La validacion en curso pudo dispararse sin emitEvent (el control es updateOn:
       // 'blur'), asi que se relanza para garantizar la notificacion.
-      telefono.updateValueAndValidity();
+      phone.updateValueAndValidity();
       return;
     }
 
@@ -239,12 +239,12 @@ export class RegisterFlowFacade {
       return;
     }
 
-    const { primerApellido, mail } = this.personalForm.controls;
+    const { firstSurname, email } = this.personalForm.controls;
 
-    primerApellido.markAsTouched();
-    mail.markAsTouched();
+    firstSurname.markAsTouched();
+    email.markAsTouched();
 
-    if (primerApellido.invalid || mail.invalid) {
+    if (firstSurname.invalid || email.invalid) {
       return;
     }
 
@@ -255,8 +255,8 @@ export class RegisterFlowFacade {
       .verifyExistingPersonIdentity({
         flowId,
         identity: this.getCleanIdentityValues(),
-        primerApellido: primerApellido.value,
-        mail: mail.value,
+        firstSurname: firstSurname.value,
+        email: email.value,
       })
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
@@ -331,12 +331,12 @@ export class RegisterFlowFacade {
   private clearRecognizedFields(): void {
     this.identityForm.patchValue({ documentType: CEDULA_DOCUMENT_TYPE, documentNumber: '' });
     this.personalForm.patchValue({
-      primerNombre: '',
-      segundoNombre: '',
-      primerApellido: '',
-      segundoApellido: '',
-      fechaNacimiento: '',
-      sexo: '',
+      firstName: '',
+      middleName: '',
+      firstSurname: '',
+      secondSurname: '',
+      birthDate: '',
+      sex: '',
     });
     this.personalForm.controls.location.setValue({
       countryCode: null,

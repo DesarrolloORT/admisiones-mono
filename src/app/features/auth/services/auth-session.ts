@@ -39,8 +39,8 @@ export class AuthSessionService {
   public login(payload: AuthLoginRequest): Observable<LoginOutcome> {
     return this.endpoint
       .login({
-        tipoDocumento: payload.documentType,
-        documento: formatDocumentForBackend(payload.documentType, payload.documentNumber),
+        documentType: payload.documentType,
+        documentNumber: formatDocumentForBackend(payload.documentType, payload.documentNumber),
         password: payload.password,
       })
       .pipe(map(result => this.toOutcome(result, payload)));
@@ -57,7 +57,7 @@ export class AuthSessionService {
     documentNumber: string;
   }): Observable<AuthSession> {
     return this.endpoint
-      .verifyTwoFactorCode({ sessionId: payload.sessionId, codigo: payload.code })
+      .verifyTwoFactorCode({ sessionId: payload.sessionId, code: payload.code })
       .pipe(
         map(result =>
           this.toSession(result, {
@@ -85,7 +85,7 @@ export class AuthSessionService {
       map(personalData => ({
         documentType: personalData.documentType,
         documentNumber: personalData.documentNumber,
-        primerNombre: personalData.firstName,
+        firstName: personalData.firstName,
       })),
       tap(session => this.storeSession(session))
     );
@@ -140,13 +140,13 @@ export class AuthSessionService {
   }
 
   private toSession(
-    result: { documento: string; primerNombre: string },
+    result: { documentNumber: string; firstName: string },
     payload: AuthLoginRequest
   ): AuthSession {
     return {
       documentType: payload.documentType,
-      documentNumber: result.documento || payload.documentNumber,
-      primerNombre: result.primerNombre,
+      documentNumber: result.documentNumber || payload.documentNumber,
+      firstName: result.firstName,
     };
   }
 

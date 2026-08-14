@@ -18,7 +18,7 @@ describe('DocumentRecognition', () => {
 
   beforeEach(() => {
     endpointMock = {
-      recognizeDocument: vi.fn().mockReturnValue(of({ campos: { primerNombre: 'Ana' } })),
+      recognizeDocument: vi.fn().mockReturnValue(of({ fields: { firstName: 'Ana' } })),
     };
 
     TestBed.configureTestingModule({
@@ -35,15 +35,15 @@ describe('DocumentRecognition', () => {
 
   it('should delegate document recognition payload to the endpoint', () => {
     const payload = {
-      tipoMime: 'image/jpeg',
-      archivoAdjunto: {
-        nombreArchivo: 'documento.jpg',
-        archivo: 'base64-content',
+      mimeType: 'image/jpeg',
+      attachment: {
+        fileName: 'documento.jpg',
+        content: 'base64-content',
       },
     };
 
     service.recognizeDocument(payload).subscribe(response => {
-      expect(response.campos?.primerNombre).toBe('Ana');
+      expect(response.fields?.firstName).toBe('Ana');
     });
 
     expect(endpointMock.recognizeDocument).toHaveBeenCalledWith(payload);
@@ -55,10 +55,10 @@ describe('DocumentRecognition', () => {
 
     service
       .recognizeDocument({
-        tipoMime: 'image/jpeg',
-        archivoAdjunto: {
-          nombreArchivo: 'documento.jpg',
-          archivo: 'base64-content',
+        mimeType: 'image/jpeg',
+        attachment: {
+          fileName: 'documento.jpg',
+          content: 'base64-content',
         },
       })
       .subscribe({
@@ -74,10 +74,10 @@ describe('DocumentRecognition', () => {
     );
 
     expect(payload).toEqual({
-      tipoMime: 'image/jpeg',
-      archivoAdjunto: {
-        nombreArchivo: 'documento.jpg',
-        archivo: 'Y29udGVudA==',
+      mimeType: 'image/jpeg',
+      attachment: {
+        fileName: 'documento.jpg',
+        content: 'Y29udGVudA==',
       },
     });
   });
@@ -121,10 +121,10 @@ describe('DocumentRecognition', () => {
     expect(drawImage).toHaveBeenCalledWith(bitmap, 0, 0, 2000, 1000);
     expect(close).toHaveBeenCalledOnce();
     expect(payload).toEqual({
-      tipoMime: 'image/png',
-      archivoAdjunto: {
-        nombreArchivo: 'cedula.png',
-        archivo: 'Y29tcHJlc3NlZA==',
+      mimeType: 'image/png',
+      attachment: {
+        fileName: 'cedula.png',
+        content: 'Y29tcHJlc3NlZA==',
       },
     });
   });
@@ -171,7 +171,7 @@ describe('DocumentRecognition', () => {
   });
 
   it('should reject files without a valid MIME type', async () => {
-    await expect(service.createRequestFromFile(new File(['content'], 'documento'))).rejects.toEqual(
+    await expect(service.createRequestFromFile(new File(['content'], 'document'))).rejects.toEqual(
       new DocumentRecognitionFileError('invalidMimeType')
     );
   });
