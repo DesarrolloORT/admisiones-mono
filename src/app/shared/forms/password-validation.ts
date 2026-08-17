@@ -31,12 +31,12 @@ export const ORT_PASSWORD_ERROR_MESSAGES: Partial<Record<OrtPasswordErrorKey, st
 };
 
 export const ORT_PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
-  { label: '12 caracteres como mínimo', errorKey: 'minChar' },
-  { label: '20 caracteres como máximo', errorKey: 'maxChar' },
-  { label: 'Una letra mayúscula', errorKey: 'hasUppercase' },
-  { label: 'Una letra minúscula', errorKey: 'hasLowercase' },
-  { label: 'Un número', errorKey: 'hasNumbers' },
-  { label: 'Un carácter especial', errorKey: 'hasSpecialChars' },
+  { label: 'Como mínimo 12 caracteres', errorKey: 'minChar' },
+  { label: 'Como máximo 20 caracteres', errorKey: 'maxChar' },
+  { label: 'Al menos una letra mayúscula', errorKey: 'hasUppercase' },
+  { label: 'Al menos una letra minúscula', errorKey: 'hasLowercase' },
+  { label: 'Al menos un número', errorKey: 'hasNumbers' },
+  { label: 'Al menos un caracter especial: $%@_!.-', errorKey: 'hasSpecialChars' },
 ];
 
 export function buildOrtPasswordRequirements(
