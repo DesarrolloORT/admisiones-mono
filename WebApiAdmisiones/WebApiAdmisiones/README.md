@@ -75,13 +75,15 @@ módulo (`IdentityDocumentFile`, etc.).
 
 ## `Docs/contracts/*.json`
 
-Tres contratos que **lee el front** y que verifican tests del backend:
+Contratos que **lee el front** y que verifican tests del backend:
 
 | Archivo | Test |
 |---|---|
 | `carreras.contract.json` | `CarrerasContractTests` |
 | `inscripcion-detalle.contract.json` | `InscripcionDetalleContractTests` |
 | `encuesta-inicial.contract.json` | `EncuestaInicialContractTests` |
+| `telefono.contract.json` | `TelefonoContractTests` |
+| `registro.contract.json` | `RegistroContractTests` |
 
 Si cambiás un DTO que aparece en alguno, **actualizá el JSON en el mismo cambio** o el test se pone
 rojo. Son contenido copiado al output: si un test falla con `NullReferenceException` leyéndolos,

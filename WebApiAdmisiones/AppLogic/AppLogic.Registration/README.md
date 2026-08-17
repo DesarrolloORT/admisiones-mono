@@ -38,6 +38,12 @@ POST registration/confirm-registration-request   IConfirmRegistrationRequest
    crea la fila en T_SOLICITUD_ALTA
 ```
 
+Los dos endpoints de confirmación devuelven el mismo `RegistrationFlowResult`. El flag que separa los
+dos finales es **`PendingReview`**: en `true` no hay persona, ni usuario LDAP, ni mail de activación —
+el flujo termina ahí y admisiones revisa a mano. El front no puede deducirlo del mensaje.
+`Docs/contracts/registro.contract.json` documenta los cinco caminos y los tres finales; lo verifica
+`RegistroContractTests`.
+
 El alta diferida se cierra desde Authentication, que llama a `ICompleteNewPerson` a través de
 `IPendingRegistrationCompletion`.
 

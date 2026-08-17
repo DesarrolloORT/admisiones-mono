@@ -29,7 +29,7 @@ public class GetEnrollmentDetails(
             .ToList();
         var estado = level1And2Rows.Count > 0 ? level1And2Rows[0].EstadoInscripcion : null;
         var productFullName = level1And2Rows.Count > 0 ? level1And2Rows[0].NombreExtensoProducto : null;
-        var filas = level1And2Rows.Select(EnrollmentPaymentRows.From).ToList();
+        var filas = level1And2Rows.Where(x => x.IdInscripto != null).Select(EnrollmentPaymentRows.From).ToList();
 
         if (estado == null)
         {
@@ -39,7 +39,7 @@ public class GetEnrollmentDetails(
                 .ToList();
             estado = level3And4Rows.Count > 0 ? level3And4Rows[0].EstadoInscripcion : null;
             productFullName = level3And4Rows.Count > 0 ? level3And4Rows[0].NombreExtensoProducto : null;
-            filas = level3And4Rows.Select(EnrollmentPaymentRows.From).ToList();
+            filas = level3And4Rows.Where(x => x.IdInscripto != null).Select(EnrollmentPaymentRows.From).ToList();
         }
 
         if (estado == null)

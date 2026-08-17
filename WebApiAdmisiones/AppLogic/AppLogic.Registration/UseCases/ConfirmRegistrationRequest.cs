@@ -4,6 +4,7 @@ using AppLogic.Identity;
 using AppLogic.Registration.Constants;
 using AppLogic.Registration.Contracts;
 using AppLogic.Registration.Dtos;
+using AppLogic.Registration.Interfaces;
 using AppLogic.Registration.Mapping;
 using AppLogic.Registration.Services;
 using AppLogic.Registration.Validators;
@@ -21,16 +22,17 @@ public class ConfirmRegistrationRequest(
 {
     private const string MethodName = nameof(ConfirmRegistrationRequest);
     private const string ErrorInesperadoLog = "Error inesperado en {Metodo}";
+    private const string SolicitudRegistradaMessage = "La solicitud de alta quedó registrada.";
 
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
     private readonly IDbConnectionContext _dbConnectionContext = dbConnectionContext;
     private readonly ILogger<ConfirmRegistrationRequest> _logger = logger;
 
-    public Task<OperationResult<object?>> ExecuteAsync(RegisterPersonRequest request)
+    public Task<OperationResult<RegistrationFlowResult>> ExecuteAsync(RegisterPersonRequest request)
     {
         if (request == null)
         {
-            return Task.FromResult(OperationResult<object?>.IsFailed(
+            return Task.FromResult(OperationResult<RegistrationFlowResult>.IsFailed(
                 RegistrationErrorCodes.MissingRequest,
                 MethodName,
                 RegistrationErrorCodes.MissingRequestMessage,
@@ -40,7 +42,7 @@ public class ConfirmRegistrationRequest(
         var documentValidation = IdentityDocumentRules.ValidateBaseDocument(request.DocumentType, request.DocumentNumber);
         if (!documentValidation.IsValid)
         {
-            return Task.FromResult(OperationResult<object?>.IsFailed(
+            return Task.FromResult(OperationResult<RegistrationFlowResult>.IsFailed(
                 RegistrationValidation.ResolveDocumentValidationCode(documentValidation.Error),
                 MethodName,
                 documentValidation.Message,
@@ -50,7 +52,7 @@ public class ConfirmRegistrationRequest(
         var documentType = TextNormalization.Trim(request.DocumentType);
         if (IdentityDocumentRules.IsNationalId(documentType))
         {
-            return Task.FromResult(OperationResult<object?>.IsFailed(
+            return Task.FromResult(OperationResult<RegistrationFlowResult>.IsFailed(
                 RegistrationErrorCodes.UnsupportedDocumentType,
                 MethodName,
                 "ConfirmRegistrationRequest solo aplica para documentos distintos a cédula de identidad.",
@@ -61,7 +63,7 @@ public class ConfirmRegistrationRequest(
         var primaryPhone = RegistrationValidation.ValidatePrimaryPhone(request.PrimaryPhone, MethodName);
         if (!primaryPhone.Success)
         {
-            return Task.FromResult(primaryPhone.Failure().As<object?>(MethodName));
+            return Task.FromResult(primaryPhone.Failure().As<RegistrationFlowResult>(MethodName));
         }
 
         using var uow = _uowFactory.Create();
@@ -77,16 +79,17 @@ public class ConfirmRegistrationRequest(
             AdmissionRecords.AddForRegistrationRequest(uow, _dbConnectionContext, registrationRequest.IdSolicitudAlta);
             uow.Commit();
 
-            return Task.FromResult(OperationResult<object?>.IsSuccess(
-                null,
+            // PendingReview marca el final del flujo: no hay persona, ni usuario LDAP, ni mail.
+            return Task.FromResult(OperationResult<RegistrationFlowResult>.IsSuccess(
+                new RegistrationFlowResult(SolicitudRegistradaMessage, MailSent: false, PendingReview: true),
                 MethodName,
-                "La solicitud de alta quedó registrada."));
+                SolicitudRegistradaMessage));
         }
         catch (Exception ex)
         {
             uow.Rollback();
             _logger.LogError(ex, ErrorInesperadoLog, MethodName);
-            return Task.FromResult(OperationResult<object?>.IsFailed(
+            return Task.FromResult(OperationResult<RegistrationFlowResult>.IsFailed(
                 "REG_SOLICITUD_99",
                 MethodName,
                 "Error al crear la solicitud de alta.",

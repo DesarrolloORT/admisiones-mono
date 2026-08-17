@@ -1,5 +1,6 @@
 using AppLogic.Identity.Dtos;
 using AppLogic.Registration.Dtos;
+using AppLogic.Registration.Interfaces;
 using Utilities;
 
 namespace AppLogic.Registration.Contracts;
@@ -46,9 +47,10 @@ public interface ICompleteNewPerson
 
 /// <summary>
 /// Deja registrada una solicitud de alta para documentos distintos a cédula de identidad,
-/// que después revisa admisiones a mano.
+/// que después revisa admisiones a mano. Devuelve el mismo tipo que <c>confirm-new-person</c>,
+/// con <c>PendingReview = true</c> para que el front distinga los dos finales del registro.
 /// </summary>
 public interface IConfirmRegistrationRequest
 {
-    Task<OperationResult<object?>> ExecuteAsync(RegisterPersonRequest request);
+    Task<OperationResult<RegistrationFlowResult>> ExecuteAsync(RegisterPersonRequest request);
 }

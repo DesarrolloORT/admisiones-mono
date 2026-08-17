@@ -247,13 +247,13 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="request">Datos personales de la nueva persona.</param>
         /// <param name="flowId">Identificador de la sesion de registro, enviado en el header <c>X-Flow-Id</c>.</param>
         /// <returns>Resultado de la confirmacion. La persona queda pendiente hasta que se establezca la contraseña.</returns>
-        /// <response code="200">Persona nueva confirmada correctamente. Se envió mail de activación.</response>
+        /// <response code="200">Persona nueva confirmada correctamente. <c>data.pendingReview</c> siempre viene en false y <c>data.mailSent</c> indica si se pudo enviar el mail de activación.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.ConfirmNewPerson, CaptchaValidationMode.ScoreOnly)]
         [HttpPost("confirm-new-person")]
-        [ProducesResponseType(typeof(OperationResult<object>), 200)]
-        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<RegistrationFlowResult>), 200)]
+        [ProducesResponseType(typeof(OperationResult<RegistrationFlowResult>), 400)]
         public async Task<IActionResult> ConfirmNewPerson(
             [FromBody] RegisterPersonRequest request,
             [FromHeader(Name = FlowIdHeaderName)] string? flowId = null)
@@ -275,13 +275,13 @@ namespace WebApiAdmisiones.Controllers
         /// <param name="request">Datos de la solicitud de alta que se confirma.</param>
         /// <param name="flowId">Identificador de la sesion de registro, enviado en el header <c>X-Flow-Id</c>.</param>
         /// <returns>Resultado de la confirmacion de la solicitud.</returns>
-        /// <response code="200">Solicitud de alta confirmada correctamente.</response>
+        /// <response code="200">Solicitud de alta confirmada correctamente. <c>data.pendingReview</c> viene en true y <c>data.mailSent</c> en false: el flujo termina aca, admisiones revisa a mano y no hay mail de activacion que esperar.</response>
         /// <response code="400">Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.</response>
         [AllowAnonymous]
         [RequireCaptcha(CaptchaActions.ConfirmRegistrationRequest, CaptchaValidationMode.ScoreOnly)]
         [HttpPost("confirm-registration-request")]
-        [ProducesResponseType(typeof(OperationResult<object>), 200)]
-        [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<RegistrationFlowResult>), 200)]
+        [ProducesResponseType(typeof(OperationResult<RegistrationFlowResult>), 400)]
         public async Task<IActionResult> ConfirmRegistrationRequest(
             [FromBody] RegisterPersonRequest request,
             [FromHeader(Name = FlowIdHeaderName)] string? flowId = null)
@@ -291,7 +291,7 @@ namespace WebApiAdmisiones.Controllers
 
             if (request == null)
             {
-                return ValidateResponse(OperationResult<object?>.IsFailed(
+                return ValidateResponse(OperationResult<RegistrationFlowResult>.IsFailed(
                     "REG_REQUEST_01",
                     nameof(ConfirmRegistrationRequest),
                     "La solicitud es obligatoria.",

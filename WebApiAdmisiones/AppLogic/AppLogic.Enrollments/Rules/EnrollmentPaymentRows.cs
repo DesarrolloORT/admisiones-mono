@@ -10,7 +10,8 @@ namespace AppLogic.Enrollments.Rules;
 /// </summary>
 internal static class EnrollmentPaymentRows
 {
-    // IdInscripto es la clave de la vista: nunca viene null, el decimal? es ruido del mapeo Devart.
+    // IdInscripto viene null mientras la inscripción está "En proceso" (todavía no hay fila en T_INSCRIPTO):
+    // filtrar esas filas antes de proyectar, estos overloads asumen que ya existe.
     internal static EnrollmentPaymentRow From(VdInscripcionesFresco1y2 fila) => new(
         (long)fila.IdInscripto!.Value, fila.IdOferta, fila.NombreComienzo, fila.NombreTurno, null);
 

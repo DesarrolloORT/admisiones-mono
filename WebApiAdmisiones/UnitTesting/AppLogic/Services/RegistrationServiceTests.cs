@@ -382,6 +382,9 @@ namespace UnitTesting.AppLogic.Services
             var result = await _service.ConfirmRegistrationRequest.ExecuteAsync(CrearRegistroPersonaRequest("PS", "A123"));
 
             Assert.True(result.Success);
+            // El front distingue este final del alta de persona por estos dos flags, no por el mensaje.
+            Assert.True(result.Data!.PendingReview);
+            Assert.False(result.Data.MailSent);
             Assert.NotNull(solicitudAgregada);
             Assert.Null(solicitudAgregada!.IdProducto);
             Assert.Null(solicitudAgregada.IdProceso);
