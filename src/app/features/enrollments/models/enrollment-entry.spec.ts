@@ -91,14 +91,14 @@ const FULL_SUMMARY: EnrollmentSummary = {
 const REACTIVATION_RESPONSE: EnrollmentPreEnrollmentResponse = {
   confirmed: false,
   isWaiting: false,
-  idEnrollment: 7010,
+  enrollmentId: 7010,
   paymentDueDate: '2027-03-04',
   enrollmentDeposit: 15500,
   accountBalance: 1200,
   summary: { degreeProgram: 'Sistemas', intake: 'Marzo 2027', shift: 'Noche' },
   seminars: [
     {
-      idEnrollment: 7010,
+      enrollmentId: 7010,
       offeringId: 310,
       name: 'Seminario',
       intake: 'Marzo 2027',
@@ -108,7 +108,7 @@ const REACTIVATION_RESPONSE: EnrollmentPreEnrollmentResponse = {
 };
 
 function interest(offeringId: number | null): EnrollmentOfferingSummary {
-  return { idEnrollment: null, offeringId, name: 'Oferta', intake: null, shift: null };
+  return { enrollmentId: null, offeringId, name: 'Oferta', intake: null, shift: null };
 }
 
 function detail(values: Partial<EnrollmentDetail> = {}): EnrollmentDetail {
@@ -189,7 +189,7 @@ const DETAIL = {
   pendingPaymentWithoutDeposit: detail({
     status: 'Pago pendiente',
     pendingPayment: {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       deposit: 15500,
       accountBalance: 1200,
       paymentDueDate: '2027-03-04',
@@ -209,7 +209,7 @@ const DETAIL = {
   pendingWithoutDeposit: detail({
     status: 'Pendiente',
     pendingPayment: {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       deposit: 15500,
       accountBalance: 1200,
       paymentDueDate: '2027-03-04',
@@ -499,7 +499,7 @@ describe('deriveInitialEnrollmentState', () => {
     ],
 
     // Actualización profesional (nivel 3/4): mismo comportamiento que el resto. Es el
-    // caso que estaba roto: AP nunca postea EncuestaInicial, así que sin encuesta
+    // caso que estaba roto: AP nunca guarda la encuesta inicial, así que sin encuesta
     // terminaba en el paso 1 vacío.
     [
       'retomar AP (nivel 3) En proceso + fresh',
@@ -795,7 +795,7 @@ describe('deriveInitialEnrollmentState', () => {
       survey: RESOLVED.fresh,
     });
     expect(state.preEnrollment).toEqual({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2027-03-04',
       enrollmentDeposit: 15500,
@@ -839,7 +839,7 @@ describe('deriveInitialEnrollmentState', () => {
       entry: resumeEntry(DETAIL.inProgressMultipleOfferings, 3),
       survey: RESOLVED.fresh,
     });
-    // `turno` y `seminarios` se llenan los dos: el payload de confirmación lee uno u
+    // `shift` y `seminars` se llenan los dos: el payload de confirmación lee uno u
     // otro según el tipo de propuesta.
     expect(state.academicPrefill).toEqual({
       proposalType: '3',
@@ -890,7 +890,7 @@ describe('deriveInitialEnrollmentState', () => {
     });
   });
 
-  it('leaves the proposal type empty when the career catalog failed', () => {
+  it('leaves the proposal type empty when the degreeProgram catalog failed', () => {
     const state = deriveInitialEnrollmentState({
       entry: resumeEntry(DETAIL.inProgressFull, null),
       survey: RESOLVED.fresh,

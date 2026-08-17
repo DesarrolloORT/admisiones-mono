@@ -43,9 +43,9 @@ export class Enrollments {
       photo: this.endpoint.getIdentityPhoto().pipe(catchError(() => of(null))),
     }).pipe(
       map(({ document, photo }) => ({
-        front: toIdentityFile(document?.front, 'frente-documento'),
-        back: toIdentityFile(document?.back, 'dorso-documento'),
-        selfie: toBlobFile(photo, 'foto-persona'),
+        front: toIdentityFile(document?.front, 'identity-document-front'),
+        back: toIdentityFile(document?.back, 'identity-document-back'),
+        selfie: toBlobFile(photo, 'identity-photo'),
         expirationDate: document?.expirationDate ?? null,
       }))
     );

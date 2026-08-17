@@ -11,11 +11,11 @@
   (closeFlow)="goHome()"
   (logoutRequested)="logout()">
   <main class="scholarship-process__main">
-    @switch (process.currentStep()) { @case ('info-postulacion') {
+    @switch (process.currentStep()) { @case ('application-info') {
     <app-scholarship-academic-step />
-    } @case ('info-personal') {
+    } @case ('personal-info') {
     <app-scholarship-personal-step />
-    } @case ('confirmacion') {
+    } @case ('confirmation') {
     <!-- Punto de extensión: montar acá el step de confirmación (ver README). -->
     } }
   </main>

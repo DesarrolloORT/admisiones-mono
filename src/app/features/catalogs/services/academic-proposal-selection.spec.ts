@@ -78,7 +78,7 @@ describe('AcademicProposalSelection', () => {
     selection.connect(form);
   });
 
-  it('loads options following the proposal, career and start cascade', () => {
+  it('loads options following the proposal, degreeProgram and start cascade', () => {
     expect(selection.proposalOptions().map(option => option.value)).toEqual(['1', '2', '3']);
     expect(getDegreePrograms).not.toHaveBeenCalled();
 
@@ -125,7 +125,7 @@ describe('AcademicProposalSelection', () => {
 
     expect(selection.isProfessionalUpdate()).toBe(true);
     expect(selection.terminology().degreeProgramLabel).toBe('Programa');
-    expect(selection.terminology().startLabel).toBe('Seminario');
+    expect(selection.terminology().intakeLabel).toBe('Seminario');
   });
 
   it('loads seminars instead of starts when an AP program is selected', () => {
@@ -184,7 +184,7 @@ describe('AcademicProposalSelection', () => {
     expect(form.controls.seminars.hasError('required')).toBe(false);
   });
 
-  // Sin `tieneSeminario` la oferta del programa es un horario y el select es simple.
+  // Sin `hasSeminar` la oferta del programa es un horario y el select es simple.
   it('names the AP offering field after the seminars flag of the program', () => {
     form.controls.proposalType.setValue('3');
     form.controls.degreeProgram.setValue('30');

@@ -17,9 +17,9 @@ import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
 import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
-  CEDULA_DOCUMENT_TYPE,
   cleanDocumentNumber,
   getDocumentNumberLabel,
+  NATIONAL_ID_DOCUMENT_TYPE,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import {
@@ -329,7 +329,7 @@ export class RegisterFlowFacade {
   }
 
   private clearRecognizedFields(): void {
-    this.identityForm.patchValue({ documentType: CEDULA_DOCUMENT_TYPE, documentNumber: '' });
+    this.identityForm.patchValue({ documentType: NATIONAL_ID_DOCUMENT_TYPE, documentNumber: '' });
     this.personalForm.patchValue({
       firstName: '',
       middleName: '',

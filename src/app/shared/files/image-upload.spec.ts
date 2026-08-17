@@ -32,7 +32,7 @@ describe('image-upload', () => {
       expect(resolveImageMimeType(new File([''], 'a.pdf', { type: 'application/pdf' }))).toBeNull();
       expect(resolveImageMimeType(new File([''], 'a.svg', { type: 'image/svg+xml' }))).toBeNull();
       expect(resolveImageMimeType(new File([''], 'a.webp'))).toBeNull();
-      expect(resolveImageMimeType(new File([''], 'documento'))).toBeNull();
+      expect(resolveImageMimeType(new File([''], 'document'))).toBeNull();
     });
   });
 

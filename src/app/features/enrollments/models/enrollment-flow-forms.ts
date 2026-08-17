@@ -31,7 +31,7 @@ export const NON_UNIVERSITY_HIGH_SCHOOL_YEAR_MESSAGE =
 
 /**
  * Bloquea años de bachillerato prohibidos cuando la carrera seleccionada es universitaria.
- * `isUniversity` lo provee el facade (cruza la carrera seleccionada contra el catálogo).
+ * `isUniversity` lo provee la fachada (cruza la carrera seleccionada contra el catálogo).
  */
 export function disallowedHighSchoolYearForUniversity(
   isUniversity: () => boolean,

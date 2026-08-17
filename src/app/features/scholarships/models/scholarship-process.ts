@@ -3,11 +3,11 @@ import type { ProcessStepDefinition } from 'src/app/shared/process-flow/process-
 /**
  * Identificadores de los pasos del flujo de postulación a becas.
  *
- * Es el equivalente de `InscripcionStep` en inscripciones. Cada id se usa como
+ * Es el equivalente de `EnrollmentStep` en inscripciones. Cada id se usa como
  * `currentStepId` del `app-process-layout` y como discriminante del `@switch`
  * que decide qué step component se muestra en `fbr.html`.
  */
-export type ScholarshipStep = 'info-postulacion' | 'info-personal' | 'confirmacion';
+export type ScholarshipStep = 'application-info' | 'personal-info' | 'confirmation';
 
 /**
  * Definición ordenada de los pasos. El orden de este array ES el orden del
@@ -15,7 +15,7 @@ export type ScholarshipStep = 'info-postulacion' | 'info-personal' | 'confirmaci
  * Para agregar, quitar o reordenar pasos, editá únicamente este array.
  */
 export const SCHOLARSHIP_STEPS: readonly ProcessStepDefinition<ScholarshipStep>[] = [
-  { id: 'info-postulacion', overline: 'Paso 1', title: 'Información de postulación' },
-  { id: 'info-personal', overline: 'Paso 2', title: 'Información personal' },
-  { id: 'confirmacion', overline: 'Paso 3', title: 'Confirmación' },
+  { id: 'application-info', overline: 'Paso 1', title: 'Información de postulación' },
+  { id: 'personal-info', overline: 'Paso 2', title: 'Información personal' },
+  { id: 'confirmation', overline: 'Paso 3', title: 'Confirmación' },
 ];

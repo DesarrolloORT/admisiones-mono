@@ -1,6 +1,6 @@
 import { DashboardEnrollmentStatusChip } from './dashboard-enrollment-status-chip';
 
-describe('DashboardCareerStatusChip', () => {
+describe('DashboardDegreeProgramStatusChip', () => {
   it('should be importable', () => {
     expect(DashboardEnrollmentStatusChip).toBeDefined();
   });

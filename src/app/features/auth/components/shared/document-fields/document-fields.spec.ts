@@ -26,12 +26,12 @@ describe('DocumentFields', () => {
     const { fixture, form } = createComponent();
 
     form.controls.documentNumber.setValue('ABC-123');
-    expect(form.controls.documentNumber.hasError('cedula')).toBe(true);
+    expect(form.controls.documentNumber.hasError('nationalId')).toBe(true);
 
     form.controls.documentType.setValue('PS');
     fixture.detectChanges();
 
-    expect(form.controls.documentNumber.hasError('cedula')).toBe(false);
+    expect(form.controls.documentNumber.hasError('nationalId')).toBe(false);
     expect(form.controls.documentNumber.valid).toBe(true);
 
     form.controls.documentNumber.setValue('con espacios');

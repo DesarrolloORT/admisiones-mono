@@ -23,8 +23,8 @@ export class EnrollmentProposalFacade {
   public readonly selection = inject(AcademicProposalSelection);
   public readonly academicForm = this.formsStore.academicForm;
   public readonly proposalOptions = this.selection.proposalOptions;
-  public readonly careerOptions = this.selection.degreeProgramOptions;
-  public readonly startOptions = this.selection.intakeOptions;
+  public readonly degreeProgramOptions = this.selection.degreeProgramOptions;
+  public readonly intakeOptions = this.selection.intakeOptions;
   public readonly shiftOptions = this.selection.shiftOptions;
   public readonly catalogError = this.selection.catalogError;
   public readonly initialized = this.selection.initialized;
@@ -41,7 +41,7 @@ export class EnrollmentProposalFacade {
     const formErrors = buildFormErrors(this.academicForm, [
       { controlName: 'proposalType', fieldId: '', label: 'Propuesta académica' },
       { controlName: 'degreeProgram', fieldId: '', label: terminology.degreeProgramLabel },
-      { controlName: 'intake', fieldId: '', label: terminology.startLabel },
+      { controlName: 'intake', fieldId: '', label: terminology.intakeLabel },
       { controlName: 'shift', fieldId: '', label: 'Turno' },
       { controlName: 'seminars', fieldId: '', label: this.selection.seminarLabel() },
     ]);
@@ -104,7 +104,7 @@ export class EnrollmentProposalFacade {
       });
   }
 
-  public careers() {
+  public degreePrograms() {
     return this.selection.degreePrograms();
   }
 

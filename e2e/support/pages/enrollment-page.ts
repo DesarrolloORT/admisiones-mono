@@ -26,24 +26,31 @@ export class EnrollmentPage {
   constructor(private readonly page: Page) {}
 
   public async goto(
-    scenario: 'primera-vez' | 'parcial' | 'encuesta-completa' = 'primera-vez',
-    result?: 'en-proceso'
+    scenario: 'first-time' | 'partial' | 'survey-complete' = 'first-time',
+    forceInProgress = false
   ): Promise<void> {
-    const params = new URLSearchParams({ escenario: scenario });
-    if (scenario !== 'primera-vez') {
+    const scenarioQueryValue = {
+      'first-time': 'primera-vez',
+      partial: 'parcial',
+      'survey-complete': 'encuesta-completa',
+    }[scenario];
+    const params = new URLSearchParams({ escenario: scenarioQueryValue });
+    if (scenario !== 'first-time') {
       params.set('idProducto', '20');
       params.set('idProceso', '200');
       params.append('idOferta', '300');
       params.set('estado', 'En proceso');
       params.set('nivel', '1');
     }
-    if (result) params.set('resultado', result);
+    if (forceInProgress) params.set('resultado', 'en-proceso');
 
     await this.page.goto(`/inscripciones?${params.toString()}`);
     await expect(
-      this.page.getByRole('heading', {
-        name: /Inscripción a carrera|Información personal|Confirmación|Inscripción en proceso/,
-      })
+      this.page
+        .getByRole('heading', {
+          name: /Inscripción a carrera|Información personal|Confirmación|Inscripción en proceso/,
+        })
+        .first()
     ).toBeVisible();
   }
 
@@ -141,11 +148,11 @@ export class EnrollmentPage {
       ),
     };
 
-    await fileInputs.nth(0).setInputFiles({ ...image, name: 'frente.png' });
-    await fileInputs.nth(1).setInputFiles({ ...image, name: 'dorso.png' });
+    await fileInputs.nth(0).setInputFiles({ ...image, name: 'front.png' });
+    await fileInputs.nth(1).setInputFiles({ ...image, name: 'back.png' });
     await fileInputs.nth(2).setInputFiles({ ...image, name: 'rostro.png' });
-    await expect(this.page.getByText('frente.png', { exact: true })).toBeVisible();
-    await expect(this.page.getByText('dorso.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('front.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('back.png', { exact: true })).toBeVisible();
     await expect(this.page.getByText('rostro.png', { exact: true })).toBeVisible();
 
     const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
@@ -157,9 +164,9 @@ export class EnrollmentPage {
   }
 
   public async continueWithPreloadedIdentity(): Promise<void> {
-    await expect(this.page.getByText('documento-frente.png', { exact: true })).toBeVisible();
-    await expect(this.page.getByText('documento-dorso.png', { exact: true })).toBeVisible();
-    await expect(this.page.getByText('foto-persona.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('identity-document-front.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('identity-document-back.png', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('identity-photo.png', { exact: true })).toBeVisible();
     await expect(this.page.getByRole('textbox', { name: 'Vencimiento' })).toHaveValue('04/02/2030');
 
     await this.page
@@ -236,8 +243,8 @@ export class EnrollmentPage {
     await this.continueWithKeyboard();
 
     await this.expectMainFocus();
-    await this.uploadIdentityFileWithKeyboard(0, 'frente.png');
-    await this.uploadIdentityFileWithKeyboard(1, 'dorso.png');
+    await this.uploadIdentityFileWithKeyboard(0, 'front.png');
+    await this.uploadIdentityFileWithKeyboard(1, 'back.png');
     const expiration = this.page.getByRole('textbox', { name: 'Vencimiento' });
     await this.tabTo(expiration);
     await this.setExpirationDate(expiration);

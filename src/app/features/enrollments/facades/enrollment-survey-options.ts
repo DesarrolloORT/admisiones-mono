@@ -51,7 +51,7 @@ export class EnrollmentSurveyOptionsFacade {
     5: '5 estrellas: Excelente',
   });
 
-  public readonly previousCareerOptions = signal<readonly EnrollmentOption[]>([]);
+  public readonly previousDegreeProgramOptions = signal<readonly EnrollmentOption[]>([]);
   public readonly educationLevelOptions = signal<readonly EnrollmentOption[]>([]);
   public readonly supportOptions = signal<readonly EnrollmentOption[]>([]);
   public readonly decisionYearOptions = signal<readonly EnrollmentOption[]>([]);
@@ -161,7 +161,9 @@ export class EnrollmentSurveyOptionsFacade {
     const decision = catalogs.academicDecision;
     const experience = catalogs.ortExperience;
 
-    this.previousCareerOptions.set(toCatalogOptions(education.previousHigherEducationOptions));
+    this.previousDegreeProgramOptions.set(
+      toCatalogOptions(education.previousHigherEducationOptions)
+    );
     this.educationLevelOptions.set(toCatalogOptions(education.guardianEducationLevels));
     this.schoolPlaceOptions.set(toCatalogOptions(education.lastSecondaryYearLocations));
     this.supportOptions.set(toCatalogOptions(decision.decisionSupports));

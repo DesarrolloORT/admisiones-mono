@@ -15,7 +15,7 @@ const OTHER_OPTION_VALUE = '0';
 
 export interface BackendSurveyPatchContext {
   forms: EnrollmentForms;
-  careers: readonly DegreeProgram[];
+  degreePrograms: readonly DegreeProgram[];
   /**
    * Si es `false`, NO se patchea la selección académica desde una encuesta previa.
    * Se usa en `nueva`, donde el Paso 1 debe quedar virgen.
@@ -33,7 +33,8 @@ export function patchBackendSurveyForms(
   const processId = toFormValue(survey.intakeId);
   const levelId =
     survey.productLevelId ??
-    context.careers.find(career => career.productId === survey.degreeProgramId)?.productLevelId;
+    context.degreePrograms.find(degreeProgram => degreeProgram.productId === survey.degreeProgramId)
+      ?.productLevelId;
   const proposalType =
     levelId === undefined
       ? forms.academicForm.controls.proposalType.value

@@ -14,18 +14,18 @@ import { getOptionLabel } from './enrollment-flow-options';
 
 export function buildSummaryItems(context: {
   response: EnrollmentPreEnrollmentResponse | null;
-  selectedCareer: string;
-  selectedStart: string;
+  selectedDegreeProgram: string;
+  selectedIntake: string;
   selectedShift: string;
-  careerOptions: readonly EnrollmentOption[];
-  startOptions: readonly EnrollmentOption[];
+  degreeProgramOptions: readonly EnrollmentOption[];
+  intakeOptions: readonly EnrollmentOption[];
   shiftOptions: readonly EnrollmentOption[];
   isProfessionalUpdate: boolean;
   seminars: readonly SeminarSummaryItem[];
 }): EnrollmentSummaryItem[] {
   const degreeProgramValue =
     context.response?.summary?.degreeProgram ??
-    getOptionLabel(context.careerOptions, context.selectedCareer, 'Sin seleccionar');
+    getOptionLabel(context.degreeProgramOptions, context.selectedDegreeProgram, 'Sin seleccionar');
 
   if (context.isProfessionalUpdate) {
     const program = { icon: 'school', label: 'Programa', value: degreeProgramValue };
@@ -46,7 +46,7 @@ export function buildSummaryItems(context: {
       label: 'Comienzo',
       value:
         context.response?.summary?.intake ??
-        getOptionLabel(context.startOptions, context.selectedStart, 'Sin seleccionar'),
+        getOptionLabel(context.intakeOptions, context.selectedIntake, 'Sin seleccionar'),
     },
     {
       icon: 'schedule',
@@ -64,7 +64,7 @@ export function buildSeminarsSummary(
   response: EnrollmentPreEnrollmentResponse | null
 ): SeminarSummaryItem[] {
   return (response?.seminars ?? []).map(seminar => ({
-    idEnrollment: seminar.idEnrollment,
+    enrollmentId: seminar.enrollmentId,
     name: seminar.name ?? 'No informado',
     intake: seminar.intake ?? 'No informado',
     shift: seminar.shift ?? 'No informado',
@@ -135,7 +135,7 @@ export function buildReservationInstructions(
     typeof reservation?.personCode === 'number' ? String(reservation.personCode) : null;
   const amount = formatEnrollmentAmount(response?.enrollmentDeposit);
 
-  const cedulaItem: ReservationInstructionItem[] = documentNumber
+  const documentNumberItem: ReservationInstructionItem[] = documentNumber
     ? [{ label: 'Cédula de identidad', value: documentNumber }]
     : [];
   const studentItem: ReservationInstructionItem[] = studentNumber
@@ -160,7 +160,7 @@ export function buildReservationInstructions(
     title: '¡Inscripción reservada!',
     description,
     intro: 'Dirigite a cualquier local habilitado presentando la siguiente información:',
-    items: [...cedulaItem, ...studentItem, ...amountItem],
+    items: [...documentNumberItem, ...studentItem, ...amountItem],
     help: RESERVATION_HELP,
   };
 }

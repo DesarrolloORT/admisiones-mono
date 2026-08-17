@@ -147,8 +147,8 @@ describe('EnrollmentSurveyFacade', () => {
 
     expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
     forms.workForm.controls.isCorporate.setValue(false);
-    const front = preloadFile('frente.png');
-    const back = preloadFile('dorso.png');
+    const front = preloadFile('front.png');
+    const back = preloadFile('back.png');
     const selfie = preloadFile('selfie.png');
     applyIdentityPreload(survey, {
       front,
@@ -241,8 +241,8 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
-    const front = preloadFile('frente.png');
-    const back = preloadFile('dorso.png');
+    const front = preloadFile('front.png');
+    const back = preloadFile('back.png');
     const selfie = preloadFile('selfie.png');
 
     applyIdentityPreload(survey, {
@@ -280,8 +280,8 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
-    const front = preloadFile('frente.png');
-    const back = preloadFile('dorso.png');
+    const front = preloadFile('front.png');
+    const back = preloadFile('back.png');
     const selfie = preloadFile('selfie.png');
 
     applyIdentityPreload(survey, {
@@ -315,8 +315,8 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
-    const front = preloadFile('frente.png');
-    const back = preloadFile('dorso.png');
+    const front = preloadFile('front.png');
+    const back = preloadFile('back.png');
     const selfie = preloadFile('selfie.png');
 
     applyIdentityPreload(survey, {
@@ -379,8 +379,8 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
-    const front = new File(['front'], 'frente.png', { type: 'image/png' });
-    const back = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const front = new File(['front'], 'front.png', { type: 'image/png' });
+    const back = new File(['back'], 'back.png', { type: 'image/png' });
     const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
 
     survey.identityForm.controls.documentExpiration.setValue(new Date(2030, 1, 4));
@@ -463,8 +463,8 @@ describe('EnrollmentSurveyFacade', () => {
 
   it('marks identity complete reactively once files and expiry are set, without pressing Continuar', () => {
     const { survey } = createFacade(createSurveyResponse({ isEligibleForSurvey: false }));
-    const front = new File(['front'], 'frente.png', { type: 'image/png' });
-    const back = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const front = new File(['front'], 'front.png', { type: 'image/png' });
+    const back = new File(['back'], 'back.png', { type: 'image/png' });
     const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
 
     survey.identityForm.controls.documentExpiration.setValue(new Date(2030, 1, 4));
@@ -567,7 +567,7 @@ describe('EnrollmentSurveyFacade', () => {
       of({
         confirmed: true,
         isWaiting: true,
-        idEnrollment: null,
+        enrollmentId: null,
         paymentDueDate: null,
         enrollmentDeposit: 15500,
         accountBalance: null,
@@ -707,7 +707,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.academicDecisionForm.controls.otherResearchedUniversity.setValue('Otra consultada');
     expect(survey.academicDecisionForm.controls.otherResearchedUniversity.valid).toBe(true);
   });
-  it('blocks pre-enrollment when a university career has a disallowed baccalaureate year', () => {
+  it('blocks pre-enrollment when a university degreeProgram has a disallowed baccalaureate year', () => {
     const { survey, forms } = createFacade(
       {
         isEligibleForSurvey: true,
@@ -746,7 +746,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.educationForm.controls.studiesHighSchool.setValue('studying');
     survey.educationForm.controls.highSchoolYear.setValue('4');
 
-    expect(survey.isUniversityCareer()).toBe(true);
+    expect(survey.isUniversityDegreeProgram()).toBe(true);
     expect(
       survey.educationForm.controls.highSchoolYear.hasError('nonUniversityHighSchoolYear')
     ).toBe(true);
@@ -757,7 +757,7 @@ describe('EnrollmentSurveyFacade', () => {
     ).toBe(false);
   });
 
-  it('does not flag disallowed years for non-university careers', () => {
+  it('does not flag disallowed years for non-university degreePrograms', () => {
     const { survey, forms } = createFacade(
       {
         isEligibleForSurvey: true,
@@ -793,7 +793,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.educationForm.controls.studiesHighSchool.setValue('studying');
     survey.educationForm.controls.highSchoolYear.setValue('4');
 
-    expect(survey.isUniversityCareer()).toBe(false);
+    expect(survey.isUniversityDegreeProgram()).toBe(false);
     expect(
       survey.educationForm.controls.highSchoolYear.hasError('nonUniversityHighSchoolYear')
     ).toBe(false);
@@ -997,7 +997,7 @@ describe('EnrollmentSurveyFacade', () => {
   function createFacade(
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
-    careers: unknown[] = [],
+    degreePrograms: unknown[] = [],
     options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
   ): {
     survey: EnrollmentSurveyFacade;
@@ -1017,7 +1017,7 @@ describe('EnrollmentSurveyFacade', () => {
         {
           provide: Catalogs,
           useValue: {
-            getDegreePrograms: () => of(careers),
+            getDegreePrograms: () => of(degreePrograms),
             getIntakes: () => of([]),
             getShifts: () => of([]),
             getSeminars: () =>
@@ -1103,8 +1103,8 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
-    const front = new File(['front'], 'frente.png', { type: 'image/png' });
-    const back = new File(['back'], 'dorso.png', { type: 'image/png' });
+    const front = new File(['front'], 'front.png', { type: 'image/png' });
+    const back = new File(['back'], 'back.png', { type: 'image/png' });
     const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
 
     result.survey.identityForm.controls.documentExpiration.setValue(new Date(2030, 1, 4));

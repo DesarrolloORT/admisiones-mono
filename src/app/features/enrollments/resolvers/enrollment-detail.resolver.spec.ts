@@ -18,14 +18,14 @@ import { enrollmentDetailResolver, resolveEntryIntent } from './enrollment-detai
 const REACTIVATION_RESPONSE = {
   confirmed: false,
   isWaiting: false,
-  idEnrollment: 7010,
+  enrollmentId: 7010,
   paymentDueDate: '2027-03-04',
   enrollmentDeposit: 15500,
   accountBalance: 1200,
   summary: { degreeProgram: 'Sistemas', intake: 'Marzo 2027', shift: 'Noche' },
   seminars: [
     {
-      idEnrollment: 7010,
+      enrollmentId: 7010,
       offeringId: 310,
       name: 'Seminario',
       intake: 'Marzo 2027',
@@ -75,7 +75,7 @@ describe('enrollmentDetailResolver', () => {
     expect(getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
   });
 
-  it('resolves the product level from the careers catalog', async () => {
+  it('resolves the product level from the degreePrograms catalog', async () => {
     const detail = createDetail('En proceso', 21);
     getDetail.mockReturnValue(of(detail));
     getDegreePrograms.mockReturnValue(
@@ -125,7 +125,7 @@ describe('enrollmentDetailResolver', () => {
     }
   );
 
-  it('keeps a null level when the careers catalog fails', async () => {
+  it('keeps a null level when the degreePrograms catalog fails', async () => {
     const detail = createDetail('En proceso', 21);
     getDetail.mockReturnValue(of(detail));
     getDegreePrograms.mockReturnValue(throwError(() => new Error('failed')));

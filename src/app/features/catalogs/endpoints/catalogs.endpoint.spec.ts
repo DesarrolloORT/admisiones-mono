@@ -23,7 +23,7 @@ describe('CatalogsEndpoint', () => {
     endpoint = TestBed.inject(CatalogsEndpoint);
   });
 
-  it('should map careers from API data', () => {
+  it('should map degreePrograms from API data', () => {
     apiMock.request.mockReturnValue(
       of([
         {

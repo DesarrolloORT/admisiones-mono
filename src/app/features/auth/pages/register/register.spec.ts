@@ -147,12 +147,12 @@ describe('Register', () => {
 
   it('should preload returned document fields', async () => {
     const facade = component['facade'];
-    const file = new File(['binary-content'], 'cedula.pdf', { type: 'application/pdf' });
+    const file = new File(['binary-content'], 'identity-document.pdf', { type: 'application/pdf' });
 
     await facade.onDocumentSelected(file);
 
     expect(documentPrefillMock.preload).toHaveBeenCalledWith(file);
-    expect(facade.selectedFileName()).toBe('cedula.pdf');
+    expect(facade.selectedFileName()).toBe('identity-document.pdf');
     expect(facade.identityForm.getRawValue()).toEqual({
       documentType: 'CI',
       documentNumber: '11111111',

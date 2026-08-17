@@ -5,7 +5,7 @@ import { provideRouter, RouterLink } from '@angular/router';
 import { EnrollmentSummary } from '../../models/enrollment-summary';
 import { DashboardEnrollmentsSection } from './dashboard-enrollments-section';
 
-describe('DashboardCareersSection', () => {
+describe('DashboardDegreeProgramsSection', () => {
   let fixture: ComponentFixture<DashboardEnrollmentsSection>;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('DashboardCareersSection', () => {
     });
   });
 
-  it('should show the career action when there are no enrollments', async () => {
+  it('should show the degreeProgram action when there are no enrollments', async () => {
     fixture = createComponent([]);
     await fixture.whenStable();
 
@@ -31,7 +31,7 @@ describe('DashboardCareersSection', () => {
     expect(fixture.nativeElement.querySelector('.swiper')).toBeNull();
   });
 
-  it('should navigate to inscriptions from the add career button', async () => {
+  it('should navigate to enrollments from the add degreeProgram button', async () => {
     fixture = createComponent([createEnrollment(1)]);
     await fixture.whenStable();
 

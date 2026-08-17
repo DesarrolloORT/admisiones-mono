@@ -26,8 +26,8 @@ describe('EnrollmentSeminarsSummary', () => {
 
   it('renders the heading and one row per seminario with comienzo and turno', () => {
     setSeminars([
-      { idEnrollment: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
-      { idEnrollment: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
+      { enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
+      { enrollmentId: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
     ]);
 
     const title = fixture.nativeElement.querySelector('#seminars-title');

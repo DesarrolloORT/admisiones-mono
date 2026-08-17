@@ -283,7 +283,7 @@ test.describe('Inscripción inicial', () => {
     await setup(page, 'partial');
     const enrollment = new EnrollmentPage(page);
 
-    await enrollment.goto('parcial');
+    await enrollment.goto('partial');
     await expect(
       page.getByRole('heading', { name: 'Información personal', exact: true })
     ).toBeVisible();
@@ -324,7 +324,7 @@ test.describe('Inscripción inicial', () => {
     await setup(page, 'complete');
     const enrollment = new EnrollmentPage(page);
 
-    await enrollment.goto('encuesta-completa');
+    await enrollment.goto('survey-complete');
 
     await expect(page.getByText('Educación', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Decisión académica', { exact: true })).toHaveCount(0);
@@ -351,7 +351,7 @@ test.describe('Inscripción inicial', () => {
     const photoRequests = collectGetRequests(page, '/person/photo');
     const enrollment = new EnrollmentPage(page);
 
-    await enrollment.goto('encuesta-completa');
+    await enrollment.goto('survey-complete');
     await expect(page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
     await enrollment.continueWithPreloadedIdentity();
 
@@ -362,7 +362,7 @@ test.describe('Inscripción inicial', () => {
     await setup(page, 'complete');
     const enrollment = new EnrollmentPage(page);
 
-    await enrollment.goto('encuesta-completa', 'en-proceso');
+    await enrollment.goto('survey-complete', true);
     await enrollment.fillIdentity();
     await enrollment.acceptRegulation();
     await enrollment.selectPayment('geopay');
@@ -377,7 +377,7 @@ test.describe('Inscripción inicial', () => {
     await setup(page, 'partial');
     const enrollment = new EnrollmentPage(page);
 
-    await enrollment.goto('parcial');
+    await enrollment.goto('partial');
     await page.reload();
 
     await expect(

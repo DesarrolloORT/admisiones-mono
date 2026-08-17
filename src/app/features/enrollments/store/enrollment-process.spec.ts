@@ -42,7 +42,7 @@ describe('EnrollmentProcessStore', () => {
     expect(store.preEnrollmentResponse()).toBeNull();
 
     const response: EnrollmentPreEnrollmentResponse = {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2027-03-04',
       enrollmentDeposit: 15500,

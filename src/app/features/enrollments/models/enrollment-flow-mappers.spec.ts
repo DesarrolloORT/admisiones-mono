@@ -240,7 +240,7 @@ describe('enrollment flow mappers', () => {
         selectedReasonOptions: [8],
         selectedAdvertisingOptions: [9],
       },
-      { forms, careers: [] }
+      { forms, degreePrograms: [] }
     );
 
     expect(forms.educationForm.getRawValue()).toMatchObject({
@@ -396,7 +396,7 @@ describe('enrollment flow mappers', () => {
         highSchoolYearId: 6,
       },
       emptySurveyResponse,
-      { forms, careers: [], includeAcademicSelection: false }
+      { forms, degreePrograms: [], includeAcademicSelection: false }
     );
 
     // El paso 1 queda virgen; el resto de la encuesta sí se patchea.
@@ -413,7 +413,7 @@ describe('enrollment flow mappers', () => {
     const proposalType = patchBackendSurveyForms(
       { ...emptySurvey, degreeProgramId: 20 },
       emptySurveyResponse,
-      { forms, careers: [] }
+      { forms, degreePrograms: [] }
     );
 
     expect(proposalType).toBe('3');
@@ -421,7 +421,7 @@ describe('enrollment flow mappers', () => {
     expect(forms.academicForm.controls.degreeProgram.value).toBe('20');
   });
 
-  it('derives the proposal type from the careers catalog when the survey has no level', () => {
+  it('derives the proposal type from the degreePrograms catalog when the survey has no level', () => {
     const forms = createEnrollmentForms();
 
     const proposalType = patchBackendSurveyForms(
@@ -429,7 +429,7 @@ describe('enrollment flow mappers', () => {
       emptySurveyResponse,
       {
         forms,
-        careers: [
+        degreePrograms: [
           {
             productId: 20,
             productLevelId: 2,
@@ -444,9 +444,9 @@ describe('enrollment flow mappers', () => {
     expect(forms.academicForm.controls.proposalType.value).toBe('2');
   });
 
-  it('prefers the survey level over the careers catalog and blanks unknown levels', () => {
+  it('prefers the survey level over the degreePrograms catalog and blanks unknown levels', () => {
     const forms = createEnrollmentForms();
-    const careers = [
+    const degreePrograms = [
       {
         productId: 20,
         productLevelId: 2,
@@ -461,7 +461,7 @@ describe('enrollment flow mappers', () => {
         emptySurveyResponse,
         {
           forms,
-          careers,
+          degreePrograms,
         }
       )
     ).toBe('1');
@@ -472,7 +472,7 @@ describe('enrollment flow mappers', () => {
         emptySurveyResponse,
         {
           forms,
-          careers,
+          degreePrograms,
         }
       )
     ).toBe('');
@@ -482,7 +482,7 @@ describe('enrollment flow mappers', () => {
     const forms = createEnrollmentForms();
     patchBackendSurveyForms({ ...emptySurvey, ...overrides }, emptySurveyResponse, {
       forms,
-      careers: [],
+      degreePrograms: [],
     });
     return forms.educationForm.controls.highSchoolLocation.value;
   }

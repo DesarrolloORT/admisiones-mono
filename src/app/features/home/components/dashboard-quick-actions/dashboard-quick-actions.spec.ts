@@ -9,21 +9,21 @@ import { DashboardQuickActions } from './dashboard-quick-actions';
 const REACTIVATION_RESPONSE = {
   confirmed: false,
   isWaiting: false,
-  idEnrollment: 7010,
+  enrollmentId: 7010,
   paymentDueDate: '2027-03-04',
   enrollmentDeposit: 15500,
   accountBalance: 1200,
   summary: { degreeProgram: 'Sistemas', intake: 'Marzo 2027', shift: 'Noche' },
   seminars: [
     {
-      idEnrollment: 7010,
+      enrollmentId: 7010,
       offeringId: 310,
       name: 'Seminario de Liderazgo',
       intake: 'Marzo 2027',
       shift: 'Noche',
     },
     {
-      idEnrollment: 7011,
+      enrollmentId: 7011,
       offeringId: 311,
       name: 'Seminario de Finanzas',
       intake: 'Abril 2027',

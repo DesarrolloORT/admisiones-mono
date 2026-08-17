@@ -24,11 +24,11 @@ describe('academic proposal options', () => {
     },
   ];
 
-  it('offers every proposal type before loading careers', () => {
+  it('offers every proposal type before loading degreePrograms', () => {
     expect(getAcademicProposalTypes().map(option => option.value)).toEqual(['1', '2', '3']);
   });
 
-  it('filters careers by proposal type', () => {
+  it('filters degreePrograms by proposal type', () => {
     expect(getAcademicDegreeProgramOptions(degreePrograms, '2')).toEqual([
       { value: '20', label: 'Analista Programador', school: 'Facultad de Ingeniería' },
     ]);
@@ -46,10 +46,10 @@ describe('academic proposal options', () => {
 
   it('uses Programa/Seminario terminology only for professional update', () => {
     expect(getAcademicProposalTerminology('3').degreeProgramLabel).toBe('Programa');
-    expect(getAcademicProposalTerminology('3').startLabel).toBe('Seminario');
+    expect(getAcademicProposalTerminology('3').intakeLabel).toBe('Seminario');
     for (const value of ['1', '2', '', '9']) {
       expect(getAcademicProposalTerminology(value).degreeProgramLabel).toBe('Carrera');
-      expect(getAcademicProposalTerminology(value).startLabel).toBe('Comienzo');
+      expect(getAcademicProposalTerminology(value).intakeLabel).toBe('Comienzo');
     }
   });
 

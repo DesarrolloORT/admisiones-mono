@@ -17,7 +17,7 @@
 <!-- TODO(a11y-ort-component): OrtInput no conserva siempre el nombre accesible del OrtFormField al alternar entre cédula y documento no-CI; se explicita aria-label hasta que la librería lo resuelva. -->
 <ort-form-field [hideRequiredMarker]="!!form().controls.documentNumber.value">
   <ort-label>{{ numberLabel() }}</ort-label>
-  @if (isCedulaInput()) {
+  @if (isNationalIdInput()) {
   <input
     ortCedulaInput
     type="text"
@@ -33,15 +33,15 @@
     [autocomplete]="autocomplete() ?? ''"
     [formControl]="form().controls.documentNumber"
     [id]="idPrefix() + '-document-number'" />
-  } @if (!isCedulaInput()) {
+  } @if (!isNationalIdInput()) {
   <ort-hint>Sin puntos ni espacios</ort-hint>
   } @if ( form().controls.documentNumber.touched &&
   form().controls.documentNumber.hasError('required') ) {
   <ort-error>Este campo es obligatorio</ort-error>
-  } @if ( isCedulaInput() && form().controls.documentNumber.touched &&
-  form().controls.documentNumber.hasError('cedula') ) {
+  } @if ( isNationalIdInput() && form().controls.documentNumber.touched &&
+  form().controls.documentNumber.hasError('nationalId') ) {
   <ort-error>Ingresá un número de cédula válido</ort-error>
-  } @if ( !isCedulaInput() && form().controls.documentNumber.touched &&
+  } @if ( !isNationalIdInput() && form().controls.documentNumber.touched &&
   form().controls.documentNumber.hasError('pattern') ) {
   <ort-error>Ingresá solo caracteres alfanuméricos o guiones</ort-error>
   }

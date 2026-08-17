@@ -114,15 +114,14 @@ export type EnrollmentPaymentInit =
  * Detalle queda como fallback para enlaces anteriores; la encuesta nunca es fuente del
  * paso 1. Si el Detalle no llegó, producto y comienzo también salen de la URL.
  *
- * `turno` y `seminarios` se llenan SIEMPRE los dos con las mismas ofertas:
- * `buildConfirmPreEnrollmentPayload` lee `seminarios` cuando el tipo es Actualización
- * profesional y `turno` en el resto, y el tipo puede quedar vacío si el catálogo de
+ * `shift` y `seminars` se llenan SIEMPRE los dos con las mismas ofertas:
+ * `buildConfirmPreEnrollmentPayload` lee `seminars` cuando el tipo es Actualización
+ * profesional y `shift` en el resto, y el tipo puede quedar vacío si el catálogo de
  * carreras falló. Llenando ambos, confirmar la preinscripción funciona igual.
  */
 export interface EnrollmentAcademicPrefill {
   proposalType: string;
   degreeProgram: string;
-  /** El control `comienzo` guarda un idProceso, que es el param de la URL. */
   intake: string;
   shift: string;
   seminars: string[];
@@ -140,7 +139,7 @@ export interface EnrollmentInitialState {
 /**
  * Deriva TODO el estado inicial del flujo a partir del contexto de entrada. Función
  * pura y sin efectos: es la única fuente de verdad de "en qué estado arranca la
- * inscripción". El backend (Detalle + EncuestaInicial) manda sobre los datos; la
+ * inscripción". El backend (detalle + encuesta inicial) manda sobre los datos; la
  * intención manda sobre presentación/navegación. Su tabla de escenarios
  * (`enrollment-entry.spec.ts`) es el contrato ejecutable.
  */
@@ -243,8 +242,8 @@ function deriveResume(
 
 /**
  * Precarga del paso 1 al retomar. Producto y comienzo prefieren el Detalle; las ofertas
- * prefieren la URL de la tarjeta y usan `Detalle.intereses` como fallback para enlaces
- * anteriores. Con `idNivelProducto` desconocido (catálogo caído) el tipo queda vacío
+ * prefieren la URL de la tarjeta y usan `detail.interests` como fallback para enlaces
+ * anteriores. Con `productLevelId` desconocido (catálogo caído) el tipo queda vacío
  * y `AcademicProposalSelection` lo completa desde el nivel de la carrera al cargar.
  */
 function buildAcademicPrefill(entry: EnrollmentResumeEntry): EnrollmentAcademicPrefill {

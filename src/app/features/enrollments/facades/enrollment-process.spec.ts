@@ -61,7 +61,7 @@ describe('EnrollmentProcessFacade', () => {
 
     expect(process.flow.currentStep()).toBe('payment');
     expect(process.preEnrollmentResponse()).toEqual({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2027-03-04',
       enrollmentDeposit: 15500,
@@ -86,7 +86,7 @@ describe('EnrollmentProcessFacade', () => {
     TestBed.tick();
 
     expect(process.preEnrollmentResponse()).toEqual({
-      idEnrollment: null,
+      enrollmentId: null,
       confirmed: true,
       paymentDueDate: null,
       enrollmentDeposit: null,
@@ -139,7 +139,7 @@ describe('EnrollmentProcessFacade', () => {
 
     expect(process.flow.currentStep()).toBe('payment');
     expect(payment.outcome()).toBeNull();
-    expect(process.preEnrollmentResponse()?.idEnrollment).toBe(1072704);
+    expect(process.preEnrollmentResponse()?.enrollmentId).toBe(1072704);
   });
 
   it('disables the survey proposal and lands on step 2 when resuming in progress', () => {
@@ -154,7 +154,7 @@ describe('EnrollmentProcessFacade', () => {
       resume({
         status: 'En proceso',
         summary,
-        interests: [interes(300)],
+        interests: [interest(300)],
         pendingPayment: null,
         minimumDeposit: null,
         confirmed: null,
@@ -185,7 +185,7 @@ describe('EnrollmentProcessFacade', () => {
         {
           status: 'En proceso',
           summary,
-          interests: [interes(310), interes(311)],
+          interests: [interest(310), interest(311)],
           pendingPayment: null,
           minimumDeposit: null,
           confirmed: null,
@@ -229,7 +229,7 @@ describe('EnrollmentProcessFacade', () => {
       resume({
         status: 'En proceso',
         summary,
-        interests: [interes(300)],
+        interests: [interest(300)],
         pendingPayment: null,
         minimumDeposit: null,
         confirmed: null,
@@ -464,8 +464,8 @@ function resume(
   };
 }
 
-function interes(offeringId: number): EnrollmentOfferingSummary {
-  return { idEnrollment: null, offeringId, name: 'Oferta', intake: null, shift: null };
+function interest(offeringId: number): EnrollmentOfferingSummary {
+  return { enrollmentId: null, offeringId, name: 'Oferta', intake: null, shift: null };
 }
 
 function inProgressSurvey(
@@ -604,7 +604,7 @@ function createPendingPaymentDetail(): EnrollmentDetail {
     summary: null,
     interests: [],
     pendingPayment: {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       deposit: 15500,
       accountBalance: 1200,
       paymentDueDate: '2027-03-04',

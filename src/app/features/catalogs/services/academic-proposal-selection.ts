@@ -54,7 +54,7 @@ export class AcademicProposalSelection {
   public readonly seminarOptions = computed(() =>
     this.seminarsState().map(toAcademicSeminarOption)
   );
-  /** AP: el programa manda. Sin `tieneSeminario` se elige una sola oferta. */
+  /** AP: el programa manda. Sin `hasSeminar` se elige una sola oferta. */
   public readonly allowsMultipleSeminars = computed(
     () =>
       this.degreeProgramsState().find(
@@ -62,11 +62,11 @@ export class AcademicProposalSelection {
       )?.hasSeminar === true
   );
   public readonly seminarLabel = computed(() =>
-    this.allowsMultipleSeminars() ? this.terminology().startLabel : 'Horario'
+    this.allowsMultipleSeminars() ? this.terminology().intakeLabel : 'Horario'
   );
   public readonly seminarErrorText = computed(() =>
     this.allowsMultipleSeminars()
-      ? this.terminology().startErrorText
+      ? this.terminology().intakeErrorText
       : `Seleccioná un ${this.seminarLabel().toLocaleLowerCase('es-UY')}`
   );
   public readonly degreeProgramsLoadingMessage = computed(() =>

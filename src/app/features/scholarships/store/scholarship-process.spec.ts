@@ -4,10 +4,10 @@ describe('ScholarshipProcessStore', () => {
   it('navigates the scholarship steps', () => {
     const store = new ScholarshipProcessStore();
 
-    expect(store.flow.currentStep()).toBe('info-postulacion');
+    expect(store.flow.currentStep()).toBe('application-info');
     expect(store.flow.next()).toBe(true);
-    expect(store.flow.currentStep()).toBe('info-personal');
+    expect(store.flow.currentStep()).toBe('personal-info');
     expect(store.flow.previous()).toBe(true);
-    expect(store.flow.currentStep()).toBe('info-postulacion');
+    expect(store.flow.currentStep()).toBe('application-info');
   });
 });

@@ -19,7 +19,7 @@ describe('ScholarshipProposalFacade', () => {
 
     facade.continue();
     expect(facade.submitted()).toBe(true);
-    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('info-postulacion');
+    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('application-info');
 
     facade.academicForm.setValue({
       proposalType: '1',
@@ -30,6 +30,6 @@ describe('ScholarshipProposalFacade', () => {
     });
     facade.continue();
 
-    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('info-personal');
+    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('personal-info');
   });
 });

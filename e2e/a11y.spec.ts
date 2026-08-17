@@ -150,7 +150,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await enrollment.goto();
     await clickRadioByName(page, /^Carrera universitaria/);
 
-    const trigger = page.locator('#academic-proposal-career-mobile');
+    const trigger = page.locator('#academic-proposal-degree-program-mobile');
     await expect(trigger).toBeEnabled();
     await trigger.focus();
     await page.keyboard.press('Enter');
@@ -158,7 +158,10 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     const dialog = page.getByRole('dialog', { name: 'Seleccionar carrera' });
     await expect(dialog).toBeVisible();
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    await expect(trigger).toHaveAttribute('aria-controls', 'academic-proposal-career-drawer');
+    await expect(trigger).toHaveAttribute(
+      'aria-controls',
+      'academic-proposal-degree-program-drawer'
+    );
     await expectNoAxeViolations(page);
 
     const option = dialog.getByRole('radio', { name: 'Licenciatura en Diseño Gráfico' });

@@ -7,7 +7,7 @@ describe('detailToPreEnrollment', () => {
       summary: null,
       interests: [],
       pendingPayment: {
-        idEnrollment: 1072704,
+        enrollmentId: 1072704,
         deposit: 3339,
         accountBalance: 70000,
         paymentDueDate: '2026-06-26T16:29:20',
@@ -19,7 +19,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2026-06-26T16:29:20',
       enrollmentDeposit: 3339,
@@ -45,7 +45,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
-      idEnrollment: null,
+      enrollmentId: null,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 3339,
@@ -72,7 +72,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
-      idEnrollment: null,
+      enrollmentId: null,
       confirmed: true,
       paymentDueDate: null,
       enrollmentDeposit: null,
@@ -88,7 +88,7 @@ describe('detailToPreEnrollment', () => {
       summary: null,
       interests: [],
       pendingPayment: {
-        idEnrollment: 1072704,
+        enrollmentId: 1072704,
         deposit: 1000,
         accountBalance: 500,
         paymentDueDate: '2026-06-26T16:29:20',
@@ -111,7 +111,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: true,
       paymentDueDate: '2026-06-26T16:29:20',
       enrollmentDeposit: 1000,
@@ -127,7 +127,7 @@ describe('detailToPreEnrollment', () => {
       summary: null,
       interests: [],
       pendingPayment: {
-        idEnrollment: 1072704,
+        enrollmentId: 1072704,
         deposit: 3339,
         accountBalance: null,
         paymentDueDate: '2026-06-26T16:29:20',
@@ -139,7 +139,7 @@ describe('detailToPreEnrollment', () => {
     };
 
     expect(detailToPreEnrollment(detail)).toEqual({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2026-06-26T16:29:20',
       enrollmentDeposit: 3339,
@@ -155,7 +155,7 @@ describe('detailToPreEnrollment', () => {
       summary: null,
       interests: [],
       pendingPayment: {
-        idEnrollment: 1072704,
+        enrollmentId: 1072704,
         deposit,
         accountBalance: null,
         paymentDueDate: null,
@@ -200,7 +200,7 @@ describe('detailToPreEnrollment', () => {
 
   function seminar() {
     return {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       offeringId: 58563,
       name: 'Seminario de Arquitectura',
       intake: 'Marzo-abril 2027',

@@ -72,14 +72,14 @@ pago) llama a `POST /enrollments/start-payment`; el detalle operativo forma part
 Antes de entrar al paso 2 se consulta `GET /enrollments/initial-survey`.
 Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
 secciones de Educacion, decision academica, experiencia ORT, situacion
-laboral, identidad y reglamento. Si `tieneDerechoEncuesta === false`, solo
+laboral, identidad y reglamento. Si `isEligibleForSurvey === false`, solo
 se muestran identidad y reglamento, salvo en Actualización profesional, donde
 también se pregunta si la inscripción es corporativa. Si la encuesta ya viene
 completa no se muestran secciones de encuesta, con la misma excepción para AP.
 
 ```mermaid
 flowchart TD
-  A[Propuesta academica] -->|InteresProducto OK| B{Estado de encuesta}
+  A[Propuesta academica] -->|Interés registrado| B{Estado de encuesta}
   B -->|Pendiente o en progreso| C[Encuesta + identidad + reglamento]
   B -->|Sin derecho| D[Identidad + reglamento]
   B -->|Completa| E[Identidad + reglamento]
@@ -107,20 +107,20 @@ es un upsert parcial que queda `temporal` mientras falten respuestas y pasa a
 Cómo arranca el flujo depende de la **intención de entrada** (decidida por la URL,
 no por el backend) combinada con el estado de la inscripción (`Detalle` o respuesta
 de `Reactivar`) y el de la
-encuesta inicial (`EncuestaInicial`, que es **por persona**). La derivación es pura
+encuesta inicial (`GET/POST /enrollments/initial-survey`, que es **por persona**). La derivación es pura
 y está fijada por la tabla ejecutable `models/enrollment-entry.spec.ts`; esta
 matriz es su lectura de negocio.
 
 - **Nueva** (`/inscripciones`, sin params): el Paso 1 arranca **siempre virgen y
   editable**, aunque exista una encuesta previa en progreso. La encuesta previa solo
   se reutiliza al llegar al Paso 2 (prellena respuestas), nunca precarga el Paso 1 ni
-  reposiciona el flujo. `InteresProducto` se envía al continuar.
+  reposiciona el flujo. `POST /enrollments/product-interest` se envía al continuar.
 - **Retomar** (`/inscripciones?idProducto=X&idProceso=Y`, desde el panel):
   llegar con producto y proceso válidos **ya prueba que la inscripción existe**, así
   que el interés está registrado y el **Paso 1 nunca se muestra**. Al hacer clic en
-  "Continuar inscripción", la tarjeta guarda sus `idOferta` e `idInscripcion` en
+  "Continuar inscripción", la tarjeta guarda sus `offeringIds` y `enrollmentIds` en
   `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel`. El Paso 1 queda precargado y
-  deshabilitado (no se vuelve a enviar `InteresProducto`) y el flujo arranca en el Paso
+  deshabilitado (no se vuelve a enviar `POST /enrollments/product-interest`) y el flujo arranca en el Paso
   2 o en la pantalla que corresponda al estado.
 
   | Estado del detalle                  | Dónde arranca / qué muestra                 |
@@ -142,14 +142,14 @@ matriz es su lectura de negocio.
 
   **Precarga del Paso 1 al retomar.** Producto y proceso salen de la URL/Detalle; las
   ofertas salen del contexto guardado por la tarjeta en `sessionStorage`. Un enlace de
-  Detalle que incluya `idOferta` explícitos mantiene precedencia; si ninguna de esas
-  fuentes existe, `detalle.intereses` aporta el fallback
+  Los `offeringIds` del contexto guardado mantienen precedencia; si esa fuente no
+  existe, `detail.interests` aporta el fallback
   (una oferta por seminario en Actualización profesional). El
-  contrato del `Detalle` **no expone `idComienzo` ni `idTurno`** en ningún bloque, así
+  contrato del `Detalle` **no expone `intakeId` ni `shiftId`** en ningún bloque, así
   que el comienzo y el turno solo llegan como texto; por eso la precarga llena
-  `turno` y `seminarios` con los `idOferta` (el payload de `ConfirmarPreInscripcion`
+  `shift` y `seminars` con los `offeringIds` (el payload de `POST /enrollments/confirm-pre-enrollment`
   lee uno u otro según el tipo de propuesta) y toma el comienzo del param `idProceso`
-  (el control `comienzo` guarda justamente un idProceso). Si el `Detalle` no llegó,
+  (el control `intake` guarda el `admissionProcessId`). Si el `Detalle` no llegó,
   los params conservan producto, proceso y ofertas, por lo que el Paso 2 puede confirmar
   igualmente. La
   selección académica de una encuesta previa nunca se aplica al Paso 1 al retomar. Si el
@@ -157,14 +157,14 @@ matriz es su lectura de negocio.
   después desde el nivel de la carrera (`AcademicProposalSelection`).
 
   **Pago y resumen al retomar AP.** La respuesta de
-  `ConfirmarPreInscripcion.inscripciones` es la fuente principal de los IDs a cobrar y
-  de las filas del resumen. Si esa respuesta no trae el bloque, `Pagar` usa como
-  fallback los `idInscripcion` guardados en sesión, y el resumen usa los seminarios
+  `EnrollmentPreEnrollmentResponse.seminars` es la fuente principal de los IDs a cobrar y
+  de las filas del resumen. Si esa respuesta no trae el bloque, `POST /enrollments/start-payment` usa como
+  fallback los `enrollmentIds` guardados en sesión, y el resumen usa los seminarios
   seleccionados del catálogo. El contexto se valida contra producto/proceso y conserva
   solo enteros positivos sin duplicados; el backend mantiene la validación final de pertenencia.
 
 - **El flujo solo avanza.** Pasar de paso es un hecho ya registrado en el backend
-  (Paso 1 ⇒ `InteresProducto`, Paso 2 ⇒ `ConfirmarPreInscripcion`), así que **no hay
+  (Paso 1 ⇒ `POST /enrollments/product-interest`, Paso 2 ⇒ `POST /enrollments/confirm-pre-enrollment`), así que **no hay
   vuelta atrás entre pasos**: no se vuelve del Paso 2 al 1 ni del Paso 3 al 2. Lo único
   que retrocede es la navegación **dentro** del Paso 2 (secciones de la encuesta y
   lector de reglamento), y el botón de volver solo aparece cuando hay algo hacia atrás.
@@ -175,12 +175,12 @@ matriz es su lectura de negocio.
   del dashboard hace `POST /enrollments/reactivate` con **todas** las anotaciones de
   la tarjeta en `enrollmentIds` (una en niveles 1/2; una por seminario en los paquetes
   de Actualización profesional, que se dan de baja y se reactivan en bloque), y
-  devuelve el mismo contrato que `ConfirmarPreInscripcion`. El frontend conserva transitoriamente esa respuesta y
-  los IDs de las nuevas inscripciones: `enEspera` muestra la pantalla informativa,
+  devuelve el mismo contrato que `POST /enrollments/confirm-pre-enrollment`. El frontend conserva transitoriamente esa respuesta y
+  los IDs de las nuevas inscripciones: `isWaiting` muestra la pantalla informativa,
   seña `0` muestra la reserva y el resto abre la selección de pago. El resolver no
   llama a `GET /enrollments/details` en esta navegación; si la respuesta ya no está
   disponible por recarga o acceso directo, usa `Detalle` como fallback. Los
-  `getDetail` posteriores a `Pagar` se mantienen para completar coordinación, materias
+  `getDetail` posteriores a `POST /enrollments/start-payment` se mantienen para completar coordinación, materias
   o referencias de reserva que el POST de reactivación no devuelve.
 
   El backend verifica **todo o nada** que cada ID pertenezca a la persona, esté dado de
@@ -207,7 +207,7 @@ que `idProducto`/`idProceso`/`modo`), leído por `enrollmentDetailResolver` y po
 `nivel` viaja por el mismo mecanismo y con la misma regla de opcionalidad: es el
 `productLevelId` que ya devuelve `GET /person/enrollments`, y existe para que el
 resolver no reconstruya el nivel del producto consultando los tres tipos de propuesta.
-No se envía al backend: solo alimenta `idNivelProducto` del read model de entrada. El
+No se envía al backend: solo alimenta `productLevelId` del read model de entrada. El
 resolver lo descarta si no corresponde a un tipo conocido y cae al catálogo, así que un
 valor manipulado no puede hacer más que elegir la rama de UI equivocada; la pertenencia
 de los IDs la revalida el backend igual que siempre.
@@ -232,32 +232,32 @@ el payload lo ignora y envia `null` cuando el padre indica que no aplica.
 
 Excepciones que si limpian valores:
 
-- Propuesta academica: cambiar `tipoPropuesta` limpia `carrera`, `comienzo` y
-  `turno`; cambiar `carrera` limpia `comienzo` y `turno`; cambiar `comienzo`
-  limpia `turno`.
-- Bachillerato: cambiar `anioSecundaria` limpia `orientacion` si el valor anterior
+- Propuesta academica: cambiar `proposalType` limpia `degreeProgram`, `intake` y
+  `shift`; cambiar `degreeProgram` limpia `intake` y `shift`; cambiar `intake`
+  limpia `shift`.
+- Bachillerato: cambiar `highSchoolYear` limpia `orientation` si el valor anterior
   ya no existe en las orientaciones vigentes para ese año.
-- Institucion educativa: cambiar `departamento` limpia `institucionEducativa`
+- Institucion educativa: cambiar `state` limpia `educationalInstitution`
   solo si el valor anterior no existe en el nuevo catalogo cargado.
-- Pago: cambiar `metodoPago` a algo distinto de `cuenta-bancaria` limpia
-  `banco`.
+- Pago: cambiar `paymentMethod` a algo distinto de `bank-account` limpia
+  `bank`.
 
 ## Matriz de campos condicionales
 
-| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                        |
-| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------- |
-| `cursaSecundaria = cursando`            | `anioSecundaria`                        | Requerido               | Conserva valor crudo                | `anioBachillerato = null`                   |
-| Año con orientaciones                   | `orientacion`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `orientacionBachilleratoId = null`          |
-| `recursaAnioBachillerato = si`          | `vecesRecursaAnioBachillerato`          | Entero mayor que 0      | Conserva valor crudo                | `vecesRecursaAnioBachillerato = null`       |
-| `lugarSecundaria = 1`                   | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `nombreInstitucion...` |
-| `lugarSecundaria != 1`                  | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `institucionSecundariaId = null`            |
-| `estadoEducacionSuperior = 1`           | `universidadesEducacionSuperior`        | Seleccion requerida     | Conserva valor crudo                | `universidadEducacionSuperiorIds = null`    |
-| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                       |
-| Formacion de madre o padre es `5` o `6` | `tituloOrtMadre` o `tituloOrtPadre`     | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                         |
-| `otrasUniversidades = si`               | `universidadesInformadas`               | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                          |
-| Experiencia ORT = `si`                  | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                  |
-| Identidad completa desde backend        | `identidadCorrecta`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                 |
-| `metodoPago = cuenta-bancaria`          | `banco`                                 | Requerido               | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`            |
+| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                             |
+| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------------ |
+| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido               | Conserva valor crudo                | `highSchoolYear = null`                          |
+| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `highSchoolOrientationId = null`                 |
+| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0      | Conserva valor crudo                | `highSchoolYearRepeatCount = null`               |
+| `highSchoolLocation = 1`                | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `highSchoolInstitutionName` |
+| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `highSchoolInstitutionId = null`                 |
+| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida     | Conserva valor crudo                | `higherEducationUniversityIds = null`            |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                            |
+| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                              |
+| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                               |
+| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                       |
+| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                      |
+| `paymentMethod = bank-account`          | `bank`                                  | Requerido               | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`                 |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -272,37 +272,37 @@ verificada al nodo exacto. No se publican enlaces generales ni placeholders.
   nuevo; si desaparece, se limpia.
 - La encuesta completa oculta sus secciones, pero identidad y reglamento
   mantienen sus propias reglas.
-- El paso de pago llama al backend; los pagos externos terminan en `pago-pendiente-externo` hasta que exista confirmación automática.
+- El paso de pago llama al backend; los pagos externos terminan en `external-payment-pending` hasta que exista confirmación automática.
 - `resultado=en-proceso` fuerza el estado terminal "Inscripcion en proceso" para
   cualquier metodo.
 
 ## Paso 1: propuesta academica
 
-El paso tiene cuatro campos en cascada. `tipoPropuesta` es una constante local
+El paso tiene cuatro campos en cascada. `proposalType` es una constante local
 filtrada por niveles disponibles (`1` carrera universitaria, `2` tecnicatura,
 `3` actualizacion profesional); no se envia directo al backend pero filtra las
-carreras disponibles. `carrera` usa el `idProducto` como string, proveniente de
-`GET /catalogs/degree-programs`, y el adapter lo envía como `productId`. `comienzo`
+carreras disponibles. `degreeProgram` usa el `idProducto` como string, proveniente de
+`GET /catalogs/degree-programs`, y el adapter lo envía como `productId`. `intake`
 usa el `idProceso` como string, proveniente de
-`GET /catalogs/intakes?degreeProgramId=<carrera>`, y el adapter lo envía como
-`admissionProcessId`. `turno` usa el `idOferta` como string, proveniente de
-`GET /catalogs/shifts?degreeProgramId=<carrera>&admissionProcessId=<comienzo>`,
+`GET /catalogs/intakes?degreeProgramId=<degreeProgram>`, y el adapter lo envía como
+`admissionProcessId`. `shift` usa el `idOferta` como string, proveniente de
+`GET /catalogs/shifts?degreeProgramId=<degreeProgram>&admissionProcessId=<intake>`,
 y el adapter lo envía dentro de `offeringIds`.
 
 Cuando un catálogo devuelve **una sola opción**, el campo se precarga: no hay elección real
-que pedir. Aplica a `comienzo`, `turno` y al campo de seminarios/horario de AP; `carrera` no
+que pedir. Aplica a `intake`, `shift` y al campo de seminarios/horario de AP; `degreeProgram` no
 se precarga, porque dispararía toda la cascada de catálogos sin intención del usuario. La
 precarga vive en un `effect` de `AcademicProposalSelection` y nunca pisa un valor ya elegido,
 así que el prefill de una encuesta previa y el de retomar quedan intactos. Precargar
-`comienzo` sí encadena `GET /catalogs/shifts`, igual que si lo hubiera elegido la persona.
+`intake` sí encadena `GET /catalogs/shifts`, igual que si lo hubiera elegido la persona.
 
 Al continuar se llama a `POST /enrollments/product-interest` con:
 
 ```json
 {
-  "offeringIds": ["Number(turno)"],
-  "admissionProcessId": "Number(comienzo)",
-  "productId": "Number(carrera)"
+  "offeringIds": ["Number(shift)"],
+  "admissionProcessId": "Number(intake)",
+  "productId": "Number(degreeProgram)"
 }
 ```
 
@@ -317,7 +317,7 @@ registrada. El interés, sus ofertas y la fila de cola hacia Tivenos se guardan 
 ## Actualización profesional (niveles 3 y 4)
 
 Cuando el tipo de propuesta es `3` (Actualización profesional, productos con
-`idNivelProducto` 3 o 4) el flujo cambia de estructura. La detección vive en una
+`productLevelId` 3 o 4) el flujo cambia de estructura. La detección vive en una
 única fuente reactiva: `AcademicProposalSelection.isProfessionalUpdate`
 (`isProfessionalUpdateType` en `academic-proposal.ts`), sincronizada también en
 precarga/retomar vía el back-fill de `getAcademicProposalTypeByLevel`.
@@ -357,7 +357,7 @@ consulta y compone `scholarships: []`.
   reemplaza por el texto `"Anotado a N seminarios"`, sin desglose por seminario.
 
 > Reemplaza la regla anterior: antes la tarjeta de niveles 3/4 usaba
-> `descripcionOferta` del primer item como título. Ese comportamiento queda
+> `offeringDescription` del primer item como título. Ese comportamiento queda
 > superado por `degreeProgramName` + conteo de seminarios.
 
 ### Alert de pago pendiente y fecha límite
@@ -401,14 +401,14 @@ El adapter (`HomeEndpoint.toEnrollmentSummaries()`) mapeaba la forma plana vieja
 contra `MyEnrollmentsResponse`, el contrato agrupado que el backend
 ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
 nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
-`idInscripto`, `idComienzo`, `idTurno`, `intakeName`, `nombreTurno` y
-`descripcionOferta` habían pasado al item interno (`enrollments[]`) y
+`enrollmentId`, `intakeId`, `shiftId`, `intakeName`, `shiftName` y
+`offeringDescription` habían pasado al item interno (`enrollments[]`) y
 resolvían a `undefined` → `0`/`''`. Efecto observable: el botón "Reactivar
 inscripción" quedaba inerte y la fila "Comienzo" salía vacía. Resuelto por el
 mapeo agrupado descrito arriba.
 
 Un segundo drift dejó el mismo botón inerte después de ese arreglo: la tarjeta
-dejó de pasarle `idInscripto` a `DashboardQuickActions`, que era la condición de
+dejó de pasarle `enrollmentId` a `DashboardQuickActions`, que era la condición de
 `reactivatesFlow`. Resuelto unificando la reactivación sobre `idEnrollments`
 (el set que la tarjeta ya calculaba), que además cubre los paquetes de
 Actualización profesional con más de una anotación.
@@ -420,19 +420,19 @@ Actualización profesional con más de una anotación.
 - No hay selects de Comienzo ni Turno. Al elegir un programa aparece el
   **select de Seminarios** (oculto hasta entonces), cada uno con su fecha de
   comienzo debajo. Cambiar de programa limpia los seminarios elegidos.
-- El programa manda el modo de selección: `tieneSeminario === true` en
+- El programa manda el modo de selección: `hasSeminar === true` en
   `GET /catalogs/degree-programs` habilita **multi-select**; cualquier otro valor deja
   un **select simple** de una sola oferta
-  (`AcademicProposalSelection.allowsMultipleSeminars`). El control `seminarios`
+  (`AcademicProposalSelection.allowsMultipleSeminars`). El control `seminars`
   guarda siempre `string[]`, así que el resto del flujo no cambia.
-- `tieneSeminario` decide además la terminología del campo
+- `hasSeminar` decide además la terminología del campo
   (`AcademicProposalSelection.seminarLabel` / `seminarErrorText`, que también alimentan el
   resumen de errores del paso): con seminarios se rotula **Seminario** y el error es
   "Seleccioná al menos un seminario"; sin seminarios las ofertas del programa son horarios,
   así que el campo se rotula **Horario** y el error va en singular.
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /catalogs/shifts`; el resultado llena el multiselect de seminarios.
-- Cada opción muestra `descripcionOferta` y, debajo, `fechaReferencia`.
+- Cada opción muestra `offeringDescription` y, debajo, `referenceDate`.
   `toAcademicSeminarOption` normaliza esa fecha a `dd/MM/yyyy`: el catálogo la manda como
   ISO con hora fija (`2026-10-16T00:00:00`) y la opción muestra solo la fecha. Sin fecha
   no se pinta la descripción.
@@ -442,15 +442,15 @@ Actualización profesional con más de una anotación.
 
 ### Paso 2 AP reducido
 
-`getSeccionesVisibles(escenario, actualizacionProfesional)` filtra por
-intersección con `SECCIONES_ENCUESTA_ACTUALIZACION_PROFESIONAL`
-(`situacion-laboral`, `identidad`, `reglamento`). Las tres se muestran siempre
+`getVisibleSections(scenario, isProfessionalUpdate)` filtra por
+intersección con `PROFESSIONAL_UPDATE_SURVEY_SECTIONS`
+(`work-situation`, `identity`, `regulation`). Las tres se muestran siempre
 para AP, incluso sin derecho a encuesta o con una encuesta completa, para
 preguntar en todos los casos si la inscripción es corporativa. Un clamp en
 `EnrollmentSurveyFacade` reposiciona la sección activa si dejó de ser visible o
 cambió la primera sección aplicable.
 
-La sección `situacion-laboral` contiene una sola pregunta,
+La sección `work-situation` contiene una sola pregunta,
 **¿A título de quién deseás realizar la inscripción?**, y solo se muestra en AP. La
 selección es obligatoria y se representa como `isCorporate`: título personal es
 `false` y corporativa es `true`. Los tipos 1/2 no ven la sección y envían
@@ -458,16 +458,16 @@ selección es obligatoria y se representa como `isCorporate`: título personal e
 
 **AP no envía `POST /enrollments/initial-survey`** (ni al cerrar el paso 2 ni
 al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
-`ConfirmarPreInscripcion`. Una inscripción personal continúa al paso 3; una
+`POST /enrollments/confirm-pre-enrollment`. Una inscripción personal continúa al paso 3; una
 corporativa termina en la pantalla "Inscripción corporativa pendiente" y espera
 que la empresa acredite el pago.
 
 ### Retomar AP "En proceso"
 
-AP nunca postea `EncuestaInicial`, así que exigir una encuesta prefilled para
+AP nunca postea `GET/POST /enrollments/initial-survey`, así que exigir una encuesta prefilled para
 arrancar en el paso 2 dejaba estas inscripciones en el paso 1 vacío. Hoy
 `deriveRetomar` nunca muestra el paso 1 (ver la matriz de retomar) y la tarjeta
-guarda todas sus ofertas en `sessionStorage` antes de navegar. `detalle.intereses`
+guarda todas sus ofertas en `sessionStorage` antes de navegar. `detail.interests`
 queda como fallback para entradas sin ese contexto; los params `idOferta` se leen solo
 por compatibilidad con enlaces generados anteriormente.
 Ojo con los productos que no están en `GET /catalogs/degree-programs` (o cuyo `Detalle`
@@ -475,7 +475,7 @@ falla): el paso 2 se abre igual, pero el tipo de propuesta queda vacío hasta qu
 catálogo resuelva el nivel, así que las secciones visibles pueden arrancar como las del
 flujo tradicional.
 
-`idNivelProducto` decide el tipo de propuesta del paso 1 y, con eso, las secciones
+`productLevelId` decide el tipo de propuesta del paso 1 y, con eso, las secciones
 visibles del paso 2. Al retomar desde el panel llega por el query param `nivel`: la
 tarjeta ya lo recibió como `productLevelId` en `GET /person/enrollments`, así que el
 resolver lo usa directo y **no** consulta el catálogo. Solo cuando ese param falta o
@@ -492,19 +492,19 @@ estado pendiente se mantiene la pantalla genérica "Inscripción en proceso".
 ### Resumen de pago: Programa + Seminarios
 
 `GET /enrollments/details`, `POST /enrollments/confirm-pre-enrollment` y su
-`pendingPayment` devuelven un array `enrollments[]` (`EnrollmentOffering`:
+`pendingPayment` devuelven un array `enrollments[]` (`EnrollmentOfferingSummary`:
 `enrollmentId`, `offeringId`, `intake`, `shift`, `offeringDescription`) junto al
 `summary` plano (`EnrollmentHeader`: `productId`, `degreeProgram`,
-`paymentDueDate`). El adapter (`EnrollmentsEndpoint.toSeminarios()`) mapea ese
-array completo a `EnrollmentPreEnrollmentResponse.seminarios` (y a
-`EnrollmentPendingPaymentDetail.seminarios` para "retomar"), además de seguir
-colapsando `inscripciones?.[0]` en los campos planos (`resumen`, `idInscripcion`) que
+`paymentDueDate`). El adapter (`EnrollmentsEndpoint.toSeminars()`) mapea ese
+array completo a `EnrollmentPreEnrollmentResponse.seminars` (y a
+`EnrollmentPendingPaymentDetail.seminars` para "retomar"), además de seguir
+colapsando `enrollments?.[0]` en los campos planos (`summary`, `enrollmentId`) que
 usa el resto del flujo.
 
 `POST /enrollments/start-payment` recibe `enrollmentIds: number[]`, así que el pago cobra el
 paquete completo: `EnrollmentPaymentFacade.paymentEnrollmentIds()` prioriza los
-`seminarios[].idInscripcion` y el `idInscripcion` plano de la respuesta. Si ambos faltan
-al retomar, usa los `idInscripcion` positivos y deduplicados guardados por la tarjeta
+`seminars[].enrollmentId` y el `enrollmentId` plano de la respuesta. Si ambos faltan
+al retomar, usa los `enrollmentIds` positivos y deduplicados guardados por la tarjeta
 en `sessionStorage`. Si tampoco quedan IDs válidos, el pago no se envía y la pantalla
 muestra "No pudimos identificar la inscripción pendiente.".
 
@@ -514,18 +514,18 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
 - **Niveles 1 y 2:** las 3 filas de siempre (Carrera, Comienzo, Turno), sin cambios.
 - **Niveles 3 y 4 (AP) con 2+ seminarios:** una sola fila **Programa** (mismo ícono e
   ídem fallback de `Carrera`) seguida de una sección **Seminarios** con una fila por
-  elemento de `seminarios[]` (nombre, comienzo, turno). Si la confirmación omite ese
+  elemento de `seminars[]` (nombre, comienzo, turno). Si la confirmación omite ese
   array, se usan como fallback las ofertas seleccionadas del catálogo de seminarios.
   Esta lista vive fuera de `summaryItems()` para no romper
   `enrollment-success-step.html`, que usa `summaryItems()[0]` como título y
   `summaryItems().slice(1)` para el resto.
 - **Niveles 3 y 4 (AP) con un solo seminario:** no hay nada que desglosar, así que el
-  resumen se lee como los niveles 1/2: filas **Programa** + **Comienzo** (el `comienzo`
+  resumen se lee como los niveles 1/2: filas **Programa** + **Comienzo** (el `intake`
   del único seminario) y **sin** sección Seminarios. La decisión es por conteo
-  (`seminarios.length === 1`), no por `tieneSeminario`, igual que
+  (`seminars.length === 1`), no por `hasSeminar`, igual que
   `DashboardCard.enrollmentsCount()` en el panel (ver línea ~255). En el facade,
-  `seminariosSeleccionados()` es la fuente única: alimenta `summaryItems()` y
-  `seminariosResumen()` solo devuelve filas con 2+.
+  `selectedSeminars()` es la fuente única: alimenta `summaryItems()` y
+  `seminarsSummary()` solo devuelve filas con 2+.
 - El diálogo "Confirmar inscripción" (mismo paso) no muestra el desglose de seminarios:
   en AP multi-seminario solo pinta la fila Programa (pendiente de decisión de UX); con
   un solo seminario sí muestra Programa + Comienzo, porque salen de `summaryItems()`.
@@ -546,58 +546,58 @@ paquetes AP se procesan completos en `product-interest`, `confirm-pre-enrollment
 
 ### Educacion
 
-`cursaSecundaria` controla si se muestra `anioSecundaria`. Si pasa a
-`no-cursando` el año queda crudo en el form pero no se envia; el backend recibe
-`anioBachillerato = null`. Si cursa secundaria y el año elegido trae
+`studiesHighSchool` controla si se muestra `highSchoolYear`. Si pasa a
+`no-studying` el año queda crudo en el form pero no se envia; el backend recibe
+`highSchoolYear = null`. Si cursa secundaria y el año elegido trae
 orientaciones en `educacion.aniosBachillerato[].orientaciones`, se muestra
-`orientacion` directamente. No hay selector intermedio de tipo nacional o
+`orientation` directamente. No hay selector intermedio de tipo nacional o
 internacional. Si el año no trae orientaciones o cambia a uno donde la seleccion
-anterior no existe, se envia `orientacionBachilleratoId = null`.
+anterior no existe, se envia `highSchoolOrientationId = null`.
 
-`recursaAnioBachillerato` es requerido. Si vale `si`, se muestra
-`vecesRecursaAnioBachillerato` y se exige un numero mayor a 0. Si vale `no`, la
+`repeatsHighSchoolYear` es requerido. Si vale `yes`, se muestra
+`highSchoolYearRepeatCount` y se exige un numero mayor a 0. Si vale `no`, la
 cantidad puede quedar cruda en el form pero el backend recibe
-`vecesRecursaAnioBachillerato = null`.
-`lugarSecundaria` decide el control de institucion educativa. Con valor `1`
-(Uruguay) se muestran `departamento` e `institucionEducativa` como select; el
-backend recibe `ubicacionUltimoAnioSecundariaId = 1`,
-`institucionSecundariaId = Number(institucionEducativa)` y
-`nombreInstitucionSecundaria = null`. Con valor `2` (exterior)
-`institucionEducativa` pasa a texto libre; el backend recibe
-`ubicacionUltimoAnioSecundariaId = 2`, `institucionSecundariaId = null` y
-`nombreInstitucionSecundaria = <texto>`. Cambiar de Uruguay a exterior no limpia
+`highSchoolYearRepeatCount = null`.
+`highSchoolLocation` decide el control de institucion educativa. Con valor `1`
+(Uruguay) se muestran `state` e `educationalInstitution` como select; el
+backend recibe `finalHighSchoolYearLocationId = 1`,
+`highSchoolInstitutionId = Number(educationalInstitution)` y
+`highSchoolInstitutionName = null`. Con valor `2` (exterior)
+`educationalInstitution` pasa a texto libre; el backend recibe
+`finalHighSchoolYearLocationId = 2`, `highSchoolInstitutionId = null` y
+`highSchoolInstitutionName = <texto>`. Cambiar de Uruguay a exterior no limpia
 el control, por lo que puede conservar el id anterior como texto.
 
-`estadoEducacionSuperior = 1` muestra el multiple `universidadesEducacionSuperior`.
+`higherEducationStatus = 1` muestra el multiple `higherEducationUniversities`.
 Si la seleccion incluye `Otro` (`0`), se muestra el `ortInput`
-`universidadEducacionSuperiorOtro` y el backend recibe
-`universidadEducacionSuperiorOtros = [texto]`. Si cambia a otro valor o no esta
+`otherHigherEducationUniversity` y el backend recibe
+`otherHigherEducationUniversities = [texto]`. Si cambia a otro valor o no esta
 seleccionado `0`, la seleccion y el texto pueden quedar crudos pero el backend
-recibe `universidadEducacionSuperiorIds = null` o
-`universidadEducacionSuperiorOtros = null`, segun corresponda.
-`formacionMadre` con valor `5` o `6` muestra `tituloOrtMadre` (si/no). Si cambia
+recibe `higherEducationUniversityIds = null` o
+`otherHigherEducationUniversities = null`, segun corresponda.
+`motherEducation` con valor `5` o `6` muestra `motherOrtDegree` (si/no). Si cambia
 a otro valor el titulo queda crudo pero se envia `null`. Lo mismo aplica a
-`formacionPadre` y `tituloOrtPadre`.
+`fatherEducation` y `fatherOrtDegree`.
 
 ### Decision academica
 
-`otrasUniversidades = si` muestra el multiple `universidadesInformadas`. Si la
+`otherUniversities = yes` muestra el multiple `researchedUniversities`. Si la
 seleccion incluye `Otro` (`0`), se muestra el `ortInput`
-`universidadInformadaOtro` y el backend recibe `universidadConsideradaOtros =
+`otherResearchedUniversity` y el backend recibe `universidadConsideradaOtros =
 [texto]`. Si pasa a `no`, la seleccion queda cruda pero el backend recibe
-`universidadConsideradaIds = null` y `universidadConsideradaOtros = null`.
-`certezaDecision` no tiene hijos condicionales; `1` es decidido/a y `2` es con
-dudas, y se envia como `nivelDecisionId`.
-Los campos directos de esta seccion son `anioDecisionCarrera` (`anioDecisionCarreraId`),
-`apoyoDecision` (`apoyoDecisionId`), `anioDecisionOrt` (`anioDecisionOrtId`) y
-`motivosOrt` (`motivoEleccionOrtIds`), todos con ids de catalogo.
+`consideredUniversityIds = null` y `otherConsideredUniversities = null`.
+`decisionCertainty` no tiene hijos condicionales; `1` es decidido/a y `2` es con
+dudas, y se envia como `decisionLevelId`.
+Los campos directos de esta seccion son `degreeProgramDecisionYear` (`degreeProgramDecisionYearId`),
+`decisionSupport` (`decisionSupportId`), `ortDecisionYear` (`ortDecisionYearId`) y
+`ortReasons` (`ortChoiceReasonIds`), todos con ids de catalogo.
 
 ### Experiencia con ORT
 
-Cuatro campos booleanos (si/no) tienen ratings condicionales: `reunionAsesoramiento`,
-`visitoWeb`, `visitoSede` y `recuerdaPublicidad`. En cada caso, si el campo padre
-vale `si` se muestra el rating o multiple correspondiente (`calificacionAsesoramiento`,
-`calificacionWeb`, `calificacionSede`, `mediosPublicidad`). Si cambia a `no`, el
+Cuatro campos booleanos (si/no) tienen ratings condicionales: `advisingMeeting`,
+`visitedWebsite`, `visitedCampus` y `recallsAdvertising`. En cada caso, si el campo padre
+vale `yes` se muestra el rating o multiple correspondiente (`advisingRating`,
+`websiteRating`, `campusRating`, `advertisingChannels`). Si cambia a `no`, el
 valor hijo queda crudo pero el backend recibe `null` para ese campo. Los ratings
 envian el numero elegido y las etiquetas salen del catalogo de valoraciones si esta
 disponible.
@@ -606,23 +606,23 @@ disponible.
 
 La encuesta inicial ya no tiene preguntas laborales: el backend dejó de publicar el
 catálogo `situacionLaboral` y los campos `trabajaActualmente` y `tipoJornadaId`. La
-sección `situacion-laboral` sobrevive solo en AP y únicamente pregunta la titularidad
+sección `work-situation` sobrevive solo en AP y únicamente pregunta la titularidad
 de la inscripción (`isCorporate`, ver [Paso 2 AP reducido](#paso-2-ap-reducido)).
 
 ### Identidad
 
 Se precargan datos desde `GET /person/identity-document` y `GET /person/photo`. La
 seccion requiere frente y dorso del documento (`File`, `image/jpeg` o `image/png`),
-selfie (`File`, `image/jpeg` o `image/png`) y `vencimientoDocumento` (`Date`).
+selfie (`File`, `image/jpeg` o `image/png`) y `documentExpiration` (`Date`).
 
 Si frente, dorso, vencimiento y selfie ya vinieron completos desde el backend, se
-muestra el checkbox `Verifico que la identidad es correcta` (`identidadCorrecta`)
+muestra el checkbox `Verifico que la identidad es correcta` (`isIdentityCorrect`)
 y la seccion queda invalida hasta marcarlo. Si alguno vino `null`, no se pide ese
 checkbox: el flujo normal pide completar solo el dato faltante.
 
 Si el usuario elimina un archivo, queda `null` y la seccion vuelve a invalida. Si
 sube o cambia archivos, el front guarda esos cambios antes de confirmar la
-preinscripcion. `identidadCorrecta` es solo de UI y no se envia al backend.
+preinscripcion. `isIdentityCorrect` es solo de UI y no se envia al backend.
 
 Al cerrar el paso 2, si se toco frente/dorso o cambio el vencimiento se llama a
 `POST /person/identity-document`; si se toco la selfie se llama a
@@ -639,9 +639,9 @@ falta de lado, vencimiento o blob vacío se rechazan aunque el front haya valida
 ### Reglamento
 
 `GET /enrollments/student-regulations` indica si el reglamento ya fue aceptado.
-Si ya fue aceptado, la UI oculta el checkbox y marca `aceptaReglamento = true`
-automaticamente; el backend recibe `aceptoReglamento = true`. Si no fue aceptado,
-se muestra un checkbox requerido y el backend recibe `aceptoReglamento = true`
+Si ya fue aceptado, la UI oculta el checkbox y marca `acceptsRegulation = true`
+automaticamente; el backend recibe `acceptedRegulation = true`. Si no fue aceptado,
+se muestra un checkbox requerido y el backend recibe `acceptedRegulation = true`
 solo si el usuario lo marca.
 
 ## Payload de encuesta inicial
@@ -651,39 +651,39 @@ guardar correctamente los cambios de identidad y antes de confirmar la
 preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
 envian `null` cuando no aplican.
 
-- `carreraId`: `Number(carrera)`.
-- `comienzoId`: `Number(comienzo)`.
-- `orientacionBachilleratoId`: `Number(orientacion)` si cursa secundaria y el año elegido tiene orientaciones.
-- `anioBachillerato`: `Number(anioSecundaria)` si `cursaSecundaria = cursando`.
-- `recursaAnioBachillerato`: `si -> true`, `no -> false`.
-- `vecesRecursaAnioBachillerato`: cantidad solo si `recursaAnioBachillerato = si`; si no, `null`.
-- `nivelFormacionPadreTutorId`: `Number(formacionPadre)`.
-- `nivelFormacionMadreTutorId`: `Number(formacionMadre)`.
-- `anioDecisionCarreraId`: `Number(anioDecisionCarrera)`.
-- `anioDecisionOrtId`: `Number(anioDecisionOrt)`.
-- `seInformoEnOtrasUniversidades`: `si -> true`, `no -> false`.
-- `informacionOtrasUniversidadesLinea1` y `Linea2`: sin campo UI, siempre `null`.
-- `apoyoDecisionId`: `Number(apoyoDecision)`.
-- `institucionSecundariaId`: `Number(institucionEducativa)` solo si `lugarSecundaria = 1`.
-- `nombreInstitucionSecundaria`: texto de `institucionEducativa` si `lugarSecundaria != 1`.
-- `ubicacionUltimoAnioSecundariaId`: `Number(lugarSecundaria)`.
-- `estadoEducacionSuperiorPreviaId`: `Number(estadoEducacionSuperior)`.
-- `nivelDecisionId`: `Number(certezaDecision)`.
-- `tuvoAsesoramientoOrt`: `si -> true`, `no -> false`.
-- `valoracionAsesoramientoOrtId`: rating si `reunionAsesoramiento = si`.
-- `visitoSitioWebOrt`: `si -> true`, `no -> false`.
-- `valoracionSitioWebOrtId`: rating si `visitoWeb = si`.
-- `visitoInstalacionesOrt`: `si -> true`, `no -> false`.
-- `valoracionInstalacionesOrtId`: rating si `visitoSede = si`.
-- `recuerdaPublicidadOrt`: `si -> true`, `no -> false`.
-- `madreTutorEgresadoOrt`: `tituloOrtMadre` (`si -> true`, `no -> false`), solo si `formacionMadre` es `5` o `6`.
-- `padreTutorEgresadoOrt`: `tituloOrtPadre` (`si -> true`, `no -> false`), solo si `formacionPadre` es `5` o `6`.
-- `universidadConsideradaIds`: `universidadesInformadas.map(Number)` solo si `otrasUniversidades = si`; incluye `0` si selecciona `Otro`.
-- `universidadConsideradaOtros`: `[universidadInformadaOtro.trim()]` solo si `universidadConsideradaIds` incluye `0`; si no, `null`.
-- `universidadEducacionSuperiorIds`: `universidadesEducacionSuperior.map(Number)` solo si `estadoEducacionSuperior = 1`; incluye `0` si selecciona `Otro`.
-- `universidadEducacionSuperiorOtros`: `[universidadEducacionSuperiorOtro.trim()]` solo si `universidadEducacionSuperiorIds` incluye `0`; si no, `null`.
-- `publicidadOrtIds`: `mediosPublicidad.map(Number)` solo si `recuerdaPublicidad = si`.
-- `motivoEleccionOrtIds`: `motivosOrt.map(Number)`, `null` si no hay seleccion.
+- `degreeProgramId`: `Number(degreeProgram)`.
+- `intakeId`: `Number(intake)`.
+- `highSchoolOrientationId`: `Number(orientation)` si cursa secundaria y el año elegido tiene orientaciones.
+- `highSchoolYear`: `Number(highSchoolYear)` si `studiesHighSchool = studying`.
+- `repeatsHighSchoolYear`: `yes -> true`, `no -> false`.
+- `highSchoolYearRepeatCount`: cantidad solo si `repeatsHighSchoolYear = yes`; si no, `null`.
+- `fatherOrGuardianEducationLevelId`: `Number(fatherEducation)`.
+- `motherOrGuardianEducationLevelId`: `Number(motherEducation)`.
+- `degreeProgramDecisionYearId`: `Number(degreeProgramDecisionYear)`.
+- `ortDecisionYearId`: `Number(ortDecisionYear)`.
+- `researchedOtherUniversities`: `yes -> true`, `no -> false`.
+- `otherUniversitiesInfoLine1` y `Linea2`: sin campo UI, siempre `null`.
+- `decisionSupportId`: `Number(decisionSupport)`.
+- `highSchoolInstitutionId`: `Number(educationalInstitution)` solo si `highSchoolLocation = 1`.
+- `highSchoolInstitutionName`: texto de `educationalInstitution` si `highSchoolLocation != 1`.
+- `finalHighSchoolYearLocationId`: `Number(highSchoolLocation)`.
+- `priorHigherEducationStatusId`: `Number(higherEducationStatus)`.
+- `decisionLevelId`: `Number(decisionCertainty)`.
+- `hadOrtAdvising`: `yes -> true`, `no -> false`.
+- `ortAdvisingRatingId`: rating si `advisingMeeting = yes`.
+- `visitedOrtWebsite`: `yes -> true`, `no -> false`.
+- `ortWebsiteRatingId`: rating si `visitedWebsite = yes`.
+- `visitedOrtCampus`: `yes -> true`, `no -> false`.
+- `ortCampusRatingId`: rating si `visitedCampus = yes`.
+- `recallsOrtAdvertising`: `yes -> true`, `no -> false`.
+- `isMotherOrGuardianOrtGraduate`: `motherOrtDegree` (`yes -> true`, `no -> false`), solo si `motherEducation` es `5` o `6`.
+- `isFatherOrGuardianOrtGraduate`: `fatherOrtDegree` (`yes -> true`, `no -> false`), solo si `fatherEducation` es `5` o `6`.
+- `consideredUniversityIds`: `researchedUniversities.map(Number)` solo si `otherUniversities = yes`; incluye `0` si selecciona `Otro`.
+- `otherConsideredUniversities`: `[otherResearchedUniversity.trim()]` solo si `consideredUniversityIds` incluye `0`; si no, `null`.
+- `higherEducationUniversityIds`: `higherEducationUniversities.map(Number)` solo si `higherEducationStatus = 1`; incluye `0` si selecciona `Otro`.
+- `otherHigherEducationUniversities`: `[otherHigherEducationUniversity.trim()]` solo si `higherEducationUniversityIds` incluye `0`; si no, `null`.
+- `ortAdvertisingIds`: `advertisingChannels.map(Number)` solo si `recallsAdvertising = yes`.
+- `ortChoiceReasonIds`: `ortReasons.map(Number)`, `null` si no hay seleccion.
 
 ### Persistencia y finalización de la encuesta
 
@@ -720,9 +720,9 @@ Orden de cierre:
 
 ```json
 {
-  "acceptedRegulations": "Boolean(aceptaReglamento)",
+  "acceptedRegulation": "Boolean(acceptsRegulation)",
   "isCorporateEnrollment": "isCorporate para AP; false para los demás tipos",
-  "selectedOfferingIds": "seminarios.map(Number) para AP; [Number(turno)] para los demás"
+  "selectedOfferingIds": "seminars.map(Number) para AP; [Number(shift)] para los demás"
 }
 ```
 
@@ -739,7 +739,7 @@ a la API interna, por lo que queda persistida aunque la confirmación remota fal
 
 La rama normal llama una sola vez a
 `ORTSecure/Enrollments/ConfirmarPreInscripcionMultiple` y mapea su éxito —incluido
-un posible resultado parcial del sistema remoto— al response propio. No envía clave de
+un posible resultado parcial del sistema remoto— a la respuesta propia. No envía clave de
 idempotencia: ante timeout o respuesta incierta, no se debe asumir que reintentar sea
 seguro sin consultar primero `GET /enrollments/details` o el dashboard.
 
@@ -747,11 +747,11 @@ La rama corporativa solo admite niveles 3/4. En una transacción crea, por cada 
 un trámite/instancia de workflow y su relación estructurada; el primer paso queda
 autocompletado y el segundo pendiente para el grupo responsable. Si una oferta falla,
 se hace rollback de todo el paquete. El response no contiene pago ni resumen:
-`confirmed = false`, `waiting = true`.
+`confirmed = false`, `isWaiting = true`.
 
-Si `esInscripcionCorporativa === true`, una respuesta exitosa termina en la
+Si `isCorporateEnrollment === true`, una respuesta exitosa termina en la
 pantalla de espera del pago empresarial sin abrir el paso de pago. Para las demás
-inscripciones, `enEspera === true` muestra "Inscripción en proceso" y el resto
+inscripciones, `isWaiting === true` muestra "Inscripción en proceso" y el resto
 avanza al paso de pago. Si Documento o Foto falla por HTTP,
 `OperationResult.success === false` o `data === false`, no se guarda la encuesta:
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
@@ -783,9 +783,9 @@ Payload feature:
 
 ```json
 {
-  "idsInscripcion": [1072704, 1072705],
-  "metodoPago": "cuenta-bancaria",
-  "idBancoSistarbanc": "brou"
+  "enrollmentIds": [1072704, 1072705],
+  "paymentMethod": "bank-account",
+  "sistarbancBankId": "brou"
 }
 ```
 
@@ -804,14 +804,14 @@ El backend rechaza listas vacías, IDs no positivos o inscripciones ajenas.
 
 Mapping adapter:
 
-| UI                | API               | `sistarbancBankId` |
-| ----------------- | ----------------- | ------------------ |
-| `cuenta-personal` | `CUENTA_PERSONAL` | `null`             |
-| `abitab`          | `ABITAB`          | `null`             |
-| `paganza`         | `PAGANZA`         | `null`             |
-| `banred`          | `BANRED`          | `null`             |
-| `geopay`          | `GEOPAY`          | `null`             |
-| `cuenta-bancaria` | `SISTARBANC`      | código del banco   |
+| UI                 | API               | `sistarbancBankId` |
+| ------------------ | ----------------- | ------------------ |
+| `personal-account` | `CUENTA_PERSONAL` | `null`             |
+| `abitab`           | `ABITAB`          | `null`             |
+| `paganza`          | `PAGANZA`         | `null`             |
+| `banred`           | `BANRED`          | `null`             |
+| `geopay`           | `GEOPAY`          | `null`             |
+| `bank-account`     | `SISTARBANC`      | código del banco   |
 
 `tarjeta-credito` no queda como método activo hasta que el backend confirme un
 `tipoPago` propio o su mapeo dentro de Sistarbanc.
@@ -840,7 +840,7 @@ flowchart TD
   D -->|OK| E[Inscripción confirmada]
   D -->|Error| F[Permanece en pago con error]
   C -->|ABITAB / PAGANZA| G[Reserva / pago pendiente externo]
-  C -->|BANRED / GEOPAY / SISTARBANC| H{Backend devuelve urlPago}
+  C -->|BANRED / GEOPAY / SISTARBANC| H{Backend devuelve URL de pago}
   H -->|Sí| I[Front redirige a pasarela]
   H -->|No| J[Pago pendiente externo]
   I --> J
@@ -848,43 +848,43 @@ flowchart TD
 
 ## Respuesta de `/enrollments/start-payment`
 
-El adapter mapea `resultado`, `urlPago`, `parametrosEncriptados`, `mensajes` y el
-bloque `confirmada` (número de estudiante, coordinación y materias) cuando el
+El adapter mapea `result`, `paymentUrl`, `encryptedParameters`, `messages` y el
+bloque `confirmed` (número de estudiante, coordinación y materias) cuando el
 backend confirma el pago en línea (p. ej. cuenta personal). Con eso la pantalla de
 éxito pinta el detalle sin un `getDetail` adicional; ese `getDetail` queda solo
-como fallback si la respuesta no trae `confirmada`.
+como fallback si la respuesta no trae `confirmed`.
 
 `ConfirmedEnrollmentDetailsResponse` es una **cabecera compartida** (`personId`,
 `productId`, `degreeProgram`, `academicCoordinator`, `courseCoordinator`) más un array
 `enrollments[]` (`ConfirmedEnrollment`), con una entrada por cada oferta
-confirmada y su propio `comienzo`/`turno`/`materiasPrimerSemestre`: en niveles 3 y 4
-vienen varias, una por seminario. Ya no existe el bloque plano `confirmada.resumen`
-ni un `confirmada.materiasPrimerSemestre` único. El adapter arma
-`EnrollmentConfirmedDetail.resumen` con la cabecera más el comienzo/turno de
-`inscripciones[0]` (mismo colapso que usa `pagoPendiente`) y expone el array completo
-en `EnrollmentConfirmedDetail.inscripciones`;
+confirmada y su propio `intake`/`shift`/`firstSemesterSubjects`: en niveles 3 y 4
+vienen varias, una por seminario. Ya no existe el bloque plano `confirmed.summary`
+ni un `confirmed.firstSemesterSubjects` único. El adapter arma
+`EnrollmentConfirmedDetail.summary` con la cabecera más el comienzo/turno de
+`enrollments[0]` (mismo colapso que usa `pendingPayment`) y expone el array completo
+en `EnrollmentConfirmedDetail.enrollments`;
 `EnrollmentPaymentFacade.subjects()` lista las materias de **todos** los seminarios
 sin repetir las compartidas.
 
 ## Estados frontend
 
 - `processing`: solo mientras responde `/enrollments/start-payment`.
-- `enrollment-confirmada`: pago confirmado por backend. Usa `confirmada` de la
-  respuesta de Pagar; si no vino, cae al `getDetail`.
-- `reserva`: Abitab o Paganza quedan con instrucciones de pago. Se muestran la
+- `enrollment-confirmed`: pago confirmado por backend. Usa `confirmed` de la
+  respuesta del endpoint de pago; si no vino, cae al `getDetail`.
+- `reservation`: Abitab o Paganza quedan con instrucciones de pago. Se muestran la
   cédula (Abitab), el número de estudiante y el monto que informa `seniaMinima`.
   En el flujo fresco se consultan con un `getDetail` tras quedar en reserva; si
   falla, se muestra solo el monto.
-- `reserva` con seña 0: si `seniaInscripcion` (o `seniaMinima.senia`/
-  `pagoPendiente.senia` al retomar) es exactamente `0`, no hay nada que cobrar, así
-  que no corresponde mostrar el paso de pago ni llamar a `Pagar`. El front fuerza el
-  outcome `reserva` directo y corta la navegación (en `EnrollmentSurveyFacade.finishSurveyStep` para el
+- `reservation` con seña 0: si `seniaInscripcion` (o `seniaMinima.senia`/
+  `pendingPayment.senia` al retomar) es exactamente `0`, no hay nada que cobrar, así
+  que no corresponde mostrar el paso de pago ni llamar a `POST /enrollments/start-payment`. El front fuerza el
+  outcome `reservation` directo y corta la navegación (en `EnrollmentSurveyFacade.finishSurveyStep` para el
   flujo fresco, en `EnrollmentProcessFacade.applyPaymentInit` para el caso
   `awaiting-method` al retomar) y `buildReservationInstructions` reemplaza fecha
   límite, cédula, monto y el texto de acreditación por un mensaje que indica
   comunicarse con la oficina de Admisiones; la resolución queda en manos de la
   oficina.
-- `pago-pendiente-externo`: Banred, Geopay o Sistarbanc ya salieron a pasarela o
+- `external-payment-pending`: Banred, Geopay o Sistarbanc ya salieron a pasarela o
   quedaron esperando definición de acreditación.
 - `editing`: errores de validación o error de backend; el usuario puede corregir
   y reintentar.
@@ -893,7 +893,7 @@ sin repetir las compartidas.
 
 Banred, Geopay y Sistarbanc **no tienen callback hacia Admisiones**. El front abre la
 pasarela fuera del proyecto y deja la pantalla actual en
-`pago-pendiente-externo`; tampoco hace polling ni consulta automática de estado. Para
+`external-payment-pending`; tampoco hace polling ni consulta automática de estado. Para
 ver el estado actualizado, la persona debe volver al dashboard o reingresar al flujo,
 que consulta nuevamente el estado persistido. Nunca se mantiene un loader infinito.
 
@@ -903,9 +903,9 @@ Las tres pasarelas intermedias (`PagosBanRedGestion.aspx`,
 `PagosGeoPayGestion.aspx`, `PagosSistarbancGestion.aspx`, en LogicaORT) leen el
 POST así: `Request.Form["data"].Split('=')[1].Split('"')[0]` — extraen lo que
 está entre el primer `=` y la primera `"`. Por eso el front envía
-`data = {"params":"parametrosEncriptados=<blob>"}` (mismo formato que Gestion_V2
+`data = {"params":"encryptedParameters=<blob>"}` (mismo formato que Gestion_V2
 en producción). El backend de admisiones ya le quitó el prefijo
-`parametrosEncriptados=` a la URL original (`InvoicePaymentUrl.Split`), así que el
+`encryptedParameters=` a la URL original (`InvoicePaymentUrl.Split`), así que el
 front lo reconstruye.
 
 ### Salteo del intermediario ASPX (propuesta a backend)
@@ -922,15 +922,15 @@ pago en su propia pantalla y redirige sin pasar por el ASPX intermedio.
 
 - Carreras: el ingreso nuevo espera la elección de tipo y hace una sola llamada a
   `GET /catalogs/degree-programs?academicOffer=<1|2|3>` con el valor elegido. Aplana
-  `productos` para niveles 1/2 y `seminarios[].productos` para niveles 3/4,
-  conservando `tieneSeminario` del grupo. Al retomar, el nivel llega por el query
+  `products` para niveles 1/2 y `seminars[].products` para niveles 3/4,
+  conservando `hasSeminar` del grupo. Al retomar, el nivel llega por el query
   param `nivel` y el resolver no consulta el catálogo; solo si ese param falta o es
   inválido consulta los tres tipos para reconstruirlo.
 - Comienzos: `GET /catalogs/intakes?degreeProgramId=<idProducto>`
 - Turnos: `GET /catalogs/shifts?degreeProgramId=<idProducto>&admissionProcessId=<idProceso>`
 - Encuesta inicial: `GET /catalogs/initial-survey`
 - Departamentos: `GET /catalogs/countries-states-cities` filtrando Uruguay (`codigoPais = 1`)
-- Instituciones: `GET /catalogs/institutions?countryId=1&stateId=<departamento>`
+- Instituciones: `GET /catalogs/institutions?countryId=1&stateId=<state>`
 - Bancos: `GET /catalogs/banks`
 
 ## Inventario HTTP y efectos

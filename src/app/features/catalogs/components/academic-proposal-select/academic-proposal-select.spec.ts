@@ -132,7 +132,7 @@ describe('AcademicProposalSelect', () => {
     );
   });
 
-  it('selects a career from the mobile drawer', () => {
+  it('selects a degreeProgram from the mobile drawer', () => {
     const component = fixture.componentInstance as unknown as {
       degreeProgramOptionGroups(): readonly {
         label: string;
@@ -193,7 +193,7 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
   });
 
-  // Sin `tieneSeminario` las ofertas del programa son horarios, no seminarios.
+  // Sin `hasSeminar` las ofertas del programa son horarios, no seminarios.
   it('labels the AP offering select as Horario when the program has no seminars', () => {
     form.controls.proposalType.setValue('3');
     form.controls.degreeProgram.setValue('40');

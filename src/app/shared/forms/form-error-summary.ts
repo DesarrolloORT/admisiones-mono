@@ -100,7 +100,7 @@ function getDefaultErrorMessage(label: string, errorKey: string, errors: Validat
       return `${label} es obligatorio.`;
     case 'email':
       return 'Ingresá un e-mail válido.';
-    case 'cedula':
+    case 'nationalId':
       return 'Ingresá un número de cédula válido.';
     case 'pattern':
       return `El formato de ${label.toLowerCase()} no es válido.`;

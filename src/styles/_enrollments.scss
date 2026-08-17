@@ -1,13 +1,13 @@
 /* Enrollment styles are global because they override ORT lib classes (ort-stepper)
    rendered outside Angular component encapsulation. */
 
-app-inscripcion-shell .enrollment-progress .ort-stepper-content {
+app-enrollment .enrollment-progress .ort-stepper-content {
   display: none;
   min-height: 0;
   padding: 0;
 }
 
-app-inscripcion-shell
+app-enrollment
   .enrollment-progress
   .ort-step-header-disabled
   :is(.ort-step-label, .ort-step-supporting-label) {

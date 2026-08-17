@@ -484,8 +484,8 @@ function normalizeCompactSummary(summary) {
 
   return {
     objetivo: sanitizeText(summary.objetivo, MAX_GOAL_LENGTH),
-    archivosActivos: normalizedTargets(
-      Array.isArray(summary.archivosActivos) ? summary.archivosActivos : [],
+    activeFiles: normalizedTargets(
+      Array.isArray(summary.activeFiles) ? summary.activeFiles : [],
       MAX_COMPACT_FILES
     ),
     riesgosAbiertos: Array.isArray(summary.riesgosAbiertos)
@@ -837,7 +837,7 @@ export function buildCompactSummary(state) {
 
   return normalizeCompactSummary({
     objetivo: state.activeGoal || 'No definido.',
-    archivosActivos: compactFiles,
+    activeFiles: compactFiles,
     riesgosAbiertos: buildRiskList(state),
     siguientePaso: nextStep,
   });
@@ -845,8 +845,8 @@ export function buildCompactSummary(state) {
 
 export function formatCompactSummary(summary) {
   const files =
-    summary.archivosActivos.length > 0
-      ? summarizeList(summary.archivosActivos, MAX_COMPACT_FILES)
+    summary.activeFiles.length > 0
+      ? summarizeList(summary.activeFiles, MAX_COMPACT_FILES)
       : 'sin archivos aun';
   const risks = summary.riesgosAbiertos.join(' ');
   return sanitizeText(

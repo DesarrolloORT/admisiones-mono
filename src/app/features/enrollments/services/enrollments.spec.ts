@@ -91,9 +91,9 @@ describe('Enrollments', () => {
   it('maps identity document and photo responses to preload files', async () => {
     endpointMock.getIdentityDocument.mockReturnValueOnce(
       of({
-        front: { fileName: 'frente.png', content: 'aGVsbG8=' },
+        front: { fileName: 'front.png', content: 'aGVsbG8=' },
         back: {
-          fileName: 'carpeta\\dorso.jpg',
+          fileName: 'folder\\back.jpg',
           content: 'data:image/jpeg;base64,d29ybGQ=',
         },
         expirationDate: '2030-02-04',
@@ -106,18 +106,18 @@ describe('Enrollments', () => {
     const preload = await firstValueFrom(service.getIdentityPreload());
 
     expect(preload.front).toEqual(
-      expect.objectContaining({ name: 'frente.png', size: 5, type: 'image/png' })
+      expect.objectContaining({ name: 'front.png', size: 5, type: 'image/png' })
     );
     expect(preload.back).toEqual(
-      expect.objectContaining({ name: 'dorso.jpg', size: 5, type: 'image/jpeg' })
+      expect.objectContaining({ name: 'back.jpg', size: 5, type: 'image/jpeg' })
     );
     expect(preload.selfie).toEqual(
-      expect.objectContaining({ name: 'foto-persona.png', size: 5, type: 'image/png' })
+      expect.objectContaining({ name: 'identity-photo.png', size: 5, type: 'image/png' })
     );
     expect(preload.expirationDate).toBe('2030-02-04');
   });
 
-  it('returns an empty identity preload when persona files are unavailable', async () => {
+  it('returns an empty identity preload when person files are unavailable', async () => {
     endpointMock.getIdentityDocument.mockReturnValueOnce(
       throwError(() => new Error('document unavailable'))
     );
@@ -134,8 +134,8 @@ describe('Enrollments', () => {
   });
 
   it('uploads identity document files as base64', async () => {
-    const front = new File(['front'], 'frente.png', { type: 'image/png' });
-    const back = new File(['back'], 'dorso.jpg', { type: 'image/jpeg' });
+    const front = new File(['front'], 'front.png', { type: 'image/png' });
+    const back = new File(['back'], 'back.jpg', { type: 'image/jpeg' });
 
     await expect(
       firstValueFrom(service.uploadIdentityDocument({ date: '2030-02-04', front, back }))
@@ -143,8 +143,8 @@ describe('Enrollments', () => {
 
     expect(endpointMock.uploadIdentityDocument).toHaveBeenCalledWith({
       date: '2030-02-04',
-      front: { fileName: 'frente.png', content: 'ZnJvbnQ=' },
-      back: { fileName: 'dorso.jpg', content: 'YmFjaw==' },
+      front: { fileName: 'front.png', content: 'ZnJvbnQ=' },
+      back: { fileName: 'back.jpg', content: 'YmFjaw==' },
     });
   });
 

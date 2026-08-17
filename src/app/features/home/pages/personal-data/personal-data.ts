@@ -28,7 +28,7 @@ import {
 } from '@desarrolloort/components';
 import { forkJoin, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
-import { isCedulaDocumentType } from 'src/app/features/auth/models/document-number';
+import { isNationalIdDocumentType } from 'src/app/features/auth/models/document-number';
 import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
 import {
   buildFormErrorSummary,
@@ -137,7 +137,9 @@ export class PersonalData implements OnInit {
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
-  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
+  protected readonly isNationalIdInput = computed(() =>
+    isNationalIdDocumentType(this.documentTypeValue())
+  );
 
   protected readonly states = computed<LocationState[]>(() => {
     const countryCode = this.selectedCountryCode();

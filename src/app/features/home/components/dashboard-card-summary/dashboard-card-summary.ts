@@ -20,7 +20,7 @@ export class DashboardCardSummary {
   readonly variant = input<SummaryVariant>('enrollments');
   readonly status = input<string>('');
 
-  // Careers
+  // DegreePrograms
   readonly startDate = input<string>('');
 
   // Scholarships

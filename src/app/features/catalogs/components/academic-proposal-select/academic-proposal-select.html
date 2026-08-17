@@ -89,10 +89,10 @@
             <app-responsive-select
               formControlName="intake"
               id="academic-proposal-start"
-              [aria-label]="selection().terminology().startLabel"
+              [aria-label]="selection().terminology().intakeLabel"
               [disabled]="!selection().canSelectIntake()"
-              [errorText]="selection().terminology().startErrorText"
-              [label]="selection().terminology().startLabel"
+              [errorText]="selection().terminology().intakeErrorText"
+              [label]="selection().terminology().intakeLabel"
               [options]="selection().intakeOptions()"
               [searchable]="true" />
 

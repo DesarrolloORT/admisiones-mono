@@ -54,7 +54,7 @@ export class EnrollmentProcessFacade {
       this.payment.view() !== 'processing'
   );
   // El flujo solo avanza: avanzar de paso es un hecho de negocio ya registrado en el
-  // backend (paso 1 ⇒ InteresProducto, paso 2 ⇒ ConfirmarPreEnrollment), así que
+  // backend (paso 1 ⇒ interés de producto, paso 2 ⇒ preinscripción), así que
   // nunca se vuelve a un paso anterior. Lo único que retrocede son las sub-secciones
   // del paso 2 y el lector de reglamento.
   public readonly canGoBack = computed(() => {

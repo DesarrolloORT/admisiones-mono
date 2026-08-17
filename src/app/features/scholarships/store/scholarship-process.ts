@@ -3,7 +3,7 @@ import { createProcessFlow } from 'src/app/shared/process-flow/process-flow';
 import { SCHOLARSHIP_STEPS } from '../models/scholarship-process';
 
 /**
- * Estado del proceso de postulación a becas. Equivale a `InscripcionProcessStore`.
+ * Estado del proceso de postulación a becas. Equivale a `EnrollmentProcessStore`.
  *
  * Es la fuente de verdad del paso actual: envuelve el motor genérico
  * `createProcessFlow` y expone sus señales (`currentStep`, `stepItems`,
@@ -15,5 +15,5 @@ import { SCHOLARSHIP_STEPS } from '../models/scholarship-process';
  * igual que `preEnrollmentResponse` en inscripciones.
  */
 export class ScholarshipProcessStore {
-  public readonly flow = createProcessFlow(SCHOLARSHIP_STEPS, 'info-postulacion');
+  public readonly flow = createProcessFlow(SCHOLARSHIP_STEPS, 'application-info');
 }

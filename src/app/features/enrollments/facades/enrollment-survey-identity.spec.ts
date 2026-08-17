@@ -21,7 +21,7 @@ describe('EnrollmentSurveyIdentityFacade', () => {
   it('stores the selected file and notifies the context', () => {
     const identity = createFacade();
     const invalid = new File(['x'], 'invalido.png', { type: 'image/png' });
-    const valid = new File(['ok'], 'frente.png', { type: 'image/png' });
+    const valid = new File(['ok'], 'front.png', { type: 'image/png' });
 
     identity.updateIdentityFile(
       'front',
@@ -106,8 +106,8 @@ describe('EnrollmentSurveyIdentityFacade', () => {
       }) as File;
     const getIdentityPreload = vi.fn().mockReturnValue(
       of({
-        front: preloadedFile('frente.png'),
-        back: preloadedFile('dorso.png'),
+        front: preloadedFile('front.png'),
+        back: preloadedFile('back.png'),
         selfie: null,
         expirationDate: '2030-02-04',
       })
@@ -116,7 +116,7 @@ describe('EnrollmentSurveyIdentityFacade', () => {
     TestBed.tick();
 
     expect(identity.requiresIdentityConfirmation()).toBe(false);
-    expect(identity.identityFiles().front?.name).toBe('frente.png');
+    expect(identity.identityFiles().front?.name).toBe('front.png');
     expect(identity.identityFiles().selfie).toBeNull();
   });
 
@@ -131,8 +131,8 @@ describe('EnrollmentSurveyIdentityFacade', () => {
       }) as File;
     const getIdentityPreload = vi.fn().mockReturnValue(
       of({
-        front: preloadedFile('frente.png'),
-        back: preloadedFile('dorso.png'),
+        front: preloadedFile('front.png'),
+        back: preloadedFile('back.png'),
         selfie: preloadedFile('selfie.png'),
         expirationDate: '2030-02-04',
       })
@@ -147,7 +147,7 @@ describe('EnrollmentSurveyIdentityFacade', () => {
   it('maps preloaded files into the uploader preload list with array buffer contents', async () => {
     const bytes = new Uint8Array([9, 9, 9]).buffer;
     const preloadedFile = {
-      name: 'frente.png',
+      name: 'front.png',
       size: 3,
       type: 'image/png',
       arrayBuffer: () => Promise.resolve(bytes),
@@ -169,7 +169,7 @@ describe('EnrollmentSurveyIdentityFacade', () => {
     expect(identity.initialIdentityFiles().front).toEqual([
       {
         id: 'identity-preload-front',
-        name: 'frente.png',
+        name: 'front.png',
         size: 3,
         type: 'image/png',
         src: bytes,

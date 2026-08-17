@@ -303,12 +303,14 @@ export class EnrollmentSurveyFacade {
     return this.progressOf('identity').submitted && !this.identity.identityFiles()[target];
   }
 
-  public isUniversityCareer(): boolean {
-    const selectedCareer = this.formsStore.academicForm.controls.degreeProgram.value;
-    if (!selectedCareer) return false;
+  public isUniversityDegreeProgram(): boolean {
+    const selectedDegreeProgram = this.formsStore.academicForm.controls.degreeProgram.value;
+    if (!selectedDegreeProgram) return false;
     const level = this.proposal
-      .careers()
-      .find(career => career.productId.toString() === selectedCareer)?.productLevelId;
+      .degreePrograms()
+      .find(
+        degreeProgram => degreeProgram.productId.toString() === selectedDegreeProgram
+      )?.productLevelId;
     return level === UNIVERSITY_LEVEL;
   }
 
@@ -575,7 +577,7 @@ export class EnrollmentSurveyFacade {
       currentlyInSchool && this.options.schoolYearOptions().length > 0;
     education.highSchoolYear.setValidators([
       ...(isHighSchoolYearRequired ? [Validators.required] : []),
-      disallowedHighSchoolYearForUniversity(() => this.isUniversityCareer()),
+      disallowedHighSchoolYearForUniversity(() => this.isUniversityDegreeProgram()),
     ]);
     education.highSchoolYear.updateValueAndValidity({ emitEvent: false });
     this.setRequired(education.orientation, this.shouldAskHighSchoolOrientation());
@@ -676,7 +678,7 @@ export class EnrollmentSurveyFacade {
   ): void {
     const proposalType = patchBackendSurveyForms(survey, response, {
       forms: this.formsStore.forms,
-      careers: this.proposal.careers(),
+      degreePrograms: this.proposal.degreePrograms(),
       includeAcademicSelection,
     });
     // En una inscripción nueva la encuesta previa no debe pisar el Paso 1.

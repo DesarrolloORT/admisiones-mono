@@ -35,7 +35,7 @@ describe('EnrollmentForms', () => {
 });
 
 describe('disallowedHighSchoolYearForUniversity', () => {
-  it('rejects disallowed years when the career is a university career', () => {
+  it('rejects disallowed years when the degreeProgram is a university degreeProgram', () => {
     const validator = disallowedHighSchoolYearForUniversity(() => true);
 
     for (const value of [4, 10, '4', '10']) {
@@ -46,7 +46,7 @@ describe('disallowedHighSchoolYearForUniversity', () => {
     }
   });
 
-  it('accepts allowed years when the career is a university career', () => {
+  it('accepts allowed years when the degreeProgram is a university degreeProgram', () => {
     const validator = disallowedHighSchoolYearForUniversity(() => true);
 
     for (const value of [5, 6]) {
@@ -57,7 +57,7 @@ describe('disallowedHighSchoolYearForUniversity', () => {
     }
   });
 
-  it('does not validate disallowed years for non-university careers', () => {
+  it('does not validate disallowed years for non-university degreePrograms', () => {
     const validator = disallowedHighSchoolYearForUniversity(() => false);
     const control = new FormControl(4);
     control.setValidators(validator);

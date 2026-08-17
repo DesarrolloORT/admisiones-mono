@@ -1,18 +1,24 @@
 import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
-import { ortCedulaValidator, ortPhoneValidator } from '@desarrolloort/components';
+import {
+  ortCedulaValidator as ortNationalIdValidator,
+  ortPhoneValidator,
+} from '@desarrolloort/components';
 import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
 
 import { LocationValue } from '../../catalogs/models/location-value';
-import { isCedulaDocumentType } from '../models/document-number';
+import { isNationalIdDocumentType } from '../models/document-number';
 
 const DOCUMENT_TYPE_VALIDATORS = [Validators.required, Validators.pattern(/^(CI|PS|DE)$/)];
 const NAME_MAX_LENGTH = 100;
 const EMAIL_MAX_LENGTH = 254;
 const ADDRESS_MAX_LENGTH = 200;
+
+const nationalIdValidator: ValidatorFn = control =>
+  ortNationalIdValidator(control) ? { nationalId: true } : null;
 
 export interface LoginForm {
   documentType: FormControl<string>;
@@ -53,7 +59,7 @@ export function createLoginForm(): FormGroup<LoginForm> {
     }),
     documentNumber: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, ortCedulaValidator],
+      validators: [Validators.required, nationalIdValidator],
     }),
     password: new FormControl('', {
       nonNullable: true,
@@ -70,26 +76,26 @@ export function createIdentityForm(): FormGroup<IdentityForm> {
     }),
     documentNumber: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, ortCedulaValidator],
+      validators: [Validators.required, nationalIdValidator],
     }),
   });
 }
 
-export const NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
+export const NON_NATIONAL_ID_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
   Validators.required,
   Validators.maxLength(30),
   Validators.pattern(/^[0-9A-Za-z-]+$/),
 ];
 
-export const CEDULA_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
+export const NATIONAL_ID_DOCUMENT_NUMBER_VALIDATORS: ValidatorFn[] = [
   Validators.required,
-  ortCedulaValidator,
+  nationalIdValidator,
 ];
 
 export function getDocumentNumberValidators(documentType: string): ValidatorFn[] {
-  return isCedulaDocumentType(documentType)
-    ? CEDULA_DOCUMENT_NUMBER_VALIDATORS
-    : NON_CEDULA_DOCUMENT_NUMBER_VALIDATORS;
+  return isNationalIdDocumentType(documentType)
+    ? NATIONAL_ID_DOCUMENT_NUMBER_VALIDATORS
+    : NON_NATIONAL_ID_DOCUMENT_NUMBER_VALIDATORS;
 }
 
 export function syncDocumentNumberValidators(
@@ -163,7 +169,7 @@ export function createRecoverAccessForm(): FormGroup<RecoverAccessForm> {
     }),
     documentNumber: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, ortCedulaValidator],
+      validators: [Validators.required, nationalIdValidator],
     }),
     firstSurname: new FormControl('', {
       nonNullable: true,

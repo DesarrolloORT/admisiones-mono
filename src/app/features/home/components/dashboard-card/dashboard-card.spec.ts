@@ -5,7 +5,7 @@ import { EnrollmentSummary } from '../../models/enrollment-summary';
 import { DashboardCard } from './dashboard-card';
 
 describe('DashboardCard', () => {
-  it('passes product and process identifiers to the career action', async () => {
+  it('passes product and process identifiers to the degreeProgram action', async () => {
     TestBed.configureTestingModule({
       imports: [DashboardCard],
       providers: [provideRouter([])],

@@ -33,8 +33,8 @@ export interface AcademicProposalTerminology {
   degreeProgramLoadingLabel: string;
   degreeProgramLoadingMessage: string;
   degreeProgramFallbackLabel: string;
-  startLabel: string;
-  startErrorText: string;
+  intakeLabel: string;
+  intakeErrorText: string;
   startLoadingLabel: string;
   startNoun: string;
 }
@@ -45,8 +45,8 @@ const DEFAULT_TERMINOLOGY: AcademicProposalTerminology = {
   degreeProgramLoadingLabel: 'Cargando carreras',
   degreeProgramLoadingMessage: 'Estamos cargando las carreras.',
   degreeProgramFallbackLabel: 'la carrera seleccionada',
-  startLabel: 'Comienzo',
-  startErrorText: 'Seleccioná un comienzo',
+  intakeLabel: 'Comienzo',
+  intakeErrorText: 'Seleccioná un comienzo',
   startLoadingLabel: 'Cargando comienzos',
   startNoun: 'los comienzos',
 };
@@ -87,8 +87,8 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
       degreeProgramLoadingLabel: 'Cargando programas',
       degreeProgramLoadingMessage: 'Estamos cargando los programas.',
       degreeProgramFallbackLabel: 'el programa seleccionado',
-      startLabel: 'Seminario',
-      startErrorText: 'Seleccioná al menos un seminario',
+      intakeLabel: 'Seminario',
+      intakeErrorText: 'Seleccioná al menos un seminario',
       startLoadingLabel: 'Cargando seminarios',
       startNoun: 'los seminarios',
     },

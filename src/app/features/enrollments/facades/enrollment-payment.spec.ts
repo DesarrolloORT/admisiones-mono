@@ -33,7 +33,7 @@ const CONFIRMED_DETAIL = {
   courseCoordinator: { name: 'Diego Cursos', email: 'diego.cursos@ort.edu.uy' },
   enrollments: [
     {
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       offeringId: 300,
       intake: 'Marzo',
       shift: 'Matutino',
@@ -45,7 +45,7 @@ const CONFIRMED_DETAIL = {
     // Segundo seminario confirmado (Actualización profesional): sus materias también
     // se listan y la que comparte con el primero no se repite.
     {
-      idEnrollment: 1072705,
+      enrollmentId: 1072705,
       offeringId: 301,
       intake: 'Marzo',
       shift: 'Nocturno',
@@ -122,7 +122,7 @@ describe('EnrollmentPaymentFacade', () => {
     facade = TestBed.inject(EnrollmentPaymentFacade);
     process = TestBed.inject(EnrollmentProcessStore);
     process.preEnrollmentResponse.set({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 15500,
@@ -413,7 +413,7 @@ describe('EnrollmentPaymentFacade', () => {
 
   it('builds reservation instructions with the real deadline and amount', () => {
     process.preEnrollmentResponse.set({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: '2027-03-04',
       enrollmentDeposit: 15500,
@@ -589,7 +589,7 @@ describe('EnrollmentPaymentFacade', () => {
     const selection = TestBed.inject(AcademicProposalSelection);
     selection.setProposalType('3');
     process.preEnrollmentResponse.set({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 15500,
@@ -597,14 +597,14 @@ describe('EnrollmentPaymentFacade', () => {
       summary: { degreeProgram: 'Actualización en IA', intake: null, shift: null },
       seminars: [
         {
-          idEnrollment: 1,
+          enrollmentId: 1,
           offeringId: 10,
           name: 'Seminario A',
           intake: 'Marzo',
           shift: 'Noche',
         },
         {
-          idEnrollment: 2,
+          enrollmentId: 2,
           offeringId: 11,
           name: 'Seminario B',
           intake: 'Abril',
@@ -618,8 +618,8 @@ describe('EnrollmentPaymentFacade', () => {
       { icon: 'school', label: 'Programa', value: 'Actualización en IA' },
     ]);
     expect(facade.seminarsSummary()).toEqual([
-      { idEnrollment: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
-      { idEnrollment: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
+      { enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
+      { enrollmentId: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
     ]);
   });
 
@@ -627,7 +627,7 @@ describe('EnrollmentPaymentFacade', () => {
     const selection = TestBed.inject(AcademicProposalSelection);
     selection.setProposalType('3');
     process.preEnrollmentResponse.set({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 15500,
@@ -635,7 +635,7 @@ describe('EnrollmentPaymentFacade', () => {
       summary: { degreeProgram: 'Actualización en IA', intake: null, shift: null },
       seminars: [
         {
-          idEnrollment: 1,
+          enrollmentId: 1,
           offeringId: 10,
           name: 'Seminario A',
           intake: 'Marzo',
@@ -669,13 +669,13 @@ describe('EnrollmentPaymentFacade', () => {
 
     expect(facade.seminarsSummary()).toEqual([
       {
-        idEnrollment: null,
+        enrollmentId: null,
         name: 'Seminario A',
         intake: '04/03/2027',
         shift: 'No informado',
       },
       {
-        idEnrollment: null,
+        enrollmentId: null,
         name: 'Seminario B',
         intake: 'No informado',
         shift: 'No informado',
@@ -718,7 +718,7 @@ describe('EnrollmentPaymentFacade', () => {
     });
     process.preEnrollmentResponse.update(response => ({
       ...response!,
-      idEnrollment: null,
+      enrollmentId: null,
       seminars: [],
     }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
@@ -735,7 +735,7 @@ describe('EnrollmentPaymentFacade', () => {
 
   it('charges every seminario of an Actualización profesional package', () => {
     process.preEnrollmentResponse.set({
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 15500,
@@ -743,14 +743,14 @@ describe('EnrollmentPaymentFacade', () => {
       summary: null,
       seminars: [
         {
-          idEnrollment: 1072704,
+          enrollmentId: 1072704,
           offeringId: 10,
           name: 'Seminario A',
           intake: null,
           shift: null,
         },
         {
-          idEnrollment: 1072705,
+          enrollmentId: 1072705,
           offeringId: 11,
           name: 'Seminario B',
           intake: null,
@@ -772,7 +772,7 @@ describe('EnrollmentPaymentFacade', () => {
 
   it('rejects the payment when the pending enrollment id is missing', () => {
     process.preEnrollmentResponse.set({
-      idEnrollment: null,
+      enrollmentId: null,
       confirmed: false,
       paymentDueDate: null,
       enrollmentDeposit: 15500,

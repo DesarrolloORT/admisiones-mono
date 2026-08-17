@@ -132,8 +132,8 @@ export class DashboardQuickActions {
 
     const responseOffers = positiveIds((response.seminars ?? []).map(item => item.offeringId));
     const responseEnrollments = positiveIds([
-      response.idEnrollment,
-      ...(response.seminars ?? []).map(item => item.idEnrollment),
+      response.enrollmentId,
+      ...(response.seminars ?? []).map(item => item.enrollmentId),
     ]);
 
     this.resumeContext.saveReactivation(

@@ -13,9 +13,9 @@ describe('ScholarshipProcessFacade', () => {
     expect(facade.stepLabel()).toBe('Paso 1 de 3 - Información de postulación');
 
     facade.continue();
-    expect(facade.currentStep()).toBe('info-personal');
+    expect(facade.currentStep()).toBe('personal-info');
 
     facade.back();
-    expect(facade.currentStep()).toBe('info-postulacion');
+    expect(facade.currentStep()).toBe('application-info');
   });
 });

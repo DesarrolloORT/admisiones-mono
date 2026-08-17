@@ -7,12 +7,12 @@ import { EnrollmentSurveyFacade } from '../../../../../facades/enrollment-survey
 import { disallowedHighSchoolYearForUniversity } from '../../../../../models/enrollment-flow-forms';
 import { EnrollmentEducationSection } from './enrollment-education-section';
 
-function createEducationForm(isUniversityCareer: () => boolean) {
+function createEducationForm(isUniversityDegreeProgram: () => boolean) {
   return new FormGroup({
     studiesHighSchool: new FormControl('', { nonNullable: true, validators: Validators.required }),
     highSchoolYear: new FormControl('', {
       nonNullable: true,
-      validators: disallowedHighSchoolYearForUniversity(isUniversityCareer),
+      validators: disallowedHighSchoolYearForUniversity(isUniversityDegreeProgram),
     }),
     orientation: new FormControl('', { nonNullable: true }),
     repeatsHighSchoolYear: new FormControl('', {
@@ -41,11 +41,11 @@ type EducationForm = ReturnType<typeof createEducationForm>;
 describe('EnrollmentEducationSection', () => {
   let fixture: ComponentFixture<EnrollmentEducationSection>;
   let educationForm: EducationForm;
-  let isUniversityCareer: boolean;
+  let isUniversityDegreeProgram: boolean;
 
   beforeEach(() => {
-    isUniversityCareer = false;
-    educationForm = createEducationForm(() => isUniversityCareer);
+    isUniversityDegreeProgram = false;
+    educationForm = createEducationForm(() => isUniversityDegreeProgram);
 
     const facade = {
       educationForm,
@@ -55,7 +55,7 @@ describe('EnrollmentEducationSection', () => {
           { value: '6', label: 'Sexto año' },
         ],
         orientationOptions: () => [{ value: 'humanistico', label: 'Humanístico' }],
-        previousCareerOptions: () => [{ value: '1', label: 'Sí' }],
+        previousDegreeProgramOptions: () => [{ value: '1', label: 'Sí' }],
         departmentOptions: () => [],
         institutionOptions: () => [],
         higherEducationUniversityOptions: () => [],
@@ -147,7 +147,7 @@ describe('EnrollmentEducationSection', () => {
   });
 
   it('shows the bachilleratoNoUniversitario error with its exact message', () => {
-    isUniversityCareer = true;
+    isUniversityDegreeProgram = true;
     createFixture();
 
     educationForm.controls.studiesHighSchool.setValue('studying');

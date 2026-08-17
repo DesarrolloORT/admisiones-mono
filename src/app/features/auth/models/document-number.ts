@@ -1,4 +1,4 @@
-export const CEDULA_DOCUMENT_TYPE = 'CI';
+export const NATIONAL_ID_DOCUMENT_TYPE = 'CI';
 
 const DOCUMENT_NUMBER_LABELS: Record<string, string> = {
   CI: 'Nro. de cédula',
@@ -6,20 +6,20 @@ const DOCUMENT_NUMBER_LABELS: Record<string, string> = {
   DE: 'Nro. de documento extranjero',
 };
 
-export function isCedulaDocumentType(documentType: string): boolean {
-  return documentType === CEDULA_DOCUMENT_TYPE;
+export function isNationalIdDocumentType(documentType: string): boolean {
+  return documentType === NATIONAL_ID_DOCUMENT_TYPE;
 }
 
 export function cleanDocumentNumber(documentType: string, documentNumber: string): string {
   const trimmed = documentNumber.trim();
 
-  return isCedulaDocumentType(documentType) ? trimmed.replaceAll(/\D/g, '') : trimmed;
+  return isNationalIdDocumentType(documentType) ? trimmed.replaceAll(/\D/g, '') : trimmed;
 }
 
 export function formatDocumentForBackend(documentType: string, documentNumber: string): string {
   const cleaned = cleanDocumentNumber(documentType, documentNumber);
 
-  if (!isCedulaDocumentType(documentType)) {
+  if (!isNationalIdDocumentType(documentType)) {
     return cleaned;
   }
 

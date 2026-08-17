@@ -137,11 +137,11 @@ export class EnrollmentPaymentFacade {
   public readonly summaryItems = computed(() =>
     buildSummaryItems({
       response: this.process.preEnrollmentResponse(),
-      selectedCareer: this.proposal.academicForm.controls.degreeProgram.value,
-      selectedStart: this.proposal.academicForm.controls.intake.value,
+      selectedDegreeProgram: this.proposal.academicForm.controls.degreeProgram.value,
+      selectedIntake: this.proposal.academicForm.controls.intake.value,
       selectedShift: this.proposal.academicForm.controls.shift.value,
-      careerOptions: this.proposal.careerOptions(),
-      startOptions: this.proposal.startOptions(),
+      degreeProgramOptions: this.proposal.degreeProgramOptions(),
+      intakeOptions: this.proposal.intakeOptions(),
       shiftOptions: this.proposal.shiftOptions(),
       isProfessionalUpdate: this.isProfessionalUpdate(),
       seminars: this.selectedSeminars(),
@@ -274,12 +274,12 @@ export class EnrollmentPaymentFacade {
   }
 
   // La respuesta del backend manda. Al retomar, sessionStorage conserva los ids de la
-  // tarjeta como fallback si ConfirmarPreEnrollment no devuelve `inscripciones`.
+  // tarjeta como fallback si `confirm-pre-enrollment` no devuelve `seminars`.
   private paymentEnrollmentIds(): number[] {
     const response = this.process.preEnrollmentResponse();
     const responseIds = [
-      ...(response?.seminars ?? []).map(seminar => seminar.idEnrollment),
-      response?.idEnrollment,
+      ...(response?.seminars ?? []).map(seminar => seminar.enrollmentId),
+      response?.enrollmentId,
     ].filter(isPositiveInteger);
     if (responseIds.length) return [...new Set(responseIds)];
 
@@ -303,7 +303,7 @@ export class EnrollmentPaymentFacade {
       .seminars()
       .filter(seminar => selectedOffers.has(seminar.offeringId))
       .map(seminar => ({
-        idEnrollment: null,
+        enrollmentId: null,
         name: seminar.name,
         intake: formatPaymentDeadline(seminar.startDate),
         shift: 'No informado',

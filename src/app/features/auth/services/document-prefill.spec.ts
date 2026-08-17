@@ -17,7 +17,7 @@ describe('DocumentPrefillService', () => {
     documentRecognitionMock = {
       createRequestFromFile: vi.fn().mockResolvedValue({
         mimeType: 'application/pdf',
-        attachment: { fileName: 'cedula.pdf', content: 'base64' },
+        attachment: { fileName: 'identity-document.pdf', content: 'base64' },
       }),
       recognizeDocument: vi.fn().mockReturnValue(
         of({
@@ -61,7 +61,7 @@ describe('DocumentPrefillService', () => {
   });
 
   it('should create a document recognition request and return form prefill data', async () => {
-    const file = new File(['content'], 'cedula.pdf', { type: 'application/pdf' });
+    const file = new File(['content'], 'identity-document.pdf', { type: 'application/pdf' });
 
     const result = await service.preload(file);
 

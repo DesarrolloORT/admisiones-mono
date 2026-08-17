@@ -77,7 +77,7 @@ export class EnrollmentsEndpoint {
           interests: this.toSeminars(response.inProgress?.interests),
           pendingPayment: response.pendingPayment
             ? {
-                idEnrollment: response.pendingPayment.enrollments?.[0]?.enrollmentId ?? null,
+                enrollmentId: response.pendingPayment.enrollments?.[0]?.enrollmentId ?? null,
                 deposit: response.pendingPayment.depositAmount ?? null,
                 accountBalance: response.pendingPayment.currentAccount?.currentBalance ?? null,
                 paymentDueDate: response.pendingPayment.summary?.paymentDueDate ?? null,
@@ -241,7 +241,7 @@ export class EnrollmentsEndpoint {
   }
 
   // Actualización profesional (nivel 3/4) da de baja el paquete entero: se reactivan
-  // todas sus anotaciones en una sola llamada, igual que `Pagar` las cobra en bloque.
+  // todas sus anotaciones en una sola llamada, igual que el endpoint de pago las cobra en bloque.
   public reactivate(enrollmentIds: number[]): Observable<EnrollmentPreEnrollmentResponse> {
     return this.api
       .request(postEnrollmentsReactivateEndpoint, {
@@ -348,14 +348,14 @@ export class EnrollmentsEndpoint {
   }
 
   // Una fila por oferta elegida (en Actualización profesional, un seminario por fila).
-  // Sirve para los dos bloques: en `pendingPayment.enrollments` el idEnrollment es lo
-  // que después se cobra en bloque vía Pagar.enrollmentIds, y en `summary.interests`
+  // Sirve para los dos bloques: en `pendingPayment.enrollments` el enrollmentId es lo
+  // que después se cobra en bloque mediante `enrollmentIds`, y en `summary.interests`
   // los offeringId son los que reconfirma la preinscripción al retomar.
   private toSeminars(
     offerings: Array<EnrollmentOffering> | null | undefined
   ): EnrollmentOfferingSummary[] {
     return (offerings ?? []).map(offering => ({
-      idEnrollment: offering.enrollmentId ?? null,
+      enrollmentId: offering.enrollmentId ?? null,
       offeringId: offering.offeringId ?? null,
       name: offering.offeringDescription ?? null,
       intake: offering.intake ?? null,
@@ -369,7 +369,7 @@ export class EnrollmentsEndpoint {
     return {
       confirmed: response.confirmed === true,
       isWaiting: response.waiting === true,
-      idEnrollment: response.enrollments?.[0]?.enrollmentId ?? null,
+      enrollmentId: response.enrollments?.[0]?.enrollmentId ?? null,
       paymentDueDate: response.summary?.paymentDueDate ?? null,
       enrollmentDeposit: response.depositAmount ?? null,
       accountBalance: response.currentAccount?.currentBalance ?? null,
@@ -392,8 +392,8 @@ export class EnrollmentsEndpoint {
       : null;
   }
 
-  // La confirmed ya no trae un bloque `summary`: producto y degreeProgram están en la
-  // cabecera y intake/shift/materias en cada inscripción confirmed.
+  // El bloque `confirmed` ya no trae `summary`: producto y `degreeProgram` están en la
+  // cabecera, y `intake`, `shift` y materias en cada inscripción confirmada.
   private toConfirmedDetail(
     confirmed: ConfirmedEnrollmentDetailsResponse | null | undefined
   ): EnrollmentConfirmedDetail | null {
@@ -406,7 +406,7 @@ export class EnrollmentsEndpoint {
       academicCoordinator: this.toCoordinator(confirmed.academicCoordinator),
       courseCoordinator: this.toCoordinator(confirmed.courseCoordinator),
       enrollments: enrollments.map(enrollment => ({
-        idEnrollment: enrollment.enrollmentId ?? null,
+        enrollmentId: enrollment.enrollmentId ?? null,
         offeringId: enrollment.offeringId ?? null,
         intake: enrollment.intake ?? null,
         shift: enrollment.shift ?? null,

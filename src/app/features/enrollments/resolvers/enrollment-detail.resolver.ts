@@ -53,10 +53,11 @@ export const enrollmentDetailResolver: ResolveFn<EnrollmentEntryResolved> = rout
     : loadDetail(productId, admissionProcessId, request.status);
   // El panel ya mandó el nivel por `nivel`; solo cuando falta hay que reconstruirlo, y eso
   // cuesta una consulta por tipo de propuesta.
-  const careers$ = request.productLevelId === null ? loadCareers() : of<DegreeProgram[]>([]);
+  const degreePrograms$ =
+    request.productLevelId === null ? loadDegreePrograms() : of<DegreeProgram[]>([]);
 
-  return forkJoin({ detail: detail$, careers: careers$ }).pipe(
-    map(({ detail, careers }) => {
+  return forkJoin({ detail: detail$, degreePrograms: degreePrograms$ }).pipe(
+    map(({ detail, degreePrograms }) => {
       const entry = {
         detail,
         productId,
@@ -64,7 +65,7 @@ export const enrollmentDetailResolver: ResolveFn<EnrollmentEntryResolved> = rout
         offeringIds,
         productLevelId:
           request.productLevelId ??
-          findProductLevel(careers, detail?.summary?.productId ?? productId),
+          findProductLevel(degreePrograms, detail?.summary?.productId ?? productId),
       };
 
       return intent === 'reactivate' ? { ...entry, intent, preEnrollment } : { ...entry, intent };
@@ -111,7 +112,7 @@ function loadDetail(
 }
 
 /** Carreras de todas las propuestas, solo para deducir el nivel del producto. */
-function loadCareers(): Observable<DegreeProgram[]> {
+function loadDegreePrograms(): Observable<DegreeProgram[]> {
   const catalogs = inject(Catalogs);
   return forkJoin(ACADEMIC_PROPOSAL_TYPE_IDS.map(type => catalogs.getDegreePrograms(type))).pipe(
     map(groups => groups.flat()),
@@ -120,8 +121,11 @@ function loadCareers(): Observable<DegreeProgram[]> {
 }
 
 /** El Detalle es la fuente preferida del producto; con el Detalle caído, el param. */
-function findProductLevel(careers: DegreeProgram[], productId: number): number | null {
-  return careers.find(career => career.productId === productId)?.productLevelId ?? null;
+function findProductLevel(degreePrograms: DegreeProgram[], productId: number): number | null {
+  return (
+    degreePrograms.find(degreeProgram => degreeProgram.productId === productId)?.productLevelId ??
+    null
+  );
 }
 
 function toPositiveInteger(value: string | null): number | null {

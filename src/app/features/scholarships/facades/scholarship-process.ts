@@ -5,7 +5,7 @@ import { ScholarshipProcessStore } from '../store/scholarship-process';
 /**
  * Fachada del proceso de postulación a becas. Es el único objeto que la página
  * `fbr` debería conocer para orquestar el paso a paso. Equivale a
- * `InscripcionProcessFacade`.
+ * `EnrollmentProcessFacade`.
  *
  * Responsabilidades:
  * - Exponer al template lo que el `app-process-layout` necesita: el paso actual
@@ -15,8 +15,8 @@ import { ScholarshipProcessStore } from '../store/scholarship-process';
  *
  * Cómo crecerá: cada paso suele tener su propia fachada de sección (validar
  * formularios, llamar a la API, etc.), tal como inscripciones tiene
- * `InscripcionProposalFacade`, `InscripcionSurveyFacade` y
- * `InscripcionPaymentFacade`. Esas fachadas se inyectan acá y `continue()`
+ * `EnrollmentProposalFacade`, `EnrollmentSurveyFacade` y
+ * `EnrollmentPaymentFacade`. Esas fachadas se inyectan acá y `continue()`
  * delega en la del paso activo: la sección decide si puede avanzar y, cuando
  * corresponde, llama a `this.process.flow.next()`. NO avances el flow desde el
  * template: pasá siempre por `continue()`.
@@ -42,11 +42,11 @@ export class ScholarshipProcessFacade {
    */
   public continue(): void {
     switch (this.currentStep()) {
-      case 'info-postulacion':
-      case 'info-personal':
+      case 'application-info':
+      case 'personal-info':
         this.process.flow.next();
         break;
-      case 'confirmacion':
+      case 'confirmation':
         // Paso terminal: acá se confirmará la postulación.
         break;
     }

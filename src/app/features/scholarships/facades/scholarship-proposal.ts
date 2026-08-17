@@ -6,7 +6,7 @@ import { ScholarshipProcessStore } from '../store/scholarship-process';
 
 /**
  * Fachada del paso "Información de postulación" (propuesta académica). Es el
- * espejo de `InscripcionProposalFacade`, pero **sin llamada a la API**: los
+ * espejo de `EnrollmentProposalFacade`, pero **sin llamada a la API**: los
  * endpoints de becas todavía no están definidos.
  *
  * Expone el formulario académico y el servicio de selección que consume el
@@ -32,7 +32,7 @@ export class ScholarshipProposalFacade {
       return;
     }
     // Punto de extensión: cuando exista el endpoint, registrar el interés por la
-    // propuesta acá antes de avanzar (ver InscripcionProposalFacade.continue).
+    // propuesta acá antes de avanzar (ver EnrollmentProposalFacade.continue).
     this.process.flow.next();
   }
 }

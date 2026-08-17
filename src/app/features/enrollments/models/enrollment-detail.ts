@@ -1,8 +1,8 @@
 import type { EnrollmentOfferingSummary, EnrollmentPreEnrollmentResponse } from './enrollment-flow';
 
-// La cabecera del Detalle (`DtoCabeceraEnrollment`) solo trae producto y degreeProgram; el
-// intake y el shift llegan como texto en la oferta asociada. La API NO expone
-// `idComienzo` ni `idTurno` en ningún bloque del Detalle: no los declaramos para que el
+// La cabecera del detalle (`EnrollmentHeader`) solo trae producto y `degreeProgram`;
+// `intake` y `shift` llegan como texto en la oferta asociada. La API no expone
+// `intakeId` ni `shiftId` en ningún bloque del Detalle: no los declaramos para que el
 // contrato no prometa datos que nunca llegan (fue la causa del bug de retomar AP).
 export interface EnrollmentSummary {
   offeringId: number | null;
@@ -13,7 +13,7 @@ export interface EnrollmentSummary {
 }
 
 export interface EnrollmentPendingPaymentDetail {
-  idEnrollment: number | null;
+  enrollmentId: number | null;
   deposit: number | null;
   accountBalance: number | null;
   paymentDueDate: string | null;
@@ -38,18 +38,18 @@ export interface EnrollmentSubject {
   name: string | null;
 }
 
-// Una por cada oferta confirmed, con su propio intake/shift/materias: en
+// Una por cada oferta confirmada, con sus propios `intake`, `shift` y materias: en
 // Actualización profesional (niveles 3 y 4) vienen varias, una por seminario.
 export interface EnrollmentConfirmedEnrollment {
-  idEnrollment: number | null;
+  enrollmentId: number | null;
   offeringId: number | null;
   intake: string | null;
   shift: string | null;
   firstSemesterSubjects: EnrollmentSubject[];
 }
 
-// `confirmed` es una cabecera compartida (producto, degreeProgram y coordinación) más el
-// summary por oferta confirmed; el intake/shift del summary sale de la primera.
+// `confirmed` es una cabecera compartida (producto, `degreeProgram` y coordinación) más el
+// resumen por oferta confirmada; `summary` toma `intake` y `shift` de la primera.
 export interface EnrollmentConfirmedDetail {
   studentNumber: number | null;
   summary: EnrollmentSummary | null;
@@ -73,20 +73,20 @@ export interface EnrollmentDetail {
 }
 
 // El flujo de pago/confirmación pinta la pantalla desde el preEnrollmentResponse del
-// store. Al retomar una inscripción desde el panel reconstruimos esa misma forma a
-// partir del summary (seña, vencimiento y summary degreeProgram/intake/shift) para que
-// el monto, la fecha y el summary se muestren sin tener que rehacer la preinscripción.
+// estado. Al retomar una inscripción desde el panel reconstruimos esa misma forma a
+// partir de `summary` (seña, vencimiento, `degreeProgram`, `intake` y `shift`) para que
+// el monto, la fecha y el resumen se muestren sin rehacer la preinscripción.
 export function detailToPreEnrollment(
   detail: EnrollmentDetail
 ): EnrollmentPreEnrollmentResponse | null {
-  // El bloque minimumDeposit (seña ya elegida) no trae summary ni vencimiento; solo el
+  // `minimumDeposit` (seña ya elegida) no trae `summary` ni vencimiento; solo el
   // monto y la persona. Igual reconstruimos el preEnrollment para mostrar el monto.
   const source = detail.pendingPayment ?? detail.confirmed;
   if (!source && !detail.minimumDeposit) return null;
 
   const summary = source?.summary ?? null;
   return {
-    idEnrollment: detail.pendingPayment?.idEnrollment ?? null,
+    enrollmentId: detail.pendingPayment?.enrollmentId ?? null,
     confirmed: detail.confirmed !== null,
     paymentDueDate: detail.pendingPayment?.paymentDueDate ?? null,
     enrollmentDeposit: detail.pendingPayment?.deposit ?? detail.minimumDeposit?.deposit ?? null,

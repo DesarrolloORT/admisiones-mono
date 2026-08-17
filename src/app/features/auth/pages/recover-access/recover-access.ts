@@ -60,7 +60,7 @@ export class RecoverAccess {
     },
     {
       controlName: 'firstSurname',
-      fieldId: 'recover-primer-apellido',
+      fieldId: 'recover-first-surname',
       label: 'Primer apellido',
     },
   ];

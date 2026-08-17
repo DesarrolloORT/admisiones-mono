@@ -50,7 +50,7 @@ export interface LoginPayload {
 
 /**
  * Stable output of login. Discriminated union: 200 → authenticated, 202 → 2FA required.
- * Hides backend DTO shape (`DtoAuthenticationResponse` / `DtoLogin2FARequired`).
+ * Hides backend contract shapes (`AuthenticationResponse` / `TwoFactorRequiredResponse`).
  */
 export type LoginResult =
   | {
@@ -190,7 +190,7 @@ export class AuthEndpoint {
    *
    * Behind the scenes: POST /auth/login using generated `postAuthLoginEndpoint`.
    * The backend returns either:
-   *   - 200 with `data.persona` → fully authenticated, cookies set.
+   *   - 200 with `data.person` → fully authenticated, cookies set.
    *   - 202 with `data.sessionId` + `data.maskedEmail` → 2FA code emailed; caller must verify.
    * Discriminates by presence of `sessionId` in the unwrapped data.
    */
@@ -442,7 +442,7 @@ export class AuthEndpoint {
    * Verify the 6-digit two-factor code emailed to the user and complete authentication.
    *
    * Behind the scenes: POST /auth/verify-two-factor-code using generated endpoint.
-   * Sets the secure HttpOnly cookies on success and returns persona data so the
+   * Sets the secure HttpOnly cookies on success and returns person data so the
    * caller can hydrate the local session.
    */
   public verifyTwoFactorCode(

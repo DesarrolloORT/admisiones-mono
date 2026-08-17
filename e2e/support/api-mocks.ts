@@ -177,12 +177,12 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
         options.identityPreload === 'complete'
           ? {
               front: {
-                fileName: 'documento-frente.png',
+                fileName: 'identity-document-front.png',
                 content:
                   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
               },
               back: {
-                fileName: 'documento-dorso.png',
+                fileName: 'identity-document-back.png',
                 content:
                   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQMcAAAAASUVORK5CYII=',
               },

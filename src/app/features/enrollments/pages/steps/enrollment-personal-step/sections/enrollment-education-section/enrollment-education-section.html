@@ -162,25 +162,25 @@
       class="enrollment-choice-list"
       formControlName="higherEducationStatus"
       legend="¿Cursaste carreras previamente?"
-      name="previous-career"
+      name="previous-degree-program"
       [aria-describedby]="
                   facade.educationForm.controls.higherEducationStatus.touched &&
                   facade.educationForm.controls.higherEducationStatus.hasError('required')
-                    ? 'previous-career-error'
+                    ? 'previous-degree-program-error'
                     : null
                 "
       [divider]="true"
       [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
       [orientation]="orientation()"
       [required]="true">
-      @for (option of facade.options.previousCareerOptions(); track option.value) {
+      @for (option of facade.options.previousDegreeProgramOptions(); track option.value) {
       <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
 
       }
     </ort-radio-group>
     @if (facade.educationForm.controls.higherEducationStatus.touched &&
     facade.educationForm.controls.higherEducationStatus.hasError('required')) {
-    <p class="enrollment-field-error" id="previous-career-error" role="alert">
+    <p class="enrollment-field-error" id="previous-degree-program-error" role="alert">
       Seleccioná una opción
     </p>
     } @if (facade.shouldAskHigherEducationUniversities()) {

@@ -135,10 +135,10 @@ export interface EnrollmentStudentRegulationAcceptance {
   acceptanceDate: string | null;
 }
 
-// Una oferta (seminario) de un paquete de Actualización profesional. `idEnrollment`
-// alimenta el array `enrollmentIds` que espera `Pagar`.
+// Una oferta (seminario) de un paquete de Actualización profesional. `enrollmentId`
+// alimenta el array `enrollmentIds` que espera el endpoint de pago.
 export interface EnrollmentOfferingSummary {
-  idEnrollment: number | null;
+  enrollmentId: number | null;
   offeringId: number | null;
   name: string | null;
   intake: string | null;
@@ -146,7 +146,7 @@ export interface EnrollmentOfferingSummary {
 }
 
 export interface EnrollmentPreEnrollmentResponse {
-  idEnrollment?: number | null;
+  enrollmentId?: number | null;
   confirmed: boolean;
   isWaiting?: boolean;
   paymentDueDate: string | null;
@@ -220,7 +220,7 @@ export interface EnrollmentSummaryItem {
 
 // Fila de seminario ya formateada para el template (Actualización profesional).
 export interface SeminarSummaryItem {
-  idEnrollment: number | null;
+  enrollmentId: number | null;
   name: string;
   intake: string;
   shift: string;

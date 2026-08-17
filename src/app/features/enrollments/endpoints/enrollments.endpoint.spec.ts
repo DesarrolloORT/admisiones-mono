@@ -73,7 +73,7 @@ describe('EnrollmentsEndpoint', () => {
         courseCoordinator: null,
         enrollments: [
           {
-            idEnrollment: null,
+            enrollmentId: null,
             offeringId: null,
             intake: null,
             shift: null,
@@ -123,7 +123,7 @@ describe('EnrollmentsEndpoint', () => {
 
     const detail = await firstValueFrom(endpoint.getDetail(40, 210));
 
-    // El resumen toma la primera oferta; `intereses` conserva todas (una por seminario).
+    // El resumen toma la primera oferta; `interests` conserva todas (una por seminario).
     expect(detail.summary).toEqual({
       offeringId: 310,
       productId: 40,
@@ -133,13 +133,13 @@ describe('EnrollmentsEndpoint', () => {
     });
     expect(detail.interests).toEqual([
       {
-        idEnrollment: null,
+        enrollmentId: null,
         offeringId: 310,
         name: 'Marco legal',
         intake: 'Abril',
         shift: 'Noche',
       },
-      { idEnrollment: null, offeringId: 311, name: 'Renta fija', intake: null, shift: null },
+      { enrollmentId: null, offeringId: 311, name: 'Renta fija', intake: null, shift: null },
     ]);
   });
 
@@ -248,14 +248,14 @@ describe('EnrollmentsEndpoint', () => {
         pendingPayment: expect.objectContaining({
           seminars: [
             {
-              idEnrollment: 1072704,
+              enrollmentId: 1072704,
               offeringId: 58563,
               name: 'Seminario de Liderazgo',
               intake: 'Marzo',
               shift: 'Matutino',
             },
             {
-              idEnrollment: 1072705,
+              enrollmentId: 1072705,
               offeringId: 58564,
               name: 'Seminario de Finanzas',
               intake: 'Abril',
@@ -294,8 +294,8 @@ describe('EnrollmentsEndpoint', () => {
   it('uploads identity document files', async () => {
     const payload = {
       date: '2030-02-04',
-      front: { fileName: 'frente.png', content: 'front' },
-      back: { fileName: 'dorso.png', content: 'back' },
+      front: { fileName: 'front.png', content: 'front' },
+      back: { fileName: 'back.png', content: 'back' },
     };
 
     await expect(firstValueFrom(endpoint.uploadIdentityDocument(payload))).resolves.toBe(true);
@@ -303,8 +303,8 @@ describe('EnrollmentsEndpoint', () => {
     expect(apiMock.request).toHaveBeenCalledWith(postPersonIdentityDocumentEndpoint, {
       body: {
         expirationDate: '2030-02-04',
-        front: { fileName: 'frente.png', content: 'front' },
-        back: { fileName: 'dorso.png', content: 'back' },
+        front: { fileName: 'front.png', content: 'front' },
+        back: { fileName: 'back.png', content: 'back' },
       },
       showLoader: true,
     });
@@ -325,7 +325,7 @@ describe('EnrollmentsEndpoint', () => {
       of({
         canAnswerSurvey: true,
         survey: {
-          idEncuestaIni: 1,
+          surveyId: 1,
           degreeProgramId: 20,
           admissionProcessId: 200,
           status: 'completa',
@@ -463,13 +463,13 @@ describe('EnrollmentsEndpoint', () => {
     await expect(firstValueFrom(endpoint.confirmPreEnrollment(payload))).resolves.toEqual({
       confirmed: true,
       isWaiting: true,
-      idEnrollment: null,
+      enrollmentId: null,
       paymentDueDate: null,
       enrollmentDeposit: 0,
       accountBalance: 70000,
       summary: { degreeProgram: 'Sistemas', intake: 'Marzo', shift: 'Matutino' },
       seminars: [
-        { idEnrollment: null, offeringId: null, name: null, intake: 'Marzo', shift: 'Matutino' },
+        { enrollmentId: null, offeringId: null, name: null, intake: 'Marzo', shift: 'Matutino' },
       ],
     });
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsConfirmPreEnrollmentEndpoint, {
@@ -482,7 +482,7 @@ describe('EnrollmentsEndpoint', () => {
     });
   });
 
-  it('maps the Actualización profesional seminarios array from confirmarPreEnrollment', async () => {
+  it('maps the Actualización profesional seminarios array from confirm-pre-enrollment', async () => {
     apiMock.request.mockReturnValueOnce(
       of({
         confirmed: false,
@@ -516,14 +516,14 @@ describe('EnrollmentsEndpoint', () => {
 
     expect(response.seminars).toEqual([
       {
-        idEnrollment: 1072704,
+        enrollmentId: 1072704,
         offeringId: 58563,
         name: 'Seminario de Liderazgo',
         intake: 'Marzo',
         shift: 'Matutino',
       },
       {
-        idEnrollment: 1072705,
+        enrollmentId: 1072705,
         offeringId: 58564,
         name: 'Seminario de Finanzas',
         intake: 'Abril',
@@ -555,7 +555,7 @@ describe('EnrollmentsEndpoint', () => {
     await expect(firstValueFrom(endpoint.reactivate([100, 101]))).resolves.toEqual({
       confirmed: false,
       isWaiting: false,
-      idEnrollment: 1072704,
+      enrollmentId: 1072704,
       paymentDueDate: '2027-03-04',
       enrollmentDeposit: 15500,
       accountBalance: 1200,
@@ -566,7 +566,7 @@ describe('EnrollmentsEndpoint', () => {
       },
       seminars: [
         {
-          idEnrollment: 1072704,
+          enrollmentId: 1072704,
           offeringId: 58563,
           name: 'Seminario de Liderazgo',
           intake: 'Marzo',
@@ -666,7 +666,7 @@ describe('EnrollmentsEndpoint', () => {
       courseCoordinator: null,
       enrollments: [
         {
-          idEnrollment: 1072704,
+          enrollmentId: 1072704,
           offeringId: 300,
           intake: 'Marzo',
           shift: 'Matutino',
@@ -757,7 +757,7 @@ describe('EnrollmentsEndpoint', () => {
     }
   });
 
-  it('maps the complete survey body renaming comienzoId to procesoId', async () => {
+  it('maps the complete survey payload to the generated request', async () => {
     await expect(firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))).resolves.toBe(
       true
     );

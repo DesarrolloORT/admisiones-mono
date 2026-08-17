@@ -147,7 +147,7 @@ describe('AuthEndpoint', () => {
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(SHOW_GLOBAL_LOADER)).toBe(true);
 
-      req.flush({ success: true, httpCode: 200, data: { codigoPersona: 1 } });
+      req.flush({ success: true, httpCode: 200, data: { personId: 1 } });
     });
 
     it('should POST to /auth/complete-initial-password and return void', () => {
@@ -599,7 +599,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('verifyTwoFactorCode', () => {
-    it('should POST to /auth/verify-two-factor-code and map persona data', () => {
+    it('should POST to /auth/verify-two-factor-code and map person data', () => {
       endpoint
         .verifyTwoFactorCode({ sessionId: 'session-123', code: '123456' })
         .subscribe(result => {
@@ -621,7 +621,7 @@ describe('AuthEndpoint', () => {
       });
     });
 
-    it('should return empty fields when the response has no persona', () => {
+    it('should return empty fields when the response has no person', () => {
       endpoint
         .verifyTwoFactorCode({ sessionId: 'session-123', code: '123456' })
         .subscribe(result => {

@@ -28,11 +28,11 @@ const PROFESSIONAL_UPDATE_CONTEXT = {
     accountBalance: 70000,
     summary: { degreeProgram: 'Actualización en IA', intake: null, shift: null },
   },
-  selectedCareer: '',
-  selectedStart: '',
+  selectedDegreeProgram: '',
+  selectedIntake: '',
   selectedShift: '',
-  careerOptions: [],
-  startOptions: [],
+  degreeProgramOptions: [],
+  intakeOptions: [],
   shiftOptions: [],
   isProfessionalUpdate: true,
 };
@@ -47,11 +47,11 @@ describe('enrollment flow view', () => {
         accountBalance: 70000,
         summary: { degreeProgram: 'Sistemas', intake: 'Agosto', shift: 'Nocturno' },
       },
-      selectedCareer: '',
-      selectedStart: '',
+      selectedDegreeProgram: '',
+      selectedIntake: '',
       selectedShift: '',
-      careerOptions: [],
-      startOptions: [],
+      degreeProgramOptions: [],
+      intakeOptions: [],
       shiftOptions: [],
       isProfessionalUpdate: false,
       seminars: [],
@@ -67,8 +67,8 @@ describe('enrollment flow view', () => {
     const items = buildSummaryItems({
       ...PROFESSIONAL_UPDATE_CONTEXT,
       seminars: [
-        { idEnrollment: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
-        { idEnrollment: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
+        { enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
+        { enrollmentId: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
       ],
     });
 
@@ -78,7 +78,7 @@ describe('enrollment flow view', () => {
   it('adds the Comienzo row when Actualización profesional has a single seminario', () => {
     const items = buildSummaryItems({
       ...PROFESSIONAL_UPDATE_CONTEXT,
-      seminars: [{ idEnrollment: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' }],
+      seminars: [{ enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' }],
     });
 
     expect(items).toEqual([
@@ -102,19 +102,19 @@ describe('enrollment flow view', () => {
       summary: null,
       seminars: [
         {
-          idEnrollment: 1,
+          enrollmentId: 1,
           offeringId: 10,
           name: 'Seminario A',
           intake: 'Marzo',
           shift: 'Noche',
         },
-        { idEnrollment: 2, offeringId: 11, name: null, intake: null, shift: null },
+        { enrollmentId: 2, offeringId: 11, name: null, intake: null, shift: null },
       ],
     });
 
     expect(seminars).toEqual([
-      { idEnrollment: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
-      { idEnrollment: 2, name: 'No informado', intake: 'No informado', shift: 'No informado' },
+      { enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
+      { enrollmentId: 2, name: 'No informado', intake: 'No informado', shift: 'No informado' },
     ]);
   });
 

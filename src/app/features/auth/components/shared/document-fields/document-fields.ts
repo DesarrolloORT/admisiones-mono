@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { OrtFormFieldModule, OrtInputModule, OrtSelectModule } from '@desarrolloort/components';
 
 import { syncDocumentNumberValidators } from '../../../forms/auth-forms';
-import { isCedulaDocumentType } from '../../../models/document-number';
+import { isNationalIdDocumentType } from '../../../models/document-number';
 
 // Solo se exige la parte estructural que usa el componente (`controls`): así los
 // FormGroup de login/recuperación/registro, que tienen campos extra, son asignables
@@ -35,7 +35,9 @@ export class DocumentFields {
   public readonly numberLabel = input('Nro. de documento');
 
   private readonly documentTypeValue = signal('CI');
-  protected readonly isCedulaInput = computed(() => isCedulaDocumentType(this.documentTypeValue()));
+  protected readonly isNationalIdInput = computed(() =>
+    isNationalIdDocumentType(this.documentTypeValue())
+  );
 
   constructor() {
     effect(onCleanup => {

@@ -4,11 +4,11 @@
     class="enrollment-choice-list"
     formControlName="degreeProgramDecisionYear"
     legend="¿En qué año de secundaria decidiste qué carrera estudiar?"
-    name="decision-career-year"
+    name="decision-degree-program-year"
     [aria-describedby]="
                 facade.academicDecisionForm.controls.degreeProgramDecisionYear.touched &&
                 facade.academicDecisionForm.controls.degreeProgramDecisionYear.hasError('required')
-                  ? 'decision-career-year-error'
+                  ? 'decision-degree-program-year-error'
                   : null
               "
     [divider]="true"
@@ -21,7 +21,7 @@
   </ort-radio-group>
   @if (facade.academicDecisionForm.controls.degreeProgramDecisionYear.touched &&
   facade.academicDecisionForm.controls.degreeProgramDecisionYear.hasError('required')) {
-  <p class="enrollment-field-error" id="decision-career-year-error" role="alert">
+  <p class="enrollment-field-error" id="decision-degree-program-year-error" role="alert">
     Seleccioná una opción
   </p>
   }

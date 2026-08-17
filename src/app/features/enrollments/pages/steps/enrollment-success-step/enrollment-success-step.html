@@ -43,7 +43,7 @@
 
   <ort-card aria-label="Inscripción" role="region">
     <ort-card-content>
-      <h3 id="career-summary-title">{{ facade.summaryItems()[0].value }}</h3>
+      <h3 id="degree-program-summary-title">{{ facade.summaryItems()[0].value }}</h3>
       <dl class="enrollment-summary-list">
         @for (item of facade.summaryItems().slice(1); track item.label) {
         <div class="enrollment-summary-list__item">
@@ -57,13 +57,13 @@
       </dl>
 
       @if (facade.visibleSubjects().length > 0) {
-      <h4 id="career-subject-list-title">
+      <h4 id="degree-program-subject-list-title">
         Listado de materias a cursar ({{ facade.visibleSubjects().length }})
       </h4>
       <ul
-        aria-labelledby="career-subject-list-title"
+        aria-labelledby="degree-program-subject-list-title"
         class="enrollment-subject-list"
-        id="career-subject-list">
+        id="degree-program-subject-list">
         @for (subject of facade.visibleSubjects(); track subject) {
         <li>
           <ort-icon aria-hidden="true">chevron_right</ort-icon>
@@ -73,7 +73,7 @@
       </ul>
       @if (facade.canToggleSubjects()) {
       <button
-        aria-controls="career-subject-list"
+        aria-controls="degree-program-subject-list"
         ort-tonal-button
         type="button"
         [attr.aria-expanded]="facade.showAllSubjects()"

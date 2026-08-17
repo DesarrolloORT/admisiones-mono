@@ -4,7 +4,7 @@ import type { AcademicProposalForm } from '../../catalogs/models/academic-propos
 
 /**
  * Crea y guarda los `FormGroup` del flujo de becas. Equivale a
- * `InscripcionFormsStore`: las fachadas leen los forms desde acá.
+ * `EnrollmentFormsStore`: las fachadas leen los forms desde acá.
  *
  * Por ahora solo tiene el formulario de propuesta académica (paso 1). A medida
  * que se sumen pasos con formulario, agregalos acá igual que inscripciones suma
