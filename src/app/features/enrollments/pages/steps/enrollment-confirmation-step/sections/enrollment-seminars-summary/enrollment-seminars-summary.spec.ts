@@ -24,23 +24,20 @@ describe('EnrollmentSeminarsSummary', () => {
     expect(fixture.nativeElement.textContent.trim()).toBe('');
   });
 
-  it('renders the heading and one row per seminario with comienzo and turno', () => {
+  it('renders a single Seminarios term with one value per seminario', () => {
     setSeminars([
       { enrollmentId: 1, name: 'Seminario A', intake: 'Marzo', shift: 'Noche' },
       { enrollmentId: 2, name: 'Seminario B', intake: 'Abril', shift: 'Mañana' },
     ]);
 
-    const title = fixture.nativeElement.querySelector('#seminars-title');
-    const rows = fixture.nativeElement.querySelectorAll('.enrollment-summary-list__item');
+    const terms = fixture.nativeElement.querySelectorAll('dt');
+    const values = fixture.nativeElement.querySelectorAll('dd');
 
-    expect(title?.textContent).toBe('Seminarios');
-    expect(fixture.nativeElement.querySelector('dl')?.getAttribute('aria-labelledby')).toBe(
-      'seminars-title'
-    );
-    expect(rows).toHaveLength(2);
-    expect(rows[0].querySelector('dt > span')?.textContent).toBe('Seminario A');
-    expect(rows[0].querySelector('dd')?.textContent).toBe('Marzo · Noche');
-    expect(rows[1].querySelector('dt > span')?.textContent).toBe('Seminario B');
-    expect(rows[1].querySelector('dd')?.textContent).toBe('Abril · Mañana');
+    expect(terms).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('#seminars-title')?.textContent).toBe('Seminarios');
+    expect(terms[0].querySelectorAll('ort-icon')).toHaveLength(1);
+    expect(values).toHaveLength(2);
+    expect(values[0].textContent).toBe('Marzo · Noche');
+    expect(values[1].textContent).toBe('Abril · Mañana');
   });
 });

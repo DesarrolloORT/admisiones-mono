@@ -1,11 +1,3 @@
-#seminars-title {
-  margin-top: var(--ort-sys-spacing-16);
-  color: var(--ort-sys-base-text-color-headline);
-  font-weight: 700;
-  font-size: var(--ort-sys-body-sm-text-size);
-  line-height: var(--ort-sys-body-sm-line-height);
-}
-
 .enrollment-summary-list {
   display: grid;
   gap: var(--ort-sys-spacing-8);
@@ -43,4 +35,9 @@
   font-weight: 600;
   font-size: var(--ort-sys-list-title-font-size);
   line-height: var(--ort-sys-list-title-line-height);
+}
+
+/* Los seminarios se listan uno debajo de otro bajo el mismo dt. */
+.enrollment-summary-list__item dd + dd {
+  margin-top: var(--ort-sys-spacing-4);
 }
