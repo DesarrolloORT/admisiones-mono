@@ -47,7 +47,13 @@ public interface IRegistrationFlowService : IPendingRegistrationCompletion
 }
 
 /// <summary>
-/// Resultado de ConfirmNewPersonAsync. <see cref="MailSent"/> distingue éxito parcial
-/// (registro OK, mail no enviado) de éxito completo.
+/// Resultado de los dos endpoints de confirmación del registro: <c>confirm-new-person</c> y
+/// <c>confirm-registration-request</c>.
+/// <para><see cref="MailSent"/> distingue éxito parcial (registro OK, mail no enviado) de éxito completo.</para>
+/// <para>
+/// <see cref="PendingReview"/> en <c>true</c> = solicitud de alta (pasaporte o documento extranjero):
+/// no se creó persona ni usuario y no hay mail, queda esperando revisión manual de admisiones. El
+/// front no debe mandar al usuario a esperar el mail de activación.
+/// </para>
 /// </summary>
-public record RegistrationFlowResult(string Message, bool MailSent = true);
+public record RegistrationFlowResult(string Message, bool MailSent = true, bool PendingReview = false);
