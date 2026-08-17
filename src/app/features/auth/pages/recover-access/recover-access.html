@@ -1,9 +1,9 @@
 <app-auth-form
-  description="Ingresá tus datos para verificar tu identidad. Te enviaremos por correo electrónico un link para actualizar tu contraseña."
+  description="Ingresá tus datos."
   heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
   heroIcon="lock"
   heroTitle="Recuperá el acceso a tu cuenta."
-  title="Recuperar acceso">
+  title="Recuperar contraseña">
   <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <section class="auth-form-section">
       <app-document-fields autocomplete="username" idPrefix="recover" [form]="form" />
