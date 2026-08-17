@@ -2923,6 +2923,46 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public async Task ObtenerDetalleInscripcion_WhenEnProcesoNivel3y4SinIdInscripto_ReturnsOfertasSeleccionadas()
+        {
+            // "En proceso" todavia no tiene fila en T_INSCRIPTO: la vista fresco trae ID_INSCRIPTO null.
+            var fresco1y2Repo = new Mock<IVdInscripcionesFresco1y2Repository>();
+            fresco1y2Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco1y2>());
+            _uowMock.Setup(u => u.VdInscripcionesFresco1y2s).Returns(fresco1y2Repo.Object);
+
+            var fresco3y4Repo = new Mock<IVdInscripcionesFresco3y4Repository>();
+            fresco3y4Repo
+                .Setup(r => r.GetInscripcionesFrescoHabilitadas(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<long>()))
+                .Returns(new List<VdInscripcionesFresco3y4>
+                {
+                    new()
+                    {
+                        IdProducto = 10m,
+                        IdProceso = 20m,
+                        IdInscripto = null,
+                        IdOferta = 99L,
+                        EstadoInscripcion = global::AppLogic.Contracts.Constants.EnrollmentStatus.InProgress
+                    }
+                });
+            _uowMock.Setup(u => u.VdInscripcionesFresco3y4s).Returns(fresco3y4Repo.Object);
+
+            var interesRepo = new Mock<IInteresProductoOfertaRepository>();
+            interesRepo
+                .Setup(r => r.GetOfertasSeleccionadas(123, 10, 20))
+                .Returns(new List<Oferta> { OfertaValida(99, 10, 7, 5, productLevelId: 4) });
+            _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesRepo.Object);
+
+            var result = await _service.Details.ExecuteAsync(123, 10, 20);
+
+            Assert.True(result.Success);
+            Assert.Equal("En proceso", result.Data!.Status);
+            Assert.NotNull(result.Data.InProgress);
+            Assert.Equal(99, result.Data.InProgress!.Interests[0].OfferingId);
+        }
+
+        [Fact]
         public async Task ObtenerDetalleInscripcion_WhenALaEspera_ReturnsEstadoSinDetalle()
         {
             SetupFresco(global::AppLogic.Contracts.Constants.EnrollmentStatus.Waiting);
