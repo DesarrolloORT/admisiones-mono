@@ -401,9 +401,7 @@ export class EnrollmentSurveyFacade {
       this.isProfessionalUpdate()
     );
     if (!confirmPayload) {
-      this.preEnrollmentError.set(
-        'No se pudo confirmar la preinscripción con la oferta seleccionada.'
-      );
+      this.preEnrollmentError.set('No se pudo confirmar la preinscripción.');
       return;
     }
 
@@ -430,13 +428,15 @@ export class EnrollmentSurveyFacade {
         next: response => {
           this.process.preEnrollmentResponse.set(response);
           this.surveyState.set('complete');
+          // Corporativa: el pago lo acredita la empresa y la respuesta no trae datos de
+          // pago (seña 0), así que se evalúa antes que la rama de seña 0.
+          if (confirmPayload.isCorporateEnrollment) {
+            this.payment.outcome.set('enrollment-in-progress');
+            return;
+          }
           // Seña 0: no hay nada que pagar; la pantalla terminal explica cómo continuar.
           if (response.enrollmentDeposit === 0) {
             this.payment.outcome.set('reservation');
-            return;
-          }
-          if (confirmPayload.isCorporateEnrollment) {
-            this.payment.outcome.set('enrollment-in-progress');
             return;
           }
           if (response.isWaiting === true) {

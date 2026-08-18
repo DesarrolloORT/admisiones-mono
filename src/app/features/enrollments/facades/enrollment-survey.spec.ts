@@ -172,6 +172,18 @@ describe('EnrollmentSurveyFacade', () => {
   });
 
   it('finishes a corporate AP pre-enrollment without opening payment', () => {
+    // La rama corporativa responde sin datos de pago (seña 0): la pantalla de espera
+    // manda sobre la de reserva por seña 0.
+    confirmPreEnrollment.mockReturnValue(
+      of({
+        confirmed: false,
+        isWaiting: true,
+        paymentDueDate: null,
+        enrollmentDeposit: 0,
+        accountBalance: null,
+        summary: null,
+      })
+    );
     const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
     forms.academicForm.controls.proposalType.setValue('3');
     forms.academicForm.controls.degreeProgram.setValue('30');
