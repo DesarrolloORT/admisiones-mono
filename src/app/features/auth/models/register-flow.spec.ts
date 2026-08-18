@@ -3,6 +3,7 @@ import {
   isRegisterContinuableFlow,
   type RegisterDocumentEvaluation,
   resolveRegisterFlow,
+  resolveRegistrationEnding,
 } from './register-flow';
 
 describe('register flow', () => {
@@ -66,5 +67,28 @@ describe('register flow', () => {
     expect(getRegisterPersonalMode('existing-person')).toBe('verification');
     expect(getRegisterPersonalMode('new-person')).toBe('complete');
     expect(getRegisterPersonalMode(null)).toBe('complete');
+  });
+
+  describe('resolveRegistrationEnding', () => {
+    it('should send a pending review to the request screen without warning about the email', () => {
+      expect(resolveRegistrationEnding({ pendingReview: true, mailSent: false })).toEqual({
+        route: '/confirmacion-correo/solicitud-registro',
+        missingActivationEmail: false,
+      });
+    });
+
+    it('should send a created account to the email confirmation screen', () => {
+      expect(resolveRegistrationEnding({ pendingReview: false, mailSent: true })).toEqual({
+        route: '/confirmacion-correo/registro',
+        missingActivationEmail: false,
+      });
+    });
+
+    it('should flag a created account whose activation email was not sent', () => {
+      expect(resolveRegistrationEnding({ pendingReview: false, mailSent: false })).toEqual({
+        route: '/confirmacion-correo/registro',
+        missingActivationEmail: true,
+      });
+    });
   });
 });

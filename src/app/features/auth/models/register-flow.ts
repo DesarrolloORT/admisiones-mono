@@ -54,3 +54,31 @@ export function isRegisterContinuableFlow(
 export function getRegisterPersonalMode(flow: RegisterFlowKind | null): RegisterPersonalMode {
   return flow === 'existing-person' ? 'verification' : 'complete';
 }
+
+export const REGISTER_CONFIRMATION_ROUTE = '/confirmacion-correo/registro';
+export const REGISTER_REQUEST_CONFIRMATION_ROUTE = '/confirmacion-correo/solicitud-registro';
+
+export interface RegistrationOutcome {
+  pendingReview: boolean;
+  mailSent: boolean;
+}
+
+export interface RegistrationEnding {
+  route: string;
+  missingActivationEmail: boolean;
+}
+
+/**
+ * `pendingReview` es la unica fuente de verdad del final del registro: el
+ * backend ya resolvio si la solicitud queda esperando revision manual, asi que
+ * el tipo de documento no participa. `mailSent` solo importa cuando hubo un
+ * correo de activacion que enviar; con `pendingReview` nunca lo hay.
+ */
+export function resolveRegistrationEnding({
+  pendingReview,
+  mailSent,
+}: RegistrationOutcome): RegistrationEnding {
+  return pendingReview
+    ? { route: REGISTER_REQUEST_CONFIRMATION_ROUTE, missingActivationEmail: false }
+    : { route: REGISTER_CONFIRMATION_ROUTE, missingActivationEmail: !mailSent };
+}
