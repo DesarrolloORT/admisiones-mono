@@ -80,7 +80,6 @@ export class Layout {
       this.survey.activeSection();
       this.survey.readerOpen();
       this.payment.outcome();
-      if (this.payment.view() === 'confirming') return;
 
       afterNextRender(() => this.focusCurrentScreen(), { injector: this.injector });
     });
