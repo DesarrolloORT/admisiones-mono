@@ -38,15 +38,15 @@ describe('DocumentFields', () => {
     expect(form.controls.documentNumber.hasError('pattern')).toBe(true);
   });
 
-  it('shows the free-format hint only for non-CI documents', () => {
+  it('shows the format hint for every document type', () => {
     const { fixture, form } = createComponent();
     const host: HTMLElement = fixture.nativeElement;
 
-    expect(host.querySelector('ort-hint')).toBeNull();
+    expect(host.querySelector('ort-hint')?.textContent).toContain('Sin puntos ni guiones');
 
     form.controls.documentType.setValue('DE');
     fixture.detectChanges();
 
-    expect(host.querySelector('ort-hint')?.textContent).toContain('Sin puntos ni espacios');
+    expect(host.querySelector('ort-hint')?.textContent).toContain('Sin puntos ni guiones');
   });
 });
