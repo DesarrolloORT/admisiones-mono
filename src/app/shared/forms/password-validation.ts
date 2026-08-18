@@ -9,10 +9,27 @@ export interface PasswordRequirement {
   errorKey: OrtPasswordErrorKey;
 }
 
+/** `pending` es el estado inicial: todavía no se escribió nada, así que no se marca error. */
+export type PasswordRequirementState = 'pending' | 'met' | 'unmet';
+
 export interface PasswordRequirementStatus {
   label: string;
-  met: boolean;
+  state: PasswordRequirementState;
+  icon: string;
+  srLabel: string;
 }
+
+const REQUIREMENT_ICONS: Record<PasswordRequirementState, string> = {
+  pending: 'chevron_right',
+  met: 'check',
+  unmet: 'close',
+};
+
+const REQUIREMENT_SR_LABELS: Record<PasswordRequirementState, string> = {
+  pending: 'Pendiente: ',
+  met: 'Cumplido: ',
+  unmet: 'No cumplido: ',
+};
 
 export const ORT_PASSWORD_VALIDATORS: ValidatorFn[] = [
   Validators.required,
@@ -42,10 +59,22 @@ export const ORT_PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
 export function buildOrtPasswordRequirements(
   control: AbstractControl
 ): PasswordRequirementStatus[] {
-  return ORT_PASSWORD_REQUIREMENTS.map(requirement => ({
-    label: requirement.label,
-    met: !control.hasError(requirement.errorKey),
-  }));
+  const isPending = !control.value;
+
+  return ORT_PASSWORD_REQUIREMENTS.map(requirement => {
+    const state: PasswordRequirementState = isPending
+      ? 'pending'
+      : control.hasError(requirement.errorKey)
+        ? 'unmet'
+        : 'met';
+
+    return {
+      label: requirement.label,
+      state,
+      icon: REQUIREMENT_ICONS[state],
+      srLabel: REQUIREMENT_SR_LABELS[state],
+    };
+  });
 }
 
 export type OrtPasswordStrengthLevel = 'weak' | 'moderate' | 'strong';
