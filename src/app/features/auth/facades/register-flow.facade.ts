@@ -19,7 +19,6 @@ import { AuthIdentityData } from '../models/auth.interface';
 import {
   cleanDocumentNumber,
   getDocumentNumberLabel,
-  isNationalIdDocumentType,
   NATIONAL_ID_DOCUMENT_TYPE,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
@@ -27,7 +26,9 @@ import {
   getRegisterPersonalMode,
   isRegisterContinuableFlow,
   RegisterFlowKind,
+  RegistrationOutcome,
   resolveRegisterFlow,
+  resolveRegistrationEnding,
 } from '../models/register-flow';
 import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
 import { AccountService } from '../services/account';
@@ -136,8 +137,13 @@ export class RegisterFlowFacade {
         return;
       }
 
-      if (flow === 'user-exists' || flow === 'application-exists') {
+      if (flow === 'user-exists') {
         this.showGoToLoginSnackbar(result.message ?? undefined);
+        return;
+      }
+
+      if (flow === 'application-exists') {
+        this.showPendingApplicationSnackbar(result.message ?? undefined);
         return;
       }
 
@@ -223,8 +229,8 @@ export class RegisterFlowFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: () => {
-          this.navigateToEmailConfirmation();
+        next: result => {
+          this.navigateToEmailConfirmation(result);
         },
         error: error => {
           this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
@@ -265,11 +271,7 @@ export class RegisterFlowFacade {
       )
       .subscribe({
         next: result => {
-          if (result.success) {
-            this.navigateToEmailConfirmation();
-          } else {
-            this.snackbar.error('No se pudo verificar la identidad.');
-          }
+          this.navigateToEmailConfirmation({ pendingReview: false, mailSent: result.mailSent });
         },
         error: error => {
           const message = getApiErrorMessage(error, 'No se pudo completar el registro.');
@@ -367,15 +369,39 @@ export class RegisterFlowFacade {
     });
   }
 
-  private navigateToEmailConfirmation(): void {
-    // Un documento no CI crea una solicitud de alta: no hay cuenta ni correo de
-    // activacion todavia, asi que la pantalla final es la de solicitud en revision.
-    const isNationalId = isNationalIdDocumentType(this.identityForm.controls.documentType.value);
+  private showPendingApplicationSnackbar(
+    message = 'Ya existe una solicitud de alta pendiente para este documento.'
+  ): void {
+    this.snackbar.show({
+      message,
+      hint: 'Admisiones la revisa y te avisa por correo cuando esté aprobada.',
+      variant: 'warning',
+      duration: 10000,
+    });
+  }
+
+  private showMissingActivationEmailSnackbar(): void {
+    this.snackbar.show({
+      message: 'No pudimos enviarte el correo de activación.',
+      hint: 'Tu cuenta quedó creada: usá "Recuperar acceso" para definir tu contraseña.',
+      variant: 'warning',
+      actionLabel: 'Recuperar acceso',
+      duration: 10000,
+      action: () => {
+        this.router.navigateByUrl('/recuperar-acceso');
+      },
+    });
+  }
+
+  private navigateToEmailConfirmation(outcome: RegistrationOutcome): void {
+    const { route, missingActivationEmail } = resolveRegistrationEnding(outcome);
 
     this.isCompleted.set(true);
-    this.router.navigateByUrl(
-      isNationalId ? '/confirmacion-correo/registro' : '/confirmacion-correo/solicitud-registro'
-    );
+    this.router.navigateByUrl(route);
+
+    if (missingActivationEmail) {
+      this.showMissingActivationEmailSnackbar();
+    }
   }
 
   private handleDocumentRecognitionError(error: unknown): void {

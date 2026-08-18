@@ -42,8 +42,8 @@ describe('RegisterFlowFacade', () => {
           message: null,
         })
       ),
-      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
+      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
+      confirmRegistration: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
     };
     snackbarMock = {
       show: vi.fn(),
@@ -127,6 +127,8 @@ describe('RegisterFlowFacade', () => {
         variant: 'warning',
       })
     );
+    // Sin usuario LDAP todavia: ofrecer iniciar sesion seria un callejon sin salida.
+    expect(snackbarMock.show.mock.calls[0][0].actionLabel).toBeUndefined();
   });
 
   it('should verify an existing CI person from the personal step', async () => {
@@ -194,6 +196,9 @@ describe('RegisterFlowFacade', () => {
 
   it('should collect full data and confirm a non-CI application request', async () => {
     mockEvaluation({ requiresApplicationCreation: true, flowId: 'flow-new-application' });
+    registrationMock.confirmRegistration.mockReturnValue(
+      of({ pendingReview: true, mailSent: false })
+    );
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
     setValidPersonalForm(facade);
 
@@ -213,6 +218,61 @@ describe('RegisterFlowFacade', () => {
       '/confirmacion-correo/solicitud-registro'
     );
     expect(snackbarMock.success).not.toHaveBeenCalled();
+  });
+
+  it('should follow pendingReview instead of the document type', async () => {
+    // Un CI con pendingReview termina en la pantalla de solicitud en revision:
+    // la unica fuente de verdad es el backend, no el tipo de documento.
+    mockEvaluation({ requiresPersonCreation: true, flowId: 'flow-new-person' });
+    registrationMock.confirmRegistration.mockReturnValue(
+      of({ pendingReview: true, mailSent: false })
+    );
+    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
+    setValidPersonalForm(facade);
+
+    await facade.continueToPersonalData();
+    facade.submitPersonalData();
+
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith(
+      '/confirmacion-correo/solicitud-registro'
+    );
+    expect(snackbarMock.show).not.toHaveBeenCalled();
+  });
+
+  it('should offer password recovery when the activation email was not sent', async () => {
+    mockEvaluation({ requiresPersonCreation: true, flowId: 'flow-new-person' });
+    registrationMock.confirmRegistration.mockReturnValue(
+      of({ pendingReview: false, mailSent: false })
+    );
+    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
+    setValidPersonalForm(facade);
+
+    await facade.continueToPersonalData();
+    facade.submitPersonalData();
+
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'No pudimos enviarte el correo de activación.',
+        actionLabel: 'Recuperar acceso',
+        variant: 'warning',
+      })
+    );
+  });
+
+  it('should offer password recovery when identity verification sent no email', async () => {
+    mockEvaluation({ requiresVerification: true });
+    registrationMock.verifyExistingPersonIdentity.mockReturnValue(of({ mailSent: false }));
+    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
+    setValidPersonalForm(facade);
+
+    await facade.continueToPersonalData();
+    facade.submitPersonalData();
+
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({ actionLabel: 'Recuperar acceso' })
+    );
   });
 
   it('should reject personal submit when no flow was evaluated', () => {
