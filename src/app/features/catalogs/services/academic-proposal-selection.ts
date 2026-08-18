@@ -62,7 +62,7 @@ export class AcademicProposalSelection {
       )?.hasSeminar === true
   );
   public readonly seminarLabel = computed(() =>
-    this.allowsMultipleSeminars() ? this.terminology().intakeLabel : 'Horario'
+    this.allowsMultipleSeminars() ? this.terminology().intakeLabel : 'Próximo comienzo'
   );
   public readonly seminarErrorText = computed(() =>
     this.allowsMultipleSeminars()
