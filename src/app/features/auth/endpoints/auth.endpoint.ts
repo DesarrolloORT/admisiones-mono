@@ -95,14 +95,27 @@ export interface VerifyIdentityPayload {
   email: string;
 }
 
-/** Stable output of identity verification. */
+/**
+ * Stable output of identity verification.
+ *
+ * No expone `success`: el interceptor de `OperationResult` convierte cualquier
+ * `success: false` en error HTTP, asi que un valor emitido siempre es un exito.
+ * `mailSent: false` es exito parcial: el usuario quedo creado pero el correo de
+ * activacion no salio y hay que ofrecer el recupero de contrasena.
+ */
 export interface VerifyIdentityResult {
-  success: boolean;
+  mailSent: boolean;
 }
 
-/** Stable output of registration. Hides `ObjectOperationResult` from backend. */
+/**
+ * Stable output of registration. Hides `RegistrationFlowResult` from backend.
+ *
+ * `pendingReview` es la unica fuente de verdad de la pantalla final: `true`
+ * significa solicitud de alta esperando revision manual, sin usuario ni correo.
+ */
 export interface RegisterResult {
-  success: boolean;
+  pendingReview: boolean;
+  mailSent: boolean;
 }
 
 /** Input for document evaluation before registration. */
@@ -263,7 +276,7 @@ export class AuthEndpoint {
    * Behind the scenes: POST /registration/confirm-new-person using generated endpoint.
    * `RegisterPayload` is a direct alias of `ConfirmarNuevaPersonaPayload` so
    * no field mapping is needed — the body is passed through as-is.
-   * Response mapped from `ObjectOperationResult` → `RegisterResult`.
+   * Response mapped from `RegistrationFlowResult` → `RegisterResult`.
    */
   public register(payload: RegisterPayload, flowId: string): Observable<RegisterResult> {
     const body = this.toRegisterPersonRequest(payload);
@@ -275,14 +288,20 @@ export class AuthEndpoint {
         withCredentials: true,
         captchaAction: 'ConfirmNewPerson',
       })
-      .pipe(map(() => ({ success: true })));
+      .pipe(
+        map(data => ({
+          pendingReview: data.pendingReview ?? false,
+          mailSent: data.mailSent ?? false,
+        }))
+      );
   }
 
   /**
    * Confirm a pending application request.
    *
    * Behind the scenes: POST /registration/confirm-registration-request using generated endpoint.
-   * Response mapped from `ObjectOperationResult` → `RegisterResult`.
+   * Response mapped from `RegistrationFlowResult` → `RegisterResult`; aca
+   * `pendingReview` llega en `true` y es lo que corta el flujo en la UI.
    */
   public confirmApplicationRequest(
     payload: ConfirmApplicationRequestPayload,
@@ -297,7 +316,12 @@ export class AuthEndpoint {
         withCredentials: true,
         captchaAction: 'ConfirmRegistrationRequest',
       })
-      .pipe(map(() => ({ success: true })));
+      .pipe(
+        map(data => ({
+          pendingReview: data.pendingReview ?? false,
+          mailSent: data.mailSent ?? false,
+        }))
+      );
   }
 
   /**
@@ -370,7 +394,7 @@ export class AuthEndpoint {
    * Verify the identity of a person before completing registration.
    *
    * Behind the scenes: POST /registration/verify-identity using generated endpoint.
-   * Response mapped from `ObjectOperationResult` → `VerifyIdentityResult`.
+   * Response mapped from `RegistrationConfirmationResponse` → `VerifyIdentityResult`.
    */
   public verifyIdentity(
     payload: VerifyIdentityPayload,
@@ -388,7 +412,7 @@ export class AuthEndpoint {
         withCredentials: true,
         captchaAction: 'VerifyIdentity',
       })
-      .pipe(map(() => ({ success: true })));
+      .pipe(map(data => ({ mailSent: data.mailSent ?? false })));
   }
 
   /**

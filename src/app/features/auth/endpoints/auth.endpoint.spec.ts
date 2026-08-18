@@ -171,6 +171,26 @@ describe('AuthEndpoint', () => {
   });
 
   describe('register', () => {
+    it('should surface the envelope message of a terminal evaluation', () => {
+      endpoint
+        .evaluateDocument({ documentType: 'CI', documentNumber: '12345' })
+        .subscribe(result => {
+          expect(result.userExists).toBe(true);
+          expect(result.message).toBe('Ya existe un usuario registrado con este documento.');
+        });
+
+      const req = httpController.expectOne(
+        r => r.url.includes('/registration/evaluate-document') && r.method === 'POST'
+      );
+
+      req.flush({
+        success: true,
+        httpCode: 200,
+        message: 'Ya existe un usuario registrado con este documento.',
+        data: { userAlreadyRegistered: true },
+      });
+    });
+
     it('should map document evaluation with flowId', () => {
       endpoint
         .evaluateDocument({ documentType: 'CI', documentNumber: '12345' })
@@ -224,7 +244,7 @@ describe('AuthEndpoint', () => {
       expect(caught).toBeInstanceOf(TypeError);
     });
 
-    it('should POST to /registration/confirm-new-person and return success', () => {
+    it('should POST to /registration/confirm-new-person and expose the flow result', () => {
       const payload = {
         documentType: 'CI',
         documentNumber: '12345678',
@@ -241,7 +261,7 @@ describe('AuthEndpoint', () => {
       };
 
       endpoint.register(payload, 'flow-new-person').subscribe(result => {
-        expect(result.success).toBe(true);
+        expect(result).toEqual({ pendingReview: false, mailSent: true });
       });
 
       const req = httpController.expectOne(
@@ -271,7 +291,15 @@ describe('AuthEndpoint', () => {
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-person');
       expect(req.request.withCredentials).toBe(true);
 
-      req.flush({ success: true, httpCode: 200, data: null });
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: {
+          message: 'Registro realizado correctamente.',
+          mailSent: true,
+          pendingReview: false,
+        },
+      });
     });
 
     it('should propagate normalized API failures', () => {
@@ -310,7 +338,7 @@ describe('AuthEndpoint', () => {
   });
 
   describe('confirmApplicationRequest', () => {
-    it('should POST to /registration/confirm-registration-request and return success', () => {
+    it('should POST to /registration/confirm-registration-request and expose pendingReview', () => {
       const payload = {
         documentType: 'PS',
         documentNumber: 'AB123456',
@@ -327,7 +355,7 @@ describe('AuthEndpoint', () => {
       };
 
       endpoint.confirmApplicationRequest(payload, 'flow-new-application').subscribe(result => {
-        expect(result.success).toBe(true);
+        expect(result).toEqual({ pendingReview: true, mailSent: false });
       });
 
       const req = httpController.expectOne(
@@ -357,12 +385,20 @@ describe('AuthEndpoint', () => {
       expect(req.request.headers.get(AUTH_FLOW_ID_HEADER)).toBe('flow-new-application');
       expect(req.request.withCredentials).toBe(true);
 
-      req.flush({ success: true, httpCode: 200, data: null });
+      req.flush({
+        success: true,
+        httpCode: 200,
+        data: {
+          message: 'La solicitud de alta quedó registrada.',
+          mailSent: false,
+          pendingReview: true,
+        },
+      });
     });
   });
 
   describe('verifyIdentity', () => {
-    it('should POST to /registration/verify-identity with X-Flow-Id and return success', () => {
+    it('should POST to /registration/verify-identity with X-Flow-Id and expose mailSent', () => {
       const payload = {
         documentType: 'CI',
         documentNumber: '12345678',
@@ -371,7 +407,7 @@ describe('AuthEndpoint', () => {
       };
 
       endpoint.verifyIdentity(payload, 'flow-existing-person').subscribe(result => {
-        expect(result.success).toBe(true);
+        expect(result).toEqual({ mailSent: true });
       });
 
       const req = httpController.expectOne(
@@ -388,7 +424,7 @@ describe('AuthEndpoint', () => {
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(CAPTCHA_ACTION)).toBe('VerifyIdentity');
 
-      req.flush({ success: true, httpCode: 200, data: null });
+      req.flush({ success: true, httpCode: 200, data: { mailSent: true } });
     });
   });
 
