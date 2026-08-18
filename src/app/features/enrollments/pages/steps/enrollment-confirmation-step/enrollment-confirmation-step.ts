@@ -1,18 +1,8 @@
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  ElementRef,
-  inject,
-  Injector,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OrtButtonModule,
   OrtCardModule,
-  OrtDialog,
   OrtIconModule,
   OrtRadioModule,
 } from '@desarrolloort/components';
@@ -30,7 +20,6 @@ import { EnrollmentSeminarsSummary } from './sections/enrollment-seminars-summar
     EnrollmentSeminarsSummary,
     OrtButtonModule,
     OrtCardModule,
-    OrtDialog,
     OrtIconModule,
     OrtRadioModule,
     ReactiveFormsModule,
@@ -43,8 +32,6 @@ import { EnrollmentSeminarsSummary } from './sections/enrollment-seminars-summar
 export class EnrollmentConfirmationStep {
   protected readonly facade = inject(EnrollmentPaymentFacade);
   private readonly breakpointService = inject(BreakpointService);
-  private readonly injector = inject(Injector);
-  private readonly paymentSubmit = viewChild<ElementRef<HTMLButtonElement>>('paymentSubmit');
 
   protected readonly divider = true;
 
@@ -53,18 +40,6 @@ export class EnrollmentConfirmationStep {
 
     return breakpoint.isXSmall || breakpoint.isSmall ? 'vertical' : 'horizontal';
   });
-
-  protected closeConfirmationDialog(): void {
-    this.facade.cancelConfirmation();
-    this.restorePaymentFocus();
-  }
-
-  private restorePaymentFocus(): void {
-    const focusSubmit = () => this.paymentSubmit()?.nativeElement.focus({ preventScroll: true });
-
-    focusSubmit();
-    afterNextRender(focusSubmit, { injector: this.injector });
-  }
 
   protected onFormEnter(event: Event): void {
     if (event.target instanceof HTMLInputElement && event.target.type === 'radio') {
