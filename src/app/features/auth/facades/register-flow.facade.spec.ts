@@ -209,7 +209,9 @@ describe('RegisterFlowFacade', () => {
       })
     );
     expect(facade.isCompleted()).toBe(true);
-    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith(
+      '/confirmacion-correo/solicitud-registro'
+    );
     expect(snackbarMock.success).not.toHaveBeenCalled();
   });
 

@@ -19,6 +19,7 @@ import { AuthIdentityData } from '../models/auth.interface';
 import {
   cleanDocumentNumber,
   getDocumentNumberLabel,
+  isNationalIdDocumentType,
   NATIONAL_ID_DOCUMENT_TYPE,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
@@ -367,8 +368,14 @@ export class RegisterFlowFacade {
   }
 
   private navigateToEmailConfirmation(): void {
+    // Un documento no CI crea una solicitud de alta: no hay cuenta ni correo de
+    // activacion todavia, asi que la pantalla final es la de solicitud en revision.
+    const isNationalId = isNationalIdDocumentType(this.identityForm.controls.documentType.value);
+
     this.isCompleted.set(true);
-    this.router.navigateByUrl('/confirmacion-correo/registro');
+    this.router.navigateByUrl(
+      isNationalId ? '/confirmacion-correo/registro' : '/confirmacion-correo/solicitud-registro'
+    );
   }
 
   private handleDocumentRecognitionError(error: unknown): void {
