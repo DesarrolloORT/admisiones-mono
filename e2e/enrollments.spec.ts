@@ -113,8 +113,11 @@ test.describe('Inscripción inicial', () => {
     });
     expect(interestRequests).toHaveLength(0);
 
-    await expect(page.getByText('Marco legal y tributario', { exact: true })).toBeVisible();
-    await expect(page.getByText('Renta fija y renta variable', { exact: true })).toBeVisible();
+    // El resumen agrupa los seminarios bajo un unico termino y lista el comienzo
+    // y el turno de cada uno; no repite el nombre del seminario.
+    await expect(page.getByText('Seminarios', { exact: true })).toBeVisible();
+    await expect(page.getByText('Marzo 2027 · Matutino', { exact: true })).toBeVisible();
+    await expect(page.getByText('Marzo 2027 · Nocturno', { exact: true })).toBeVisible();
 
     const paymentRequest = waitForPost(page, '/enrollments/start-payment');
     await enrollment.selectPayment('abitab');
@@ -236,7 +239,7 @@ test.describe('Inscripción inicial', () => {
     });
     await expect(
       page.getByText(
-        'Tu inscripción quedó pendiente del pago de la empresa. Se confirmará automáticamente cuando el pago se acredite.'
+        'Tu empresa deberá enviar la solicitud con los datos de la inscripción a sae@ort.edu.uy'
       )
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Ir al panel principal' })).toHaveAttribute(

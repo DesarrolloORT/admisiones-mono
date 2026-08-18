@@ -507,7 +507,16 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
         );
       }
 
-      return fulfillOperation(route, true);
+      const confirmation = registerScenario.confirmation ?? {
+        mailSent: true,
+        pendingReview: false,
+      };
+
+      // verify-identity devuelve `RegistrationConfirmationResponse`, que no
+      // tiene `pendingReview`: la persona ya existia y siempre se crea usuario.
+      return path === '/registration/verify-identity'
+        ? fulfillOperation(route, { mailSent: confirmation.mailSent })
+        : fulfillOperation(route, confirmation);
     }
 
     if (path === '/registration/analyze-attachment') {

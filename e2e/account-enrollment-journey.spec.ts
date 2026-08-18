@@ -11,10 +11,18 @@ const validPassword = 'Ort2027!Cambio';
 const backendDocumentNumber = '1234567-2';
 
 test.describe('Account to enrollment journey', () => {
+  // Recorrido completo (registro, activacion, login e inscripcion): en mobile no
+  // entra en el timeout por defecto.
+  test.describe.configure({ timeout: 60_000 });
+
   test('crea y activa la cuenta, inicia sesión y completa la inscripción @regression', async ({
     page,
   }) => {
-    await mockApi(page, { registerFlow: 'new-person' });
+    // El retardo en Pagar mantiene visible la pantalla "Procesando tu pago".
+    await mockApi(page, {
+      registerFlow: 'new-person',
+      delayMsByPath: { '/enrollments/start-payment': 800 },
+    });
 
     const register = new RegisterPage(page);
     await register.goto();
@@ -44,6 +52,11 @@ test.describe('Account to enrollment journey', () => {
     expect((await passwordRequest).postDataJSON()).toEqual({ newPassword: validPassword });
     await expect(page).toHaveURL(/\/inicio/);
     await expect(page.getByRole('heading', { name: /Hola/ })).toBeVisible();
+
+    // El snackbar de activacion se ancla abajo al centro y pausa su auto-cierre
+    // mientras el puntero esta encima, asi que en mobile tapa el boton primario
+    // del paso siguiente. Se cierra explicitamente.
+    await page.getByRole('button', { name: 'Cerrar notificación' }).click();
 
     const home = new HomePage(page);
     await home.profileMenuButton().click();
@@ -97,7 +110,8 @@ test.describe('Account to enrollment journey', () => {
 
     await enrollment.selectPayment('personal-account');
 
-    await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
+    // El h1 declara role="status" explicito, asi que no expone el rol heading.
+    await expect(page.getByRole('status').filter({ hasText: 'Procesando tu pago' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 });

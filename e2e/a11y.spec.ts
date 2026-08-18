@@ -10,9 +10,9 @@ import { RegisterPage } from './support/pages/register-page';
 import { addAuthenticatedSession } from './support/session';
 
 const publicPages = [
-  { path: '/iniciar-sesion', heading: 'Comenzá tu camino en ORT' },
+  { path: '/iniciar-sesion', heading: 'Tu inscripción empieza aquí' },
   { path: '/registro', heading: 'Crear cuenta' },
-  { path: '/recuperar-acceso', heading: 'Recuperar acceso' },
+  { path: '/recuperar-acceso', heading: 'Recuperar contraseña' },
   { path: '/crear-password?token=a11y-token', heading: 'Creá tu contraseña' },
 ];
 
@@ -22,12 +22,12 @@ const protectedPages = [
   { path: '/inicio/cambiar-contrasena', heading: 'Definí tu nueva contraseña' },
   {
     path: '/inscripciones?escenario=primera-vez',
-    heading: 'Inscripción a carrera',
+    heading: 'Propuesta académica',
   },
 ];
 
 test.beforeEach(async ({ page }) => {
-  // El retardo en Pagar permite observar la pantalla "Estamos procesando el pago".
+  // El retardo en Pagar permite observar la pantalla "Procesando tu pago".
   await mockApi(page, { delayMsByPath: { '/enrollments/start-payment': 800 } });
 });
 

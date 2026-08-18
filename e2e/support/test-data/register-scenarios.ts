@@ -8,12 +8,19 @@ export interface RegisterDocumentEvaluationMock {
   userExists: boolean;
 }
 
+/** Cuerpo de `RegistrationFlowResult` que devuelven los endpoints de confirmacion. */
+export interface RegisterConfirmationMock {
+  mailSent: boolean;
+  pendingReview: boolean;
+}
+
 export interface RegisterScenario {
   kind: RegisterFlowKind;
   documentType: 'CI' | 'PS' | 'DE';
   documentNumber: string;
   flowId: string;
   evaluation: RegisterDocumentEvaluationMock;
+  confirmation?: RegisterConfirmationMock;
   terminalMessage?: string;
 }
 
@@ -30,6 +37,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
       hasExistingApplication: false,
       userExists: false,
     },
+    confirmation: { mailSent: true, pendingReview: false },
   },
   'existing-person': {
     kind: 'existing-person',
@@ -43,6 +51,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
       hasExistingApplication: false,
       userExists: false,
     },
+    confirmation: { mailSent: true, pendingReview: false },
   },
   'new-application': {
     kind: 'new-application',
@@ -56,6 +65,7 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
       hasExistingApplication: false,
       userExists: false,
     },
+    confirmation: { mailSent: false, pendingReview: true },
   },
   'user-exists': {
     kind: 'user-exists',
@@ -71,10 +81,12 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
       userExists: true,
     },
   },
+  // Solo puede darse con documento no CI: una CI con solicitud previa no existe
+  // en el backend (T_SOLICITUD_ALTA solo recibe documentos extranjeros).
   'application-exists': {
     kind: 'application-exists',
-    documentType: 'CI',
-    documentNumber: '12345672',
+    documentType: 'PS',
+    documentNumber: 'PS-654321',
     flowId: 'flow-e2e-application-exists',
     terminalMessage: 'Ya existe una solicitud de alta pendiente para este documento.',
     evaluation: {

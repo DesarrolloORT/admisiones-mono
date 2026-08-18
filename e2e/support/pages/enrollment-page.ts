@@ -48,7 +48,7 @@ export class EnrollmentPage {
     await expect(
       this.page
         .getByRole('heading', {
-          name: /Inscripción a carrera|Información personal|Confirmación|Inscripción en proceso/,
+          name: /Propuesta académica|Información personal|Confirmación|Inscripción en proceso/,
         })
         .first()
     ).toBeVisible();
@@ -290,7 +290,7 @@ export class EnrollmentPage {
     await this.page.keyboard.press('Enter');
 
     await expect(
-      this.page.getByRole('heading', { name: 'Inscripción a carrera', exact: true })
+      this.page.getByRole('heading', { name: 'Propuesta académica', exact: true })
     ).toBeVisible();
     await expect(
       this.page.getByRole('heading', { name: 'Información personal', exact: true })

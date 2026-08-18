@@ -8,7 +8,7 @@ test.describe('Preprod controlled nightly flows @nightly @real', () => {
 
   test('renders the deployed public auth surfaces @nightly @real', async ({ page }) => {
     await page.goto('/iniciar-sesion');
-    await expect(page.getByRole('heading', { name: 'Comenzá tu camino en ORT' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tu inscripción empieza aquí' })).toBeVisible();
 
     await page.goto('/registro');
     await expect(page.getByRole('heading', { name: 'Crear cuenta' })).toBeVisible();
