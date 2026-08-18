@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import {
   RECOVER_ACCESS_EMAIL_CONFIRMATION,
   REGISTER_EMAIL_CONFIRMATION,
+  REGISTER_REQUEST_EMAIL_CONFIRMATION,
   TWO_FACTOR_EMAIL_CONFIRMATION,
 } from './models/email-confirmation';
 import { EmailConfirmation } from './pages/email-confirmation/email-confirmation';
@@ -23,6 +24,11 @@ export const routes: Routes = [
     path: 'confirmacion-correo/registro',
     component: EmailConfirmation,
     data: { confirmation: REGISTER_EMAIL_CONFIRMATION },
+  },
+  {
+    path: 'confirmacion-correo/solicitud-registro',
+    component: EmailConfirmation,
+    data: { confirmation: REGISTER_REQUEST_EMAIL_CONFIRMATION },
   },
   {
     path: 'confirmacion-correo/recuperar-acceso',
