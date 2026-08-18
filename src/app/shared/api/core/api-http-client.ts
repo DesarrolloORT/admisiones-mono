@@ -9,6 +9,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   isOperationResult,
   suppressGlobalErrorContext,
+  UNWRAP_OPERATION_RESULT,
   unwrapOperationResultContext,
 } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
@@ -189,7 +190,11 @@ export class ApiHttpClient {
     }
 
     if (options.unwrapOperationResult === false) {
-      return context;
+      // Se setea el token en false en lugar de omitirlo: el interceptor cae al
+      // config global cuando el token viene vacio, y `FDPComponentsModule` lo
+      // provee en true. Omitirlo desenvolveria la respuesta y `requestWithMessage`
+      // perderia el `message` del envelope.
+      return context.set(UNWRAP_OPERATION_RESULT, false);
     }
 
     return unwrapOperationResultContext(context);
