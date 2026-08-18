@@ -55,8 +55,16 @@ generados ni usar `HttpClient` directamente. Ver
 
 ## Contratos API generados
 
-El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El
-frontend genera localmente dos salidas tecnicas ignoradas por Git:
+El backend mantiene la fuente de verdad del contrato HTTP en Swagger. El repo
+versiona un snapshot de ese contrato en `.api-spec/` (`swagger.json` mas los
+contratos de formulario de `/contracts`) y todo lo generado sale de ahi: local y
+CI producen tipos identicos, y un cambio de backend entra por PR al refrescar el
+snapshot con `npm run api-spec:refresh`, no por sorpresa en el pipeline. El
+refresh lee el origen desde `API_URL` del environment sincronizado, o sea el
+ambiente contra el que estas trabajando; una vez commiteado, ese snapshot es el
+contrato para todos y el ambiente que sincronice CI ya no afecta la generacion.
+
+Desde ese snapshot, el frontend genera dos salidas tecnicas ignoradas por Git:
 
 - `src/app/shared/api/generated/models/`: modelos TypeScript generados por
   `npm run update-api`.
@@ -83,6 +91,7 @@ Acoplamiento esperado:
 
 ```text
 Swagger backend
+  -> npm run api-spec:refresh  (snapshot .api-spec/, versionado y revisado en PR)
   -> npm run update-api
   -> modelos y endpoints generados
   -> endpoint adapters de feature

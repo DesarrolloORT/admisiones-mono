@@ -27,36 +27,44 @@ Este documento no asume que `angular-template` se mantendra como aplicacion prod
 
    Los archivos `src/environments/generated-environment.ts` y `src/web.config` estan ignorados por [`.gitignore`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.gitignore). El cache local vive en `tmp/env/`, tambien ignorado por Git.
 
-3. Actualizar contratos generados si el backend Swagger ya esta disponible:
+3. Generar los contratos desde el snapshot de API versionado:
 
    ```bash
    npm run update-api
    ```
 
-   Este comando ejecuta `update-models` y `update-endpoints`. Ambos leen `API_URL`
-   desde el environment indicado, toman su origen y descargan
-   `/swagger/v1/swagger.json` por defecto. Al terminar, compila la configuracion
-   usada por `ng serve`; si el contrato nuevo rompe la aplicacion, informa los
-   archivos y lineas afectados antes de que se ejecute `npm start`. Si el Swagger
-   no esta disponible, conserva los modelos generados anteriores.
-
-   Si el Swagger vive en otra ruta:
-
-   ```bash
-   npm run update-api -- --swagger-path /swagger/v2/swagger.json
-   ```
+   Este comando ejecuta `update-models`, `update-endpoints` y `update-contracts`
+   leyendo `.api-spec/` (snapshot de `swagger.json` + contratos de formulario
+   versionado en el repo), sin acceso de red al backend. Al terminar, compila la
+   configuracion usada por `ng serve`; si el contrato nuevo rompe la aplicacion,
+   informa los archivos y lineas afectados antes de que se ejecute `npm start`.
 
    Los modelos se escriben en `src/app/shared/api/generated/models/` y los endpoints
    tecnicos en `src/app/shared/api/generated/endpoints/`. Esos archivos son
    locales, estan ignorados por Git y no deben editarse manualmente.
 
-   Para actualizar los endpoints reales disponibles en tu ambiente local:
+4. Refrescar el snapshot cuando el backend cambia el contrato (requiere red interna ORT):
 
    ```bash
+   npm run api-spec:refresh
    npm run update-api
    ```
 
-4. Ajustar la base del repositorio nuevo:
+   `api-spec:refresh` descarga Swagger y `/contracts` desde el origen que resuelve
+   `API_URL` en `src/environments/generated-environment.ts`, o sea el ambiente que
+   tengas sincronizado con `npm run env`. **Verifica cual tenes sincronizado antes
+   de refrescar**: el snapshot que commitees pasa a ser el contrato de todo el
+   equipo y de CI.
+
+   Una vez commiteado, CI genera desde ese mismo snapshot, asi que local y CI
+   compilan contra los mismos tipos y el ambiente que sincronice el pipeline no
+   influye en los contratos.
+
+   El diff de `.api-spec/` se revisa en el PR junto con el codigo que lo consume;
+   asi un cambio de backend nunca rompe CI por sorpresa. Para leer otro origen
+   puntualmente: `npm run api-spec:refresh -- --origin https://otra-api.ort.edu.uy`.
+
+5. Ajustar la base del repositorio nuevo:
    - reemplazar `angular-template` por el slug real del proyecto;
    - revisar dependencias, workflows y scripts que no apliquen;
    - completar README y documentacion especifica del proyecto que nace desde esta plantilla.

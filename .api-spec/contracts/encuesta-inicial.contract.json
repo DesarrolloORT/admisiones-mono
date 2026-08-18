@@ -1,0 +1,458 @@
+{
+  "version": 10,
+  "request": "SaveInitialSurveyRequest",
+  "catalogSource": "catalogs/initial-survey",
+  "sections": [
+    {
+      "key": "education",
+      "label": "Educación",
+      "fields": [
+        "lastSecondaryYearLocationId",
+        "secondaryInstitutionId",
+        "secondaryInstitutionName",
+        "currentlyInSecondary",
+        "highSchoolYear",
+        "highSchoolTrackId",
+        "repeatsHighSchoolYear",
+        "highSchoolYearRepeatCount",
+        "previousHigherEducationId",
+        "higherEducationUniversityIds",
+        "higherEducationUniversityOthers",
+        "fatherEducationLevelId",
+        "fatherIsOrtGraduate",
+        "motherEducationLevelId",
+        "motherIsOrtGraduate"
+      ]
+    },
+    {
+      "key": "academicDecision",
+      "label": "Decisión académica",
+      "fields": [
+        "careerDecisionYearId",
+        "ortDecisionYearId",
+        "decisionLevelId",
+        "researchedOtherUniversities",
+        "consideredUniversityIds",
+        "consideredUniversityOthers",
+        "otherUniversitiesInfoLine1",
+        "otherUniversitiesInfoLine2",
+        "decisionSupportId",
+        "ortChoiceReasonIds"
+      ]
+    },
+    {
+      "key": "ortExperience",
+      "label": "Experiencia con ORT",
+      "fields": [
+        "hadOrtAdvisory",
+        "ortAdvisoryRatingId",
+        "visitedOrtWebsite",
+        "ortWebsiteRatingId",
+        "visitedOrtFacilities",
+        "ortFacilitiesRatingId",
+        "recallsOrtAdvertising",
+        "ortAdvertisingIds"
+      ]
+    }
+  ],
+  "backendResolvedFields": [
+    "idComienzo",
+    "tipoDocumento",
+    "documento",
+    "codigoPersona",
+    "idTurno",
+    "tipoInscripcion",
+    "claveEncuesta",
+    "usuarioIngreso",
+    "fechaIngreso",
+    "estadoEncuesta"
+  ],
+  "constants": {
+    "tipoInscripcion": "SOLO_ENCUESTA_INI"
+  },
+  "fields": {
+    "degreeProgramId": {
+      "type": "number",
+      "catalogEndpoint": "catalogs/degree-programs",
+      "valueField": "idProducto",
+      "labelField": "nombreProducto",
+      "levelField": "idNivelProducto",
+      "requiredForDefinitivo": true
+    },
+    "admissionProcessId": {
+      "type": "number",
+      "catalogEndpoint": "catalogs/intakes",
+      "valueField": "idProceso",
+      "labelField": "nombreProceso",
+      "dependsOn": "degreeProgramId",
+      "requiredForDefinitivo": true
+    },
+    "lastSecondaryYearLocationId": {
+      "section": "education",
+      "type": "number",
+      "allowedOptions": [
+        {
+          "value": 1,
+          "label": "Uruguay"
+        },
+        {
+          "value": 2,
+          "label": "En el exterior"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "secondaryInstitutionId": {
+      "section": "education",
+      "type": "number",
+      "catalogEndpoint": "catalogs/institutions",
+      "valueField": "codigoEmpresa",
+      "labelField": "nombre",
+      "requiredWhen": "ubicacionUltimoAnioSecundariaId == 1",
+      "clearWhen": "ubicacionUltimoAnioSecundariaId == 2"
+    },
+    "secondaryInstitutionName": {
+      "section": "education",
+      "type": "string",
+      "requiredWhen": "ubicacionUltimoAnioSecundariaId == 2",
+      "clearWhen": "ubicacionUltimoAnioSecundariaId == 1"
+    },
+    "highSchoolYear": {
+      "section": "education",
+      "type": "number",
+      "catalogPath": "education.highSchoolYears",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "cursaSecundariaActualmente == true",
+      "clearWhen": "cursaSecundariaActualmente == false",
+      "disallowedWhen": [
+        {
+          "code": "INS_EI_64",
+          "condition": "selectedCarrera.nivel == 1",
+          "values": [
+            4,
+            10
+          ],
+          "message": "Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año."
+        }
+      ]
+    },
+    "currentlyInSecondary": {
+      "section": "education",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "highSchoolTrackId": {
+      "section": "education",
+      "type": "number",
+      "catalogPath": "education.highSchoolYears[].tracks",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "cursaSecundariaActualmente == true && selectedAnioBachillerato.tracks.length > 0",
+      "clearWhen": "cursaSecundariaActualmente == false"
+    },
+    "repeatsHighSchoolYear": {
+      "section": "education",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "highSchoolYearRepeatCount": {
+      "section": "education",
+      "type": "number",
+      "requiredWhen": "recursaAnioBachillerato == true",
+      "clearWhen": "recursaAnioBachillerato == false",
+      "min": 1
+    },
+    "previousHigherEducationId": {
+      "section": "education",
+      "type": "number",
+      "allowedOptions": [
+        {
+          "value": 1,
+          "label": "Sí, en Uruguay"
+        },
+        {
+          "value": 2,
+          "label": "Sí, en el exterior"
+        },
+        {
+          "value": 3,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "higherEducationUniversityIds": {
+      "section": "education",
+      "type": "array",
+      "catalogPath": "education.universities",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "estadoEducacionSuperiorPreviaId == 1",
+      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]",
+      "minItems": 1
+    },
+    "higherEducationUniversityOthers": {
+      "section": "education",
+      "type": "array",
+      "itemType": "string",
+      "requiredWhen": "universidadEducacionSuperiorIds contains 0",
+      "clearWhen": "estadoEducacionSuperiorPreviaId in [2, 3]"
+    },
+    "fatherEducationLevelId": {
+      "section": "education",
+      "type": "number",
+      "catalogPath": "education.educationLevels",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "fatherIsOrtGraduate": {
+      "section": "education",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredWhen": "nivelFormacionPadreTutorId in [5, 6]",
+      "clearWhen": "nivelFormacionPadreTutorId not in [5, 6]"
+    },
+    "motherEducationLevelId": {
+      "section": "education",
+      "type": "number",
+      "catalogPath": "education.educationLevels",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "motherIsOrtGraduate": {
+      "section": "education",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredWhen": "nivelFormacionMadreTutorId in [5, 6]",
+      "clearWhen": "nivelFormacionMadreTutorId not in [5, 6]"
+    },
+    "careerDecisionYearId": {
+      "section": "academicDecision",
+      "type": "number",
+      "catalogPath": "academicDecision.upperSecondaryYears",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "ortDecisionYearId": {
+      "section": "academicDecision",
+      "type": "number",
+      "catalogPath": "academicDecision.upperSecondaryYears",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "decisionLevelId": {
+      "section": "academicDecision",
+      "type": "number",
+      "allowedOptions": [
+        {
+          "value": 1,
+          "label": "Decidido/a"
+        },
+        {
+          "value": 2,
+          "label": "Con dudas"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "researchedOtherUniversities": {
+      "section": "academicDecision",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí, lo hice"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "consideredUniversityIds": {
+      "section": "academicDecision",
+      "type": "array",
+      "catalogPath": "academicDecision.universities",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "seInformoEnOtrasUniversidades == true",
+      "clearWhen": "seInformoEnOtrasUniversidades == false",
+      "minItems": 1
+    },
+    "consideredUniversityOthers": {
+      "section": "academicDecision",
+      "type": "array",
+      "itemType": "string",
+      "requiredWhen": "universidadConsideradaIds contains 0",
+      "clearWhen": "seInformoEnOtrasUniversidades == false"
+    },
+    "otherUniversitiesInfoLine1": {
+      "section": "academicDecision",
+      "type": "string",
+      "requiredForDefinitivo": false
+    },
+    "otherUniversitiesInfoLine2": {
+      "section": "academicDecision",
+      "type": "string",
+      "requiredForDefinitivo": false
+    },
+    "decisionSupportId": {
+      "section": "academicDecision",
+      "type": "number",
+      "catalogPath": "academicDecision.decisionSupports",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredForDefinitivo": true
+    },
+    "ortChoiceReasonIds": {
+      "section": "academicDecision",
+      "type": "array",
+      "catalogPath": "academicDecision.ortChoiceReasons",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredForDefinitivo": true,
+      "minItems": 1
+    },
+    "hadOrtAdvisory": {
+      "section": "ortExperience",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí, tuve"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "ortAdvisoryRatingId": {
+      "section": "ortExperience",
+      "type": "number",
+      "catalogPath": "ortExperience.ratings",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "tuvoAsesoramientoOrt == true",
+      "clearWhen": "tuvoAsesoramientoOrt == false"
+    },
+    "visitedOrtWebsite": {
+      "section": "ortExperience",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí, lo visité"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "ortWebsiteRatingId": {
+      "section": "ortExperience",
+      "type": "number",
+      "catalogPath": "ortExperience.ratings",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "visitoSitioWebOrt == true",
+      "clearWhen": "visitoSitioWebOrt == false"
+    },
+    "visitedOrtFacilities": {
+      "section": "ortExperience",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí, lo hice"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "ortFacilitiesRatingId": {
+      "section": "ortExperience",
+      "type": "number",
+      "catalogPath": "ortExperience.ratings",
+      "valueField": "value",
+      "labelField": "label",
+      "requiredWhen": "visitoInstalacionesOrt == true",
+      "clearWhen": "visitoInstalacionesOrt == false"
+    },
+    "recallsOrtAdvertising": {
+      "section": "ortExperience",
+      "type": "boolean",
+      "allowedOptions": [
+        {
+          "value": true,
+          "label": "Sí"
+        },
+        {
+          "value": false,
+          "label": "No recuerdo"
+        }
+      ],
+      "requiredForDefinitivo": true
+    },
+    "ortAdvertisingIds": {
+      "section": "ortExperience",
+      "type": "array",
+      "catalogPath": "ortExperience.ortAdvertisements",
+      "itemValueField": "value",
+      "itemLabelField": "label",
+      "requiredWhen": "recuerdaPublicidadOrt == true",
+      "clearWhen": "recuerdaPublicidadOrt == false",
+      "minItems": 1
+    }
+  }
+}

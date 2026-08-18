@@ -3,6 +3,9 @@
 # Environment variables
 src/environments/environment.generated.ts
 
+# API spec snapshot (generado por npm run api-spec:refresh)
+/.api-spec
+
 # Compiled output
 /dist
 /tmp
