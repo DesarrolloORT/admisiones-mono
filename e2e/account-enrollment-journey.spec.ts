@@ -96,7 +96,6 @@ test.describe('Account to enrollment journey', () => {
     });
 
     await enrollment.selectPayment('personal-account');
-    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: 'Estamos procesando el pago' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();

@@ -84,12 +84,29 @@ export class RegisterPage {
     await this.page.getByRole('button', { name: /^(Crear cuenta|Confirmar)$/ }).click();
   }
 
-  public async expectCreatedAccount(): Promise<void> {
-    await this.expectEmailConfirmation();
+  public async expectCreatedAccount(
+    documentType: RegisterScenario['documentType'] = 'CI'
+  ): Promise<void> {
+    if (documentType === 'CI') {
+      await this.expectEmailConfirmation();
+      return;
+    }
+
+    await this.expectPendingRequest();
   }
 
   public async expectVerifiedIdentity(): Promise<void> {
     await this.expectEmailConfirmation();
+  }
+
+  private async expectPendingRequest(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/confirmacion-correo\/solicitud-registro/);
+    await expect(this.page.getByRole('heading', { name: 'Procesando tu solicitud' })).toBeVisible();
+    await expect(
+      this.page.getByText(
+        'Recibimos tu solicitud de creación de cuenta. Estamos validando tus datos.'
+      )
+    ).toBeVisible();
   }
 
   private async expectEmailConfirmation(): Promise<void> {

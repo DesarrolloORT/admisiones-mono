@@ -64,13 +64,14 @@ test.describe('Backend observability probes', () => {
     const testRunId = await prepareTelemetry(page, testInfo, 'real-registration');
     const requests = observeAdmisionesApiRequests(page);
     const register = new RegisterPage(page);
+    const scenario = realBackendScenario(testRunId);
 
     await register.goto();
-    await register.fillIdentity(realBackendScenario(testRunId));
+    await register.fillIdentity(scenario);
     await register.continueFromIdentity();
     await register.fillFullPersonalData(realBackendPersonalData(testRunId));
     await register.continueFromPersonalData();
-    await register.expectCreatedAccount();
+    await register.expectCreatedAccount(scenario.documentType);
 
     const observed = relevantRegistrationRequests(requests);
 
@@ -168,7 +169,7 @@ async function completeMockedRegistration(
   }
 
   await register.continueFromPersonalData();
-  await register.expectCreatedAccount();
+  await register.expectCreatedAccount(scenario.documentType);
 }
 
 function relevantRegistrationRequests(requests: ObservedApiRequest[]): ObservedApiRequest[] {

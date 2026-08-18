@@ -38,7 +38,7 @@ test.describe('Registration flow guardrails', () => {
     await register.continueFromIdentity();
     await register.fillFullPersonalData();
     await register.continueFromPersonalData();
-    await register.expectCreatedAccount();
+    await register.expectCreatedAccount(REGISTER_SCENARIOS['new-application'].documentType);
   });
 
   for (const flow of ['user-exists', 'application-exists'] as const) {

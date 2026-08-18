@@ -192,12 +192,6 @@ export class EnrollmentPage {
   public async selectPayment(method: PaymentMethod): Promise<void> {
     await this.chooseRadio('paymentMethod', paymentLabels[method]);
     await this.pay();
-
-    await expect(this.page.getByRole('dialog', { name: 'Confirmar inscripción' })).toBeVisible();
-  }
-
-  public async confirmPayment(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Confirmar', exact: true }).click();
   }
 
   public async completeInitialEnrollmentWithKeyboard(): Promise<void> {
@@ -280,11 +274,6 @@ export class EnrollmentPage {
     await this.expectMainFocus();
     await this.chooseRadioWithKeyboard('paymentMethod', paymentLabels['personal-account']);
     await this.payWithKeyboard();
-
-    const confirmButton = this.page.getByRole('button', { name: 'Confirmar', exact: true });
-    await this.tabTo(confirmButton);
-    await expect(confirmButton).toBeFocused();
-    await this.page.keyboard.press('Enter');
   }
 
   public async expectEnterOnFocusedRadioDoesNotAdvance(
@@ -343,7 +332,7 @@ export class EnrollmentPage {
     await this.page.keyboard.press('Enter');
   }
 
-  public paymentSubmitButton(): Locator {
+  private paymentSubmitButton(): Locator {
     return this.page.locator('.enrollment-payment-submit');
   }
 

@@ -177,9 +177,7 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(trigger).toBeFocused();
     await expect(trigger).toContainText('Licenciatura en Diseño Gráfico');
   });
-  test('keeps the enrollment survey, payment and confirmation dialog accessible @a11y', async ({
-    page,
-  }) => {
+  test('keeps the enrollment survey and payment screens accessible @a11y', async ({ page }) => {
     await addAuthenticatedSession(page);
 
     const enrollment = new EnrollmentPage(page);
@@ -202,17 +200,8 @@ test.describe('Keyboard and form accessibility @a11y', () => {
 
     await enrollment.selectPayment('personal-account');
 
-    const dialog = page.getByRole('dialog', { name: 'Confirmar inscripción' });
-    await expect(dialog).toBeVisible();
-    await expect
-      .poll(() => dialog.evaluate(element => element.contains(element.ownerDocument.activeElement)))
-      .toBe(true);
+    await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
     await expectNoAxeViolations(page);
-
-    await page.keyboard.press('Escape');
-
-    await expect(dialog).toBeHidden();
-    await expect(enrollment.paymentSubmitButton()).toBeVisible();
   });
 
   test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({

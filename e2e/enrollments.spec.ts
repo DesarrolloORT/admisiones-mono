@@ -118,7 +118,7 @@ test.describe('Inscripción inicial', () => {
 
     const paymentRequest = waitForPost(page, '/enrollments/start-payment');
     await enrollment.selectPayment('abitab');
-    await enrollment.confirmPayment();
+
     expect((await paymentRequest).postDataJSON()).toEqual({
       enrollmentIds: [7010, 7011],
       paymentType: 'ABITAB',
@@ -172,7 +172,7 @@ test.describe('Inscripción inicial', () => {
       page.getByRole('heading', { name: 'Confirmación', exact: true, level: 2 })
     ).toBeVisible();
     await enrollment.selectPayment('personal-account');
-    await enrollment.confirmPayment();
+
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 
@@ -272,7 +272,6 @@ test.describe('Inscripción inicial', () => {
     });
 
     await enrollment.selectPayment('personal-account');
-    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
@@ -313,7 +312,6 @@ test.describe('Inscripción inicial', () => {
     });
 
     await enrollment.selectPayment('personal-account');
-    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
@@ -337,7 +335,6 @@ test.describe('Inscripción inicial', () => {
     await surveyRequest;
     await preEnrollmentRequest;
     await enrollment.selectPayment('paganza');
-    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
     await expect(page.getByText(/Ingresá a Paganza y realizá un nuevo pago/)).toBeVisible();
@@ -366,7 +363,6 @@ test.describe('Inscripción inicial', () => {
     await enrollment.fillIdentity();
     await enrollment.acceptRegulation();
     await enrollment.selectPayment('geopay');
-    await enrollment.confirmPayment();
 
     await expect(page.getByRole('heading', { name: 'Inscripción en proceso' })).toBeVisible();
   });
