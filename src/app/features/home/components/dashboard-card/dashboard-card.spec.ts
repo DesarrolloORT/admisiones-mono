@@ -1,35 +1,36 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { MiInscripcion } from '../../models/mi-inscripcion';
+import { EnrollmentSummary } from '../../models/enrollment-summary';
 import { DashboardCard } from './dashboard-card';
 
 describe('DashboardCard', () => {
-  it('passes product and process identifiers to the career action', async () => {
+  it('passes product and process identifiers to the degreeProgram action', async () => {
     TestBed.configureTestingModule({
       imports: [DashboardCard],
       providers: [provideRouter([])],
     });
     const fixture = TestBed.createComponent(DashboardCard);
-    fixture.componentRef.setInput('inscripcion', {
-      idInscripto: 100,
-      idOfertas: [300],
-      idProducto: 20,
-      idProceso: 200,
-      idComienzo: 2,
-      idTurno: 3,
-      nombreProducto: 'Sistemas',
-      nombreComienzo: 'Marzo 2027',
-      nombreTurno: 'Noche',
-      estado: 'Confirmada',
-      fechaVencimientoPago: null,
-      seminarios: [],
+    fixture.componentRef.setInput('enrollment', {
+      enrollmentId: 100,
+      offeringIds: [300],
+      productId: 20,
+      admissionProcessId: 200,
+      productLevelId: 1,
+      intakeId: 2,
+      shiftId: 3,
+      degreeProgramName: 'Sistemas',
+      intakeName: 'Marzo 2027',
+      shiftName: 'Noche',
+      status: 'Confirmada',
+      paymentDueDate: null,
+      seminars: [],
     });
 
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
-      '/inscripciones?idProducto=20&idProceso=200'
+      '/inscripciones?idProducto=20&idProceso=200&estado=Confirmada&nivel=1'
     );
   });
 
@@ -39,7 +40,7 @@ describe('DashboardCard', () => {
       providers: [provideRouter([])],
     });
     const fixture = TestBed.createComponent(DashboardCard);
-    fixture.componentRef.setInput('inscripcion', buildInscripcion({ seminarios: [] }));
+    fixture.componentRef.setInput('enrollment', buildEnrollment({ seminars: [] }));
 
     await fixture.whenStable();
 
@@ -54,9 +55,9 @@ describe('DashboardCard', () => {
     });
     const fixture = TestBed.createComponent(DashboardCard);
     fixture.componentRef.setInput(
-      'inscripcion',
-      buildInscripcion({
-        seminarios: [buildSeminario({ idInscripto: 1, descripcionOferta: 'Seminario A' })],
+      'enrollment',
+      buildEnrollment({
+        seminars: [buildSeminar({ enrollmentId: 1, offeringDescription: 'Seminario A' })],
       })
     );
 
@@ -74,11 +75,11 @@ describe('DashboardCard', () => {
     });
     const fixture = TestBed.createComponent(DashboardCard);
     fixture.componentRef.setInput(
-      'inscripcion',
-      buildInscripcion({
-        seminarios: [
-          buildSeminario({ idInscripto: 1, descripcionOferta: 'Seminario A' }),
-          buildSeminario({ idInscripto: 2, descripcionOferta: 'Seminario B' }),
+      'enrollment',
+      buildEnrollment({
+        seminars: [
+          buildSeminar({ enrollmentId: 1, offeringDescription: 'Seminario A' }),
+          buildSeminar({ enrollmentId: 2, offeringDescription: 'Seminario B' }),
         ],
       })
     );
@@ -90,39 +91,40 @@ describe('DashboardCard', () => {
     expect(text).toContain('Anotado a 2 seminarios');
     expect(text).not.toContain('Comienzo');
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe(
-      '/inscripciones?idProducto=20&idProceso=200'
+      '/inscripciones?idProducto=20&idProceso=200&estado=Confirmada&nivel=1'
     );
   });
 
-  function buildInscripcion(overrides: Partial<MiInscripcion>): MiInscripcion {
+  function buildEnrollment(overrides: Partial<EnrollmentSummary>): EnrollmentSummary {
     return {
-      idInscripto: 100,
-      idOfertas: [300],
-      idProducto: 20,
-      idProceso: 200,
-      idComienzo: 2,
-      idTurno: 3,
-      nombreProducto: 'Analista Programador',
-      nombreComienzo: 'Marzo 2027',
-      nombreTurno: 'Noche',
-      estado: 'Confirmada',
-      fechaVencimientoPago: null,
-      seminarios: [],
+      enrollmentId: 100,
+      offeringIds: [300],
+      productId: 20,
+      admissionProcessId: 200,
+      productLevelId: 1,
+      intakeId: 2,
+      shiftId: 3,
+      degreeProgramName: 'Analista Programador',
+      intakeName: 'Marzo 2027',
+      shiftName: 'Noche',
+      status: 'Confirmada',
+      paymentDueDate: null,
+      seminars: [],
       ...overrides,
     };
   }
 
-  function buildSeminario(
-    overrides: Partial<MiInscripcion['seminarios'][number]>
-  ): MiInscripcion['seminarios'][number] {
+  function buildSeminar(
+    overrides: Partial<EnrollmentSummary['seminars'][number]>
+  ): EnrollmentSummary['seminars'][number] {
     return {
-      idInscripto: 1,
-      idOferta: 10,
-      descripcionOferta: 'Seminario A',
-      idComienzo: 2,
-      idTurno: 3,
-      nombreComienzo: 'Marzo 2027',
-      nombreTurno: 'Noche',
+      enrollmentId: 1,
+      offeringId: 10,
+      offeringDescription: 'Seminario A',
+      intakeId: 2,
+      shiftId: 3,
+      intakeName: 'Marzo 2027',
+      shiftName: 'Noche',
       ...overrides,
     };
   }

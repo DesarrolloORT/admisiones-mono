@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
+import { CanMatchFn, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 
 import { AuthSessionService } from '../../features/auth/services/auth-session';
@@ -15,5 +15,4 @@ function checkAuthenticated() {
     );
 }
 
-export const authGuard: CanActivateFn = () => checkAuthenticated();
 export const authMatchGuard: CanMatchFn = () => checkAuthenticated();

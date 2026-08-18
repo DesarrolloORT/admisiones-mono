@@ -5,14 +5,8 @@ on:
     types: [published]
 
 jobs:
-  fetch_api_spec:
-    name: Fetch API spec (internal network)
-    uses: ./.github/workflows/fetch-api-spec.yml
-    secrets: inherit
-
   prepare_api:
     name: Prepare API contracts
-    needs: fetch_api_spec
     uses: ./.github/workflows/prepare-api-contracts.yml
     with:
       environment: prod

@@ -3,11 +3,11 @@ import { LocationValue } from './location-value';
 describe('LocationValue', () => {
   it('should represent nullable country, state and city ids', () => {
     const value: LocationValue = {
-      codigoPais: null,
-      codigoEstado: null,
-      codigoCiudad: null,
+      countryCode: null,
+      stateCode: null,
+      cityCode: null,
     };
 
-    expect(value.codigoPais).toBeNull();
+    expect(value.countryCode).toBeNull();
   });
 });

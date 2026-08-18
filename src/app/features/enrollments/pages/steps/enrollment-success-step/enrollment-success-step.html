@@ -1,0 +1,129 @@
+<section
+  aria-labelledby="enrollment-success-title"
+  class="enrollment-screen enrollment-screen--success">
+  <header aria-live="polite" class="enrollment-success-heading">
+    <ort-status-icon aria-hidden="true" purpose="success" size="xl" type="gradient" />
+    <h2 id="enrollment-success-title">¡Confirmamos tu inscripción!</h2>
+    <p>
+      Podrás consultar esta información en cualquier momento desde "Mis carreras" en el panel
+      principal.
+    </p>
+  </header>
+
+  @if (facade.studentNumber(); as studentNumber) {
+  <p class="enrollment-alert enrollment-alert--info">
+    <ort-icon aria-hidden="true">info</ort-icon>
+    <span>
+      <strong>Tu número de estudiante es {{ studentNumber }}</strong>
+      Lo utilizarás a lo largo de tu carrera.
+    </span>
+  </p>
+  } @if (facade.coordinators().length > 0) {
+  <ort-card aria-labelledby="coordinators-title" role="region">
+    <ort-card-content>
+      <h3 id="coordinators-title">Coordinadores</h3>
+      <p>Tus contactos principales durante el desarrollo de tus estudios en ORT serán:</p>
+      <div class="enrollment-contact-list">
+        @for (coordinator of facade.coordinators(); track coordinator.email) {
+        <article class="enrollment-contact">
+          <span aria-hidden="true" class="enrollment-contact__avatar">
+            <ort-icon filled>person</ort-icon>
+          </span>
+          <div>
+            <h3>{{ coordinator.role }}</h3>
+            <p>{{ coordinator.name }}</p>
+            <a [href]="'mailto:' + coordinator.email">{{ coordinator.email }}</a>
+          </div>
+        </article>
+        }
+      </div>
+    </ort-card-content>
+  </ort-card>
+  }
+
+  <ort-card aria-label="Inscripción" role="region">
+    <ort-card-content>
+      <h3 id="degree-program-summary-title">{{ facade.summaryItems()[0].value }}</h3>
+      <dl class="enrollment-summary-list">
+        @for (item of facade.summaryItems().slice(1); track item.label) {
+        <div class="enrollment-summary-list__item">
+          <dt>
+            <ort-icon aria-hidden="true">{{ item.icon }}</ort-icon>
+            <span>{{ item.label }}</span>
+          </dt>
+          <dd>{{ item.value }}</dd>
+        </div>
+        }
+      </dl>
+
+      @if (facade.visibleSubjects().length > 0) {
+      <h4 id="degree-program-subject-list-title">
+        Listado de materias a cursar ({{ facade.visibleSubjects().length }})
+      </h4>
+      <ul
+        aria-labelledby="degree-program-subject-list-title"
+        class="enrollment-subject-list"
+        id="degree-program-subject-list">
+        @for (subject of facade.visibleSubjects(); track subject) {
+        <li>
+          <ort-icon aria-hidden="true">chevron_right</ort-icon>
+          {{ subject }}
+        </li>
+        }
+      </ul>
+      @if (facade.canToggleSubjects()) {
+      <button
+        aria-controls="degree-program-subject-list"
+        ort-tonal-button
+        type="button"
+        [attr.aria-expanded]="facade.showAllSubjects()"
+        (click)="facade.toggleSubjects()">
+        {{ facade.subjectsToggleLabel() }}
+      </button>
+      } }
+    </ort-card-content>
+  </ort-card>
+
+  <ort-card aria-label="Cuenta SOY Santander" role="region">
+    <ort-card-content class="enrollment-santander-content">
+      <ort-icon
+        aria-hidden="true"
+        size="xl"
+        type="svg"
+        [svgContent]="getBankSvg('SANTANDER_FULL')" />
+      <span class="sr-only">Santander Cuenta SOY</span>
+      <p>
+        Por convenio entre ORT y Banco Santander, nuestros estudiantes pueden acceder a una cuenta
+        bancaria muy fácilmente.
+      </p>
+      <a
+        class="enrollment-santander-cta"
+        ort-secondary-button
+        rel="noopener noreferrer"
+        target="_blank"
+        [href]="facade.santanderAccountUrl">
+        Quiero mi cuenta SOY
+      </a>
+    </ort-card-content>
+  </ort-card>
+
+  <ort-card aria-labelledby="student-services-title" role="region">
+    <ort-card-content class="enrollment-services">
+      <h3 id="student-services-title">Servicios para estudiantes</h3>
+      <ul aria-labelledby="student-services-title" class="enrollment-services__links">
+        @for (service of facade.studentServices; track service.label) {
+        <li>
+          <a ort-secondary-button rel="noopener noreferrer" target="_blank" [href]="service.url">
+            <ort-icon aria-hidden="true">{{ service.icon }}</ort-icon>
+            {{ service.label }}
+          </a>
+        </li>
+        }
+      </ul>
+    </ort-card-content>
+  </ort-card>
+
+  <footer class="enrollment-footer">
+    <a ort-primary-button routerLink="/inicio">Ir al panel principal</a>
+  </footer>
+</section>

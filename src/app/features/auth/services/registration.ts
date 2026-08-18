@@ -37,8 +37,8 @@ export class RegistrationService {
 
   public evaluateDocument(identity: AuthIdentityData): Observable<EvaluateDocumentResult> {
     return this.endpoint.evaluateDocument({
-      tipoDocumento: identity.documentType,
-      documento: formatDocumentForBackend(identity.documentType, identity.documentNumber),
+      documentType: identity.documentType,
+      documentNumber: formatDocumentForBackend(identity.documentType, identity.documentNumber),
     });
   }
 

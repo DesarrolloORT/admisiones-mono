@@ -13,6 +13,7 @@ sourcePaths:
   - src/app/features/auth/services/document-recognition.ts
   - src/app/features/auth/services/document-prefill.ts
   - src/app/features/auth/endpoints/auth.endpoint.ts
+  - src/app/features/auth/models/email-confirmation.ts
   - src/app/features/auth/models/register-flow.ts
   - src/app/features/auth/models/register-step.ts
 ---
@@ -121,13 +122,13 @@ activación ni crea una cuenta.
 La UI no consume directamente los flags del servidor. `resolveRegisterFlow(...)`
 los traduce a un `RegisterFlowKind` estable y aplica esta prioridad:
 
-| Prioridad | Respuesta backend               | Flujo frontend       | Resultado                                 |
-| --------- | ------------------------------- | -------------------- | ----------------------------------------- |
-| 1         | `usuarioExistente`              | `user-exists`        | Informar y ofrecer login; no continúa     |
-| 2         | `solicitudAltaExistente`        | `application-exists` | Informar solicitud pendiente; no continúa |
-| 3         | CI + `requiereVerificacion`     | `existing-person`    | Pedir apellido y email                    |
-| 4         | CI + `requiereAltaPersona`      | `new-person`         | Pedir datos personales completos          |
-| 5         | No CI + `requiereAltaSolicitud` | `new-application`    | Crear solicitud de alta                   |
+| Prioridad | Respuesta backend                     | Flujo frontend       | Resultado                                 |
+| --------- | ------------------------------------- | -------------------- | ----------------------------------------- |
+| 1         | `userExists`                          | `user-exists`        | Informar y ofrecer login; no continúa     |
+| 2         | `hasExistingApplication`              | `application-exists` | Informar solicitud pendiente; no continúa |
+| 3         | CI + `requiresVerification`           | `existing-person`    | Pedir apellido y email                    |
+| 4         | CI + `requiresPersonCreation`         | `new-person`         | Pedir datos personales completos          |
+| 5         | No CI + `requiresApplicationCreation` | `new-application`    | Crear solicitud de alta                   |
 
 Una combinación desconocida devuelve `null`: la fachada muestra un error y no
 avanza.
@@ -135,7 +136,7 @@ avanza.
 ## Sesiones y activación
 
 Una evaluación exitosa crea una sesión Redis con estado `evaluado` siempre que
-`usuarioExistente` sea falso. Esto incluye `application-exists`, aunque el
+`userExists` sea falso. Esto incluye `application-exists`, aunque el
 frontend no usa ese `flowId` porque el flujo es terminal.
 
 | Dato                      | Duración predeterminada | Uso                                                                                                  |
@@ -179,6 +180,28 @@ como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste 
 formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son
 informativos y el servidor los recalcula o ignora.
 
+El mapeo del teléfono es único para registro y para la edición de datos
+personales, y vive en `src/app/shared/forms/phone.ts`:
+
+- `toBackendPhone` arma el `primaryPhone` del request.
+- `toPhoneValidationValue` arma el body de `POST /person/validate-phone-number`,
+  resolviendo el prefijo del país a partir del `iso2`.
+- `toPhoneInputValue` reconstruye el valor de `ort-phone-input` a partir de lo
+  almacenado. `GET /person/details` devuelve `primaryPhone` como objeto: cuando
+  `isValid` es `true` el servidor ya lo desarmó y se usan `nationalNumber` e
+  `iso2` tal cual. Cuando es `false` el número quedó sin resolver —dato previo a
+  la migración o una línea fija— y llega crudo, sin país: ahí se reprocesa el
+  texto asumiendo `UY` si no viene en internacional (`+` o `00`), descartando el
+  `0` de salida nacional. Un número internacional cuyo prefijo no se reconoce
+  **no** se re-etiqueta: se envía tal cual con `iso2` nulo, que el contrato acepta.
+
+Como ese default por país es una suposición, el formulario de datos personales
+revalida el teléfono contra el servidor apenas lo carga y marca el campo en error
+si lo rechaza, en lugar de persistir un número extranjero como uruguayo.
+Por el mismo motivo, registro y edición esperan a que termine la validación
+asíncrona antes de enviar: mientras está pendiente el formulario no es `invalid`
+y el envío se saltearía el chequeo del número.
+
 `EvaluarDocumento`, `VerificarIdentidad`, `AnalizarAdjunto`,
 `ConfirmarNuevaPersona` y `ConfirmarSolicitudAlta` son públicos y están
 protegidos por captcha. La sesión, el captcha y la cookie de activación son
@@ -190,18 +213,46 @@ controles independientes.
 | -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `existing-person`    | `POST /registration/verify-identity`              | Crea usuario LDAP, registra admisión y envía activación. `CompletarPassword` establece la contraseña.               |
 | `new-person`         | `POST /registration/confirm-new-person`           | Guarda la persona pendiente en Redis y envía activación. `CompletarPassword` crea persona, usuario LDAP y admisión. |
-| `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña.                                                      |
+| `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña. La UI muestra “Procesando tu solicitud”.             |
 | `user-exists`        | Ninguno                                           | Ofrece iniciar sesión.                                                                                              |
-| `application-exists` | Ninguno                                           | Informa la solicitud existente.                                                                                     |
+| `application-exists` | Ninguno                                           | Informa la solicitud existente y permite corregir el documento; no ofrece iniciar sesión.                           |
 
 Si el email de una persona nueva falla, los datos pendientes permanecen en
 Redis y el backend devuelve un mensaje de reintento sin duplicarlos.
 
-:::warning Discrepancia visible en `new-application`
-Después de crear una solicitud, el frontend navega hoy a la confirmación genérica
-“Cuenta creada con éxito” y afirma que envió un enlace. El backend no envía ese
-correo para `new-application`; la solicitud queda pendiente de revisión.
-:::
+`application-exists` solo puede darse con documento no CI: `T_SOLICITUD_ALTA`
+únicamente recibe documentos extranjeros. En ese estado no hay persona, usuario
+LDAP ni contraseña, así que iniciar sesión o recuperar acceso son imposibles; la
+UI muestra un aviso sin acción y mantiene el paso de identidad para permitir
+corregir un documento mal tipeado.
+
+## Pantalla final del registro
+
+El destino lo decide `pendingReview`, el booleano que devuelven los dos endpoints
+de confirmación dentro de `RegistrationFlowResult`. Es la única fuente de verdad:
+el frontend no vuelve a mirar el tipo de documento ni el `RegisterFlowKind`.
+`resolveRegistrationEnding()` traduce la respuesta a ruta y ambas reutilizan
+`EmailConfirmation` con datos estáticos declarados en `auth.routes.ts`.
+
+| `pendingReview` | `mailSent` | Ruta                                      | Título                    | Mensaje                                                                                                                                 |
+| --------------- | ---------- | ----------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`          | `false`    | `/confirmacion-correo/solicitud-registro` | Procesando tu solicitud   | Solicitud recibida y en validación; el registro se completa en un plazo máximo de tres días hábiles ([Figma][figma-solicitud-registro]) |
+| `false`         | `true`     | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | Enlace de activación enviado por correo                                                                                                 |
+| `false`         | `false`    | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | La misma pantalla más un aviso: el correo no salió y la salida es «Recuperar acceso»                                                    |
+
+`pendingReview: true` no promete correo alguno porque el backend no envía
+activación para una solicitud de alta: queda pendiente de revisión manual.
+`mailSent: false` con `pendingReview: false` es éxito parcial —la cuenta quedó
+creada pero el correo de activación no salió—, así que el aviso lleva a
+`/recuperar-acceso`, la única forma de definir la contraseña.
+
+`verify-identity` devuelve `RegistrationConfirmationResponse`, que solo trae
+`mailSent`: esa rama siempre crea usuario, así que se resuelve con
+`pendingReview: false`.
+
+Ninguno de los tres resultados expone `success`: el interceptor de
+`OperationResult` convierte cualquier `success: false` en error HTTP, de modo que
+un valor emitido siempre es un éxito y la falla viaja por el canal de excepción.
 
 ## OCR y casos borde
 
@@ -210,7 +261,7 @@ solicitudes por minuto por usuario/IP y solo precarga el formulario. Nunca decid
 el flujo ni reemplaza `EvaluarDocumento`.
 
 - Un documento inválido se rechaza antes de consultar persona, solicitud o LDAP.
-- `usuarioExistente` corta el flujo aunque otros flags sean verdaderos.
+- `userExists` corta el flujo aunque otros flags sean verdaderos.
 - Volver al paso identidad limpia `RegisterFlowKind` y `flowId` en el frontend.
 - Un `flowId` ausente impide cualquier confirmación continuable.
 - Repetir una confirmación con estado `confirmado` falla por `FLOW_04`.
@@ -233,8 +284,9 @@ el flujo ni reemplaza `EvaluarDocumento`.
   [tests de creación de contraseña][front-set-password-tests].
 
 Los enlaces de Figma se agregan solamente cuando existe una URL verificada con
-`node-id`. Actualmente no hay nodos verificados para este flujo.
+`node-id`. Nodo verificado disponible: [solicitud en revisión][figma-solicitud-registro].
 
+[figma-solicitud-registro]: https://www.figma.com/design/opDCGX7LCg1vMO7soLF3Mr/Sistema-de-Admisiones-ORT?node-id=807-7399
 [frontend-commit]: https://github.com/DesarrolloORT/admisiones/tree/91e3d7ba33774d9fa11db386fb64ce5eb751982f
 [front-login]: https://github.com/DesarrolloORT/admisiones/blob/91e3d7ba33774d9fa11db386fb64ce5eb751982f/src/app/features/auth/pages/login/login.html#L91
 [front-routes]: https://github.com/DesarrolloORT/admisiones/blob/91e3d7ba33774d9fa11db386fb64ce5eb751982f/src/app/features/auth/auth.routes.ts#L15-L20

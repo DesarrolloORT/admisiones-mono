@@ -8,6 +8,7 @@ import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive
 import { vi } from 'vitest';
 
 import type { AcademicProposalForm } from '../../models/academic-proposal';
+import { AcademicProposalSelection } from '../../services/academic-proposal-selection';
 import { Catalogs } from '../../services/catalogs';
 import { AcademicProposalSelect } from './academic-proposal-select';
 
@@ -44,47 +45,50 @@ describe('AcademicProposalSelect', () => {
     TestBed.configureTestingModule({
       imports: [AcademicProposalSelect],
       providers: [
+        AcademicProposalSelection,
         { provide: BreakpointService, useValue: { breakpoint } },
         {
           provide: Catalogs,
           useValue: {
-            getCareers: () =>
+            getDegreePrograms: () =>
               of([
                 {
-                  idProducto: 20,
-                  idNivelProducto: 1,
-                  nombreProducto: 'Licenciatura en Diseño Gráfico',
-                  nombreNivelProducto: 'Carrera universitaria',
-                  nombreEscuela: 'Facultad de Diseño',
+                  productId: 20,
+                  productLevelId: 1,
+                  productName: 'Licenciatura en Diseño Gráfico',
+                  productLevelName: 'Carrera universitaria',
+                  schoolName: 'Facultad de Diseño',
                 },
                 {
-                  idProducto: 30,
-                  idNivelProducto: 1,
-                  nombreProducto: 'Analista Programador',
-                  nombreNivelProducto: 'Carrera universitaria',
-                  nombreEscuela: 'Facultad de Ingeniería',
+                  productId: 30,
+                  productLevelId: 1,
+                  productName: 'Analista Programador',
+                  productLevelName: 'Carrera universitaria',
+                  schoolName: 'Facultad de Ingeniería',
                 },
                 {
-                  idProducto: 40,
-                  idNivelProducto: 3,
-                  idProceso: 210,
-                  nombreProducto: 'Programa de Asesoramiento Financiero',
-                  nombreNivelProducto: 'Actualización profesional',
-                  tieneSeminario: false,
+                  productId: 40,
+                  productLevelId: 3,
+                  admissionProcessId: 210,
+                  productName: 'Programa de Asesoramiento Financiero',
+                  productLevelName: 'Actualización profesional',
+                  hasSeminar: false,
                 },
                 {
-                  idProducto: 41,
-                  idNivelProducto: 4,
-                  idProceso: 211,
-                  nombreProducto: 'Programa de Finanzas Corporativas',
-                  nombreNivelProducto: 'Actualización profesional',
-                  tieneSeminario: true,
+                  productId: 41,
+                  productLevelId: 4,
+                  admissionProcessId: 211,
+                  productName: 'Programa de Finanzas Corporativas',
+                  productLevelName: 'Actualización profesional',
+                  hasSeminar: true,
                 },
               ]),
-            getComienzos: () => of([]),
-            getTurnos: () => of([]),
-            getSeminarios: () =>
-              of([{ idOferta: 300, idProceso: 200, nombre: 'Marco legal', fechaComienzo: null }]),
+            getIntakes: () => of([]),
+            getShifts: () => of([]),
+            getSeminars: () =>
+              of([
+                { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null },
+              ]),
           },
         },
       ],
@@ -93,6 +97,7 @@ describe('AcademicProposalSelect', () => {
     form = createForm();
     fixture = TestBed.createComponent(AcademicProposalSelect);
     fixture.componentRef.setInput('form', form);
+    fixture.componentRef.setInput('selection', TestBed.inject(AcademicProposalSelection));
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -127,18 +132,18 @@ describe('AcademicProposalSelect', () => {
     );
   });
 
-  it('selects a career from the mobile drawer', () => {
+  it('selects a degreeProgram from the mobile drawer', () => {
     const component = fixture.componentInstance as unknown as {
-      careerOptionGroups(): readonly {
+      degreeProgramOptionGroups(): readonly {
         label: string;
         options: readonly { label: string; value: string; school?: string }[];
       }[];
     };
 
-    form.controls.tipoPropuesta.setValue('1');
+    form.controls.proposalType.setValue('1');
     fixture.detectChanges();
 
-    expect(component.careerOptionGroups().map(group => group.label)).toEqual([
+    expect(component.degreeProgramOptionGroups().map(group => group.label)).toEqual([
       'Facultad de Diseño',
       'Facultad de Ingeniería',
     ]);
@@ -157,30 +162,30 @@ describe('AcademicProposalSelect', () => {
     select.toggleOption('20');
     select.confirmDrawerValue();
 
-    expect(form.controls.carrera.value).toBe('20');
-    expect(form.controls.carrera.touched).toBe(true);
+    expect(form.controls.degreeProgram.value).toBe('20');
+    expect(form.controls.degreeProgram.touched).toBe(true);
   });
 
   it('keeps the current field labels for non-AP proposals (regression guard)', () => {
-    form.controls.tipoPropuesta.setValue('1');
+    form.controls.proposalType.setValue('1');
     fixture.detectChanges();
 
-    expect(fieldLabel(fixture, 'academic-proposal-career')).toContain('Carrera');
+    expect(fieldLabel(fixture, 'academic-proposal-degree-program')).toContain('Carrera');
     expect(fieldLabel(fixture, 'academic-proposal-start')).toContain('Comienzo');
     expect(fieldLabel(fixture, 'academic-proposal-shift')).toContain('Turno');
     expect(fixture.nativeElement.querySelector('#academic-proposal-seminars-mobile')).toBeNull();
   });
 
   it('shows Programa and reveals Seminario only after picking a program in AP', () => {
-    form.controls.tipoPropuesta.setValue('3');
+    form.controls.proposalType.setValue('3');
     fixture.detectChanges();
 
-    expect(fieldLabel(fixture, 'academic-proposal-career')).toContain('Programa');
+    expect(fieldLabel(fixture, 'academic-proposal-degree-program')).toContain('Programa');
     expect(fixture.nativeElement.querySelector('#academic-proposal-seminars-mobile')).toBeNull();
     expect(fixture.nativeElement.querySelector('#academic-proposal-start-mobile')).toBeNull();
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
 
-    form.controls.carrera.setValue('40');
+    form.controls.degreeProgram.setValue('41');
     fixture.detectChanges();
 
     expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Seminario');
@@ -188,14 +193,31 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
   });
 
+  // Sin `hasSeminar` el programa ofrece una sola oferta, no seminarios.
+  it('labels the AP offering select as Próximo comienzo when the program has no seminars', () => {
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('40');
+    fixture.detectChanges();
+
+    expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Próximo comienzo');
+  });
+
+  it('preselects the only offering the AP program has', () => {
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('40');
+    TestBed.tick();
+
+    expect(form.controls.seminars.value).toEqual(['300']);
+  });
+
   it('only allows multiple seminars when the AP program has them', () => {
-    form.controls.tipoPropuesta.setValue('3');
-    form.controls.carrera.setValue('41');
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('41');
     fixture.detectChanges();
 
     expect(seminarSelect(fixture).multiple()).toBe(true);
 
-    form.controls.carrera.setValue('40');
+    form.controls.degreeProgram.setValue('40');
     fixture.detectChanges();
 
     const select = seminarSelect(fixture);
@@ -205,7 +227,7 @@ describe('AcademicProposalSelect', () => {
     (select as unknown as { toggleOption(value: string): void }).toggleOption('300');
     (select as unknown as { confirmDrawerValue(): void }).confirmDrawerValue();
 
-    expect(form.controls.seminarios.value).toEqual(['300']);
+    expect(form.controls.seminars.value).toEqual(['300']);
   });
 
   it('shows required errors after controls are touched', () => {
@@ -245,13 +267,13 @@ function fieldLabel(fixture: ComponentFixture<AcademicProposalSelect>, id: strin
 
 function createForm(): FormGroup<AcademicProposalForm> {
   return new FormGroup<AcademicProposalForm>({
-    tipoPropuesta: new FormControl('', {
+    proposalType: new FormControl('', {
       nonNullable: true,
       validators: Validators.required,
     }),
-    carrera: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    comienzo: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    turno: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    seminarios: new FormControl<string[]>([], { nonNullable: true }),
+    degreeProgram: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    intake: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    shift: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    seminars: new FormControl<string[]>([], { nonNullable: true }),
   });
 }

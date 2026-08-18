@@ -10,26 +10,24 @@ describe('Catalogs', () => {
   let endpointMock: {
     getCountries: ReturnType<typeof vi.fn>;
     getCountryLocations: ReturnType<typeof vi.fn>;
-    getCareers: ReturnType<typeof vi.fn>;
-    getComienzos: ReturnType<typeof vi.fn>;
+    getDegreePrograms: ReturnType<typeof vi.fn>;
+    getIntakes: ReturnType<typeof vi.fn>;
     getInitialSurveyCatalogs: ReturnType<typeof vi.fn>;
-    getBancos: ReturnType<typeof vi.fn>;
-    getInstituciones: ReturnType<typeof vi.fn>;
-    getTurnos: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
+    getBanks: ReturnType<typeof vi.fn>;
+    getInstitutions: ReturnType<typeof vi.fn>;
+    getShifts: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
       getCountries: vi.fn(),
       getCountryLocations: vi.fn(),
-      getCareers: vi.fn(),
-      getComienzos: vi.fn(),
+      getDegreePrograms: vi.fn(),
+      getIntakes: vi.fn(),
       getInitialSurveyCatalogs: vi.fn(),
-      getBancos: vi.fn(),
-      getInstituciones: vi.fn(),
-      getTurnos: vi.fn(),
-      clearCache: vi.fn(),
+      getBanks: vi.fn(),
+      getInstitutions: vi.fn(),
+      getShifts: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -64,52 +62,52 @@ describe('Catalogs', () => {
     expect(endpointMock.getCountries).toHaveBeenCalledOnce();
   });
 
-  it('should delegate getCareers to the endpoint', () => {
+  it('should delegate getDegreePrograms to the endpoint', () => {
     const result = [
       {
-        idProducto: 20,
-        idNivelProducto: 1,
-        nombreProducto: 'Diseño',
-        nombreNivelProducto: 'Carreras',
+        productId: 20,
+        productLevelId: 1,
+        productName: 'Diseño',
+        productLevelName: 'Carreras',
       },
     ];
-    endpointMock.getCareers.mockReturnValue(of(result));
+    endpointMock.getDegreePrograms.mockReturnValue(of(result));
 
-    service.getCareers(2).subscribe(data => {
+    service.getDegreePrograms(2).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getCareers).toHaveBeenCalledWith(2);
+    expect(endpointMock.getDegreePrograms).toHaveBeenCalledWith(2);
   });
 
-  it('should delegate getComienzos to the endpoint', () => {
-    const result = [{ idProceso: 10, nombreProceso: 'Marzo 2026' }];
-    endpointMock.getComienzos.mockReturnValue(of(result));
+  it('should delegate getIntakes to the endpoint', () => {
+    const result = [{ admissionProcessId: 10, admissionProcessName: 'Marzo 2026' }];
+    endpointMock.getIntakes.mockReturnValue(of(result));
 
-    service.getComienzos(20).subscribe(data => {
+    service.getIntakes(20).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getComienzos).toHaveBeenCalledWith(20);
+    expect(endpointMock.getIntakes).toHaveBeenCalledWith(20);
   });
 
   it('should delegate getInitialSurveyCatalogs to the endpoint', () => {
     const result = {
-      educacion: {
-        ubicacionesUltimoAnioSecundaria: [],
-        aniosBachillerato: [],
-        estadosEducacionSuperiorPrevia: [],
-        universidades: [],
-        nivelesFormacionTutores: [],
+      education: {
+        lastSecondaryYearLocations: [],
+        highSchoolYears: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
       },
-      decisionAcademica: {
-        aniosEducacionMediaSuperior: [],
-        apoyosDecision: [],
-        nivelesDecision: [],
-        universidades: [],
-        motivosEleccionOrt: [],
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
       },
-      experienciaOrt: { valoraciones: [], publicidadesOrt: [] },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
     };
     endpointMock.getInitialSurveyCatalogs.mockReturnValue(of(result));
 
@@ -120,75 +118,69 @@ describe('Catalogs', () => {
     expect(endpointMock.getInitialSurveyCatalogs).toHaveBeenCalledOnce();
   });
 
-  it('should delegate getBancos to the endpoint', () => {
+  it('should delegate getBanks to the endpoint', () => {
     const result = [{ id: 1, label: 'BROU', code: 'brou' }];
-    endpointMock.getBancos.mockReturnValue(of(result));
+    endpointMock.getBanks.mockReturnValue(of(result));
 
-    service.getBancos().subscribe(data => {
+    service.getBanks().subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getBancos).toHaveBeenCalledOnce();
+    expect(endpointMock.getBanks).toHaveBeenCalledOnce();
   });
 
-  it('should delegate getInstituciones to the endpoint', () => {
-    const result = [{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }];
-    endpointMock.getInstituciones.mockReturnValue(of(result));
+  it('should delegate getInstitutions to the endpoint', () => {
+    const result = [{ id: 5, label: 'Liceo 1', countryCode: 1, stateCode: 10 }];
+    endpointMock.getInstitutions.mockReturnValue(of(result));
 
-    service.getInstituciones(1, 10).subscribe(data => {
+    service.getInstitutions(1, 10).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getInstituciones).toHaveBeenCalledWith(1, 10);
+    expect(endpointMock.getInstitutions).toHaveBeenCalledWith(1, 10);
   });
 
-  it('should delegate getTurnos to the endpoint', () => {
+  it('should delegate getShifts to the endpoint', () => {
     const result = [
       {
-        idOferta: 30,
-        idTurno: 2,
-        nombreTurno: 'Nocturno',
-        horarioReferencia: '19:00',
+        offeringId: 30,
+        shiftId: 2,
+        shiftName: 'Nocturno',
+        referenceSchedule: '19:00',
       },
     ];
-    endpointMock.getTurnos.mockReturnValue(of(result));
+    endpointMock.getShifts.mockReturnValue(of(result));
 
-    service.getTurnos(20, 10).subscribe(data => {
+    service.getShifts(20, 10).subscribe(data => {
       expect(data).toEqual(result);
     });
 
-    expect(endpointMock.getTurnos).toHaveBeenCalledWith(20, 10);
+    expect(endpointMock.getShifts).toHaveBeenCalledWith(20, 10);
   });
 
   it('should map seminars using the offer description and reference date', () => {
-    endpointMock.getTurnos.mockReturnValue(
+    endpointMock.getShifts.mockReturnValue(
       of([
         {
-          idOferta: 30,
-          idTurno: 2,
-          nombreTurno: 'Nocturno',
-          horarioReferencia: '19:00',
-          descripcionOferta: 'Seminario de marco legal',
-          fechaReferencia: '19/05/2026',
+          offeringId: 30,
+          shiftId: 2,
+          shiftName: 'Nocturno',
+          referenceSchedule: '19:00',
+          offeringDescription: 'Seminario de marco legal',
+          referenceDate: '19/05/2026',
         },
       ])
     );
 
-    service.getSeminarios(20, 10).subscribe(data => {
+    service.getSeminars(20, 10).subscribe(data => {
       expect(data).toEqual([
         {
-          idOferta: 30,
-          idProceso: 10,
-          nombre: 'Seminario de marco legal',
-          fechaComienzo: '19/05/2026',
+          offeringId: 30,
+          admissionProcessId: 10,
+          name: 'Seminario de marco legal',
+          startDate: '19/05/2026',
         },
       ]);
     });
-  });
-
-  it('should delegate clearCache to the endpoint', () => {
-    service.clearCache();
-
-    expect(endpointMock.clearCache).toHaveBeenCalledOnce();
   });
 });

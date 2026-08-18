@@ -12,15 +12,15 @@ describe('document recognition mapper', () => {
   it('should map recognized fields to form patches', () => {
     expect(
       toRecognizedFormPatch({
-        tipoDocumento: 'CI',
-        numeroDocumento: '12345678',
-        primerNombre: ' Ana ',
-        fechaNacimiento: '2000-01-01T00:00:00',
-        lugarNacimiento: 'Montevideo / URY',
+        documentType: 'CI',
+        documentNumber: '12345678',
+        firstName: ' Ana ',
+        birthDate: '2000-01-01T00:00:00',
+        birthplace: 'Montevideo / URY',
       })
     ).toEqual({
       identity: { documentType: 'CI', documentNumber: '12345678' },
-      personal: { primerNombre: 'Ana', fechaNacimiento: birthDate },
+      personal: { firstName: 'Ana', birthDate: birthDate },
       countryCode: 1,
       birthplace: 'Montevideo / URY',
     });
@@ -33,9 +33,9 @@ describe('document recognition mapper', () => {
       resolveStateCodeFromBirthplace(
         [
           {
-            codigoPais: 1,
-            nombre: 'Uruguay',
-            estado: [{ codigoPais: 1, codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 10, name: 'MONTEVIDEO' }],
           },
         ],
         1,
@@ -58,8 +58,8 @@ describe('document recognition mapper', () => {
   it('should drop non-string recognized fields from the form patch', () => {
     expect(
       toRecognizedFormPatch({
-        primerNombre: 12345 as unknown as string,
-        segundoNombre: '   ',
+        firstName: 12345 as unknown as string,
+        middleName: '   ',
       })
     ).toEqual({
       identity: {},
@@ -90,9 +90,9 @@ describe('document recognition mapper', () => {
       resolveStateCodeFromBirthplace(
         [
           {
-            codigoPais: 1,
-            nombre: 'Uruguay',
-            estado: [{ codigoPais: 1, codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 10, name: 'MONTEVIDEO' }],
           },
         ],
         1,

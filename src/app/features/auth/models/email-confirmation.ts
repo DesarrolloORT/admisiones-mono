@@ -3,6 +3,7 @@ export interface EmailConfirmationData {
   actionRoute: string;
   description: string;
   icon: string;
+  iconTone?: 'primary' | 'success';
   secondaryDescription?: string;
   title: string;
 }
@@ -18,6 +19,17 @@ export const REGISTER_EMAIL_CONFIRMATION: EmailConfirmationData = {
   icon: 'how_to_reg',
   secondaryDescription: EMAIL_CONFIRMATION_SPAM_HINT,
   title: '¡Cuenta creada con éxito!',
+};
+
+export const REGISTER_REQUEST_EMAIL_CONFIRMATION: EmailConfirmationData = {
+  actionLabel: 'Volver al inicio de sesión',
+  actionRoute: '/iniciar-sesion',
+  description: 'Recibimos tu solicitud de creación de cuenta. Estamos validando tus datos.',
+  icon: 'more_horiz',
+  iconTone: 'primary',
+  secondaryDescription:
+    'El registro de la cuenta se completará en un plazo máximo de tres días hábiles.',
+  title: 'Procesando tu solicitud',
 };
 
 export const RECOVER_ACCESS_EMAIL_CONFIRMATION: EmailConfirmationData = {

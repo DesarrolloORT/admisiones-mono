@@ -1,0 +1,247 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -- Un @if por seccion visible del acordeon; el contenido de cada seccion vive en su subcomponente. -->
+<section aria-labelledby="enrollment-personal-title" class="enrollment-screen">
+  <header class="enrollment-screen__header">
+    <p class="enrollment-screen__eyebrow">Inscripción a carrera</p>
+    <h2 id="enrollment-personal-title">Información personal</h2>
+    <p>Completar el proceso toma unos 10-15 minutos.</p>
+    <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
+  </header>
+
+  <form
+    class="enrollment-form"
+    novalidate
+    (keydown.enter)="onFormEnter($event)"
+    (submit)="onSubmit($event)">
+    @if (facade.activeSectionErrorAlert(); as error) {
+    <app-error-alert [message]="error.message" [title]="error.title" />
+    }
+    <ort-accordion [multi]="false">
+      @if (facade.visibleSections().includes('education')) {
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('education') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'education'"
+        (opened)="facade.openSection('education')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('education') === 'complete'">
+                {{ facade.getSectionState('education') === 'complete' ? 'check_circle' :
+                'auto_stories' }}
+              </ort-icon>
+              @if (facade.isSectionPending('education')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Educación</h3>
+              @if (facade.isSectionPending('education')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-education-section [orientation]="radioGroupOrientation()" />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('academic-decision')) {
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('academic-decision') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'academic-decision'"
+        (opened)="facade.openSection('academic-decision')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('academic-decision') === 'complete'">
+                {{ facade.getSectionState('academic-decision') === 'complete' ? 'check_circle' :
+                'conversion_path' }}
+              </ort-icon>
+              @if (facade.isSectionPending('academic-decision')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Decisión académica</h3>
+              @if (facade.isSectionPending('academic-decision')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-academic-decision-section [orientation]="radioGroupOrientation()" />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('ort-experience')) {
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('ort-experience') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'ort-experience'"
+        (opened)="facade.openSection('ort-experience')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('ort-experience') === 'complete'">
+                {{ facade.getSectionState('ort-experience') === 'complete' ? 'check_circle' :
+                'business' }}
+              </ort-icon>
+              @if (facade.isSectionPending('ort-experience')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Experiencia con ORT</h3>
+              @if (facade.isSectionPending('ort-experience')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-ort-experience-section [orientation]="radioGroupOrientation()" />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.visibleSections().includes('work-situation')) {
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('work-situation') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'work-situation'"
+        (opened)="facade.openSection('work-situation')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('work-situation') === 'complete'">
+                {{ facade.getSectionState('work-situation') === 'complete' ? 'check_circle' :
+                'work_outline' }}
+              </ort-icon>
+              @if (facade.isSectionPending('work-situation')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Situación laboral</h3>
+              @if (facade.isSectionPending('work-situation')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-work-section [orientation]="radioGroupOrientation()" />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      }
+
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('identity') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'identity'"
+        (opened)="facade.openSection('identity')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('identity') === 'complete'">
+                {{ facade.getSectionState('identity') === 'complete' ? 'check_circle' : 'verified'
+                }}
+              </ort-icon>
+              @if (facade.isSectionPending('identity')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Verificación de identidad</h3>
+              @if (facade.isSectionPending('identity')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-identity-section />
+        </ort-accordion-body>
+      </ort-accordion-item>
+
+      <ort-accordion-item
+        class="enrollment-accordion-item"
+        [class.enrollment-accordion-item--complete]="
+          facade.getSectionState('regulation') === 'complete'
+        "
+        [expanded]="facade.activeSection() === 'regulation'"
+        (opened)="facade.openSection('regulation')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="enrollment-accordion__state-icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                aria-hidden="true"
+                class="enrollment-accordion__state-icon"
+                ortAccordionTitleLeadingIcon
+                [filled]="facade.getSectionState('regulation') === 'complete'">
+                {{ facade.getSectionState('regulation') === 'complete' ? 'check_circle' : 'contract'
+                }}
+              </ort-icon>
+              @if (facade.isSectionPending('regulation')) {
+              <ort-badge class="enrollment-accordion__state-badge" color="primary" type="dot" />
+              }
+            </div>
+            <div class="enrollment-accordion__title-group">
+              <h3 class="enrollment-accordion__title">Reglamento estudiantil</h3>
+              @if (facade.isSectionPending('regulation')) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-enrollment-regulation-section />
+        </ort-accordion-body>
+      </ort-accordion-item>
+    </ort-accordion>
+
+    @if (facade.preEnrollmentError()) {
+    <p class="enrollment-dialog-error" role="alert">{{ facade.preEnrollmentError() }}</p>
+    }
+
+    <footer class="enrollment-footer">
+      @if (facade.canGoBack()) {
+      <button class="back-button" ort-secondary-button type="button" (click)="facade.back()">
+        Volver a la sección anterior
+      </button>
+      }
+      <button ort-primary-button type="submit" [disabled]="facade.finalizingPreEnrollment()">
+        {{ facade.finalizingPreEnrollment() ? 'Confirmando…' : 'Continuar' }}
+      </button>
+    </footer>
+  </form>
+</section>

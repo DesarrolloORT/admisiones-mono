@@ -45,15 +45,15 @@ describe('RecoverAccess', () => {
     component['form'].setValue({
       documentType: 'CI',
       documentNumber: '11111111',
-      primerApellido: 'Silva',
+      firstSurname: 'Silva',
     });
 
     component['submit']();
 
     expect(passwordServiceMock.recoverPassword).toHaveBeenCalledWith({
-      tipoDocumento: 'CI',
-      documento: '1111111-1',
-      primerApellido: 'Silva',
+      documentType: 'CI',
+      documentNumber: '1111111-1',
+      firstSurname: 'Silva',
     });
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/recuperar-acceso');
   });
@@ -70,7 +70,7 @@ describe('RecoverAccess', () => {
     component['form'].setValue({
       documentType: 'CI',
       documentNumber: '11111111',
-      primerApellido: 'Silva',
+      firstSurname: 'Silva',
     });
 
     component['submit']();
@@ -93,7 +93,7 @@ describe('RecoverAccess', () => {
     component['form'].setValue({
       documentType: 'CI',
       documentNumber: '11111111',
-      primerApellido: 'Silva',
+      firstSurname: 'Silva',
     });
 
     component['submit']();

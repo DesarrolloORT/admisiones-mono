@@ -2,17 +2,17 @@ import { expect, type Page, test } from '@playwright/test';
 
 import { expectNoAxeViolations, ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES } from './support/a11y';
 import { mockApi } from './support/api-mocks';
+import { EnrollmentPage } from './support/pages/enrollment-page';
 import { HomePage } from './support/pages/home-page';
-import { InscripcionPage } from './support/pages/inscripcion-page';
 import { LoginPage } from './support/pages/login-page';
 import { clickRadioByName } from './support/pages/ort-controls';
 import { RegisterPage } from './support/pages/register-page';
 import { addAuthenticatedSession } from './support/session';
 
 const publicPages = [
-  { path: '/iniciar-sesion', heading: 'Comenzá tu camino en ORT' },
+  { path: '/iniciar-sesion', heading: 'Tu inscripción empieza aquí' },
   { path: '/registro', heading: 'Crear cuenta' },
-  { path: '/recuperar-acceso', heading: 'Recuperar acceso' },
+  { path: '/recuperar-acceso', heading: 'Recuperar contraseña' },
   { path: '/crear-password?token=a11y-token', heading: 'Creá tu contraseña' },
 ];
 
@@ -22,12 +22,12 @@ const protectedPages = [
   { path: '/inicio/cambiar-contrasena', heading: 'Definí tu nueva contraseña' },
   {
     path: '/inscripciones?escenario=primera-vez',
-    heading: 'Inscripción a carrera',
+    heading: 'Propuesta académica',
   },
 ];
 
 test.beforeEach(async ({ page }) => {
-  // El retardo en Pagar permite observar la pantalla "Estamos procesando el pago".
+  // El retardo en Pagar permite observar la pantalla "Procesando tu pago".
   await mockApi(page, { delayMsByPath: { '/enrollments/start-payment': 800 } });
 });
 
@@ -105,8 +105,8 @@ test.describe('Keyboard and form accessibility @a11y', () => {
   }, testInfo) => {
     await addAuthenticatedSession(page);
 
-    const inscription = new InscripcionPage(page);
-    await inscription.goto();
+    const enrollment = new EnrollmentPage(page);
+    await enrollment.goto();
 
     // En desktop el header oculta el botón de cierre; el disparador visible es el del rail.
     const closeButton =
@@ -132,10 +132,10 @@ test.describe('Keyboard and form accessibility @a11y', () => {
   }) => {
     await addAuthenticatedSession(page);
 
-    const inscription = new InscripcionPage(page);
-    await inscription.goto();
-    await inscription.expectEnterOnFocusedRadioDoesNotAdvance(
-      'tipoPropuesta',
+    const enrollment = new EnrollmentPage(page);
+    await enrollment.goto();
+    await enrollment.expectEnterOnFocusedRadioDoesNotAdvance(
+      'proposalType',
       'Carrera universitaria'
     );
   });
@@ -146,11 +146,11 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile drawer behavior only.');
     await addAuthenticatedSession(page);
 
-    const inscription = new InscripcionPage(page);
-    await inscription.goto();
+    const enrollment = new EnrollmentPage(page);
+    await enrollment.goto();
     await clickRadioByName(page, /^Carrera universitaria/);
 
-    const trigger = page.locator('#academic-proposal-career-mobile');
+    const trigger = page.locator('#academic-proposal-degree-program-mobile');
     await expect(trigger).toBeEnabled();
     await trigger.focus();
     await page.keyboard.press('Enter');
@@ -158,7 +158,10 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     const dialog = page.getByRole('dialog', { name: 'Seleccionar carrera' });
     await expect(dialog).toBeVisible();
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    await expect(trigger).toHaveAttribute('aria-controls', 'academic-proposal-career-drawer');
+    await expect(trigger).toHaveAttribute(
+      'aria-controls',
+      'academic-proposal-degree-program-drawer'
+    );
     await expectNoAxeViolations(page);
 
     const option = dialog.getByRole('radio', { name: 'Licenciatura en Diseño Gráfico' });
@@ -174,42 +177,31 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(trigger).toBeFocused();
     await expect(trigger).toContainText('Licenciatura en Diseño Gráfico');
   });
-  test('keeps the enrollment survey, payment and confirmation dialog accessible @a11y', async ({
-    page,
-  }) => {
+  test('keeps the enrollment survey and payment screens accessible @a11y', async ({ page }) => {
     await addAuthenticatedSession(page);
 
-    const inscription = new InscripcionPage(page);
-    await inscription.goto();
-    await inscription.fillAcademicProposal();
-    await inscription.fillEducation();
-    await inscription.fillAcademicDecision();
-    await inscription.fillOrtExperience();
+    const enrollment = new EnrollmentPage(page);
+    await enrollment.goto();
+    await enrollment.fillAcademicProposal();
+    await enrollment.fillEducation();
+    await enrollment.fillAcademicDecision();
+    await enrollment.fillOrtExperience();
 
     await expectNoAxeViolations(page, {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
-    await inscription.fillIdentity();
-    await inscription.acceptRegulation();
+    await enrollment.fillIdentity();
+    await enrollment.acceptRegulation();
 
     await expectNoAxeViolations(page, {
       knownIssues: ORT_FILE_UPLOADER_KNOWN_AXE_ISSUES,
     });
 
-    await inscription.selectPayment('cuenta-personal');
+    await enrollment.selectPayment('personal-account');
 
-    const dialog = page.getByRole('dialog', { name: 'Confirmar inscripción' });
-    await expect(dialog).toBeVisible();
-    await expect
-      .poll(() => dialog.evaluate(element => element.contains(element.ownerDocument.activeElement)))
-      .toBe(true);
+    await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
     await expectNoAxeViolations(page);
-
-    await page.keyboard.press('Escape');
-
-    await expect(dialog).toBeHidden();
-    await expect(inscription.paymentSubmitButton()).toBeVisible();
   });
 
   test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({
@@ -217,9 +209,9 @@ test.describe('Keyboard and form accessibility @a11y', () => {
   }) => {
     await addAuthenticatedSession(page);
 
-    const inscription = new InscripcionPage(page);
-    await inscription.goto();
-    await inscription.completeInitialEnrollmentWithKeyboard();
+    const enrollment = new EnrollmentPage(page);
+    await enrollment.goto();
+    await enrollment.completeInitialEnrollmentWithKeyboard();
 
     // El título de procesamiento expone role="status", por lo que no es un heading.
     await expect(page.getByRole('status').filter({ hasText: 'Procesando tu pago' })).toBeVisible();

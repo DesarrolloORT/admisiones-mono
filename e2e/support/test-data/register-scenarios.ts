@@ -1,11 +1,17 @@
 import type { RegisterFlowKind } from '../../../src/app/features/auth/models/register-flow';
 
 export interface RegisterDocumentEvaluationMock {
-  requiereAltaPersona: boolean;
-  requiereAltaSolicitud: boolean;
-  requiereVerificacion: boolean;
-  solicitudAltaExistente: boolean;
-  usuarioExistente: boolean;
+  requiresPersonCreation: boolean;
+  requiresApplicationCreation: boolean;
+  requiresVerification: boolean;
+  hasExistingApplication: boolean;
+  userExists: boolean;
+}
+
+/** Cuerpo de `RegistrationFlowResult` que devuelven los endpoints de confirmacion. */
+export interface RegisterConfirmationMock {
+  mailSent: boolean;
+  pendingReview: boolean;
 }
 
 export interface RegisterScenario {
@@ -14,6 +20,7 @@ export interface RegisterScenario {
   documentNumber: string;
   flowId: string;
   evaluation: RegisterDocumentEvaluationMock;
+  confirmation?: RegisterConfirmationMock;
   terminalMessage?: string;
 }
 
@@ -24,12 +31,13 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: '12345672',
     flowId: 'flow-e2e-new-person',
     evaluation: {
-      requiereAltaPersona: true,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: true,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: false,
     },
+    confirmation: { mailSent: true, pendingReview: false },
   },
   'existing-person': {
     kind: 'existing-person',
@@ -37,12 +45,13 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: '12345672',
     flowId: 'flow-e2e-existing-person',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: true,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: true,
+      hasExistingApplication: false,
+      userExists: false,
     },
+    confirmation: { mailSent: true, pendingReview: false },
   },
   'new-application': {
     kind: 'new-application',
@@ -50,12 +59,13 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     documentNumber: 'PS-123456',
     flowId: 'flow-e2e-new-application',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: true,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: true,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: false,
     },
+    confirmation: { mailSent: false, pendingReview: true },
   },
   'user-exists': {
     kind: 'user-exists',
@@ -64,25 +74,27 @@ export const REGISTER_SCENARIOS: Record<RegisterFlowKind, RegisterScenario> = {
     flowId: 'flow-e2e-user-exists',
     terminalMessage: 'Ya existe un usuario registrado con este documento.',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: false,
-      usuarioExistente: true,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: false,
+      userExists: true,
     },
   },
+  // Solo puede darse con documento no CI: una CI con solicitud previa no existe
+  // en el backend (T_SOLICITUD_ALTA solo recibe documentos extranjeros).
   'application-exists': {
     kind: 'application-exists',
-    documentType: 'CI',
-    documentNumber: '12345672',
+    documentType: 'PS',
+    documentNumber: 'PS-654321',
     flowId: 'flow-e2e-application-exists',
     terminalMessage: 'Ya existe una solicitud de alta pendiente para este documento.',
     evaluation: {
-      requiereAltaPersona: false,
-      requiereAltaSolicitud: false,
-      requiereVerificacion: false,
-      solicitudAltaExistente: true,
-      usuarioExistente: false,
+      requiresPersonCreation: false,
+      requiresApplicationCreation: false,
+      requiresVerification: false,
+      hasExistingApplication: true,
+      userExists: false,
     },
   },
 };

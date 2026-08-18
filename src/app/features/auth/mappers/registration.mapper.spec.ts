@@ -7,46 +7,46 @@ import {
 describe('registration mapper', () => {
   const identity = { documentType: 'CI', documentNumber: '12345678' };
   const personal = {
-    primerNombre: 'Ana',
-    segundoNombre: '',
-    primerApellido: 'Silva',
-    segundoApellido: '',
-    fechaNacimiento: '2000-01-01',
-    sexo: 'F',
-    location: { codigoPais: 1, codigoEstado: 10, codigoCiudad: 100 },
-    direccion: 'Mercedes 1234',
-    telefono1: {
+    firstName: 'Ana',
+    middleName: '',
+    firstSurname: 'Silva',
+    secondSurname: '',
+    birthDate: '2000-01-01',
+    sex: 'F',
+    location: { countryCode: 1, stateCode: 10, cityCode: 100 },
+    address: 'Mercedes 1234',
+    primaryPhone: {
       iso2: 'UY',
       number: '099123456',
       numberE164: '+59899123456',
     },
-    mail: 'ana@example.com',
-    verificacionMail: 'ana@example.com',
+    email: 'ana@example.com',
+    emailConfirmation: 'ana@example.com',
   };
 
   it('should map personal form values to registration data', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        fechaNacimiento: new Date(2000, 0, 1),
+        birthDate: new Date(2000, 0, 1),
       })
     ).toEqual({
-      primerNombre: 'Ana',
-      segundoNombre: '',
-      primerApellido: 'Silva',
-      segundoApellido: '',
-      fechaNacimiento: '2000-01-01',
-      sexo: 'F',
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: 100,
-      direccion: 'Mercedes 1234',
-      telefono1: {
+      firstName: 'Ana',
+      middleName: '',
+      firstSurname: 'Silva',
+      secondSurname: '',
+      birthDate: '2000-01-01',
+      sex: 'F',
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: 100,
+      address: 'Mercedes 1234',
+      primaryPhone: {
         nationalNumber: '099123456',
         iso2: 'UY',
       },
-      mail: 'ana@example.com',
-      verificacionMail: 'ana@example.com',
+      email: 'ana@example.com',
+      emailConfirmation: 'ana@example.com',
     });
   });
 
@@ -57,40 +57,40 @@ describe('registration mapper', () => {
         personal: toAuthRegisterPersonalData(personal),
       })
     ).toEqual({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      primerNombre: 'Ana',
-      segundoNombre: null,
-      primerApellido: 'Silva',
-      segundoApellido: null,
-      fechaNacimiento: '2000-01-01',
-      sexo: 'F',
-      direccion: 'Mercedes 1234',
-      telefono1: {
+      documentType: 'CI',
+      documentNumber: '1234567-8',
+      firstName: 'Ana',
+      middleName: null,
+      firstSurname: 'Silva',
+      secondSurname: null,
+      birthDate: '2000-01-01',
+      sex: 'F',
+      address: 'Mercedes 1234',
+      primaryPhone: {
         nationalNumber: '099123456',
         iso2: 'UY',
       },
-      mail: 'ana@example.com',
-      verificacionMail: 'ana@example.com',
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: 100,
+      email: 'ana@example.com',
+      emailConfirmation: 'ana@example.com',
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: 100,
     });
   });
 
   it('should build verification payloads for existing-person flow', () => {
     expect(
-      toVerifyIdentityPayload({ identity, primerApellido: 'Silva', mail: 'ana@example.com' })
+      toVerifyIdentityPayload({ identity, firstSurname: 'Silva', email: 'ana@example.com' })
     ).toEqual({
-      tipoDocumento: 'CI',
-      documento: '1234567-8',
-      primerApellido: 'Silva',
-      mail: 'ana@example.com',
+      documentType: 'CI',
+      documentNumber: '1234567-8',
+      firstSurname: 'Silva',
+      email: 'ana@example.com',
     });
   });
 
   it('should send the national number and ISO country required by backend', () => {
-    expect(toAuthRegisterPersonalData(personal).telefono1).toEqual({
+    expect(toAuthRegisterPersonalData(personal).primaryPhone).toEqual({
       nationalNumber: '099123456',
       iso2: 'UY',
     });
@@ -98,12 +98,12 @@ describe('registration mapper', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        telefono1: {
+        primaryPhone: {
           iso2: 'AR',
           number: '1123456789',
           numberE164: '+541123456789',
         },
-      }).telefono1
+      }).primaryPhone
     ).toEqual({
       nationalNumber: '1123456789',
       iso2: 'AR',
@@ -114,8 +114,8 @@ describe('registration mapper', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        fechaNacimiento: '31/12/2000',
-      }).fechaNacimiento
+        birthDate: '31/12/2000',
+      }).birthDate
     ).toBe('2000-12-31');
   });
 
@@ -123,15 +123,15 @@ describe('registration mapper', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        fechaNacimiento: '',
-      }).fechaNacimiento
+        birthDate: '',
+      }).birthDate
     ).toBe('');
 
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        fechaNacimiento: null,
-      }).fechaNacimiento
+        birthDate: null,
+      }).birthDate
     ).toBe('');
   });
 
@@ -139,46 +139,46 @@ describe('registration mapper', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        fechaNacimiento: '  2000/01/01  ',
-      }).fechaNacimiento
+        birthDate: '  2000/01/01  ',
+      }).birthDate
     ).toBe('2000/01/01');
   });
 
-  it('should map a null telefono1 to an empty phone payload', () => {
+  it('should map a null primaryPhone to an empty phone payload', () => {
     expect(
       toAuthRegisterPersonalData({
         ...personal,
-        telefono1: null,
-      }).telefono1
+        primaryPhone: null,
+      }).primaryPhone
     ).toEqual({ nationalNumber: '', iso2: null });
   });
 
   it('should trim whitespace-only names to empty strings', () => {
     const result = toAuthRegisterPersonalData({
       ...personal,
-      primerNombre: '   ',
-      segundoNombre: '   ',
-      primerApellido: '   ',
-      segundoApellido: '   ',
+      firstName: '   ',
+      middleName: '   ',
+      firstSurname: '   ',
+      secondSurname: '   ',
     });
 
-    expect(result.primerNombre).toBe('');
-    expect(result.segundoNombre).toBe('');
-    expect(result.primerApellido).toBe('');
-    expect(result.segundoApellido).toBe('');
+    expect(result.firstName).toBe('');
+    expect(result.middleName).toBe('');
+    expect(result.firstSurname).toBe('');
+    expect(result.secondSurname).toBe('');
   });
 
-  it('should map empty segundoNombre/segundoApellido to null in the register payload', () => {
+  it('should map empty middleName/secondSurname to null in the register payload', () => {
     const payload = toRegisterPayload({
       identity,
       personal: toAuthRegisterPersonalData({
         ...personal,
-        segundoNombre: '',
-        segundoApellido: '',
+        middleName: '',
+        secondSurname: '',
       }),
     });
 
-    expect(payload.segundoNombre).toBeNull();
-    expect(payload.segundoApellido).toBeNull();
+    expect(payload.middleName).toBeNull();
+    expect(payload.secondSurname).toBeNull();
   });
 });

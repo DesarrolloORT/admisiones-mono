@@ -1,0 +1,5227 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "API Admisiones",
+    "description": "La autenticación se realiza mediante cookies HttpOnly generadas al iniciar sesión.",
+    "version": "v1"
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Autentica un usuario mediante LDAP.\nLos tokens se devuelven como cookies HttpOnly seguras, no en el body de la respuesta.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para iniciar sesion. El front debe enviar codigo de persona y password; si la autenticacion es correcta, la API setea las cookies de access token y refresh token automaticamente.\n\n🔐 Protección DUAL ADAPTATIVA contra fuerza bruta (OWASP Anti-Automation):\n\n1️⃣ Rate Limit por IP SOLAMENTE:\n   - Límite: 10 intentos cada 15 minutos por dirección IP\n   - Previene: Credential stuffing masivo (probar muchas cuentas)\n   - Permite: Múltiples usuarios legítimos en la misma red/PC/hogar\n   - Algoritmo: Sliding Window con Redis distribuido\n\n2️⃣ Rate Limit por IP + Documento:\n   - Límite: 5 intentos cada 15 minutos por combinación única\n   - Previene: Ataque focalizado a una cuenta específica\n   - Normaliza formato de documento (ignora puntos/guiones)\n   - Bloquea: Intentos repetidos al mismo usuario desde la misma IP\n\n🎯 Ejemplos de comportamiento:\n- Usuario olvida contraseña → Bloqueado al 5to intento con SU documento\n- Familia con IP compartida → 10 usuarios diferentes pueden intentar (2 veces c/u)\n- Ataque a cuenta \"12345678\" → Bloqueado al 5to intento desde esa IP\n- Credential stuffing → Bloqueado al 10mo intento desde esa IP\n\nSi cualquiera de los dos límites se excede → HTTP 429 con headers:\n- X-RateLimit-Limit: Límite máximo configurado\n- X-RateLimit-Remaining: Intentos restantes\n- X-RateLimit-Reset: Timestamp UNIX de cuando se resetea\n- Retry-After: Segundos hasta poder reintentar",
+        "requestBody": {
+          "description": "Datos de autenticación del usuario.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticación exitosa. Las cookies X-Access-Token y X-Refresh-Token han sido establecidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorRequiredResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error en los datos de entrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiados intentos de login. Protección contra fuerza bruta activa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-two-factor-code": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Verifica el código de dos factores enviado por email y completa la autenticación.\nLos tokens se devuelven como cookies HttpOnly seguras, no en el body de la respuesta.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico usado como segundo paso del login cuando la API respondio `202 Accepted` en `auth/login`.\nSi el codigo es valido, se eliminan los datos temporales de 2FA y se emiten las cookies normales de autenticacion.\nSi el codigo vencio pero la sesion 2FA sigue activa, el front puede solicitar uno nuevo con `Auth/ResendTwoFactorCode`.",
+        "requestBody": {
+          "description": "Session ID y código de verificación.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTwoFactorCodeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTwoFactorCodeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTwoFactorCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verificación exitosa. Las cookies han sido establecidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Código incorrecto, sesión expirada o máximo de intentos superado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Se superó el máximo de solicitudes de verificación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-two-factor-code": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Reenvia el codigo de verificacion de dos factores para una sesion 2FA vigente.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para el caso en que el usuario no recibio el mail o el codigo anterior expiro.\nCada reenvio exitoso genera un codigo nuevo, reinicia los intentos de validacion y conserva el tiempo restante de la sesion 2FA.",
+        "requestBody": {
+          "description": "Identificador de la sesion 2FA devuelto por `auth/login`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendTwoFactorCodeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendTwoFactorCodeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendTwoFactorCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Codigo reenviado correctamente. El codigo anterior queda invalidado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorRequiredResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El request es invalido o no contiene sessionId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorRequiredResponseOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "La sesion 2FA no existe, expiro o ya fue consumida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorRequiredResponseOperationResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Se supero el limite de reenvios para esta sesion o cuenta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorRequiredResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/activate-password-link": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Valida el link de creacion y recuperación de password y crea una sesion temporal.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico usado por el frontend cuando el usuario abre el link recibido por mail.\n\nEste endpoint no autentica al usuario para consumir servicios normales. Solo emite una cookie temporal\nllamada X-Password-Activation, con duracion configurada por PasswordActivation:SessionMinutes.\n\nFlujo esperado:\n1. El frontend recibe el token desde la URL del mail.\n2. Llama a este endpoint enviando el token en el body.\n3. Si el token es valido, la API setea X-Password-Activation.\n4. El frontend muestra el formulario para crear la password inicial.\n\nEjemplo de request:\n\n    POST /Auth/ActivatePasswordLink\n    {\n      \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n    }",
+        "requestBody": {
+          "description": "Token de activacion recibido por mail.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePasswordLinkRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePasswordLinkRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePasswordLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Link valido. La cookie temporal X-Password-Activation fue establecida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordActivationSessionOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El token no fue enviado o el request es invalido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordActivationSessionOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "El token expiro, fue manipulado, ya fue usado o no coincide con el hash guardado en la persona.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordActivationSessionOperationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno al validar el link.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordActivationSessionOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/complete-initial-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Completa la creacion y recuperación de password usando la cookie temporal del link.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico pero no anonimo funcionalmente: no usa Authorize porque no debe aceptar el JWT normal.\nValida explicitamente la cookie temporal X-Password-Activation generada por Auth/ActivatePasswordLink.\n\nEsta cookie solo sirve para este endpoint. No permite consumir otros servicios de la API.\n\nSi LDAP falla, el hash del link se conserva para permitir reintentar mientras el link siga vigente.\nSi LDAP responde correctamente, la API limpia el hash guardado, elimina la cookie temporal y emite\nlas cookies normales X-Access-Token y X-Refresh-Token.\n\nEjemplo de request:\n\n    POST /Auth/CompletarPasswordInicial\n    {\n      \"newPassword\": \"NuevaPassword1!\"\n    }",
+        "requestBody": {
+          "description": "Nueva password elegida por el usuario.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInitialPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInitialPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInitialPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password creada correctamente. Se elimina X-Password-Activation y se establecen X-Access-Token y X-Refresh-Token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "La nueva password no cumple las reglas de validacion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No existe cookie temporal, expiro o no corresponde al flujo de activacion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la persona asociada a la sesion temporal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno al completar la password inicial o al cambiarla en LDAP.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Cierra la sesión del usuario eliminando las cookies de autenticación.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint público (anónimo a propósito, M-06): solo limpia cookies, no requiere una sesión\nválida — debe poder llamarse aunque el access token ya haya expirado.",
+        "responses": {
+          "200": {
+            "description": "Logout exitoso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StringOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Renueva el access token usando el refresh token almacenado en cookies.\nEste endpoint valida el refresh token contra la base de datos y genera nuevos tokens.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint autenticado por cookie de refresh token, no por el access token de sesión (que puede\nestar vencido). El front no necesita enviar el token en el body; debe llamar este endpoint\ncuando expire el access token y la API actualizara las cookies si el refresh token sigue vigente.",
+        "responses": {
+          "200": {
+            "description": "Tokens renovados correctamente. Las cookies se actualizan automáticamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token inválido, expirado o no encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado en la base de datos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/recover-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Público] Recuperar contraseña",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para iniciar el flujo de recuperacion de password. El front envia tipo de documento, documento y primer apellido.\nSi los datos coinciden, la API envia un mail con link seguro de recupero. La respuesta es generica para no revelar si la persona existe.",
+        "requestBody": {
+          "description": "Datos de la persona a recuperar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud recibida. Si los datos coinciden, se envia un mail con link de recupero.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El request o el formato del documento es invalido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/countries-states-cities": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Público] Lista paises, estados y ciudades para formularios de admision.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para poblar combos de ubicacion. Devuelve una respuesta liviana con codigos y nombres, manteniendo Uruguay primero, luego paises por nombre, y estados/ciudades ordenados alfabeticamente.",
+        "responses": {
+          "200": {
+            "description": "Catalogo obtenido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryStateCityResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryStateCityResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/initial-survey": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Lista todos los combos estaticos necesarios para la encuesta inicial de admision.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.<br/><br/>Endpoint para poblar la encuesta inicial con los valores canonicos que valida y persiste backend.",
+        "responses": {
+          "200": {
+            "description": "Catalogos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitialSurveyCatalogsResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/degree-programs": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Lista las carreras vigentes para el registro de admision.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.<br/><br/>Endpoint para poblar la seleccion inicial de carrera/producto. Devuelve identificadores y nombres necesarios para que el front luego consulte comienzos.",
+        "parameters": [
+          {
+            "name": "academicOffer",
+            "in": "query",
+            "description": "Opción elegida: CarreraUniversitaria, Tecnicatura o ActualizacionProfesional.",
+            "schema": {
+              "$ref": "#/components/schemas/AcademicOffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalogo obtenido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DegreeProgramsByLevelResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No se informó la propuesta académica o el valor no es válido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DegreeProgramsByLevelResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/intakes": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Lista los comienzos habilitados para una carrera.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.<br/><br/>Endpoint para poblar el combo de comienzo/proceso luego de seleccionar una carrera. El parametro degreeProgramId debe ser el IdProducto recibido desde el endpoint de carreras.",
+        "parameters": [
+          {
+            "name": "degreeProgramId",
+            "in": "query",
+            "description": "Identificador de la carrera/producto seleccionado.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalogo obtenido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Carrera invalida o solicitud invalida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/shifts": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Lista las ofertas disponibles para una carrera y proceso.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.<br/><br/>Endpoint para obtener las ofertas disponibles en Inscripciones y Pagos. En niveles 3 y 4 se\nexcluyen las ofertas en las que la persona autenticada ya tiene una inscripcion vigente.",
+        "parameters": [
+          {
+            "name": "degreeProgramId",
+            "in": "query",
+            "description": "Identificador de la carrera/producto seleccionado.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "admissionProcessId",
+            "in": "query",
+            "description": "Identificador del proceso/comienzo seleccionado.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalogo obtenido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferingResponseListOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Carrera, proceso o solicitud invalida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferingResponseListOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/banks": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Obtiene los bancos disponibles para pagos.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Bancos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida o rechazada por la API interna.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error inesperado al obtener bancos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "La API interna no devolvio datos validos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalogs/institutions": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "[Privado] Obtiene las instituciones educativas para un país y estado dados.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "parameters": [
+          {
+            "name": "countryId",
+            "in": "query",
+            "description": "Código del país.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "description": "Código del estado/departamento.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/product-interest": {
+      "post": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Registra o actualiza el interes de la persona autenticada para un producto, proceso y oferta habilitados.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Producto, proceso y oferta seleccionados.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInterestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInterestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInterestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interes registrado correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Producto, proceso, oferta o solicitud invalida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Persona no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La persona ya tuvo inscripcion o tiene una pendiente para ese producto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/initial-survey": {
+      "get": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Obtiene los datos de preinscripción (encuesta inicial) de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Datos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontraron datos de preinscripción para la persona.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Guarda parcial o completamente la encuesta inicial de admision.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Campos de encuesta enviados por el front.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveInitialSurveyRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveInitialSurveyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveInitialSurveyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Encuesta guardada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Los datos enviados son invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la persona, producto o proceso indicado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveInitialSurveyResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/confirm-pre-enrollment": {
+      "post": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Confirma la preinscripcion de la persona autenticada como cierre del paso 2.\nValida encuesta definitiva, documentos frente y dorso, aceptacion del reglamento y confirma contra la API interna.\nPara productos de nivel 1 y 2 debe indicarse una unica oferta; para nivel 3 y 4 pueden indicarse varias.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Ofertas seleccionadas y aceptacion del reglamento.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPreEnrollmentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPreEnrollmentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPreEnrollmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preinscripcion confirmada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida o datos incompletos para confirmar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la persona, encuesta o documento requerido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La encuesta o el documento no estan vigentes o en estado valido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/reactivate": {
+      "post": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Reactiva una o varias inscripciones dadas de baja de la persona autenticada, creando\ninscripciones nuevas para las mismas ofertas.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Ids de las inscripciones dadas de baja a reactivar: una para nivel 1 y 2, una por seminario para nivel 3 y 4.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactivateEnrollmentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactivateEnrollmentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactivateEnrollmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inscripciones reactivadas correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida, o las ofertas indicadas no son compatibles entre si.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro alguna de las inscripciones para la persona.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Alguna de las inscripciones indicadas no esta dada de baja, o no esta en un estado valido para reactivar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmPreEnrollmentResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/start-payment": {
+      "post": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Inicia o confirma el pago de una inscripcion de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.<br/><br/>Tipos de pago admitidos: `CUENTA_PERSONAL`, `ABITAB`, `PAGANZA`, `BANRED`, `GEOPAY` y `SISTARBANC`. Para `SISTARBANC` se debe enviar `IdBancoSistarbanc`.",
+        "requestBody": {
+          "description": "Inscripcion y tipo de pago seleccionado por el front.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPaymentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPaymentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pago procesado, metodo guardado o URL de pago generada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartPaymentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida o tipo de pago no admitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartPaymentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la inscripcion de la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartPaymentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La inscripcion no esta en un estado valido para pagar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartPaymentResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/student-regulations": {
+      "get": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Indica si la persona autenticada ya aceptó el reglamento estudiantil.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Consulta realizada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentRegulationsAcceptanceResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enrollments/details": {
+      "get": {
+        "tags": [
+          "Enrollments"
+        ],
+        "summary": "[Privado] Obtiene el detalle de una inscripción de \"Mis carreras\" según su estado.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "ID del producto de la tarjeta.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "admissionProcessId",
+            "in": "query",
+            "description": "ID del proceso de la tarjeta.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Estado de la tarjeta (el `enrollmentStatus` que devuelve `person/enrollments`).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle obtenido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentDetailsResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontró la inscripción para la persona.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentDetailsResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/details": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Obtiene los datos de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Datos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailsResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontró la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailsResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Actualiza los datos editables de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Datos editables de la persona.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonDetailsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonDetailsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonDetailsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Datos actualizados correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Los datos enviados son inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontró la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/validate-phone-number": {
+      "post": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Público] Valida un telefono informado por el front para los datos de la persona.\nPublico: el flujo de registro lo necesita antes de que exista un token.",
+        "description": "Endpoint público. No requiere autenticación.",
+        "parameters": [
+          {
+            "name": "isPrimaryPhone",
+            "in": "query",
+            "description": "Indica si se valida como telefono principal.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Telefono normalizado o ingresado por el usuario.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneNumber"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Telefono validado correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Telefono invalido o solicitud incompleta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Se supero el limite de validaciones por minuto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/enrollments": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Obtiene las inscripciones fresco 1 y 2 habilitadas de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Datos obtenidos correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyEnrollmentsResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyEnrollmentsResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/change-password": {
+      "post": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Cambia la contraseña del usuario autenticado.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Password actual y nueva password.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación o de negocio.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno no controlado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/photo": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Obtiene la foto de perfil de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Foto obtenida correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Foto no encontrada o sin imagen.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ByteArrayOperationResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Sube la foto de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "JSON con el nombre del archivo y los bytes de la imagen.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonPhotoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonPhotoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonPhotoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Archivo guardado correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request invalido o archivo no permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/identity-document": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Obtiene el documento de identidad de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Imagen obtenida correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonIdentityDocumentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documento no encontrado o sin imagen.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonIdentityDocumentResponseOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El documento existe pero no esta en un estado valido para ser devuelto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonIdentityDocumentResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Sube frente y dorso del documento de la persona autenticada para la fecha de vencimiento indicada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "JSON con fecha de vencimiento, frente y dorso del documento.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonIdentityDocumentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonIdentityDocumentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadPersonIdentityDocumentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Archivo guardado correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request invalido o archivo no permitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No se encontro la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registration/evaluate-document": {
+      "post": {
+        "tags": [
+          "Registration"
+        ],
+        "summary": "[Público] Evalua si el documento ingresado puede iniciar el registro.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para el primer paso del onboarding. El front envia tipo y numero de documento y recibe el estado funcional para decidir si continua con una persona existente, una persona nueva o una solicitud pendiente.\nLa respuesta incluye un `flowId` que debe enviarse en el header `X-Flow-Id` en los pasos siguientes.",
+        "requestBody": {
+          "description": "Tipo y numero de documento que se quiere registrar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateDocumentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateDocumentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateDocumentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documento evaluado correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentEvaluationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos o regla funcional no cumplida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentEvaluationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registration/verify-identity": {
+      "post": {
+        "tags": [
+          "Registration"
+        ],
+        "summary": "[Público] Verifica la identidad de una persona existente.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico para confirmar que quien continua el registro conoce los datos requeridos de la persona encontrada por documento.\nSi la identidad es valida, se crea el usuario LDAP y se envia el mail de activacion de password.\nRequiere el header `X-Flow-Id` obtenido de EvaluateDocument.",
+        "parameters": [
+          {
+            "name": "X-Flow-Id",
+            "in": "header",
+            "description": "Identificador de la sesion de registro, enviado en el header `X-Flow-Id`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Datos de validacion de identidad asociados a la persona.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIdentityRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIdentityRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIdentityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identidad verificada correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationConfirmationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos, verificacion rechazada o sesion de registro expirada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationConfirmationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registration/analyze-attachment": {
+      "post": {
+        "tags": [
+          "Registration"
+        ],
+        "summary": "[Público] Analiza una imagen o PDF de documento usando Azure Document Intelligence, detecta si se trata\nde cédula uruguaya, pasaporte o documento extranjero admitido, y devuelve los datos extraídos.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Este endpoint está protegido por rate limiting: máximo 5 solicitudes por minuto por usuario/IP.",
+        "requestBody": {
+          "description": "Archivo adjunto y tipo MIME del documento a reconocer.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecognizeDocumentApiRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecognizeDocumentApiRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecognizeDocumentApiRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documento reconocido correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No se recibio archivo o la solicitud es invalida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El archivo no cumple las reglas de validacion o no corresponde a un documento admitido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Se supero el limite de solicitudes de reconocimiento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno al procesar el documento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error del proveedor externo de reconocimiento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Timeout al consultar el proveedor externo de reconocimiento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRecognitionResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registration/confirm-new-person": {
+      "post": {
+        "tags": [
+          "Registration"
+        ],
+        "summary": "[Público] Confirma el registro de una persona nueva.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico protegido por captcha. El front lo usa cuando el documento evaluado no corresponde a una persona existente y debe enviar los datos personales y ubicacion.\nLa persona NO se crea en la base de datos todavía; los datos se guardan temporalmente en Redis.\nLa persona se crea definitivamente cuando el usuario establece su contraseña (CompleteInitialPassword).\nRequiere el header `X-Flow-Id` obtenido de EvaluateDocument.",
+        "parameters": [
+          {
+            "name": "X-Flow-Id",
+            "in": "header",
+            "description": "Identificador de la sesion de registro, enviado en el header `X-Flow-Id`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Datos personales de la nueva persona.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persona nueva confirmada correctamente. `data.pendingReview` siempre viene en false y `data.mailSent` indica si se pudo enviar el mail de activación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationFlowResultOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationFlowResultOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registration/confirm-registration-request": {
+      "post": {
+        "tags": [
+          "Registration"
+        ],
+        "summary": "[Público] Confirma una solicitud de alta previamente generada.",
+        "description": "Endpoint público. No requiere autenticación.<br/><br/>Endpoint publico protegido por captcha. El front lo usa cuando el flujo detecta una solicitud de alta pendiente y necesita completar la confirmacion sin volver a crear la persona.\nRequiere el header `X-Flow-Id` obtenido de EvaluateDocument.",
+        "parameters": [
+          {
+            "name": "X-Flow-Id",
+            "in": "header",
+            "description": "Identificador de la sesion de registro, enviado en el header `X-Flow-Id`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Datos de la solicitud de alta que se confirma.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPersonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud de alta confirmada correctamente. `data.pendingReview` viene en true y `data.mailSent` en false: el flujo termina aca, admisiones revisa a mano y no hay mail de activacion que esperar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationFlowResultOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos, captcha invalido, sesion expirada o regla funcional no cumplida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationFlowResultOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scholarships/enrollments": {
+      "get": {
+        "tags": [
+          "Scholarships"
+        ],
+        "summary": "[Privado] Obtiene las inscripciones confirmadas de la persona autenticada que pueden usarse en el flujo de becas.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Inscripciones obtenidas correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmedEnrollmentResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida o error funcional al obtener las inscripciones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmedEnrollmentResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contracts": {
+      "get": {
+        "tags": [
+          "WebApiAdmisiones"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StringString<>f__AnonymousType1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcademicOffer": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ActivatePasswordLinkRequest": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthRequest": {
+        "required": [
+          "documentNumber",
+          "documentType",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "documentNumber": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthenticatedPerson": {
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "personType": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthenticationResponse": {
+        "required": [
+          "person"
+        ],
+        "type": "object",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/AuthenticatedPerson"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthenticationResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AuthenticationResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BankResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sistarbancBankId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BankResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BooleanOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ByteArrayOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CityResponse": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ComboOption": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompleteInitialPasswordRequest": {
+        "required": [
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmPreEnrollmentRequest": {
+        "type": "object",
+        "properties": {
+          "acceptedRegulations": {
+            "type": "boolean"
+          },
+          "isCorporateEnrollment": {
+            "type": "boolean"
+          },
+          "selectedOfferingIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmPreEnrollmentResponse": {
+        "type": "object",
+        "properties": {
+          "confirmed": {
+            "type": "boolean"
+          },
+          "waiting": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/EnrollmentHeader"
+          },
+          "currentAccount": {
+            "$ref": "#/components/schemas/CurrentAccountBalance"
+          },
+          "enrollments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentOffering"
+            },
+            "nullable": true
+          },
+          "depositAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmPreEnrollmentResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ConfirmPreEnrollmentResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmedEnrollment": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offeringId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intakeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intake": {
+            "type": "string",
+            "nullable": true
+          },
+          "shiftId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "shift": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstSemesterSubjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Subject"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmedEnrollmentDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "degreeProgram": {
+            "type": "string",
+            "nullable": true
+          },
+          "academicCoordinator": {
+            "$ref": "#/components/schemas/Coordinator"
+          },
+          "courseCoordinator": {
+            "$ref": "#/components/schemas/Coordinator"
+          },
+          "enrollments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedEnrollment"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmedEnrollmentResponse": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "enrollmentDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "enrollmentUser": {
+            "type": "string",
+            "nullable": true
+          },
+          "enrollmentStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "productFullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "productLevelId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "admissionProcessId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "intakeId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "intakeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "intakeStartDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "shiftId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "shiftName": {
+            "type": "string",
+            "nullable": true
+          },
+          "offeringId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "referenceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "origin": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmedEnrollmentResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedEnrollmentResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Coordinator": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CountryStateCityResponse": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateWithCitiesResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CountryStateCityResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountryStateCityResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CurrentAccountBalance": {
+        "type": "object",
+        "properties": {
+          "currentBalance": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DegreeProgramResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "admissionProcessId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DegreeProgramsByLevelResponse": {
+        "type": "object",
+        "properties": {
+          "productLevelId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productLevelName": {
+            "type": "string",
+            "nullable": true
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DegreeProgramsBySchoolResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DegreeProgramsByLevelResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DegreeProgramsByLevelResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DegreeProgramsBySchoolResponse": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "schoolName": {
+            "type": "string",
+            "nullable": true
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DegreeProgramResponse"
+            },
+            "nullable": true
+          },
+          "seminars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DegreeProgramsBySeminarResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DegreeProgramsBySeminarResponse": {
+        "type": "object",
+        "properties": {
+          "hasSeminar": {
+            "type": "boolean"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DegreeProgramResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentEvaluationResponse": {
+        "type": "object",
+        "properties": {
+          "userAlreadyRegistered": {
+            "type": "boolean"
+          },
+          "requiresIdentityVerification": {
+            "type": "boolean"
+          },
+          "requiresPersonRegistration": {
+            "type": "boolean"
+          },
+          "requiresRegistrationRequest": {
+            "type": "boolean"
+          },
+          "registrationRequestPending": {
+            "type": "boolean"
+          },
+          "flowId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentEvaluationResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DocumentEvaluationResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentRecognitionResponse": {
+        "type": "object",
+        "properties": {
+          "requiresReview": {
+            "type": "boolean"
+          },
+          "fields": {
+            "$ref": "#/components/schemas/RecognizedDocumentFields"
+          },
+          "personFace": {
+            "$ref": "#/components/schemas/RecognizedFace"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentRecognitionResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DocumentRecognitionResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollmentDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "inProgress": {
+            "$ref": "#/components/schemas/InProgressDetails"
+          },
+          "pendingPayment": {
+            "$ref": "#/components/schemas/ConfirmPreEnrollmentResponse"
+          },
+          "minimumDeposit": {
+            "$ref": "#/components/schemas/MinimumDepositDetails"
+          },
+          "confirmed": {
+            "$ref": "#/components/schemas/ConfirmedEnrollmentDetailsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollmentDetailsResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/EnrollmentDetailsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollmentHeader": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "degreeProgram": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentDueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollmentOffering": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "offeringId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intake": {
+            "type": "string",
+            "nullable": true
+          },
+          "shift": {
+            "type": "string",
+            "nullable": true
+          },
+          "offeringDescription": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EvaluateDocumentRequest": {
+        "required": [
+          "documentNumber",
+          "documentType"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "documentNumber": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FilePayload": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "description": "Nombre original del archivo, con extensión: de ahí sale el tipo permitido.",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Contenido del archivo.",
+            "format": "byte",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Archivo subido por el front: contenido en base64 más su nombre original."
+      },
+      "GetInitialSurveyResponse": {
+        "type": "object",
+        "properties": {
+          "canAnswerSurvey": {
+            "type": "boolean"
+          },
+          "survey": {
+            "$ref": "#/components/schemas/InitialSurveyDetails"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetInitialSurveyResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/GetInitialSurveyResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HighSchoolTrackCatalog": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "track": {
+            "type": "string",
+            "nullable": true
+          },
+          "newTrack": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HighSchoolYearCatalog": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HighSchoolTrackCatalog"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdentityDocumentFile": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InProgressDetails": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/EnrollmentHeader"
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnrollmentOffering"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InitialSurveyCatalogsResponse": {
+        "type": "object",
+        "properties": {
+          "education": {
+            "$ref": "#/components/schemas/SurveyEducationCatalogs"
+          },
+          "academicDecision": {
+            "$ref": "#/components/schemas/SurveyAcademicDecisionCatalogs"
+          },
+          "ortExperience": {
+            "$ref": "#/components/schemas/SurveyOrtExperienceCatalogs"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InitialSurveyCatalogsResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/InitialSurveyCatalogsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InitialSurveyDetails": {
+        "type": "object",
+        "properties": {
+          "degreeProgramId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "admissionProcessId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "highSchoolTrackId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "highSchoolYear": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "currentlyInSecondary": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "highSchoolYearRepeatCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "repeatsHighSchoolYear": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "fatherEducationLevelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "motherEducationLevelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "careerDecisionYearId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ortDecisionYearId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "researchedOtherUniversities": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "otherUniversitiesInfoLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "otherUniversitiesInfoLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "decisionSupportId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "secondaryInstitutionId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "secondaryInstitutionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSecondaryYearLocationId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "previousHigherEducationId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "decisionLevelId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "hadOrtAdvisory": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortAdvisoryRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "visitedOrtWebsite": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortWebsiteRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "visitedOrtFacilities": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortFacilitiesRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "recallsOrtAdvertising": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "motherIsOrtGraduate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "fatherIsOrtGraduate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "consideredUniversityIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "consideredUniversityOthers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "higherEducationUniversityIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "higherEducationUniversityOthers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "ortAdvertisingIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "ortChoiceReasonIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "surveyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstitutionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstitutionResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IntakeResponse": {
+        "type": "object",
+        "properties": {
+          "admissionProcessId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "admissionProcessName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IntakeResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntakeResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MinimumDepositDetails": {
+        "type": "object",
+        "properties": {
+          "paymentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "personId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "depositAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MyEnrollmentItem": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "offeringId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "offeringDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "shiftId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "intakeId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "intakeStartDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "intakeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "shiftName": {
+            "type": "string",
+            "nullable": true
+          },
+          "referenceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MyEnrollmentsResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "productFullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "admissionProcessId": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "productLevelId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "enrollmentStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasSeminars": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentDueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "enrollments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyEnrollmentItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MyEnrollmentsResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyEnrollmentsResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ObjectOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "enum": [
+              null
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "OfferingResponse": {
+        "type": "object",
+        "properties": {
+          "offeringId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "shift": {
+            "$ref": "#/components/schemas/ShiftResponse"
+          },
+          "referenceSchedule": {
+            "type": "string",
+            "nullable": true
+          },
+          "referenceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "offeringDescription": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OfferingResponseListOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfferingResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PasswordActivationSession": {
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PasswordActivationSessionOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PasswordActivationSession"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaymentMessage": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sex": {
+            "type": "string",
+            "nullable": true
+          },
+          "countryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "emailConfirmation": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasRestrictedIdentity": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonDetailsResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PersonDetailsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonIdentityDocumentResponse": {
+        "type": "object",
+        "properties": {
+          "front": {
+            "$ref": "#/components/schemas/IdentityDocumentFile"
+          },
+          "back": {
+            "$ref": "#/components/schemas/IdentityDocumentFile"
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonIdentityDocumentResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PersonIdentityDocumentResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PhoneNumber": {
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "e164": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "iso2": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "countryCode": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nationalNumber": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductInterestRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "admissionProcessId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offeringIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReactivateEnrollmentRequest": {
+        "type": "object",
+        "properties": {
+          "enrollmentIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecognizeDocumentApiRequest": {
+        "type": "object",
+        "properties": {
+          "mimeType": {
+            "type": "string",
+            "description": "Tipo MIME del adjunto: se usa para resolver la extensión si el nombre no la trae.",
+            "nullable": true
+          },
+          "file": {
+            "$ref": "#/components/schemas/FilePayload"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Documento a analizar con Azure Document Intelligence."
+      },
+      "RecognizedDocumentFields": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "birthPlace": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "nullable": true
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "nationality": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecognizedFace": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentType": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoverPasswordRequest": {
+        "required": [
+          "documentNumber",
+          "documentType",
+          "firstSurname"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "documentNumber": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "firstSurname": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterPersonRequest": {
+        "required": [
+          "address",
+          "documentNumber",
+          "documentType",
+          "email",
+          "emailConfirmation",
+          "firstName",
+          "firstSurname",
+          "primaryPhone",
+          "sex"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "documentNumber": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "firstSurname": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "secondSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sex": {
+            "minLength": 1,
+            "pattern": "^[mMfF]$",
+            "type": "string"
+          },
+          "address": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "primaryPhone": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          },
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "emailConfirmation": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "countryId": {
+            "maximum": 9223372036854776000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateId": {
+            "maximum": 9223372036854776000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "maximum": 9223372036854776000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrationConfirmationResponse": {
+        "type": "object",
+        "properties": {
+          "mailSent": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrationConfirmationResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/RegistrationConfirmationResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrationFlowResult": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "mailSent": {
+            "type": "boolean"
+          },
+          "pendingReview": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrationFlowResultOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/RegistrationFlowResult"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResendTwoFactorCodeRequest": {
+        "required": [
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveInitialSurveyRequest": {
+        "type": "object",
+        "properties": {
+          "degreeProgramId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "admissionProcessId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "highSchoolTrackId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "highSchoolYear": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "currentlyInSecondary": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "highSchoolYearRepeatCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "repeatsHighSchoolYear": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "fatherEducationLevelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "motherEducationLevelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "careerDecisionYearId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ortDecisionYearId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "researchedOtherUniversities": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "otherUniversitiesInfoLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "otherUniversitiesInfoLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "decisionSupportId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "secondaryInstitutionId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "secondaryInstitutionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSecondaryYearLocationId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "previousHigherEducationId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "decisionLevelId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "hadOrtAdvisory": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortAdvisoryRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "visitedOrtWebsite": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortWebsiteRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "visitedOrtFacilities": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "ortFacilitiesRatingId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "recallsOrtAdvertising": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "motherIsOrtGraduate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "fatherIsOrtGraduate": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "consideredUniversityIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "consideredUniversityOthers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "higherEducationUniversityIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "higherEducationUniversityOthers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "ortAdvertisingIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "ortChoiceReasonIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveInitialSurveyResponse": {
+        "type": "object",
+        "properties": {
+          "surveyId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "pendingSections": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "pendingFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveInitialSurveyResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/SaveInitialSurveyResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShiftResponse": {
+        "type": "object",
+        "properties": {
+          "shiftId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "shiftName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "enrollmentIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
+          },
+          "paymentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "sistarbancBankId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "encryptedParameters": {
+            "type": "string",
+            "nullable": true
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMessage"
+            },
+            "nullable": true
+          },
+          "confirmed": {
+            "$ref": "#/components/schemas/ConfirmedEnrollmentDetailsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartPaymentResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/StartPaymentResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StateWithCitiesResponse": {
+        "type": "object",
+        "properties": {
+          "countryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "cities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CityResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StringOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StringString<>f__AnonymousType1": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StudentRegulationsAcceptanceResponse": {
+        "type": "object",
+        "properties": {
+          "acceptedStudentRegulations": {
+            "type": "boolean"
+          },
+          "acceptanceDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StudentRegulationsAcceptanceResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentRegulationsAcceptanceResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Subject": {
+        "type": "object",
+        "properties": {
+          "subjectId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SurveyAcademicDecisionCatalogs": {
+        "type": "object",
+        "properties": {
+          "upperSecondaryYears": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "decisionSupports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "decisionLevels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "universities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UniversityCatalog"
+            },
+            "nullable": true
+          },
+          "ortChoiceReasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SurveyEducationCatalogs": {
+        "type": "object",
+        "properties": {
+          "yesNoOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "lastSecondaryYearLocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "highSchoolYears": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HighSchoolYearCatalog"
+            },
+            "nullable": true
+          },
+          "previousHigherEducationOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "universities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UniversityCatalog"
+            },
+            "nullable": true
+          },
+          "educationLevels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SurveyOrtExperienceCatalogs": {
+        "type": "object",
+        "properties": {
+          "yesNoOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "ratings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          },
+          "ortAdvertisements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComboOption"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TwoFactorRequiredResponse": {
+        "required": [
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "maskedEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TwoFactorRequiredResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/TwoFactorRequiredResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UniversityCatalog": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePersonDetailsRequest": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "middleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondSurname": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "nullable": true
+          },
+          "countryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryPhone": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "emailConfirmation": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UploadPersonIdentityDocumentRequest": {
+        "required": [
+          "expirationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "expirationDate": {
+            "type": "string",
+            "description": "Fecha de vencimiento del documento.",
+            "format": "date-time"
+          },
+          "front": {
+            "$ref": "#/components/schemas/FilePayload"
+          },
+          "back": {
+            "$ref": "#/components/schemas/FilePayload"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Alta o reemplazo de las dos caras del documento de identidad."
+      },
+      "UploadPersonPhotoRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/FilePayload"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Alta o reemplazo de la foto de perfil."
+      },
+      "VerifyIdentityRequest": {
+        "required": [
+          "documentNumber",
+          "documentType",
+          "email",
+          "firstSurname"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "documentNumber": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "firstSurname": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyTwoFactorCodeRequest": {
+        "required": [
+          "code",
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "code": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Catalogs"
+    },
+    {
+      "name": "Enrollments"
+    },
+    {
+      "name": "Person"
+    },
+    {
+      "name": "Registration"
+    },
+    {
+      "name": "Scholarships"
+    },
+    {
+      "name": "WebApiAdmisiones"
+    }
+  ]
+}

@@ -13,8 +13,8 @@ import { HomeService } from './services/home';
 export const homeResolver: ResolveFn<HomeData | null> = () => {
   const homeService = inject(HomeService);
 
-  return homeService.getMisInscripciones().pipe(
-    map(inscripciones => ({ inscripciones, becas: [] })),
+  return homeService.getMyEnrollments().pipe(
+    map(enrollments => ({ enrollments, scholarships: [] })),
     catchError(() => of(null))
   );
 };

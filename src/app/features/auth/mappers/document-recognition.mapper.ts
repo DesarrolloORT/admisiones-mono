@@ -7,12 +7,12 @@ export interface RecognizedIdentityPatch {
 }
 
 export interface RecognizedPersonalPatch {
-  primerNombre?: string;
-  segundoNombre?: string;
-  primerApellido?: string;
-  segundoApellido?: string;
-  fechaNacimiento?: Date;
-  sexo?: string;
+  firstName?: string;
+  middleName?: string;
+  firstSurname?: string;
+  secondSurname?: string;
+  birthDate?: Date;
+  sex?: string;
 }
 
 export interface RecognizedFormPatch {
@@ -31,19 +31,19 @@ export function toRecognizedFormPatch(
 
   return {
     identity: withoutEmptyValues({
-      documentType: getStringValue(fields.tipoDocumento),
-      documentNumber: getStringValue(fields.numeroDocumento),
+      documentType: getStringValue(fields.documentType),
+      documentNumber: getStringValue(fields.documentNumber),
     }),
     personal: withoutEmptyValues({
-      primerNombre: getStringValue(fields.primerNombre),
-      segundoNombre: getStringValue(fields.segundoNombre),
-      primerApellido: getStringValue(fields.primerApellido),
-      segundoApellido: getStringValue(fields.segundoApellido),
-      fechaNacimiento: toDateInputValue(getStringValue(fields.fechaNacimiento)),
-      sexo: getStringValue(fields.sexo),
+      firstName: getStringValue(fields.firstName),
+      middleName: getStringValue(fields.middleName),
+      firstSurname: getStringValue(fields.firstSurname),
+      secondSurname: getStringValue(fields.secondSurname),
+      birthDate: toDateInputValue(getStringValue(fields.birthDate)),
+      sex: getStringValue(fields.sex),
     }),
-    countryCode: getCountryCodeFromBirthplace(fields.lugarNacimiento),
-    birthplace: fields.lugarNacimiento,
+    countryCode: getCountryCodeFromBirthplace(fields.birthplace),
+    birthplace: fields.birthplace,
   };
 }
 
@@ -58,9 +58,9 @@ export function resolveStateCodeFromBirthplace(
     return null;
   }
 
-  const country = locations.find(c => c.codigoPais === countryCode);
-  const state = country?.estado?.find(s => s.nombre.toUpperCase() === departmentName);
-  return state?.codigoEstado ?? null;
+  const country = locations.find(c => c.countryCode === countryCode);
+  const state = country?.states?.find(s => s.name.toUpperCase() === departmentName);
+  return state?.stateCode ?? null;
 }
 
 export function getCountryCodeFromBirthplace(birthplace: string | null | undefined): number | null {

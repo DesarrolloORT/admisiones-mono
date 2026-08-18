@@ -69,8 +69,8 @@
   display: none;
 }
 
-.mis-carreras,
-.mis-becas {
+.dashboard-enrollments,
+.dashboard-scholarships {
   display: grid;
   align-content: start;
 }
@@ -91,30 +91,6 @@
   font-weight: var(--ort-sys-font-weight-bold);
   font-size: var(--ort-sys-heading-level5-text-size);
   line-height: var(--ort-sys-heading-level5-line-height);
-}
-
-.scholarship-dialog__list {
-  display: grid;
-  gap: var(--ort-sys-spacing-12);
-  margin-top: var(--ort-sys-spacing-12);
-  margin-left: 0;
-  padding-left: 0;
-  list-style: none;
-}
-
-.scholarship-dialog__list-item {
-  display: flex;
-  gap: var(--ort-sys-spacing-12);
-  align-items: flex-start;
-}
-
-.scholarship-dialog__list-marker {
-  flex: 0 0 auto;
-  color: var(--ort-sys-color-primary-500);
-}
-
-.scholarship-dialog__list-item-content span {
-  font-weight: var(--ort-sys-font-weight-semibold);
 }
 
 @media (width <=760px) {
@@ -143,13 +119,13 @@
     gap: var(--ort-sys-spacing-36);
   }
 
-  .mis-becas__empty,
-  .mis-carreras__empty {
+  .dashboard-scholarships__empty,
+  .dashboard-enrollments__empty {
     display: none;
   }
 
-  .mis-carreras--single,
-  .mis-becas--single {
+  .dashboard-enrollments--single,
+  .dashboard-scholarships--single {
     max-width: 40%;
   }
 
@@ -157,8 +133,8 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .dashboard-cards--row .mis-carreras,
-  .dashboard-cards--row .mis-becas {
+  .dashboard-cards--row .dashboard-enrollments,
+  .dashboard-cards--row .dashboard-scholarships {
     max-width: 85%;
   }
 
@@ -176,11 +152,5 @@
 
   .section-header {
     margin-bottom: var(--ort-sys-spacing-16);
-  }
-}
-
-@media (width >=1200px) {
-  .ort-dialog__dialog {
-    width: 30%;
   }
 }

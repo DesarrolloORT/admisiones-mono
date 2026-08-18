@@ -37,8 +37,8 @@ jobs:
       - name: Audit dependencies for high/critical vulnerabilities
         run: npm audit --audit-level=high
 
-  fetch_api_spec:
-    name: Fetch API spec (internal network)
+  prepare_api:
+    name: Prepare API contracts
     if: >
       github.event.pull_request.head.repo.full_name == github.repository &&
       (startsWith(github.event.pull_request.head.ref, 'feature/') ||
@@ -46,15 +46,6 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'release/') ||
       startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
       startsWith(github.event.pull_request.head.ref, 'hotfix/'))
-    uses: ./.github/workflows/fetch-api-spec.yml
-    with:
-      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
-      checkout-ref: ${{ github.event.pull_request.head.ref }}
-    secrets: inherit
-
-  prepare_api:
-    name: Prepare API contracts
-    needs: fetch_api_spec
     uses: ./.github/workflows/prepare-api-contracts.yml
     with:
       environment: preprod

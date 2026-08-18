@@ -1,13 +1,13 @@
 import type { FormControl } from '@angular/forms';
 
-import type { Career, Comienzo, Seminario, Turno } from './catalog.interface';
+import type { DegreeProgram, Intake, Seminar, Shift } from './catalog.interface';
 
 export interface AcademicProposalForm {
-  tipoPropuesta: FormControl<string>;
-  carrera: FormControl<string>;
-  comienzo: FormControl<string>;
-  turno: FormControl<string>;
-  seminarios: FormControl<string[]>;
+  proposalType: FormControl<string>;
+  degreeProgram: FormControl<string>;
+  intake: FormControl<string>;
+  shift: FormControl<string>;
+  seminars: FormControl<string[]>;
 }
 
 export interface AcademicProposalOption {
@@ -28,25 +28,25 @@ export type AcademicProposalTypeId = (typeof ACADEMIC_PROPOSAL_TYPE_IDS)[number]
  * terminología de carreras.
  */
 export interface AcademicProposalTerminology {
-  careerLabel: string;
-  careerErrorText: string;
-  careerLoadingLabel: string;
-  careerLoadingMessage: string;
-  careerFallbackLabel: string;
-  startLabel: string;
-  startErrorText: string;
+  degreeProgramLabel: string;
+  degreeProgramErrorText: string;
+  degreeProgramLoadingLabel: string;
+  degreeProgramLoadingMessage: string;
+  degreeProgramFallbackLabel: string;
+  intakeLabel: string;
+  intakeErrorText: string;
   startLoadingLabel: string;
   startNoun: string;
 }
 
 const DEFAULT_TERMINOLOGY: AcademicProposalTerminology = {
-  careerLabel: 'Carrera',
-  careerErrorText: 'Seleccioná una carrera',
-  careerLoadingLabel: 'Cargando carreras',
-  careerLoadingMessage: 'Estamos cargando las carreras.',
-  careerFallbackLabel: 'la carrera seleccionada',
-  startLabel: 'Comienzo',
-  startErrorText: 'Seleccioná un comienzo',
+  degreeProgramLabel: 'Carrera',
+  degreeProgramErrorText: 'Seleccioná una carrera',
+  degreeProgramLoadingLabel: 'Cargando carreras',
+  degreeProgramLoadingMessage: 'Estamos cargando las carreras.',
+  degreeProgramFallbackLabel: 'la carrera seleccionada',
+  intakeLabel: 'Comienzo',
+  intakeErrorText: 'Seleccioná un comienzo',
   startLoadingLabel: 'Cargando comienzos',
   startNoun: 'los comienzos',
 };
@@ -82,30 +82,30 @@ const ACADEMIC_PROPOSAL_TYPES: readonly AcademicProposalType[] = [
     hint: 'Cursos cortos para actualizar habilidades',
     levelIds: [3, 4],
     terminology: {
-      careerLabel: 'Programa',
-      careerErrorText: 'Seleccioná un programa',
-      careerLoadingLabel: 'Cargando programas',
-      careerLoadingMessage: 'Estamos cargando los programas.',
-      careerFallbackLabel: 'el programa seleccionado',
-      startLabel: 'Seminario',
-      startErrorText: 'Seleccioná al menos un seminario',
+      degreeProgramLabel: 'Programa',
+      degreeProgramErrorText: 'Seleccioná un programa',
+      degreeProgramLoadingLabel: 'Cargando programas',
+      degreeProgramLoadingMessage: 'Estamos cargando los programas.',
+      degreeProgramFallbackLabel: 'el programa seleccionado',
+      intakeLabel: 'Seminario',
+      intakeErrorText: 'Seleccioná al menos un seminario',
       startLoadingLabel: 'Cargando seminarios',
       startNoun: 'los seminarios',
     },
   },
 ];
 
-const ACTUALIZACION_PROFESIONAL_TYPE = '3';
+const PROFESSIONAL_UPDATE_TYPE = '3';
 
 export function isProfessionalUpdateType(value: string): boolean {
-  return value === ACTUALIZACION_PROFESIONAL_TYPE;
+  return value === PROFESSIONAL_UPDATE_TYPE;
 }
 
 export function isProfessionalUpdateLevel(levelId: number | null | undefined): boolean {
   return (
     levelId !== null &&
     levelId !== undefined &&
-    getAcademicProposalLevelIds(ACTUALIZACION_PROFESIONAL_TYPE).includes(levelId)
+    getAcademicProposalLevelIds(PROFESSIONAL_UPDATE_TYPE).includes(levelId)
   );
 }
 
@@ -127,18 +127,18 @@ export function getAcademicProposalTypeId(value: string): AcademicProposalTypeId
   return ACADEMIC_PROPOSAL_TYPES.find(option => option.value === value)?.id ?? null;
 }
 
-export function getAcademicCareerOptions(
-  careers: readonly Career[],
+export function getAcademicDegreeProgramOptions(
+  degreePrograms: readonly DegreeProgram[],
   proposalType: string
 ): readonly AcademicProposalOption[] {
   const levelIds = getAcademicProposalLevelIds(proposalType);
 
-  return careers
-    .filter(career => levelIds.includes(career.idNivelProducto))
-    .map(career => ({
-      value: career.idProducto.toString(),
-      label: career.nombreProducto,
-      school: career.nombreEscuela,
+  return degreePrograms
+    .filter(degreeProgram => levelIds.includes(degreeProgram.productLevelId))
+    .map(degreeProgram => ({
+      value: degreeProgram.productId.toString(),
+      label: degreeProgram.productName,
+      school: degreeProgram.schoolName,
     }));
 }
 
@@ -152,24 +152,24 @@ export function getAcademicProposalTypeByLevel(
   return ACADEMIC_PROPOSAL_TYPES.find(option => option.levelIds.includes(levelId));
 }
 
-export function toAcademicStartOption(start: Comienzo): AcademicProposalOption {
-  return { value: start.idProceso.toString(), label: start.nombreProceso };
+export function toAcademicIntakeOption(intake: Intake): AcademicProposalOption {
+  return { value: intake.admissionProcessId.toString(), label: intake.admissionProcessName };
 }
 
-export function toAcademicShiftOption(turno: Turno): AcademicProposalOption {
+export function toAcademicShiftOption(shift: Shift): AcademicProposalOption {
   return {
-    value: turno.idOferta.toString(),
-    label: turno.horarioReferencia
-      ? `${turno.nombreTurno} (${turno.horarioReferencia})`
-      : turno.nombreTurno,
+    value: shift.offeringId.toString(),
+    label: shift.referenceSchedule
+      ? `${shift.shiftName} (${shift.referenceSchedule})`
+      : shift.shiftName,
   };
 }
 
-export function toAcademicSeminarOption(seminario: Seminario): AcademicProposalOption {
+export function toAcademicSeminarOption(seminar: Seminar): AcademicProposalOption {
   return {
-    value: seminario.idOferta.toString(),
-    label: seminario.nombre,
-    description: formatSeminarStartDate(seminario.fechaComienzo),
+    value: seminar.offeringId.toString(),
+    label: seminar.name,
+    description: formatSeminarStartDate(seminar.startDate),
   };
 }
 

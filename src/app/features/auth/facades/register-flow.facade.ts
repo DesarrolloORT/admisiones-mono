@@ -4,8 +4,9 @@ import { AsyncValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { firstValueFrom, of } from 'rxjs';
-import { catchError, finalize, map } from 'rxjs/operators';
+import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 
+import { toPhoneValidationValue } from '../../../shared/forms/phone';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import {
   createIdentityForm,
@@ -16,16 +17,18 @@ import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
 import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
-  CEDULA_DOCUMENT_TYPE,
   cleanDocumentNumber,
   getDocumentNumberLabel,
+  NATIONAL_ID_DOCUMENT_TYPE,
 } from '../models/document-number';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import {
   getRegisterPersonalMode,
   isRegisterContinuableFlow,
   RegisterFlowKind,
+  RegistrationOutcome,
   resolveRegisterFlow,
+  resolveRegistrationEnding,
 } from '../models/register-flow';
 import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
 import { AccountService } from '../services/account';
@@ -74,7 +77,7 @@ export class RegisterFlowFacade {
   });
 
   constructor() {
-    this.personalForm.controls.telefono1.addAsyncValidators(this.phoneValidator());
+    this.personalForm.controls.primaryPhone.addAsyncValidators(this.phoneValidator());
 
     effect(() => {
       syncDocumentNumberValidators(
@@ -134,8 +137,13 @@ export class RegisterFlowFacade {
         return;
       }
 
-      if (flow === 'user-exists' || flow === 'application-exists') {
+      if (flow === 'user-exists') {
         this.showGoToLoginSnackbar(result.message ?? undefined);
+        return;
+      }
+
+      if (flow === 'application-exists') {
+        this.showPendingApplicationSnackbar(result.message ?? undefined);
         return;
       }
 
@@ -184,6 +192,23 @@ export class RegisterFlowFacade {
       return;
     }
 
+    const phone = this.personalForm.controls.primaryPhone;
+
+    if (phone.pending) {
+      phone.statusChanges
+        .pipe(
+          filter(status => status !== 'PENDING'),
+          take(1),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(() => this.submitFullRegistration(flow));
+
+      // La validacion en curso pudo dispararse sin emitEvent (el control es updateOn:
+      // 'blur'), asi que se relanza para garantizar la notificacion.
+      phone.updateValueAndValidity();
+      return;
+    }
+
     if (this.personalForm.invalid) {
       this.personalForm.markAllAsTouched();
       return;
@@ -204,8 +229,8 @@ export class RegisterFlowFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: () => {
-          this.navigateToEmailConfirmation();
+        next: result => {
+          this.navigateToEmailConfirmation(result);
         },
         error: error => {
           this.showError(getApiErrorMessage(error, 'No se pudo completar el registro.'));
@@ -221,12 +246,12 @@ export class RegisterFlowFacade {
       return;
     }
 
-    const { primerApellido, mail } = this.personalForm.controls;
+    const { firstSurname, email } = this.personalForm.controls;
 
-    primerApellido.markAsTouched();
-    mail.markAsTouched();
+    firstSurname.markAsTouched();
+    email.markAsTouched();
 
-    if (primerApellido.invalid || mail.invalid) {
+    if (firstSurname.invalid || email.invalid) {
       return;
     }
 
@@ -237,8 +262,8 @@ export class RegisterFlowFacade {
       .verifyExistingPersonIdentity({
         flowId,
         identity: this.getCleanIdentityValues(),
-        primerApellido: primerApellido.value,
-        mail: mail.value,
+        firstSurname: firstSurname.value,
+        email: email.value,
       })
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
@@ -246,11 +271,7 @@ export class RegisterFlowFacade {
       )
       .subscribe({
         next: result => {
-          if (result.success) {
-            this.navigateToEmailConfirmation();
-          } else {
-            this.snackbar.error('No se pudo verificar la identidad.');
-          }
+          this.navigateToEmailConfirmation({ pendingReview: false, mailSent: result.mailSent });
         },
         error: error => {
           const message = getApiErrorMessage(error, 'No se pudo completar el registro.');
@@ -267,17 +288,10 @@ export class RegisterFlowFacade {
         return of(null);
       }
 
-      return this.account
-        .validatePhone({
-          iso2: value.iso2 ?? null,
-          countryPrefix: null,
-          number: value.number.trim(),
-          numberE164: value.numberE164?.trim() || null,
-        })
-        .pipe(
-          map(isValid => (isValid ? null : { phone: true })),
-          catchError(() => of(null))
-        );
+      return this.account.validatePhone(toPhoneValidationValue(value)).pipe(
+        map(isValid => (isValid ? null : { phone: true })),
+        catchError(() => of(null))
+      );
     };
   }
 
@@ -318,19 +332,19 @@ export class RegisterFlowFacade {
   }
 
   private clearRecognizedFields(): void {
-    this.identityForm.patchValue({ documentType: CEDULA_DOCUMENT_TYPE, documentNumber: '' });
+    this.identityForm.patchValue({ documentType: NATIONAL_ID_DOCUMENT_TYPE, documentNumber: '' });
     this.personalForm.patchValue({
-      primerNombre: '',
-      segundoNombre: '',
-      primerApellido: '',
-      segundoApellido: '',
-      fechaNacimiento: '',
-      sexo: '',
+      firstName: '',
+      middleName: '',
+      firstSurname: '',
+      secondSurname: '',
+      birthDate: '',
+      sex: '',
     });
     this.personalForm.controls.location.setValue({
-      codigoPais: null,
-      codigoEstado: null,
-      codigoCiudad: null,
+      countryCode: null,
+      stateCode: null,
+      cityCode: null,
     });
   }
 
@@ -355,9 +369,39 @@ export class RegisterFlowFacade {
     });
   }
 
-  private navigateToEmailConfirmation(): void {
+  private showPendingApplicationSnackbar(
+    message = 'Ya existe una solicitud de alta pendiente para este documento.'
+  ): void {
+    this.snackbar.show({
+      message,
+      hint: 'Admisiones la revisa y te avisa por correo cuando esté aprobada.',
+      variant: 'warning',
+      duration: 10000,
+    });
+  }
+
+  private showMissingActivationEmailSnackbar(): void {
+    this.snackbar.show({
+      message: 'No pudimos enviarte el correo de activación.',
+      hint: 'Tu cuenta quedó creada: usá "Recuperar acceso" para definir tu contraseña.',
+      variant: 'warning',
+      actionLabel: 'Recuperar acceso',
+      duration: 10000,
+      action: () => {
+        this.router.navigateByUrl('/recuperar-acceso');
+      },
+    });
+  }
+
+  private navigateToEmailConfirmation(outcome: RegistrationOutcome): void {
+    const { route, missingActivationEmail } = resolveRegistrationEnding(outcome);
+
     this.isCompleted.set(true);
-    this.router.navigateByUrl('/confirmacion-correo/registro');
+    this.router.navigateByUrl(route);
+
+    if (missingActivationEmail) {
+      this.showMissingActivationEmailSnackbar();
+    }
   }
 
   private handleDocumentRecognitionError(error: unknown): void {

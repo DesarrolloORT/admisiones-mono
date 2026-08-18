@@ -51,7 +51,7 @@ describe('RegisterPersonalStep', () => {
 
     const previousSummary = component.errorSummary();
 
-    form.controls.mail.setValue('postulante@ort.edu.uy');
+    form.controls.email.setValue('postulante@ort.edu.uy');
 
     expect(component.errorSummary()).toBe(previousSummary);
   });

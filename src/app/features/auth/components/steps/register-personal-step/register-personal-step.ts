@@ -59,14 +59,14 @@ export class RegisterPersonalStep {
     this.personalMode() === 'verification' ? 'Confirmando...' : 'Creando...'
   );
   private readonly verificationFields: FormErrorField[] = [
-    { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
-    { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
+    { controlName: 'firstSurname', fieldId: 'first-last-name', label: 'Primer apellido' },
+    { controlName: 'email', fieldId: 'email', label: 'E-mail' },
   ];
   private readonly completeFields: FormErrorField[] = [
-    { controlName: 'primerNombre', fieldId: 'first-name', label: 'Primer nombre' },
-    { controlName: 'primerApellido', fieldId: 'first-last-name', label: 'Primer apellido' },
-    { controlName: 'fechaNacimiento', fieldId: 'birth-date', label: 'Fecha de nacimiento' },
-    { controlName: 'sexo', fieldId: 'sex', label: 'Sexo' },
+    { controlName: 'firstName', fieldId: 'first-name', label: 'Primer nombre' },
+    { controlName: 'firstSurname', fieldId: 'first-last-name', label: 'Primer apellido' },
+    { controlName: 'birthDate', fieldId: 'birth-date', label: 'Fecha de nacimiento' },
+    { controlName: 'sex', fieldId: 'sex', label: 'Sexo' },
     {
       controlName: 'location',
       fieldId: (control: AbstractControl) => {
@@ -82,10 +82,10 @@ export class RegisterPersonalStep {
       },
       label: 'Ubicación',
     },
-    { controlName: 'direccion', fieldId: 'address', label: 'Dirección' },
-    { controlName: 'telefono1', fieldId: 'phone', label: 'Celular' },
-    { controlName: 'mail', fieldId: 'email', label: 'E-mail' },
-    { controlName: 'verificacionMail', fieldId: 'confirm-email', label: 'Confirmar e-mail' },
+    { controlName: 'address', fieldId: 'address', label: 'Dirección' },
+    { controlName: 'primaryPhone', fieldId: 'phone', label: 'Celular' },
+    { controlName: 'email', fieldId: 'email', label: 'E-mail' },
+    { controlName: 'emailConfirmation', fieldId: 'confirm-email', label: 'Confirmar e-mail' },
   ];
 
   public hasSubmittedInvalidFields(): boolean {
@@ -94,9 +94,9 @@ export class RegisterPersonalStep {
     }
 
     if (this.personalMode() === 'verification') {
-      const { primerApellido, mail } = this.form().controls;
+      const { firstSurname, email } = this.form().controls;
 
-      return primerApellido.invalid || mail.invalid;
+      return firstSurname.invalid || email.invalid;
     }
 
     return this.form().invalid;

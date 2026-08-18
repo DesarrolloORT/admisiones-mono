@@ -1,0 +1,22 @@
+<app-process-layout
+  closeLabel="Cerrar becas"
+  processTitle="Postulación a becas"
+  stepperAriaLabel="Progreso de postulación a becas"
+  [currentStepId]="process.currentStep()"
+  [showBack]="process.canGoBack()"
+  [showStepper]="true"
+  [stepperSubtitle]="process.stepLabel()"
+  [steps]="process.stepItems()"
+  (back)="process.back()"
+  (closeFlow)="goHome()"
+  (logoutRequested)="logout()">
+  <main class="scholarship-process__main">
+    @switch (process.currentStep()) { @case ('application-info') {
+    <app-scholarship-academic-step />
+    } @case ('personal-info') {
+    <app-scholarship-personal-step />
+    } @case ('confirmation') {
+    <!-- Punto de extensión: montar acá el step de confirmación (ver README). -->
+    } }
+  </main>
+</app-process-layout>

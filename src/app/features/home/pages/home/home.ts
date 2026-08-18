@@ -20,12 +20,12 @@ const HOME_DESCRIPTION = 'Aquí podés gestionar tu inscripción y postulación 
 
 const ACTION_CARDS: HomeActionCard[] = [
   {
-    id: 'career',
+    id: 'enrollment',
     title: 'Inscripción a carrera',
     description: 'Iniciá tu inscripción y reservá tu lugar para el próximo inicio.',
     icon: 'school',
     ctaLabel: 'Comenzar inscripción',
-    imageSrc: 'assets/home/inscripcion-card.png',
+    imageSrc: 'assets/home/enrollment-card.png',
     route: '/inscripciones',
   },
   {
@@ -34,7 +34,7 @@ const ACTION_CARDS: HomeActionCard[] = [
     description: 'Podés postularte a las oportunidades de beca disponibles.',
     icon: 'workspace_premium',
     ctaLabel: 'Postularme a beca',
-    imageSrc: 'assets/home/becas-card.png',
+    imageSrc: 'assets/home/scholarships-card.png',
     route: '/becas',
   },
 ];
@@ -53,13 +53,13 @@ export class Home {
 
   protected readonly hasActivity = computed(() => {
     const data = this.homeData();
-    return !!data && (data.inscripciones.length > 0 || data.becas.length > 0);
+    return !!data && (data.enrollments.length > 0 || data.scholarships.length > 0);
   });
   protected readonly description = HOME_DESCRIPTION;
   protected readonly actionCards = ACTION_CARDS;
 
   protected readonly greeting = computed(() => {
-    const userName = this.authSession.session()?.primerNombre?.trim();
+    const userName = this.authSession.session()?.firstName?.trim();
 
     return userName ? `¡Hola ${userName}!` : '¡Hola!';
   });

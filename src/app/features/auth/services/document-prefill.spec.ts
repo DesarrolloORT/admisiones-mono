@@ -16,17 +16,17 @@ describe('DocumentPrefillService', () => {
   beforeEach(() => {
     documentRecognitionMock = {
       createRequestFromFile: vi.fn().mockResolvedValue({
-        tipoMime: 'application/pdf',
-        archivoAdjunto: { nombreArchivo: 'cedula.pdf', archivo: 'base64' },
+        mimeType: 'application/pdf',
+        attachment: { fileName: 'identity-document.pdf', content: 'base64' },
       }),
       recognizeDocument: vi.fn().mockReturnValue(
         of({
-          campos: {
-            tipoDocumento: 'CI',
-            numeroDocumento: '11111111',
-            primerNombre: 'Ana',
-            primerApellido: 'Silva',
-            lugarNacimiento: 'Montevideo / URY',
+          fields: {
+            documentType: 'CI',
+            documentNumber: '11111111',
+            firstName: 'Ana',
+            firstSurname: 'Silva',
+            birthplace: 'Montevideo / URY',
           },
         })
       ),
@@ -42,9 +42,9 @@ describe('DocumentPrefillService', () => {
             getCountryLocations: vi.fn().mockReturnValue(
               of([
                 {
-                  codigoPais: 1,
-                  nombre: 'Uruguay',
-                  estado: [{ codigoEstado: 10, nombre: 'MONTEVIDEO' }],
+                  countryCode: 1,
+                  name: 'Uruguay',
+                  states: [{ stateCode: 10, name: 'MONTEVIDEO' }],
                 },
               ])
             ),
@@ -61,18 +61,18 @@ describe('DocumentPrefillService', () => {
   });
 
   it('should create a document recognition request and return form prefill data', async () => {
-    const file = new File(['content'], 'cedula.pdf', { type: 'application/pdf' });
+    const file = new File(['content'], 'identity-document.pdf', { type: 'application/pdf' });
 
     const result = await service.preload(file);
 
     expect(documentRecognitionMock.createRequestFromFile).toHaveBeenCalledWith(file);
     expect(documentRecognitionMock.recognizeDocument).toHaveBeenCalled();
     expect(result.patch?.identity).toEqual({ documentType: 'CI', documentNumber: '11111111' });
-    expect(result.patch?.personal).toEqual({ primerNombre: 'Ana', primerApellido: 'Silva' });
+    expect(result.patch?.personal).toEqual({ firstName: 'Ana', firstSurname: 'Silva' });
     expect(result.location).toEqual({
-      codigoPais: 1,
-      codigoEstado: 10,
-      codigoCiudad: null,
+      countryCode: 1,
+      stateCode: 10,
+      cityCode: null,
     });
   });
 });

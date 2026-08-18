@@ -2,13 +2,13 @@ import {
   cleanDocumentNumber,
   formatDocumentForBackend,
   getDocumentNumberLabel,
-  isCedulaDocumentType,
+  isNationalIdDocumentType,
 } from './document-number';
 
 describe('document-number', () => {
-  it('should detect cedula document type', () => {
-    expect(isCedulaDocumentType('CI')).toBe(true);
-    expect(isCedulaDocumentType('PS')).toBe(false);
+  it('should detect the national ID document type', () => {
+    expect(isNationalIdDocumentType('CI')).toBe(true);
+    expect(isNationalIdDocumentType('PS')).toBe(false);
   });
 
   it('should clean CI separators but keep non-CI values trimmed', () => {

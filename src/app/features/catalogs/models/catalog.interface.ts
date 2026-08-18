@@ -21,55 +21,55 @@ export interface Country extends CatalogItem {
 }
 
 export interface LocationCity {
-  codigoPais: number;
-  codigoEstado: number;
-  codigoCiudad: number;
-  nombre: string;
+  countryCode: number;
+  stateCode: number;
+  cityCode: number;
+  name: string;
 }
 
 export interface LocationState {
-  codigoPais: number;
-  codigoEstado: number;
-  nombre: string;
-  ciudad?: LocationCity[] | null;
+  countryCode: number;
+  stateCode: number;
+  name: string;
+  cities?: LocationCity[] | null;
 }
 
 export interface LocationCountry {
-  codigoPais: number;
-  nombre: string;
-  estado?: LocationState[] | null;
+  countryCode: number;
+  name: string;
+  states?: LocationState[] | null;
 }
 
-export interface Career {
-  idProducto: number;
-  idProceso?: number | null;
-  idNivelProducto: number;
-  nombreProducto: string;
-  nombreNivelProducto: string;
-  nombreEscuela?: string;
+export interface DegreeProgram {
+  productId: number;
+  admissionProcessId?: number | null;
+  productLevelId: number;
+  productName: string;
+  productLevelName: string;
+  schoolName?: string;
   /** AP: true habilita elegir varios seminarios; false deja una sola oferta. */
-  tieneSeminario?: boolean | null;
+  hasSeminar?: boolean | null;
 }
 
-export interface Comienzo {
-  idProceso: number;
-  nombreProceso: string;
+export interface Intake {
+  admissionProcessId: number;
+  admissionProcessName: string;
 }
 
-export interface Turno {
-  idOferta: number;
-  idTurno: number;
-  nombreTurno: string;
-  horarioReferencia: string;
-  descripcionOferta: string;
-  fechaReferencia: string | null;
+export interface Shift {
+  offeringId: number;
+  shiftId: number;
+  shiftName: string;
+  referenceSchedule: string;
+  offeringDescription: string;
+  referenceDate: string | null;
 }
 
-export interface Seminario {
-  idOferta: number;
-  idProceso: number;
-  nombre: string;
-  fechaComienzo: string | null;
+export interface Seminar {
+  offeringId: number;
+  admissionProcessId: number;
+  name: string;
+  startDate: string | null;
 }
 
 export type ReasonForChoice = CatalogItem;
@@ -107,23 +107,23 @@ export interface BaccalaureateYearGroup extends CatalogItem {
 }
 
 export interface InitialSurveyCatalogs {
-  educacion: {
-    ubicacionesUltimoAnioSecundaria: CatalogItem[];
-    aniosBachillerato: BaccalaureateYearGroup[];
-    estadosEducacionSuperiorPrevia: CatalogItem[];
-    universidades: CatalogItem[];
-    nivelesFormacionTutores: CatalogItem[];
+  education: {
+    lastSecondaryYearLocations: CatalogItem[];
+    highSchoolYears: BaccalaureateYearGroup[];
+    previousHigherEducationOptions: CatalogItem[];
+    universities: CatalogItem[];
+    guardianEducationLevels: CatalogItem[];
   };
-  decisionAcademica: {
-    aniosEducacionMediaSuperior: CatalogItem[];
-    apoyosDecision: CatalogItem[];
-    nivelesDecision: CatalogItem[];
-    universidades: CatalogItem[];
-    motivosEleccionOrt: CatalogItem[];
+  academicDecision: {
+    upperSecondaryYears: CatalogItem[];
+    decisionSupports: CatalogItem[];
+    decisionLevels: CatalogItem[];
+    universities: CatalogItem[];
+    ortChoiceReasons: CatalogItem[];
   };
-  experienciaOrt: {
-    valoraciones: CatalogItem[];
-    publicidadesOrt: CatalogItem[];
+  ortExperience: {
+    ratings: CatalogItem[];
+    ortAdvertisements: CatalogItem[];
   };
 }
 
@@ -134,6 +134,6 @@ export interface Bank extends CatalogItem {
 
 /** Institución educativa para un país/estado dados. */
 export interface EducationalInstitution extends CatalogItem {
-  codigoPais: number | null;
-  codigoEstado: number | null;
+  countryCode: number | null;
+  stateCode: number | null;
 }

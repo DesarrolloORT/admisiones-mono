@@ -66,15 +66,15 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
   protected readonly states = computed(() => {
     const countryCode = this.selectedCountryCode();
     if (countryCode === null) return [];
-    const country = this.countries().find(c => c.codigoPais === countryCode);
-    return country?.estado ?? [];
+    const country = this.countries().find(c => c.countryCode === countryCode);
+    return country?.states ?? [];
   });
 
   protected readonly cities = computed(() => {
     const stateCode = this.selectedStateCode();
     if (stateCode === null) return [];
-    const state = this.states().find((s: LocationState) => s.codigoEstado === stateCode);
-    return state?.ciudad ?? [];
+    const state = this.states().find((s: LocationState) => s.stateCode === stateCode);
+    return state?.cities ?? [];
   });
 
   protected readonly showStates = computed(
@@ -106,12 +106,12 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
       this.cityControl.setValue('');
       return;
     }
-    this.selectedCountryCode.set(value.codigoPais);
-    this.selectedStateCode.set(value.codigoEstado);
-    this.selectedCityCode.set(value.codigoCiudad);
-    this.countryControl.setValue(value.codigoPais?.toString() ?? '', { emitEvent: false });
-    this.stateControl.setValue(value.codigoEstado?.toString() ?? '', { emitEvent: false });
-    this.cityControl.setValue(value.codigoCiudad?.toString() ?? '', { emitEvent: false });
+    this.selectedCountryCode.set(value.countryCode);
+    this.selectedStateCode.set(value.stateCode);
+    this.selectedCityCode.set(value.cityCode);
+    this.countryControl.setValue(value.countryCode?.toString() ?? '', { emitEvent: false });
+    this.stateControl.setValue(value.stateCode?.toString() ?? '', { emitEvent: false });
+    this.cityControl.setValue(value.cityCode?.toString() ?? '', { emitEvent: false });
   }
 
   registerOnChange(fn: (value: LocationValue) => void): void {
@@ -129,21 +129,21 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
   validate(control: AbstractControl<LocationValue | null>): ValidationErrors | null {
     const value = control.value;
 
-    if (!value?.codigoPais) {
+    if (!value?.countryCode) {
       return { locationRequired: true };
     }
 
-    const country = this.countries().find(item => item.codigoPais === value.codigoPais);
-    const states = country?.estado ?? [];
+    const country = this.countries().find(item => item.countryCode === value.countryCode);
+    const states = country?.states ?? [];
 
-    if (states.length > 0 && !value.codigoEstado) {
+    if (states.length > 0 && !value.stateCode) {
       return { locationStateRequired: true };
     }
 
-    const state = states.find(item => item.codigoEstado === value.codigoEstado);
-    const cities = state?.ciudad ?? [];
+    const state = states.find(item => item.stateCode === value.stateCode);
+    const cities = state?.cities ?? [];
 
-    if (cities.length > 0 && !value.codigoCiudad) {
+    if (cities.length > 0 && !value.cityCode) {
       return { locationCityRequired: true };
     }
 
@@ -204,9 +204,9 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
 
   private emitValue(): void {
     this.onChange({
-      codigoPais: this.selectedCountryCode(),
-      codigoEstado: this.selectedStateCode(),
-      codigoCiudad: this.selectedCityCode(),
+      countryCode: this.selectedCountryCode(),
+      stateCode: this.selectedStateCode(),
+      cityCode: this.selectedCityCode(),
     });
   }
 

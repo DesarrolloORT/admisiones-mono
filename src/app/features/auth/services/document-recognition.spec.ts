@@ -18,7 +18,7 @@ describe('DocumentRecognition', () => {
 
   beforeEach(() => {
     endpointMock = {
-      recognizeDocument: vi.fn().mockReturnValue(of({ campos: { primerNombre: 'Ana' } })),
+      recognizeDocument: vi.fn().mockReturnValue(of({ fields: { firstName: 'Ana' } })),
     };
 
     TestBed.configureTestingModule({
@@ -35,15 +35,15 @@ describe('DocumentRecognition', () => {
 
   it('should delegate document recognition payload to the endpoint', () => {
     const payload = {
-      tipoMime: 'image/jpeg',
-      archivoAdjunto: {
-        nombreArchivo: 'documento.jpg',
-        archivo: 'base64-content',
+      mimeType: 'image/jpeg',
+      attachment: {
+        fileName: 'identity-document.jpg',
+        content: 'base64-content',
       },
     };
 
     service.recognizeDocument(payload).subscribe(response => {
-      expect(response.campos?.primerNombre).toBe('Ana');
+      expect(response.fields?.firstName).toBe('Ana');
     });
 
     expect(endpointMock.recognizeDocument).toHaveBeenCalledWith(payload);
@@ -55,10 +55,10 @@ describe('DocumentRecognition', () => {
 
     service
       .recognizeDocument({
-        tipoMime: 'image/jpeg',
-        archivoAdjunto: {
-          nombreArchivo: 'documento.jpg',
-          archivo: 'base64-content',
+        mimeType: 'image/jpeg',
+        attachment: {
+          fileName: 'identity-document.jpg',
+          content: 'base64-content',
         },
       })
       .subscribe({
@@ -70,14 +70,14 @@ describe('DocumentRecognition', () => {
 
   it('should create a base64 request from a valid image file', async () => {
     const payload = await service.createRequestFromFile(
-      new File(['content'], 'documento.jpg', { type: 'image/jpeg' })
+      new File(['content'], 'identity-document.jpg', { type: 'image/jpeg' })
     );
 
     expect(payload).toEqual({
-      tipoMime: 'image/jpeg',
-      archivoAdjunto: {
-        nombreArchivo: 'documento.jpg',
-        archivo: 'Y29udGVudA==',
+      mimeType: 'image/jpeg',
+      attachment: {
+        fileName: 'identity-document.jpg',
+        content: 'Y29udGVudA==',
       },
     });
   });
@@ -109,7 +109,7 @@ describe('DocumentRecognition', () => {
     vi.stubGlobal('createImageBitmap', createImageBitmapMock);
 
     const file = fileWithSize(
-      new File(['original'], 'cedula.png', { type: 'image/png' }),
+      new File(['original'], 'identity-document.png', { type: 'image/png' }),
       IMAGE_COMPRESSION_THRESHOLD_BYTES + 1
     );
 
@@ -121,10 +121,10 @@ describe('DocumentRecognition', () => {
     expect(drawImage).toHaveBeenCalledWith(bitmap, 0, 0, 2000, 1000);
     expect(close).toHaveBeenCalledOnce();
     expect(payload).toEqual({
-      tipoMime: 'image/png',
-      archivoAdjunto: {
-        nombreArchivo: 'cedula.png',
-        archivo: 'Y29tcHJlc3NlZA==',
+      mimeType: 'image/png',
+      attachment: {
+        fileName: 'identity-document.png',
+        content: 'Y29tcHJlc3NlZA==',
       },
     });
   });
@@ -152,7 +152,7 @@ describe('DocumentRecognition', () => {
     const bitmap = { width: 4000, height: 2000, close } as ImageBitmap;
     vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue(bitmap));
 
-    const file = new File([new Uint8Array(MAX_IMAGE_SIZE_BYTES + 1000)], 'cedula.jpg', {
+    const file = new File([new Uint8Array(MAX_IMAGE_SIZE_BYTES + 1000)], 'identity-document.jpg', {
       type: 'image/jpeg',
     });
 
@@ -165,13 +165,13 @@ describe('DocumentRecognition', () => {
   it('should reject PDF files', async () => {
     await expect(
       service.createRequestFromFile(
-        new File(['content'], 'documento.pdf', { type: 'application/pdf' })
+        new File(['content'], 'identity-document.pdf', { type: 'application/pdf' })
       )
     ).rejects.toEqual(new DocumentRecognitionFileError('invalidMimeType'));
   });
 
   it('should reject files without a valid MIME type', async () => {
-    await expect(service.createRequestFromFile(new File(['content'], 'documento'))).rejects.toEqual(
+    await expect(service.createRequestFromFile(new File(['content'], 'document'))).rejects.toEqual(
       new DocumentRecognitionFileError('invalidMimeType')
     );
   });
@@ -179,7 +179,7 @@ describe('DocumentRecognition', () => {
   it('should reject active or unsupported image formats', async () => {
     await expect(
       service.createRequestFromFile(
-        new File(['<svg/>'], 'documento.svg', { type: 'image/svg+xml' })
+        new File(['<svg/>'], 'identity-document.svg', { type: 'image/svg+xml' })
       )
     ).rejects.toEqual(new DocumentRecognitionFileError('invalidMimeType'));
   });

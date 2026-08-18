@@ -22,7 +22,7 @@ describe('Home', () => {
             session: signal<AuthSession | null>({
               documentType: 'CI',
               documentNumber: '12345678',
-              primerNombre: 'Ana',
+              firstName: 'Ana',
             }),
           },
         },
@@ -31,7 +31,7 @@ describe('Home', () => {
   });
 
   it('should render the current user name and primary actions', async () => {
-    fixture = createComponent({ inscripciones: [], becas: [] });
+    fixture = createComponent({ enrollments: [], scholarships: [] });
     await fixture.whenStable();
 
     const text = fixture.nativeElement.textContent as string;
@@ -43,23 +43,24 @@ describe('Home', () => {
 
   it('should render Dashboard when the user has activity', async () => {
     fixture = createComponent({
-      inscripciones: [
+      enrollments: [
         {
-          idInscripto: 100,
-          idOfertas: [300],
-          idProducto: 1,
-          idProceso: 4,
-          idComienzo: 2,
-          idTurno: 3,
-          nombreProducto: 'Analista Programador',
-          nombreComienzo: 'Marzo 2027',
-          nombreTurno: 'Noche',
-          estado: 'Confirmada',
-          fechaVencimientoPago: null,
-          seminarios: [],
+          enrollmentId: 100,
+          offeringIds: [300],
+          productId: 1,
+          admissionProcessId: 4,
+          productLevelId: 1,
+          intakeId: 2,
+          shiftId: 3,
+          degreeProgramName: 'Analista Programador',
+          intakeName: 'Marzo 2027',
+          shiftName: 'Noche',
+          status: 'Confirmada',
+          paymentDueDate: null,
+          seminars: [],
         },
       ],
-      becas: [],
+      scholarships: [],
     });
     await fixture.whenStable();
 

@@ -9,13 +9,11 @@ describe('CatalogsEndpoint', () => {
   let endpoint: CatalogsEndpoint;
   let apiMock: {
     request: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     apiMock = {
       request: vi.fn().mockReturnValue(of([])),
-      clearCache: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -25,7 +23,7 @@ describe('CatalogsEndpoint', () => {
     endpoint = TestBed.inject(CatalogsEndpoint);
   });
 
-  it('should map careers from API data', () => {
+  it('should map degreePrograms from API data', () => {
     apiMock.request.mockReturnValue(
       of([
         {
@@ -58,25 +56,25 @@ describe('CatalogsEndpoint', () => {
       ])
     );
 
-    endpoint.getCareers(3).subscribe(result => {
+    endpoint.getDegreePrograms(3).subscribe(result => {
       expect(result).toEqual([
         {
-          idProducto: 20,
-          idProceso: 10,
-          idNivelProducto: 1,
-          nombreProducto: 'Diseño',
-          nombreNivelProducto: 'Carreras',
-          nombreEscuela: 'Facultad de Diseño',
-          tieneSeminario: false,
+          productId: 20,
+          admissionProcessId: 10,
+          productLevelId: 1,
+          productName: 'Diseño',
+          productLevelName: 'Carreras',
+          schoolName: 'Facultad de Diseño',
+          hasSeminar: false,
         },
         {
-          idProducto: 30,
-          idProceso: 11,
-          idNivelProducto: 3,
-          nombreProducto: 'Ciberseguridad',
-          nombreNivelProducto: 'Actualización profesional',
-          nombreEscuela: 'Escuela de Tecnología',
-          tieneSeminario: true,
+          productId: 30,
+          admissionProcessId: 11,
+          productLevelId: 3,
+          productName: 'Ciberseguridad',
+          productLevelName: 'Actualización profesional',
+          schoolName: 'Escuela de Tecnología',
+          hasSeminar: true,
         },
       ]);
     });
@@ -118,12 +116,12 @@ describe('CatalogsEndpoint', () => {
 
     endpoint.getInitialSurveyCatalogs().subscribe(result => {
       expect(result).toEqual({
-        educacion: {
-          ubicacionesUltimoAnioSecundaria: [{ id: 1, label: 'Uruguay' }],
-          estadosEducacionSuperiorPrevia: [{ id: 5, label: 'Sin estudios previos' }],
-          universidades: [{ id: 11, label: 'ORT' }],
-          nivelesFormacionTutores: [{ id: 6, label: 'Universitaria completa' }],
-          aniosBachillerato: [
+        education: {
+          lastSecondaryYearLocations: [{ id: 1, label: 'Uruguay' }],
+          previousHigherEducationOptions: [{ id: 5, label: 'Sin estudios previos' }],
+          universities: [{ id: 11, label: 'ORT' }],
+          guardianEducationLevels: [{ id: 6, label: 'Universitaria completa' }],
+          highSchoolYears: [
             {
               id: 11,
               label: '6º año',
@@ -131,16 +129,16 @@ describe('CatalogsEndpoint', () => {
             },
           ],
         },
-        decisionAcademica: {
-          apoyosDecision: [{ id: 2, label: 'Familia' }],
-          aniosEducacionMediaSuperior: [{ id: 3, label: 'Salida laboral' }],
-          nivelesDecision: [{ id: 7, label: 'Alto' }],
-          motivosEleccionOrt: [{ id: 8, label: 'Reputación' }],
-          universidades: [{ id: 10, label: 'Universidad de la República' }],
+        academicDecision: {
+          decisionSupports: [{ id: 2, label: 'Familia' }],
+          upperSecondaryYears: [{ id: 3, label: 'Salida laboral' }],
+          decisionLevels: [{ id: 7, label: 'Alto' }],
+          ortChoiceReasons: [{ id: 8, label: 'Reputación' }],
+          universities: [{ id: 10, label: 'Universidad de la República' }],
         },
-        experienciaOrt: {
-          valoraciones: [{ id: 4, label: 'Muy bueno' }],
-          publicidadesOrt: [{ id: 9, label: 'Redes sociales' }],
+        ortExperience: {
+          ratings: [{ id: 4, label: 'Muy bueno' }],
+          ortAdvertisements: [{ id: 9, label: 'Redes sociales' }],
         },
       });
     });
@@ -151,7 +149,7 @@ describe('CatalogsEndpoint', () => {
       of([{ id: 1, name: 'BROU', code: 11, sistarbancBankId: 'brou' }])
     );
 
-    endpoint.getBancos().subscribe(result => {
+    endpoint.getBanks().subscribe(result => {
       expect(result).toEqual([{ id: 1, label: 'BROU', code: 'brou' }]);
     });
   });
@@ -159,8 +157,8 @@ describe('CatalogsEndpoint', () => {
   it('should map instituciones from API data', () => {
     apiMock.request.mockReturnValue(of([{ id: 5, name: 'Liceo 1' }]));
 
-    endpoint.getInstituciones(1, 10).subscribe(result => {
-      expect(result).toEqual([{ id: 5, label: 'Liceo 1', codigoPais: 1, codigoEstado: 10 }]);
+    endpoint.getInstitutions(1, 10).subscribe(result => {
+      expect(result).toEqual([{ id: 5, label: 'Liceo 1', countryCode: 1, stateCode: 10 }]);
     });
 
     expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
@@ -184,23 +182,17 @@ describe('CatalogsEndpoint', () => {
       ])
     );
 
-    endpoint.getTurnos(20, 10).subscribe(result => {
+    endpoint.getShifts(20, 10).subscribe(result => {
       expect(result).toEqual([
         {
-          idOferta: 30,
-          idTurno: 2,
-          nombreTurno: 'Nocturno',
-          horarioReferencia: '19:00 a 23:00',
-          descripcionOferta: 'Seminario de marco legal',
-          fechaReferencia: '19/05/2026',
+          offeringId: 30,
+          shiftId: 2,
+          shiftName: 'Nocturno',
+          referenceSchedule: '19:00 a 23:00',
+          offeringDescription: 'Seminario de marco legal',
+          referenceDate: '19/05/2026',
         },
       ]);
     });
-  });
-
-  it('should delegate cache clearing', () => {
-    endpoint.clearCache();
-
-    expect(apiMock.clearCache).toHaveBeenCalled();
   });
 });

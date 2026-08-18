@@ -18,6 +18,6 @@ export class PasswordActivationService {
   }
 
   public completePassword(password: string): Observable<void> {
-    return this.endpoint.completePassword({ passwordNueva: password });
+    return this.endpoint.completePassword({ newPassword: password });
   }
 }

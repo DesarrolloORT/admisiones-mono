@@ -9,7 +9,7 @@ import { fetchApiSpec } from './fetch-api-spec.js';
 
 const SWAGGER = { openapi: '3.0.1', paths: {}, components: { schemas: {} } };
 const CONTRACTS_INDEX = [{ name: 'persona.json', url: '/contracts/persona.json' }];
-const PERSONA_CONTRACT = { title: 'Persona', fields: [] };
+const PERSON_CONTRACT = { title: 'Persona', fields: [] };
 
 function startFakeApi(routes) {
   return new Promise(resolvePromise => {
@@ -32,7 +32,7 @@ test('fetchApiSpec guarda swagger y contratos en el snapshot', async () => {
   const { server, origin } = await startFakeApi({
     '/swagger/v1/swagger.json': SWAGGER,
     '/contracts': CONTRACTS_INDEX,
-    '/contracts/persona.json': PERSONA_CONTRACT,
+    '/contracts/persona.json': PERSON_CONTRACT,
   });
   const outputDir = join(tmpdir(), `api-spec-test-${process.pid}-${Date.now()}`);
 
@@ -52,7 +52,7 @@ test('fetchApiSpec guarda swagger y contratos en el snapshot', async () => {
     );
     assert.deepEqual(
       JSON.parse(readFileSync(join(outputDir, 'contracts', 'persona.json'), 'utf-8')),
-      PERSONA_CONTRACT
+      PERSON_CONTRACT
     );
   } finally {
     server.close();

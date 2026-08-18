@@ -28,23 +28,23 @@ export class DocumentRecognition {
   }
 
   public async createRequestFromFile(file: File): Promise<DocumentRecognitionRequest> {
-    const tipoMime = resolveImageMimeType(file);
-    if (!tipoMime) {
+    const mimeType = resolveImageMimeType(file);
+    if (!mimeType) {
       throw new DocumentRecognitionFileError('invalidMimeType');
     }
 
-    const preparedFile = await compressImageIfNeeded(file, tipoMime);
+    const preparedFile = await compressImageIfNeeded(file, mimeType);
     if (preparedFile.size > MAX_IMAGE_SIZE_BYTES) {
       throw new DocumentRecognitionFileError('maxFileSize');
     }
 
-    const archivo = await this.readFileAsBase64(preparedFile);
+    const content = await this.readFileAsBase64(preparedFile);
 
     return {
-      tipoMime: preparedFile.type || tipoMime,
-      archivoAdjunto: {
-        nombreArchivo: preparedFile.name,
-        archivo,
+      mimeType: preparedFile.type || mimeType,
+      attachment: {
+        fileName: preparedFile.name,
+        content,
       },
     };
   }

@@ -9,36 +9,36 @@ export type RegisterContinuableFlowKind = Extract<
 export type RegisterPersonalMode = 'complete' | 'verification';
 
 export interface RegisterDocumentEvaluation {
-  requiereAltaPersona: boolean;
-  requiereAltaSolicitud: boolean;
-  requiereVerificacion: boolean;
-  solicitudAltaExistente: boolean;
-  usuarioExistente: boolean;
+  requiresPersonCreation: boolean;
+  requiresApplicationCreation: boolean;
+  requiresVerification: boolean;
+  hasExistingApplication: boolean;
+  userExists: boolean;
 }
 
 export function resolveRegisterFlow(
   documentType: string,
   evaluation: RegisterDocumentEvaluation
 ): RegisterFlowKind | null {
-  if (evaluation.usuarioExistente) {
+  if (evaluation.userExists) {
     return 'user-exists';
   }
 
-  if (evaluation.solicitudAltaExistente) {
+  if (evaluation.hasExistingApplication) {
     return 'application-exists';
   }
 
   if (documentType === 'CI') {
-    if (evaluation.requiereVerificacion) {
+    if (evaluation.requiresVerification) {
       return 'existing-person';
     }
 
-    if (evaluation.requiereAltaPersona) {
+    if (evaluation.requiresPersonCreation) {
       return 'new-person';
     }
   }
 
-  if (documentType !== 'CI' && evaluation.requiereAltaSolicitud) {
+  if (documentType !== 'CI' && evaluation.requiresApplicationCreation) {
     return 'new-application';
   }
 
@@ -53,4 +53,32 @@ export function isRegisterContinuableFlow(
 
 export function getRegisterPersonalMode(flow: RegisterFlowKind | null): RegisterPersonalMode {
   return flow === 'existing-person' ? 'verification' : 'complete';
+}
+
+export const REGISTER_CONFIRMATION_ROUTE = '/confirmacion-correo/registro';
+export const REGISTER_REQUEST_CONFIRMATION_ROUTE = '/confirmacion-correo/solicitud-registro';
+
+export interface RegistrationOutcome {
+  pendingReview: boolean;
+  mailSent: boolean;
+}
+
+export interface RegistrationEnding {
+  route: string;
+  missingActivationEmail: boolean;
+}
+
+/**
+ * `pendingReview` es la unica fuente de verdad del final del registro: el
+ * backend ya resolvio si la solicitud queda esperando revision manual, asi que
+ * el tipo de documento no participa. `mailSent` solo importa cuando hubo un
+ * correo de activacion que enviar; con `pendingReview` nunca lo hay.
+ */
+export function resolveRegistrationEnding({
+  pendingReview,
+  mailSent,
+}: RegistrationOutcome): RegistrationEnding {
+  return pendingReview
+    ? { route: REGISTER_REQUEST_CONFIRMATION_ROUTE, missingActivationEmail: false }
+    : { route: REGISTER_CONFIRMATION_ROUTE, missingActivationEmail: !mailSent };
 }

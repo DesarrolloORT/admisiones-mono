@@ -4,9 +4,9 @@ import { firstValueFrom, Observable, of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { AuthSessionService } from '../../features/auth/services/auth-session';
-import { authGuard } from './auth';
+import { authMatchGuard } from './auth';
 
-describe('authGuard', () => {
+describe('authMatchGuard', () => {
   let authSessionMock: { ensureAuthenticatedSession: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
@@ -26,7 +26,9 @@ describe('authGuard', () => {
   });
 
   it('should allow authenticated users', async () => {
-    const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
+    const result = TestBed.runInInjectionContext(() =>
+      authMatchGuard({} as never, [], {} as never)
+    );
 
     await expect(firstValueFrom(result as Observable<true | UrlTree>)).resolves.toBe(true);
     expect(authSessionMock.ensureAuthenticatedSession).toHaveBeenCalled();
@@ -36,7 +38,9 @@ describe('authGuard', () => {
     authSessionMock.ensureAuthenticatedSession.mockReturnValue(of(false));
     const router = TestBed.inject(Router);
 
-    const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
+    const result = TestBed.runInInjectionContext(() =>
+      authMatchGuard({} as never, [], {} as never)
+    );
     const resolved = await firstValueFrom(result as Observable<true | UrlTree>);
 
     expect(router.serializeUrl(resolved as UrlTree)).toBe('/iniciar-sesion');

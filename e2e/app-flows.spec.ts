@@ -7,7 +7,7 @@ import { personalData } from './support/test-data/register-scenarios';
 
 const validPassword = 'Ort2027!Cambio';
 const recoverySuccessMessage =
-  'Si los datos coinciden, te enviaremos un correo con un link para recuperar tu acceso.';
+  'Si los datos coinciden, te enviamos un enlace para actualizar tu contraseña.';
 
 test.describe('Base user flows', () => {
   test('logs in and reaches home @smoke @regression', async ({ page }) => {
@@ -33,15 +33,15 @@ test.describe('Base user flows', () => {
   test('submits recovery access with controlled data @regression', async ({ page }) => {
     await mockApi(page);
     await page.goto('/recuperar-acceso');
-    await expect(page.getByRole('heading', { name: 'Recuperar acceso' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Recuperar contraseña' })).toBeVisible();
 
     await page.getByRole('textbox', { name: 'Nro. de documento' }).fill('12345672');
     await page.getByRole('textbox', { name: 'Primer apellido' }).fill(personalData.firstLastName);
     await page.getByRole('button', { name: 'Enviar' }).click();
 
-    await expect(
-      page.getByRole('status').filter({ hasText: recoverySuccessMessage })
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/confirmacion-correo\/recuperar-acceso/);
+    await expect(page.getByRole('heading', { name: 'Revisá tu correo' })).toBeVisible();
+    await expect(page.getByText(recoverySuccessMessage)).toBeVisible();
   });
 
   test('creates a password from a valid activation token @regression', async ({ page }) => {

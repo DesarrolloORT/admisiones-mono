@@ -12,7 +12,7 @@ export class LoginPage {
   public async goto(): Promise<void> {
     await this.page.goto('/iniciar-sesion');
     await expect(
-      this.page.getByRole('heading', { name: 'Comenzá tu camino en ORT' })
+      this.page.getByRole('heading', { name: 'Tu inscripción empieza aquí' })
     ).toBeVisible();
   }
 

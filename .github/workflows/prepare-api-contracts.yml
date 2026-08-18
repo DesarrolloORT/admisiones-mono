@@ -55,15 +55,10 @@ jobs:
       - name: Sync environment from Azure App Configuration
         run: npm run env -- ${{ inputs.env-sync-target }} ${{ inputs.env-sync-refresh && 'refresh' || '' }}
 
-      - name: Download API spec snapshot
-        uses: actions/download-artifact@v8
-        with:
-          name: api-spec
-          path: api-spec
-
       - name: Generate API contracts
+        # Genera desde el snapshot versionado en .api-spec/ (ver npm run api-spec:refresh).
         # --skip-build: el job siguiente compila el proyecto con estos contratos.
-        run: npm run update-api -- --spec-dir api-spec --skip-build
+        run: npm run update-api -- --skip-build
 
       - name: Upload API contracts
         uses: actions/upload-artifact@v7

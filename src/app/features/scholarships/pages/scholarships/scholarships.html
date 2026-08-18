@@ -1,0 +1,46 @@
+<app-home-header [showBack]="showBack()" />
+<main class="scholarships-main">
+  <section aria-labelledby="scholarships-title" class="scholarships-screen">
+    <div class="scholarships-screen__header">
+      <h1 class="scholarships-title">Postulación a becas</h1>
+      <p class="scholarships-description">Conocé las becas disponibles y sus requisitos.</p>
+    </div>
+
+    @if (isEnrolled()) {
+    <ul class="scholarship-list">
+      @for (scholarship of scholarships(); track $index) {
+      <li>
+        <app-scholarship-card [isEnrolled]="isEnrolled()" [scholarship]="scholarship" />
+      </li>
+      }
+    </ul>
+    } @else{
+    <app-scholarship-card
+      [isEnrolled]="isEnrolled()"
+      [scholarship]="scholarships()[0]"
+      [single]="true" />
+    <div class="with-enrollment__container">
+      <div class="enrollment-separation__container">
+        <div class="enrollment-separation">
+          <span>Con inscripción previa</span>
+        </div>
+        <p class="enrollment-separation__text">
+          La postulación a estas becas requiere que hayas completado el proceso de inscripción y
+          abonado la seña.
+        </p>
+      </div>
+      <ul class="scholarship-list scholarship-list__grid">
+        @for (scholarship of scholarships().slice(1); track $index) {
+        <li>
+          <app-scholarship-card
+            [isEnrolled]="isEnrolled()"
+            [scholarship]="scholarship"
+            [style.opacity]="0.75" />
+        </li>
+        }
+      </ul>
+    </div>
+
+    }
+  </section>
+</main>

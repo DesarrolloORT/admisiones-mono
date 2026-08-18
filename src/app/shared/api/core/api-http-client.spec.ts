@@ -41,19 +41,19 @@ describe('ApiHttpClient', () => {
     const endpoint = defineEndpoint<{
       pathParams: { id: string };
       queryParams: { page: number; search?: string | null };
-      request: { nombre: string };
+      request: { name: string };
       response: { ok: boolean };
     }>({
-      operationId: 'ActualizarPersona',
+      operationId: 'UpdatePerson',
       method: 'POST',
-      path: '/personas/{id}',
+      path: '/people/{id}',
     });
 
     api
       .request(endpoint, {
         pathParams: { id: 'CI 123' },
         queryParams: { page: 2, search: null },
-        body: { nombre: 'Ana' },
+        body: { name: 'Ana' },
         headers: { 'X-Flow-Id': 'flow-123', 'X-Skip-Empty': null },
         withCredentials: true,
       })
@@ -61,14 +61,14 @@ describe('ApiHttpClient', () => {
         expect(response.ok).toBe(true);
       });
 
-    const expectedUrl = new URL('/personas/CI%20123', environment.API_URL).toString();
+    const expectedUrl = new URL('/people/CI%20123', environment.API_URL).toString();
     const request = httpController.expectOne(
       req => req.url === expectedUrl && req.params.get('page') === '2' && !req.params.has('search')
     );
 
     expect(request.request.method).toBe('POST');
     expect(request.request.withCredentials).toBe(true);
-    expect(request.request.body).toEqual({ nombre: 'Ana' });
+    expect(request.request.body).toEqual({ name: 'Ana' });
     expect(request.request.headers.get('X-Flow-Id')).toBe('flow-123');
     expect(request.request.headers.has('X-Skip-Empty')).toBe(false);
 
@@ -82,14 +82,14 @@ describe('ApiHttpClient', () => {
       request: never;
       response: { ok: boolean };
     }>({
-      operationId: 'ObtenerPersona',
+      operationId: 'GetPerson',
       method: 'GET',
-      path: '/persona',
+      path: '/person',
     });
 
     api.request(endpoint).subscribe();
 
-    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+    const request = httpController.expectOne(new URL('/person', environment.API_URL).toString());
 
     expect(request.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
     request.flush({ ok: true });
@@ -99,7 +99,7 @@ describe('ApiHttpClient', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;
       queryParams: never;
-      request: { documento: string };
+      request: { documentNumber: string };
       response: { ok: boolean };
     }>({
       operationId: 'Login',
@@ -109,7 +109,7 @@ describe('ApiHttpClient', () => {
 
     api
       .request(endpoint, {
-        body: { documento: '12345678' },
+        body: { documentNumber: '12345678' },
         captchaAction: ' login ',
       })
       .subscribe(response => {
@@ -132,14 +132,14 @@ describe('ApiHttpClient', () => {
       request: never;
       response: { ok: boolean };
     }>({
-      operationId: 'GuardarPersona',
+      operationId: 'SavePerson',
       method: 'POST',
-      path: '/persona',
+      path: '/person',
     });
 
     api.request(endpoint, { showLoader: true }).subscribe();
 
-    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+    const request = httpController.expectOne(new URL('/person', environment.API_URL).toString());
 
     expect(request.request.context.get(SHOW_GLOBAL_LOADER)).toBe(true);
     request.flush({ ok: true });
@@ -148,21 +148,21 @@ describe('ApiHttpClient', () => {
   it('should append repeated query params for array values', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;
-      queryParams: { estado: string[] };
+      queryParams: { status: string[] };
       request: never;
       response: string[];
     }>({
-      operationId: 'BuscarEstados',
+      operationId: 'SearchStatuses',
       method: 'GET',
-      path: '/estados',
+      path: '/statuses',
     });
 
-    api.request(endpoint, { queryParams: { estado: ['activo', 'pendiente'] } }).subscribe();
+    api.request(endpoint, { queryParams: { status: ['active', 'pending'] } }).subscribe();
 
-    const expectedUrl = new URL('/estados', environment.API_URL).toString();
+    const expectedUrl = new URL('/statuses', environment.API_URL).toString();
     const request = httpController.expectOne(req => req.url === expectedUrl);
 
-    expect(request.request.params.getAll('estado')).toEqual(['activo', 'pendiente']);
+    expect(request.request.params.getAll('status')).toEqual(['active', 'pending']);
 
     request.flush([]);
   });
@@ -174,101 +174,49 @@ describe('ApiHttpClient', () => {
       request: never;
       response: Blob;
     }>({
-      operationId: 'ObtenerFoto',
+      operationId: 'GetPhoto',
       method: 'GET',
-      path: '/persona/foto',
+      path: '/person/photo',
     });
     const response = new Blob(['photo'], { type: 'image/png' });
 
-    api.request(endpoint, { cache: false, responseType: 'blob' }).subscribe(blob => {
+    api.request(endpoint, { responseType: 'blob' }).subscribe(blob => {
       expect(blob.size).toBe(response.size);
       expect(blob.type).toBe('image/png');
     });
 
     const request = httpController.expectOne(
-      new URL('/persona/foto', environment.API_URL).toString()
+      new URL('/person/photo', environment.API_URL).toString()
     );
     expect(request.request.responseType).toBe('blob');
     request.flush(response);
   });
-  it('should cache GET endpoints without params by default', () => {
+  // El cliente no cachea: cada GET va a la red y devuelve el dato vigente. Antes existía un
+  // `Map` de respuestas, pero solo se activaba para endpoints sin `requiresAuth` y todos los
+  // generados que la app consume son autenticados, así que nunca acertaba en producción.
+  it('should re-request GET endpoints instead of caching them', () => {
     const endpoint = defineEndpoint<{
       pathParams: never;
       queryParams: never;
       request: never;
       response: { success?: boolean; httpCode?: number; data: string[] };
     }>({
-      operationId: 'ListarPaises',
+      operationId: 'ListCountries',
       method: 'GET',
-      path: '/paises',
+      path: '/countries',
     });
-    const expectedUrl = new URL('/paises', environment.API_URL).toString();
+    const expectedUrl = new URL('/countries', environment.API_URL).toString();
     const responses: string[][] = [];
 
     api.list(endpoint).subscribe(data => responses.push(data));
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    const request = httpController.expectOne(expectedUrl);
-    request.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
-
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    httpController.expectNone(expectedUrl);
-    expect(responses).toEqual([['Uruguay'], ['Uruguay'], ['Uruguay']]);
-  });
-
-  it('should not cache GET endpoints with query params by default', () => {
-    const endpoint = defineEndpoint<{
-      pathParams: never;
-      queryParams: { estado: string };
-      request: never;
-      response: string[];
-    }>({
-      operationId: 'BuscarEstados',
-      method: 'GET',
-      path: '/estados',
-    });
-    const expectedUrl = new URL('/estados', environment.API_URL).toString();
-
-    api.request(endpoint, { queryParams: { estado: 'activo' } }).subscribe();
-
-    const firstRequest = httpController.expectOne(
-      req => req.url === expectedUrl && req.params.get('estado') === 'activo'
-    );
-    firstRequest.flush([]);
-
-    api.request(endpoint, { queryParams: { estado: 'activo' } }).subscribe();
-
-    const secondRequest = httpController.expectOne(
-      req => req.url === expectedUrl && req.params.get('estado') === 'activo'
-    );
-    secondRequest.flush([]);
-  });
-
-  it('should clear cached GET responses', () => {
-    const endpoint = defineEndpoint<{
-      pathParams: never;
-      queryParams: never;
-      request: never;
-      response: { success?: boolean; httpCode?: number; data: string[] };
-    }>({
-      operationId: 'ListarPaises',
-      method: 'GET',
-      path: '/paises',
-    });
-    const expectedUrl = new URL('/paises', environment.API_URL).toString();
-    const responses: string[][] = [];
+    httpController
+      .expectOne(expectedUrl)
+      .flush({ success: true, httpCode: 200, data: ['Uruguay'] });
 
     api.list(endpoint).subscribe(data => responses.push(data));
-
-    const firstRequest = httpController.expectOne(expectedUrl);
-    firstRequest.flush({ success: true, httpCode: 200, data: ['Uruguay'] });
-
-    api.clearCache();
-    api.list(endpoint).subscribe(data => responses.push(data));
-
-    const secondRequest = httpController.expectOne(expectedUrl);
-    secondRequest.flush({ success: true, httpCode: 200, data: ['Argentina'] });
+    httpController
+      .expectOne(expectedUrl)
+      .flush({ success: true, httpCode: 200, data: ['Argentina'] });
 
     expect(responses).toEqual([['Uruguay'], ['Argentina']]);
   });
@@ -281,28 +229,28 @@ describe('ApiHttpClient', () => {
       response: {
         success?: boolean;
         httpCode?: number;
-        data: { nombre: string; aceptado: boolean; fechaAceptacion: string | null };
+        data: { name: string; accepted: boolean; acceptanceDate: string | null };
         message?: string | null;
       };
     }>({
-      operationId: 'ObtenerPersona',
+      operationId: 'GetPerson',
       method: 'GET',
-      path: '/persona',
+      path: '/person',
     });
 
     api.data(endpoint).subscribe(data => {
       expect(data).toEqual({
-        nombre: 'Ana',
-        aceptado: true,
-        fechaAceptacion: '2026-06-01',
+        name: 'Ana',
+        accepted: true,
+        acceptanceDate: '2026-06-01',
       });
     });
 
-    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+    const request = httpController.expectOne(new URL('/person', environment.API_URL).toString());
     request.flush({
       success: true,
       httpCode: 200,
-      data: { nombre: 'Ana', aceptado: true, fechaAceptacion: '2026-06-01' },
+      data: { name: 'Ana', accepted: true, acceptanceDate: '2026-06-01' },
       message: null,
     });
   });
@@ -315,29 +263,29 @@ describe('ApiHttpClient', () => {
       response: {
         success?: boolean;
         httpCode?: number;
-        data: { nombre: string };
+        data: { name: string };
         message?: string | null;
       };
     }>({
-      operationId: 'EvaluarDocumento',
+      operationId: 'EvaluateDocument',
       method: 'POST',
-      path: '/registro/evaluar-documento',
+      path: '/registration/evaluate-document',
     });
 
     api.requestWithMessage(endpoint).subscribe(response => {
       expect(response).toEqual({
-        data: { nombre: 'Ana' },
+        data: { name: 'Ana' },
         message: 'Documento ya registrado.',
       });
     });
 
     const request = httpController.expectOne(
-      new URL('/registro/evaluar-documento', environment.API_URL).toString()
+      new URL('/registration/evaluate-document', environment.API_URL).toString()
     );
     request.flush({
       success: true,
       httpCode: 200,
-      data: { nombre: 'Ana' },
+      data: { name: 'Ana' },
       message: 'Documento ya registrado.',
     });
   });
@@ -355,9 +303,9 @@ describe('ApiHttpClient', () => {
         message?: string | null;
       };
     }>({
-      operationId: 'CrearPersona',
+      operationId: 'CreatePerson',
       method: 'POST',
-      path: '/persona',
+      path: '/person',
     });
 
     api.request(endpoint).subscribe({
@@ -373,7 +321,7 @@ describe('ApiHttpClient', () => {
       },
     });
 
-    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
+    const request = httpController.expectOne(new URL('/person', environment.API_URL).toString());
     request.flush({
       success: false,
       httpCode: 409,
@@ -391,22 +339,22 @@ describe('ApiHttpClient', () => {
       response: {
         success?: boolean;
         httpCode?: number;
-        data: Array<{ id: number; nombre: string }> | null;
+        data: Array<{ id: number; name: string }> | null;
       };
     }>({
-      operationId: 'ListarPersonas',
+      operationId: 'ListPeople',
       method: 'GET',
-      path: '/personas',
+      path: '/people',
     });
 
     api
-      .list(endpoint, item => ({ id: item.id, label: item.nombre }))
+      .list(endpoint, item => ({ id: item.id, label: item.name }))
       .subscribe(data => {
         expect(data).toEqual([{ id: 1, label: 'Ana' }]);
       });
 
-    const request = httpController.expectOne(new URL('/personas', environment.API_URL).toString());
-    request.flush({ success: true, httpCode: 200, data: [{ id: 1, nombre: 'Ana' }] });
+    const request = httpController.expectOne(new URL('/people', environment.API_URL).toString());
+    request.flush({ success: true, httpCode: 200, data: [{ id: 1, name: 'Ana' }] });
   });
 
   it('should treat single operation result data as a one item list', () => {
@@ -414,19 +362,19 @@ describe('ApiHttpClient', () => {
       pathParams: never;
       queryParams: never;
       request: never;
-      response: { success?: boolean; httpCode?: number; data: { id: number; nombre: string } };
+      response: { success?: boolean; httpCode?: number; data: { id: number; name: string } };
     }>({
-      operationId: 'ObtenerPersona',
+      operationId: 'GetPerson',
       method: 'GET',
-      path: '/persona',
+      path: '/person',
     });
 
     api.list(endpoint).subscribe(data => {
-      expect(data).toEqual([{ id: 1, nombre: 'Ana' }]);
+      expect(data).toEqual([{ id: 1, name: 'Ana' }]);
     });
 
-    const request = httpController.expectOne(new URL('/persona', environment.API_URL).toString());
-    request.flush({ success: true, httpCode: 200, data: { id: 1, nombre: 'Ana' } });
+    const request = httpController.expectOne(new URL('/person', environment.API_URL).toString());
+    request.flush({ success: true, httpCode: 200, data: { id: 1, name: 'Ana' } });
   });
 
   it('should return an empty list when operation result data is null', () => {
@@ -436,16 +384,74 @@ describe('ApiHttpClient', () => {
       request: never;
       response: { success?: boolean; httpCode?: number; data: Array<{ id: number }> | null };
     }>({
-      operationId: 'ListarPersonas',
+      operationId: 'ListPeople',
       method: 'GET',
-      path: '/personas',
+      path: '/people',
     });
 
     api.list(endpoint).subscribe(data => {
       expect(data).toEqual([]);
     });
 
-    const request = httpController.expectOne(new URL('/personas', environment.API_URL).toString());
+    const request = httpController.expectOne(new URL('/people', environment.API_URL).toString());
     request.flush({ success: true, httpCode: 200, data: null });
+  });
+  describe('with a global unwrapOperationResult config', () => {
+    // `FDPComponentsModule` provee la config global con `unwrapOperationResult: true`.
+    // El interceptor cae a ese valor cuando el request no setea el token, asi que
+    // `requestWithMessage` tiene que setearlo explicitamente en false.
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(
+            withXhr(),
+            withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+          ),
+          provideHttpClientTesting(),
+          ...provideOrtApiErrorHandling({
+            config: { logErrors: false, unwrapOperationResult: true },
+          }),
+        ],
+      });
+
+      api = TestBed.inject(ApiHttpClient);
+      httpController = TestBed.inject(HttpTestingController);
+    });
+
+    it('should still expose the envelope message from requestWithMessage', () => {
+      const endpoint = defineEndpoint<{
+        pathParams: never;
+        queryParams: never;
+        request: never;
+        response: {
+          success?: boolean;
+          httpCode?: number;
+          data: { name: string };
+          message?: string | null;
+        };
+      }>({
+        operationId: 'EvaluateDocument',
+        method: 'POST',
+        path: '/registration/evaluate-document',
+      });
+
+      api.requestWithMessage(endpoint).subscribe(response => {
+        expect(response).toEqual({
+          data: { name: 'Ana' },
+          message: 'Documento ya registrado.',
+        });
+      });
+
+      const request = httpController.expectOne(
+        new URL('/registration/evaluate-document', environment.API_URL).toString()
+      );
+      request.flush({
+        success: true,
+        httpCode: 200,
+        data: { name: 'Ana' },
+        message: 'Documento ya registrado.',
+      });
+    });
   });
 });

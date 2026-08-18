@@ -8,8 +8,8 @@
     (blur)="onBlur()"
     (selectionChange)="onCountryChange()">
     <ort-option value="">Seleccioná...</ort-option>
-    @for (country of countries(); track country.codigoPais) {
-    <ort-option [value]="country.codigoPais.toString()">{{ country.nombre }}</ort-option>
+    @for (country of countries(); track country.countryCode) {
+    <ort-option [value]="country.countryCode.toString()">{{ country.name }}</ort-option>
     }
   </ort-select>
   @if (countryControl.touched && countryControl.hasError('required')) {
@@ -28,8 +28,8 @@
     (blur)="onBlur()"
     (selectionChange)="onStateChange()">
     <ort-option value="">Seleccioná...</ort-option>
-    @for (state of states(); track state.codigoEstado) {
-    <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
+    @for (state of states(); track state.stateCode) {
+    <ort-option [value]="state.stateCode.toString()">{{ state.name }}</ort-option>
     }
   </ort-select>
   @if (stateControl.touched && stateControl.hasError('required')) {
@@ -47,8 +47,8 @@
     (blur)="onBlur()"
     (selectionChange)="onCityChange()">
     <ort-option value="">Seleccioná...</ort-option>
-    @for (city of cities(); track city.codigoCiudad) {
-    <ort-option [value]="city.codigoCiudad.toString()">{{ city.nombre }}</ort-option>
+    @for (city of cities(); track city.cityCode) {
+    <ort-option [value]="city.cityCode.toString()">{{ city.name }}</ort-option>
     }
   </ort-select>
   @if (cityControl.touched && cityControl.hasError('required')) {

@@ -15,6 +15,7 @@ import { matchingFieldsValidator } from '../../../../shared/forms/matching-field
 import {
   buildOrtPasswordRequirements,
   ORT_PASSWORD_VALIDATORS,
+  PasswordRequirementStatus,
 } from '../../../../shared/forms/password-validation';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { AccountService } from '../../../auth/services/account';
@@ -23,11 +24,6 @@ interface ChangePasswordForm {
   currentPassword: FormControl<string>;
   password: FormControl<string>;
   confirmPassword: FormControl<string>;
-}
-
-interface PasswordRequirement {
-  label: string;
-  met: boolean;
 }
 
 @Component({
@@ -110,7 +106,7 @@ export class ChangePassword {
     initialValue: this.form.controls.password.value,
   });
 
-  protected readonly requirements = computed<PasswordRequirement[]>(() => {
+  protected readonly requirements = computed<PasswordRequirementStatus[]>(() => {
     this.password();
     return buildOrtPasswordRequirements(this.form.controls.password);
   });

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
-export type ActionCardVariant = 'career' | 'scholarship';
+export type ActionCardVariant = 'enrollment' | 'scholarship';
 
 interface ActionCardConfig {
   icon: string;
@@ -13,7 +13,7 @@ interface ActionCardConfig {
 }
 
 const VARIANT_CONFIG: Record<ActionCardVariant, ActionCardConfig> = {
-  career: {
+  enrollment: {
     icon: 'school',
     title: 'Inscripción a carrera',
     description: 'Iniciá tu inscripción y reservá tu lugar.',

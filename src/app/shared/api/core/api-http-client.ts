@@ -9,10 +9,11 @@ import { inject, Injectable } from '@angular/core';
 import {
   isOperationResult,
   suppressGlobalErrorContext,
+  UNWRAP_OPERATION_RESULT,
   unwrapOperationResultContext,
 } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
@@ -37,7 +38,6 @@ export type ApiRequestOptions<TEndpoint extends ApiEndpoint<EndpointDefinition>>
   body?: EndpointRequest<TEndpoint>;
   headers?: ApiRequestHeaders;
   withCredentials?: boolean;
-  cache?: boolean;
   responseType?: 'json' | 'blob';
   captchaAction?: string;
   showLoader?: boolean;
@@ -52,7 +52,6 @@ export type ApiRequestHeaders =
 export class ApiHttpClient {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = environment.API_URL;
-  private readonly getCache = new Map<string, Observable<unknown>>();
 
   public request<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
     endpoint: TEndpoint,
@@ -67,27 +66,6 @@ export class ApiHttpClient {
       params,
       withCredentials,
     };
-
-    if (this.shouldCache(endpoint, options, params)) {
-      const cacheKey = this.getCacheKey(url, withCredentials);
-      const cached = this.getCache.get(cacheKey) as Observable<EndpointData<TEndpoint>> | undefined;
-
-      if (cached) {
-        return cached;
-      }
-
-      const fresh = this.execute(
-        endpoint,
-        url,
-        requestOptions,
-        options.body,
-        options.responseType
-      ).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-
-      this.getCache.set(cacheKey, fresh);
-
-      return fresh;
-    }
 
     return this.execute(endpoint, url, requestOptions, options.body, options.responseType);
   }
@@ -110,10 +88,6 @@ export class ApiHttpClient {
         message: isOperationResult(response) ? (response.message ?? null) : null,
       }))
     );
-  }
-
-  public clearCache(): void {
-    this.getCache.clear();
   }
 
   public data<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
@@ -189,13 +163,15 @@ export class ApiHttpClient {
 
         return this.http.get<EndpointResponse<TEndpoint>>(url, requestOptions);
       case 'POST':
-        return this.http.post<EndpointResponse<TEndpoint>>(url, body, requestOptions);
+        return this.http.post<EndpointResponse<TEndpoint>>(url, body ?? null, requestOptions);
       case 'PUT':
-        return this.http.put<EndpointResponse<TEndpoint>>(url, body, requestOptions);
+        return this.http.put<EndpointResponse<TEndpoint>>(url, body ?? null, requestOptions);
       case 'PATCH':
-        return this.http.patch<EndpointResponse<TEndpoint>>(url, body, requestOptions);
+        return this.http.patch<EndpointResponse<TEndpoint>>(url, body ?? null, requestOptions);
       case 'DELETE':
         return this.http.delete<EndpointResponse<TEndpoint>>(url, requestOptions);
+      default:
+        throw new Error(`Unsupported HTTP method: ${String(endpoint.method)}`);
     }
   }
 
@@ -214,7 +190,11 @@ export class ApiHttpClient {
     }
 
     if (options.unwrapOperationResult === false) {
-      return context;
+      // Se setea el token en false en lugar de omitirlo: el interceptor cae al
+      // config global cuando el token viene vacio, y `FDPComponentsModule` lo
+      // provee en true. Omitirlo desenvolveria la respuesta y `requestWithMessage`
+      // perderia el `message` del envelope.
+      return context.set(UNWRAP_OPERATION_RESULT, false);
     }
 
     return unwrapOperationResultContext(context);
@@ -277,28 +257,6 @@ export class ApiHttpClient {
     }
 
     return params.append(key, String(value));
-  }
-
-  private shouldCache<TEndpoint extends ApiEndpoint<EndpointDefinition>>(
-    endpoint: TEndpoint,
-    options: ApiRequestOptions<TEndpoint>,
-    params: HttpParams | undefined
-  ): boolean {
-    return (
-      options.cache !== false &&
-      endpoint.method === 'GET' &&
-      !endpoint.requiresAuth &&
-      !this.hasObjectValues(options.pathParams) &&
-      !params?.keys().length
-    );
-  }
-
-  private hasObjectValues(value: unknown): boolean {
-    return !!value && typeof value === 'object' && Object.keys(value).length > 0;
-  }
-
-  private getCacheKey(url: string, withCredentials: boolean | undefined): string {
-    return `${withCredentials ? 'credentials' : 'default'} ${url}`;
   }
 
   private resolveWithCredentials<TEndpoint extends ApiEndpoint<EndpointDefinition>>(

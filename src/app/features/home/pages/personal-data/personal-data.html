@@ -31,7 +31,7 @@
 
     <ort-form-field [hideRequiredMarker]="!!form.controls.documentNumber.value">
       <ort-label>Nro. de documento</ort-label>
-      @if (isCedulaInput()) {
+      @if (isNationalIdInput()) {
       <input
         autocomplete="username"
         formControlName="documentNumber"
@@ -45,15 +45,15 @@
         ortInput
         type="text"
         [id]="'login-document-number'" />
-      } @if (!isCedulaInput()) {
+      } @if (!isNationalIdInput()) {
       <ort-hint>Sin puntos ni guiones</ort-hint>
       } @if ( form.controls.documentNumber.touched &&
       form.controls.documentNumber.hasError('required') ) {
       <ort-error>Este campo es obligatorio</ort-error>
       } @if ( form.controls.documentNumber.touched &&
-      form.controls.documentNumber.hasError('cedula') ) {
+      form.controls.documentNumber.hasError('nationalId') ) {
       <ort-error>Ingresá un número de cédula válido</ort-error>
-      } @if ( !isCedulaInput() && form.controls.documentNumber.touched &&
+      } @if ( !isNationalIdInput() && form.controls.documentNumber.touched &&
       form.controls.documentNumber.hasError('pattern') ) {
       <ort-error>Ingresá solo caracteres alfanuméricos</ort-error>
       }
@@ -121,8 +121,8 @@
         [id]="'profile-country'"
         (selectionChange)="onCountryChange()">
         <ort-option value="">Seleccioná...</ort-option>
-        @for (country of locations(); track country.codigoPais) {
-        <ort-option [value]="country.codigoPais.toString()">{{ country.nombre }}</ort-option>
+        @for (country of locations(); track country.countryCode) {
+        <ort-option [value]="country.countryCode.toString()">{{ country.name }}</ort-option>
         }
       </ort-select>
       @if (form.controls.countryCode.touched && form.controls.countryCode.hasError('required')) {
@@ -137,8 +137,8 @@
         [id]="'profile-state'"
         (selectionChange)="onStateChange()">
         <ort-option value="">Seleccioná...</ort-option>
-        @for (state of states(); track state.codigoEstado) {
-        <ort-option [value]="state.codigoEstado.toString()">{{ state.nombre }}</ort-option>
+        @for (state of states(); track state.stateCode) {
+        <ort-option [value]="state.stateCode.toString()">{{ state.name }}</ort-option>
         }
       </ort-select>
       @if (form.controls.stateCode.touched && form.controls.stateCode.hasError('required')) {

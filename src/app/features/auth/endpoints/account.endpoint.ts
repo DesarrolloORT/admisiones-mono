@@ -8,6 +8,7 @@ import {
   postPersonValidatePhoneNumberEndpoint,
   putPersonDetailsEndpoint,
 } from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import type { StoredPhoneNumber } from 'src/app/shared/forms/phone';
 
 import type { AuthPhoneNumber } from '../models/auth.interface';
 
@@ -24,7 +25,7 @@ export interface AccountPersonalData {
   stateCode: number | null;
   cityCode: number | null;
   address: string;
-  phone: string;
+  phone: StoredPhoneNumber;
   email: string;
   emailVerification: string;
   identityRestricted: boolean;
@@ -59,7 +60,7 @@ export class AccountEndpoint {
   private readonly api = inject(ApiHttpClient);
 
   public getPersonalData(): Observable<AccountPersonalData> {
-    return this.api.request(getPersonDetailsEndpoint, { cache: false }).pipe(
+    return this.api.request(getPersonDetailsEndpoint).pipe(
       map(data => ({
         documentType: data.documentType ?? '',
         documentNumber: data.documentNumber ?? '',
@@ -73,7 +74,12 @@ export class AccountEndpoint {
         stateCode: data.stateId ?? null,
         cityCode: data.cityId ?? null,
         address: data.address ?? '',
-        phone: data.primaryPhone ?? '',
+        phone: {
+          nationalNumber: data.primaryPhone?.nationalNumber ?? '',
+          iso2: data.primaryPhone?.iso2 ?? null,
+          e164: data.primaryPhone?.e164 ?? null,
+          isValid: data.primaryPhone?.isValid ?? false,
+        },
         email: data.email ?? '',
         emailVerification: data.emailConfirmation ?? data.email ?? '',
         identityRestricted: data.hasRestrictedIdentity ?? false,

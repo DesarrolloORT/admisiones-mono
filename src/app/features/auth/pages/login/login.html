@@ -1,9 +1,9 @@
 <app-auth-form
-  description="Inscribite a carreras o programas de formación, y postulá a oportunidades de becas."
+  description="Inscribite y postulate a becas."
   heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
   heroIcon="school"
   heroTitle="Tu red profesional comienza hoy."
-  title="Comenzá tu camino en ORT">
+  title="Tu inscripción empieza aquí">
   @if (formError(); as error) {
   <app-error-alert title="No pudimos continuar" [message]="error" />
   }
@@ -34,7 +34,7 @@
         }
       </ort-form-field>
 
-      <a class="auth-link" routerLink="/recuperar-acceso">¿Olvidaste tu usuario o contraseña?</a>
+      <a class="auth-link" routerLink="/recuperar-acceso">¿Olvidaste tu contraseña?</a>
     </section>
 
     <button

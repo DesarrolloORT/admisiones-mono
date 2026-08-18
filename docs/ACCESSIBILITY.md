@@ -245,7 +245,7 @@ En esos casos:
   `TODO(a11y-ort-component)`.
 - `OrtFileUploader`: en mobile axe detecta contraste insuficiente en texto
   interno del boton del uploader. No se parchean clases internas desde la app;
-  el uso queda marcado en `inscripcion-personal-step.html` y la excepcion de
+  el uso queda marcado en `enrollment-personal-step.html` y la excepcion de
   `test:a11y` queda acotada a `color-contrast` sobre nodos del uploader hasta
   que la libreria lo corrija.
 

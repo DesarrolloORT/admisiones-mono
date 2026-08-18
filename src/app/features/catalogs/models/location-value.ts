@@ -1,5 +1,5 @@
 export interface LocationValue {
-  codigoPais: number | null;
-  codigoEstado: number | null;
-  codigoCiudad: number | null;
+  countryCode: number | null;
+  stateCode: number | null;
+  cityCode: number | null;
 }

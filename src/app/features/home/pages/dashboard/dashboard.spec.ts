@@ -4,7 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { MiInscripcion } from '../../models/mi-inscripcion';
+import { EnrollmentSummary } from '../../models/enrollment-summary';
 import { Dashboard } from './dashboard';
 
 describe('Dashboard', () => {
@@ -22,7 +22,7 @@ describe('Dashboard', () => {
             session: signal<AuthSession | null>({
               documentType: 'CI',
               documentNumber: '12345678',
-              primerNombre: 'Ana',
+              firstName: 'Ana',
             }),
           },
         },
@@ -30,8 +30,8 @@ describe('Dashboard', () => {
     });
 
     fixture = TestBed.createComponent(Dashboard);
-    fixture.componentRef.setInput('inscripciones', [createEnrollment({ idProducto: 1 })]);
-    fixture.componentRef.setInput('becas', []);
+    fixture.componentRef.setInput('enrollments', [createEnrollment({ productId: 1 })]);
+    fixture.componentRef.setInput('scholarships', []);
   });
 
   it('should render the enrollments supplied by the home entry point', async () => {
@@ -74,11 +74,11 @@ describe('Dashboard', () => {
     actionButton?.click();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/inscripciones'], {
-      queryParams: { idProducto: 1, idProceso: 4 },
+      queryParams: { idProducto: 1, idProceso: 4, estado: 'Pago pendiente' },
     });
   });
 
-  // El texto con varias fechas se cubre en `mi-inscripcion.spec.ts`: con 2+ inscripciones la
+  // El texto con varias fechas se cubre en `enrollment-summary.spec.ts`: con 2+ inscripciones la
   // sección de carreras monta un Swiper que jsdom no soporta en este entorno de test.
 
   it('should fall back to the generic detail when no deadline is informed', async () => {
@@ -93,31 +93,32 @@ describe('Dashboard', () => {
 
   function setPendingEnrollments(deadlines: (string | null)[]): void {
     fixture.componentRef.setInput(
-      'inscripciones',
-      deadlines.map((fechaVencimientoPago, index) =>
+      'enrollments',
+      deadlines.map((paymentDueDate, index) =>
         createEnrollment({
-          idProducto: index + 1,
-          estado: 'Pago pendiente',
-          fechaVencimientoPago,
+          productId: index + 1,
+          status: 'Pago pendiente',
+          paymentDueDate,
         })
       )
     );
   }
 
-  function createEnrollment(overrides: Partial<MiInscripcion>): MiInscripcion {
+  function createEnrollment(overrides: Partial<EnrollmentSummary>): EnrollmentSummary {
     return {
-      idInscripto: 100,
-      idOfertas: [300],
-      idProducto: 1,
-      idProceso: 4,
-      idComienzo: 2,
-      idTurno: 3,
-      nombreProducto: 'Analista Programador',
-      nombreComienzo: 'Marzo 2027',
-      nombreTurno: 'Noche',
-      estado: 'Confirmada',
-      fechaVencimientoPago: null,
-      seminarios: [],
+      enrollmentId: 100,
+      offeringIds: [300],
+      productId: 1,
+      admissionProcessId: 4,
+      productLevelId: 1,
+      intakeId: 2,
+      shiftId: 3,
+      degreeProgramName: 'Analista Programador',
+      intakeName: 'Marzo 2027',
+      shiftName: 'Noche',
+      status: 'Confirmada',
+      paymentDueDate: null,
+      seminars: [],
       ...overrides,
     };
   }

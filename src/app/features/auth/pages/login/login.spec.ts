@@ -22,7 +22,7 @@ describe('Login', () => {
           session: {
             documentType: 'CI',
             documentNumber: '12345678',
-            primerNombre: 'Ana',
+            firstName: 'Ana',
           },
         })
       ),

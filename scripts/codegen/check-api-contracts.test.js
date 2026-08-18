@@ -112,12 +112,12 @@ test('detects stale request fields hidden behind adapter variables', () => {
         ): void;
       };
       declare const endpoint: ApiEndpoint<{
-        idInscripcion?: number;
-        tipoPago?: string | null;
+        enrollmentId?: number;
+        paymentType?: string | null;
       }>;
       export class DemoEndpoint {
         public save(): void {
-          const body = { idInscripto: 7, tipoPago: 'ABITAB' };
+          const body = { enrolledPersonId: 7, paymentMethod: 'ABITAB' };
           api.request(endpoint, { body });
         }
       }
@@ -127,7 +127,7 @@ test('detects stale request fields hidden behind adapter variables', () => {
   try {
     const violations = checkApiContracts({ root: fixture, tsconfigPath: 'tsconfig.json' });
     assert.equal(violations.length, 1);
-    assert.match(violations[0].message, /idInscripto.*request actual/);
+    assert.match(violations[0].message, /enrolledPersonId.*request actual/);
   } finally {
     rmSync(fixture, { recursive: true, force: true });
   }

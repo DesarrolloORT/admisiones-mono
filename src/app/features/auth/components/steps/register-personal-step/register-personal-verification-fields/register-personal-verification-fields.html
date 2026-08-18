@@ -9,21 +9,21 @@
 
   <ort-form-field
     class="auth-field--wide"
-    [hideRequiredMarker]="!!form().controls.primerApellido.value">
+    [hideRequiredMarker]="!!form().controls.firstSurname.value">
     <ort-label>Primer apellido</ort-label>
-    <input formControlName="primerApellido" ortInput type="text" [id]="'first-last-name'" />
-    @if (form().controls.primerApellido.touched &&
-    form().controls.primerApellido.hasError('required')) {
+    <input formControlName="firstSurname" ortInput type="text" [id]="'first-last-name'" />
+    @if (form().controls.firstSurname.touched && form().controls.firstSurname.hasError('required'))
+    {
     <ort-error>Este campo es obligatorio</ort-error>
     }
   </ort-form-field>
 
-  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.mail.value">
+  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.email.value">
     <ort-label>E-mail</ort-label>
-    <input autocomplete="email" formControlName="mail" ortInput type="email" [id]="'email'" />
-    @if (form().controls.mail.touched && form().controls.mail.hasError('required')) {
+    <input autocomplete="email" formControlName="email" ortInput type="email" [id]="'email'" />
+    @if (form().controls.email.touched && form().controls.email.hasError('required')) {
     <ort-error>Este campo es obligatorio</ort-error>
-    } @if (form().controls.mail.touched && form().controls.mail.hasError('email')) {
+    } @if (form().controls.email.touched && form().controls.email.hasError('email')) {
     <ort-error>Ingresá un e-mail válido</ort-error>
     }
   </ort-form-field>

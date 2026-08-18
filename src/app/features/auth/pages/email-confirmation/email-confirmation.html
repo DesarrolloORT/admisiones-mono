@@ -14,7 +14,10 @@
 
   <section aria-labelledby="email-confirmation-title" class="email-confirmation">
     <div class="email-confirmation__content">
-      <div aria-hidden="true" class="email-confirmation__icon">
+      <div
+        aria-hidden="true"
+        class="email-confirmation__icon"
+        [class.email-confirmation__icon--primary]="confirmation.iconTone === 'primary'">
         <span class="email-confirmation__icon-inner">
           <ort-icon>{{ confirmation.icon }}</ort-icon>
         </span>

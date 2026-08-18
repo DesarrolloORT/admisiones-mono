@@ -59,8 +59,8 @@ export class RecoverAccess {
       },
     },
     {
-      controlName: 'primerApellido',
-      fieldId: 'recover-primer-apellido',
+      controlName: 'firstSurname',
+      fieldId: 'recover-first-surname',
       label: 'Primer apellido',
     },
   ];
@@ -77,13 +77,13 @@ export class RecoverAccess {
 
     this.isSubmitting.set(true);
 
-    const { documentType, documentNumber, primerApellido } = this.form.getRawValue();
+    const { documentType, documentNumber, firstSurname } = this.form.getRawValue();
 
     this.passwordService
       .recoverPassword({
-        tipoDocumento: documentType,
-        documento: formatDocumentForBackend(documentType, documentNumber),
-        primerApellido: primerApellido.trim(),
+        documentType: documentType,
+        documentNumber: formatDocumentForBackend(documentType, documentNumber),
+        firstSurname: firstSurname.trim(),
       })
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
