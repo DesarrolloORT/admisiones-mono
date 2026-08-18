@@ -1,5 +1,5 @@
 <section aria-labelledby="contact-title" class="auth-form-section" [formGroup]="form()">
-  <h2 class="auth-contact-title mt-2" id="contact-title">Datos de contacto</h2>
+  <h2 class="auth-contact-title" id="contact-title">Datos de contacto</h2>
 
   <ort-form-field [hideRequiredMarker]="!!form().controls.primaryPhone.value?.number">
     <ort-label>Celular</ort-label>
@@ -10,7 +10,6 @@
       placeholderText="Número"
       [defaultCountry]="'UY'"
       [required]="true" />
-    <ort-hint>Seleccione prefijo y luego ingrese solo dígitos.</ort-hint>
     @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('required'))
     {
     <ort-error>El teléfono es obligatorio.</ort-error>
