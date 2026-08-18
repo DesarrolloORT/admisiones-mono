@@ -9,7 +9,7 @@ import { EnrollmentPaymentFacade } from '../../../facades/enrollment-payment';
 import { EnrollmentConfirmationStep } from './enrollment-confirmation-step';
 
 describe('EnrollmentConfirmationStep', () => {
-  const requestConfirmationSpy = vi.fn();
+  const confirmSpy = vi.fn();
   const breakpoint = signal({
     isXSmall: true,
     isSmall: false,
@@ -20,7 +20,7 @@ describe('EnrollmentConfirmationStep', () => {
   });
 
   beforeEach(() => {
-    requestConfirmationSpy.mockClear();
+    confirmSpy.mockClear();
     breakpoint.set({
       isXSmall: true,
       isSmall: false,
@@ -39,14 +39,14 @@ describe('EnrollmentConfirmationStep', () => {
         },
         {
           provide: EnrollmentPaymentFacade,
-          useValue: { requestConfirmation: requestConfirmationSpy },
+          useValue: { confirm: confirmSpy },
         },
       ],
     }).overrideComponent(EnrollmentConfirmationStep, {
       set: {
         imports: [],
         template:
-          '<form (keydown.enter)="onFormEnter($event)" (submit)="facade.requestConfirmation()"><input type="radio" name="payment" /><button type="submit">Pagar</button></form>',
+          '<form (keydown.enter)="onFormEnter($event)" (submit)="facade.confirm()"><input type="radio" name="payment" /><button type="submit">Pagar</button></form>',
       },
     });
   });
@@ -55,7 +55,7 @@ describe('EnrollmentConfirmationStep', () => {
     expect(TestBed.createComponent(EnrollmentConfirmationStep).componentInstance).toBeTruthy();
   });
 
-  it('does not request confirmation when Enter is pressed from a focused radio', () => {
+  it('does not submit the payment when Enter is pressed from a focused radio', () => {
     const fixture = TestBed.createComponent(EnrollmentConfirmationStep);
     fixture.detectChanges();
 
@@ -69,7 +69,7 @@ describe('EnrollmentConfirmationStep', () => {
     radio.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(requestConfirmationSpy).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it('uses vertical radio groups on small breakpoints', () => {
