@@ -42,8 +42,8 @@ describe('Register', () => {
           message: null,
         })
       ),
-      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      confirmRegistration: vi.fn().mockReturnValue(of({ success: true })),
+      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
+      confirmRegistration: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
     };
     documentPrefillMock = {
       preload: vi.fn().mockResolvedValue({

@@ -396,4 +396,62 @@ describe('ApiHttpClient', () => {
     const request = httpController.expectOne(new URL('/people', environment.API_URL).toString());
     request.flush({ success: true, httpCode: 200, data: null });
   });
+  describe('with a global unwrapOperationResult config', () => {
+    // `FDPComponentsModule` provee la config global con `unwrapOperationResult: true`.
+    // El interceptor cae a ese valor cuando el request no setea el token, asi que
+    // `requestWithMessage` tiene que setearlo explicitamente en false.
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(
+            withXhr(),
+            withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
+          ),
+          provideHttpClientTesting(),
+          ...provideOrtApiErrorHandling({
+            config: { logErrors: false, unwrapOperationResult: true },
+          }),
+        ],
+      });
+
+      api = TestBed.inject(ApiHttpClient);
+      httpController = TestBed.inject(HttpTestingController);
+    });
+
+    it('should still expose the envelope message from requestWithMessage', () => {
+      const endpoint = defineEndpoint<{
+        pathParams: never;
+        queryParams: never;
+        request: never;
+        response: {
+          success?: boolean;
+          httpCode?: number;
+          data: { name: string };
+          message?: string | null;
+        };
+      }>({
+        operationId: 'EvaluateDocument',
+        method: 'POST',
+        path: '/registration/evaluate-document',
+      });
+
+      api.requestWithMessage(endpoint).subscribe(response => {
+        expect(response).toEqual({
+          data: { name: 'Ana' },
+          message: 'Documento ya registrado.',
+        });
+      });
+
+      const request = httpController.expectOne(
+        new URL('/registration/evaluate-document', environment.API_URL).toString()
+      );
+      request.flush({
+        success: true,
+        httpCode: 200,
+        data: { name: 'Ana' },
+        message: 'Documento ya registrado.',
+      });
+    });
+  });
 });

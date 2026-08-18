@@ -193,13 +193,13 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.nativeElement.querySelector('#academic-proposal-shift-mobile')).toBeNull();
   });
 
-  // Sin `hasSeminar` las ofertas del programa son horarios, no seminarios.
-  it('labels the AP offering select as Horario when the program has no seminars', () => {
+  // Sin `hasSeminar` el programa ofrece una sola oferta, no seminarios.
+  it('labels the AP offering select as Próximo comienzo when the program has no seminars', () => {
     form.controls.proposalType.setValue('3');
     form.controls.degreeProgram.setValue('40');
     fixture.detectChanges();
 
-    expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Horario');
+    expect(fieldLabel(fixture, 'academic-proposal-seminars')).toContain('Próximo comienzo');
   });
 
   it('preselects the only offering the AP program has', () => {

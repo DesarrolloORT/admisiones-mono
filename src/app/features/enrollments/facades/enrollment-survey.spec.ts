@@ -835,9 +835,7 @@ describe('EnrollmentSurveyFacade', () => {
     expect(uploadIdentityDocument).not.toHaveBeenCalled();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).not.toHaveBeenCalled();
-    expect(survey.preEnrollmentError()).toBe(
-      'No se pudo confirmar la preinscripción con la oferta seleccionada.'
-    );
+    expect(survey.preEnrollmentError()).toBe('No se pudo confirmar la preinscripción.');
     expect(survey.finalizingPreEnrollment()).toBe(false);
   });
 

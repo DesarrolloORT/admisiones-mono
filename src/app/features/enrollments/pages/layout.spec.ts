@@ -176,7 +176,7 @@ describe('Layout', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Inscripción corporativa pendiente');
     expect(fixture.nativeElement.textContent).toContain(
-      'Tu inscripción quedó pendiente del pago de la empresa. Se confirmará automáticamente cuando el pago se acredite.'
+      'Tu empresa deberá enviar la solicitud con los datos de la inscripción a sae@ort.edu.uy'
     );
     expect(fixture.nativeElement.querySelector('a[href="/inicio"]')).toBeTruthy();
   });

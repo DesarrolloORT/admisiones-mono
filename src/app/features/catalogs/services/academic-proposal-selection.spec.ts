@@ -184,14 +184,14 @@ describe('AcademicProposalSelection', () => {
     expect(form.controls.seminars.hasError('required')).toBe(false);
   });
 
-  // Sin `hasSeminar` la oferta del programa es un horario y el select es simple.
+  // Sin `hasSeminar` el programa ofrece una sola oferta y el select es simple.
   it('names the AP offering field after the seminars flag of the program', () => {
     form.controls.proposalType.setValue('3');
     form.controls.degreeProgram.setValue('30');
 
     expect(selection.allowsMultipleSeminars()).toBe(false);
-    expect(selection.seminarLabel()).toBe('Horario');
-    expect(selection.seminarErrorText()).toBe('Seleccioná un horario');
+    expect(selection.seminarLabel()).toBe('Próximo comienzo');
+    expect(selection.seminarErrorText()).toBe('Seleccioná un próximo comienzo');
 
     getDegreePrograms.mockReturnValue(
       of([

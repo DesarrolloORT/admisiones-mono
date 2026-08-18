@@ -17,9 +17,11 @@ describe('RegistrationService', () => {
   beforeEach(() => {
     endpointMock = {
       evaluateDocument: vi.fn().mockReturnValue(of({ userExists: false })),
-      verifyIdentity: vi.fn().mockReturnValue(of({ success: true })),
-      register: vi.fn().mockReturnValue(of({ success: true })),
-      confirmApplicationRequest: vi.fn().mockReturnValue(of({ success: true })),
+      verifyIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
+      register: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
+      confirmApplicationRequest: vi
+        .fn()
+        .mockReturnValue(of({ pendingReview: true, mailSent: false })),
     };
 
     TestBed.configureTestingModule({
