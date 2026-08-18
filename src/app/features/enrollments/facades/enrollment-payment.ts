@@ -216,7 +216,8 @@ export class EnrollmentPaymentFacade {
     bankControl.updateValueAndValidity({ emitEvent: false });
   }
 
-  public requestConfirmation(): void {
+  public confirm(): void {
+    if (this.view() === 'processing') return;
     this.submitted.set(true);
     this.paymentApiError.set(null);
     if (!this.isSelectedPaymentMethodAvailable()) {
@@ -228,26 +229,16 @@ export class EnrollmentPaymentFacade {
       this.paymentForm.markAllAsTouched();
       return;
     }
-    this.view.set('confirming');
-  }
 
-  public cancelConfirmation(): void {
-    if (this.view() === 'confirming') this.view.set('editing');
-  }
-
-  public confirm(): void {
-    if (this.view() === 'processing') return;
     const method = this.paymentForm.controls.paymentMethod.value;
     const enrollmentIds = this.paymentEnrollmentIds();
     if (!method) return;
     if (enrollmentIds.length === 0) {
       this.paymentApiError.set('No pudimos identificar la inscripción pendiente.');
-      this.view.set('editing');
       return;
     }
 
     this.selectedPaymentMethod.set(method);
-    this.paymentApiError.set(null);
     this.view.set('processing');
     this.enrollments
       .pay({

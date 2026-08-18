@@ -134,7 +134,6 @@ describe('EnrollmentPaymentFacade', () => {
   it('calls the payment service and shows reservation for Abitab', () => {
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.pay).toHaveBeenCalledWith({
@@ -150,7 +149,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(payment.asObservable());
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.view()).toBe('processing');
@@ -162,7 +160,7 @@ describe('EnrollmentPaymentFacade', () => {
   it('shows a reusable error alert when no payment method is selected', () => {
     expect(facade.paymentForm.controls.paymentMethod.value).toBe('');
 
-    facade.requestConfirmation();
+    facade.confirm();
 
     expect(facade.view()).toBe('editing');
     expect(facade.paymentErrorAlert()).toEqual({
@@ -175,7 +173,7 @@ describe('EnrollmentPaymentFacade', () => {
     facade.paymentForm.controls.paymentMethod.setValue('bank-account');
     facade.paymentForm.controls.bank.setValue('');
 
-    facade.requestConfirmation();
+    facade.confirm();
 
     expect(facade.view()).toBe('editing');
     expect(facade.paymentForm.controls.bank.hasError('required')).toBe(true);
@@ -192,7 +190,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.view()).toBe('editing');
@@ -219,7 +216,6 @@ describe('EnrollmentPaymentFacade', () => {
         })
       );
 
-      facade.requestConfirmation();
       facade.confirm();
 
       expect(enrollments.pay).toHaveBeenCalledWith({
@@ -281,7 +277,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.getDetail).toHaveBeenCalledWith(20, 200, null);
@@ -310,7 +305,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('enrollment-confirmed');
@@ -325,7 +319,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
@@ -351,7 +344,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('reservation');
@@ -373,7 +365,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('reservation');
@@ -391,7 +382,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('enrollment-confirmed');
@@ -404,7 +394,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('enrollment-confirmed');
@@ -445,7 +434,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(payment.asObservable());
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
     facade.confirm();
 
@@ -461,7 +449,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('banred');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(externalPaymentSubmitter.submit).not.toHaveBeenCalled();
@@ -479,7 +466,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('geopay');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(externalPaymentSubmitter.submit).not.toHaveBeenCalled();
@@ -502,7 +488,6 @@ describe('EnrollmentPaymentFacade', () => {
     );
     facade.paymentForm.controls.paymentMethod.setValue('banred');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBeNull();
@@ -518,7 +503,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('enrollment-in-progress');
@@ -528,7 +512,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(throwError(() => new Error('network down')));
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.view()).toBe('editing');
@@ -548,22 +531,10 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.loadingBanks()).toBe(false);
   });
 
-  it('closes the confirmation dialog without paying', () => {
-    facade.paymentForm.controls.paymentMethod.setValue('abitab');
-    facade.requestConfirmation();
-    expect(facade.view()).toBe('confirming');
-
-    facade.cancelConfirmation();
-
-    expect(facade.view()).toBe('editing');
-    expect(enrollments.pay).not.toHaveBeenCalled();
-  });
-
   it('reserves on a reservada result for methods without their own branch', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'reservada' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('reservation');
@@ -573,7 +544,6 @@ describe('EnrollmentPaymentFacade', () => {
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'algo-desconocido' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(facade.outcome()).toBe('enrollment-confirmed');
@@ -723,7 +693,6 @@ describe('EnrollmentPaymentFacade', () => {
     }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.pay).toHaveBeenCalledWith({
@@ -760,7 +729,6 @@ describe('EnrollmentPaymentFacade', () => {
     });
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.pay).toHaveBeenCalledWith({
@@ -781,7 +749,6 @@ describe('EnrollmentPaymentFacade', () => {
     });
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
-    facade.requestConfirmation();
     facade.confirm();
 
     expect(enrollments.pay).not.toHaveBeenCalled();
