@@ -526,9 +526,7 @@ usa `AcademicProposalSelection.isProfessionalUpdate` para decidir el layout:
   `DashboardCard.enrollmentsCount()` en el panel (ver línea ~255). En el facade,
   `selectedSeminars()` es la fuente única: alimenta `summaryItems()` y
   `seminarsSummary()` solo devuelve filas con 2+.
-- El diálogo "Confirmar inscripción" (mismo paso) no muestra el desglose de seminarios:
-  en AP multi-seminario solo pinta la fila Programa (pendiente de decisión de UX); con
-  un solo seminario sí muestra Programa + Comienzo, porque salen de `summaryItems()`.
+- El botón "Pagar" envía el pago directo: no hay diálogo de confirmación intermedio.
 
 ### Regla de cardinalidad y drift backend
 
