@@ -13,6 +13,7 @@ sourcePaths:
   - src/app/features/auth/services/document-recognition.ts
   - src/app/features/auth/services/document-prefill.ts
   - src/app/features/auth/endpoints/auth.endpoint.ts
+  - src/app/features/auth/models/email-confirmation.ts
   - src/app/features/auth/models/register-flow.ts
   - src/app/features/auth/models/register-step.ts
 ---
@@ -212,18 +213,28 @@ controles independientes.
 | -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `existing-person`    | `POST /registration/verify-identity`              | Crea usuario LDAP, registra admisión y envía activación. `CompletarPassword` establece la contraseña.               |
 | `new-person`         | `POST /registration/confirm-new-person`           | Guarda la persona pendiente en Redis y envía activación. `CompletarPassword` crea persona, usuario LDAP y admisión. |
-| `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña.                                                      |
+| `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña. La UI muestra “Procesando tu solicitud”.             |
 | `user-exists`        | Ninguno                                           | Ofrece iniciar sesión.                                                                                              |
 | `application-exists` | Ninguno                                           | Informa la solicitud existente.                                                                                     |
 
 Si el email de una persona nueva falla, los datos pendientes permanecen en
 Redis y el backend devuelve un mensaje de reintento sin duplicarlos.
 
-:::warning Discrepancia visible en `new-application`
-Después de crear una solicitud, el frontend navega hoy a la confirmación genérica
-“Cuenta creada con éxito” y afirma que envió un enlace. El backend no envía ese
-correo para `new-application`; la solicitud queda pendiente de revisión.
-:::
+## Pantalla final del registro
+
+`navigateToEmailConfirmation()` elige el destino por tipo de documento, no por
+`RegisterFlowKind`: CI va a la confirmación de correo y cualquier otro documento
+va a la pantalla de solicitud en revisión. Ambas rutas reutilizan
+`EmailConfirmation` con datos estáticos declarados en `auth.routes.ts`.
+
+| Documento | Ruta                                      | Título                    | Mensaje                                                                                                                                 |
+| --------- | ----------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| CI        | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | Enlace de activación enviado por correo                                                                                                 |
+| No CI     | `/confirmacion-correo/solicitud-registro` | Procesando tu solicitud   | Solicitud recibida y en validación; el registro se completa en un plazo máximo de tres días hábiles ([Figma][figma-solicitud-registro]) |
+
+La segunda pantalla no promete correo alguno porque el backend no envía
+activación para `new-application`: la solicitud queda pendiente de revisión
+manual.
 
 ## OCR y casos borde
 
@@ -255,8 +266,9 @@ el flujo ni reemplaza `EvaluarDocumento`.
   [tests de creación de contraseña][front-set-password-tests].
 
 Los enlaces de Figma se agregan solamente cuando existe una URL verificada con
-`node-id`. Actualmente no hay nodos verificados para este flujo.
+`node-id`. Nodo verificado disponible: [solicitud en revisión][figma-solicitud-registro].
 
+[figma-solicitud-registro]: https://www.figma.com/design/opDCGX7LCg1vMO7soLF3Mr/Sistema-de-Admisiones-ORT?node-id=807-7399
 [frontend-commit]: https://github.com/DesarrolloORT/admisiones/tree/91e3d7ba33774d9fa11db386fb64ce5eb751982f
 [front-login]: https://github.com/DesarrolloORT/admisiones/blob/91e3d7ba33774d9fa11db386fb64ce5eb751982f/src/app/features/auth/pages/login/login.html#L91
 [front-routes]: https://github.com/DesarrolloORT/admisiones/blob/91e3d7ba33774d9fa11db386fb64ce5eb751982f/src/app/features/auth/auth.routes.ts#L15-L20

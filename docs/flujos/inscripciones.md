@@ -883,7 +883,9 @@ sin repetir las compartidas.
   `awaiting-method` al retomar) y `buildReservationInstructions` reemplaza fecha
   límite, cédula, monto y el texto de acreditación por un mensaje que indica
   comunicarse con la oficina de Admisiones; la resolución queda en manos de la
-  oficina.
+  oficina. **La rama corporativa se evalúa antes**: su respuesta tampoco trae datos de
+  pago (seña `0`), pero termina en `enrollment-in-progress` ("Inscripción corporativa
+  pendiente"), no en esta pantalla.
 - `external-payment-pending`: Banred, Geopay o Sistarbanc ya salieron a pasarela o
   quedaron esperando definición de acreditación.
 - `editing`: errores de validación o error de backend; el usuario puede corregir
