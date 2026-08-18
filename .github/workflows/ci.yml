@@ -17,18 +17,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fetch_api_spec:
-    name: Fetch API spec (internal network)
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    uses: ./.github/workflows/fetch-api-spec.yml
-    with:
-      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
-      checkout-ref: ${{ github.event.pull_request.head.ref }}
-    secrets: inherit
-
   prepare_api:
     name: Prepare API contracts
-    needs: fetch_api_spec
+    if: github.event.pull_request.head.repo.full_name == github.repository
     uses: ./.github/workflows/prepare-api-contracts.yml
     with:
       environment: desarrollo
