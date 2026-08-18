@@ -361,7 +361,7 @@ describe('EnrollmentProcessFacade', () => {
 
     process.flow.goTo('payment');
     facade.continue();
-    expect(payment.requestConfirmation).toHaveBeenCalledOnce();
+    expect(payment.confirm).toHaveBeenCalledOnce();
   });
 
   // El flujo solo avanza: no se vuelve del paso 2 al 1 ni del 3 al 2.
@@ -494,7 +494,7 @@ function createFacade(
       null
     ),
     selectedPaymentMethod: signal(null),
-    requestConfirmation: vi.fn(),
+    confirm: vi.fn(),
   };
   const proposal = {
     initialized: signal(initialized),

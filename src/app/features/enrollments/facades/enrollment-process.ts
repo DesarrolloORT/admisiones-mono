@@ -81,7 +81,7 @@ export class EnrollmentProcessFacade {
         this.survey.continue();
         break;
       case 'payment':
-        this.payment.requestConfirmation();
+        this.payment.confirm();
         break;
     }
   }
