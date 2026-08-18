@@ -215,26 +215,44 @@ controles independientes.
 | `new-person`         | `POST /registration/confirm-new-person`           | Guarda la persona pendiente en Redis y envía activación. `CompletarPassword` crea persona, usuario LDAP y admisión. |
 | `new-application`    | `POST /registration/confirm-registration-request` | Registra la solicitud; no envía activación ni crea contraseña. La UI muestra “Procesando tu solicitud”.             |
 | `user-exists`        | Ninguno                                           | Ofrece iniciar sesión.                                                                                              |
-| `application-exists` | Ninguno                                           | Informa la solicitud existente.                                                                                     |
+| `application-exists` | Ninguno                                           | Informa la solicitud existente y permite corregir el documento; no ofrece iniciar sesión.                           |
 
 Si el email de una persona nueva falla, los datos pendientes permanecen en
 Redis y el backend devuelve un mensaje de reintento sin duplicarlos.
 
+`application-exists` solo puede darse con documento no CI: `T_SOLICITUD_ALTA`
+únicamente recibe documentos extranjeros. En ese estado no hay persona, usuario
+LDAP ni contraseña, así que iniciar sesión o recuperar acceso son imposibles; la
+UI muestra un aviso sin acción y mantiene el paso de identidad para permitir
+corregir un documento mal tipeado.
+
 ## Pantalla final del registro
 
-`navigateToEmailConfirmation()` elige el destino por tipo de documento, no por
-`RegisterFlowKind`: CI va a la confirmación de correo y cualquier otro documento
-va a la pantalla de solicitud en revisión. Ambas rutas reutilizan
+El destino lo decide `pendingReview`, el booleano que devuelven los dos endpoints
+de confirmación dentro de `RegistrationFlowResult`. Es la única fuente de verdad:
+el frontend no vuelve a mirar el tipo de documento ni el `RegisterFlowKind`.
+`resolveRegistrationEnding()` traduce la respuesta a ruta y ambas reutilizan
 `EmailConfirmation` con datos estáticos declarados en `auth.routes.ts`.
 
-| Documento | Ruta                                      | Título                    | Mensaje                                                                                                                                 |
-| --------- | ----------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| CI        | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | Enlace de activación enviado por correo                                                                                                 |
-| No CI     | `/confirmacion-correo/solicitud-registro` | Procesando tu solicitud   | Solicitud recibida y en validación; el registro se completa en un plazo máximo de tres días hábiles ([Figma][figma-solicitud-registro]) |
+| `pendingReview` | `mailSent` | Ruta                                      | Título                    | Mensaje                                                                                                                                 |
+| --------------- | ---------- | ----------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`          | `false`    | `/confirmacion-correo/solicitud-registro` | Procesando tu solicitud   | Solicitud recibida y en validación; el registro se completa en un plazo máximo de tres días hábiles ([Figma][figma-solicitud-registro]) |
+| `false`         | `true`     | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | Enlace de activación enviado por correo                                                                                                 |
+| `false`         | `false`    | `/confirmacion-correo/registro`           | ¡Cuenta creada con éxito! | La misma pantalla más un aviso: el correo no salió y la salida es «Recuperar acceso»                                                    |
 
-La segunda pantalla no promete correo alguno porque el backend no envía
-activación para `new-application`: la solicitud queda pendiente de revisión
-manual.
+`pendingReview: true` no promete correo alguno porque el backend no envía
+activación para una solicitud de alta: queda pendiente de revisión manual.
+`mailSent: false` con `pendingReview: false` es éxito parcial —la cuenta quedó
+creada pero el correo de activación no salió—, así que el aviso lleva a
+`/recuperar-acceso`, la única forma de definir la contraseña.
+
+`verify-identity` devuelve `RegistrationConfirmationResponse`, que solo trae
+`mailSent`: esa rama siempre crea usuario, así que se resuelve con
+`pendingReview: false`.
+
+Ninguno de los tres resultados expone `success`: el interceptor de
+`OperationResult` convierte cualquier `success: false` en error HTTP, de modo que
+un valor emitido siempre es un éxito y la falla viaja por el canal de excepción.
 
 ## OCR y casos borde
 

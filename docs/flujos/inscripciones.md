@@ -428,8 +428,9 @@ Actualización profesional con más de una anotación.
 - `hasSeminar` decide además la terminología del campo
   (`AcademicProposalSelection.seminarLabel` / `seminarErrorText`, que también alimentan el
   resumen de errores del paso): con seminarios se rotula **Seminario** y el error es
-  "Seleccioná al menos un seminario"; sin seminarios las ofertas del programa son horarios,
-  así que el campo se rotula **Horario** y el error va en singular.
+  "Seleccioná al menos un seminario"; sin seminarios el programa ofrece una sola oferta,
+  así que el campo se rotula **Próximo comienzo** y el error va en singular
+  ("Seleccioná un próximo comienzo", derivado del rótulo en minúscula).
 - Catálogo: el `idProceso` del producto y su `idProducto` llaman
   `GET /catalogs/shifts`; el resultado llena el multiselect de seminarios.
 - Cada opción muestra `offeringDescription` y, debajo, `referenceDate`.
