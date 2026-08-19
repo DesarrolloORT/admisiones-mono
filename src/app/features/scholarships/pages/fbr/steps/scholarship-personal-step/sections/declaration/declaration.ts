@@ -21,7 +21,7 @@ import {
     OrtDrawer,
   ],
   templateUrl: './declaration.html',
-  styleUrls: ['../../../pages/fbr/fbr.scss', './declaration.scss'],
+  styleUrls: ['../../../../fbr.scss', './declaration.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Declaration {

@@ -5,7 +5,7 @@ import { OrtAccordionModule, OrtRadioModule } from '@desarrolloort/components';
   selector: 'app-personal-data',
   imports: [OrtAccordionModule, OrtRadioModule],
   templateUrl: './personal-data.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../../fbr.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PersonalData {}

@@ -114,8 +114,12 @@ comportamiento propio (combina llamadas, guarda estado, prepara archivos).
 - **`facades/scholarship-proposal.ts`** — fachada del paso 1: dueña del
   `FormGroup` y de `canContinue()`. Las secciones nunca llaman a `flow.next()`,
   y el template nunca avanza el flow: siempre `process.continue()`.
-- **`components/scholarship-*-step`** — los steps. El paso 3 es el punto de
-  extensión: montarlo en el `@switch` de `pages/fbr/fbr.html`.
+- **`pages/fbr/steps/scholarship-*-step`** — los steps. Viven dentro de la page
+  que los renderiza (igual que `enrollments/pages/steps/`), porque inyectan la
+  fachada del proceso: `components/` queda solo para presentación sin `inject()`.
+  Las secciones que usa un único paso cuelgan de él, en `<step>/sections/`.
+  El paso 3 es el punto de extensión: montarlo en el `@switch` de
+  `pages/fbr/fbr.html`.
 
 ## Qué falta
 

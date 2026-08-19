@@ -10,7 +10,7 @@ import {
   selector: 'app-education-info-fbr',
   imports: [OrtFormFieldModule, OrtFileUploaderModule, OrtRadioModule, OrtInput],
   templateUrl: './education-info-fbr.html',
-  styleUrl: '../../../pages/fbr/fbr.scss',
+  styleUrl: '../../../../fbr.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EducationInfoFbr {}
