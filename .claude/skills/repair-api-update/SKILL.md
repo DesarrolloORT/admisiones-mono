@@ -46,7 +46,7 @@ If contracts and generated endpoints/models disagree, contracts define the inten
   generated -> feature endpoint adapter -> mapper/service/facade/store -> component/page -> template
   ```
 
-- Start from adapter imports under `src/app/features/*/endpoints/`. Only widen the search to callers that CodeGraph identifies.
+- Start from adapter imports under `src/app/features/*/api/`. Only widen the search to callers that CodeGraph identifies.
 - Read `docs/index.md`. For login, registration, or inscriptions, read the matching `businessId` page in `docs/flujos/` before changing behavior.
 - Keep the adapter public contract stable only for URL, operationId, generated-name, or backend-only shape changes.
 - Propagate additions, removals, and semantic contract changes through every affected frontend consumer.

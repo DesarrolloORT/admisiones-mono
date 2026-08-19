@@ -27,15 +27,22 @@ Ninguna `page`, `component` o `store` debe llamar endpoints ni importar
 Cada feature vive bajo `src/app/features/<feature>/` y puede usar estas carpetas:
 
 - `pages/`: componentes de ruta. Manejan UI, formularios, navegacion y estado visual.
-- `components/`: UI reutilizable dentro de la feature. No contiene llamadas HTTP ni conoce endpoints.
-- `services/`: casos de uso y orquestacion. Es la API que consumen pages y components.
-- `endpoints/`: **adapters HTTP**. Es la unica capa que importa endpoints
+- `components/`: UI reutilizable dentro de la feature.
+- `api/`: **adapters HTTP**. Es la unica capa que importa endpoints
   generados y DTOs de backend. Expone una interfaz publica estable con tipos
   propios de frontend. Si el backend cambia URL, método o shape de respuesta,
   solo este archivo se modifica.
-- `store/`: estado local con `signal` y `computed`. No contiene HTTP ni endpoints.
-- `models/`: tipos de dominio propios de la feature. No duplicar ahi DTOs que ya
-  existan en `src/app/shared/api/generated/models/`.
+- `facades/`: orquestacion y estado de un flujo. Se proveen a nivel de la page.
+- `services/`: **solo** comportamiento compartido con estado propio (sesion,
+  seleccion de propuesta, preparacion de archivos…). Un service que solo reenvia
+  al adapter no existe: pages, components, resolvers y facades pueden inyectar
+  directamente el adapter de su feature. Agregá una facade cuando haya
+  orquestacion real, no por tramite.
+- `models/`: tipos de dominio propios de la feature, funciones puras y factories
+  de estado o de `FormGroup`. No duplicar ahi DTOs que ya existan en
+  `src/app/shared/api/generated/models/`. Los archivos **solo de tipos** se
+  nombran `*.interface.ts`: ese sufijo esta exento del spec obligatorio en
+  `test-generator.config.json`; cualquier otro nombre exige un `.spec.ts`.
 
 ## Endpoint adapters: contrato estable de API
 
@@ -47,7 +54,7 @@ directo, un rename de URL o de DTO en backend obliga a tocar toda la feature.
 
 ### Solucion
 
-Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
+Cada feature tiene un archivo `api/<feature>.api.ts` que actua como
 **unica puerta de entrada a la API**. Este adapter:
 
 1. Importa endpoints generados y DTOs de backend (capa inestable).
@@ -93,7 +100,7 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 
 ### Reglas
 
-- Solo `endpoints/*.endpoint.ts` importa de `shared/api/generated/`.
+- Solo `api/*.api.ts` importa de `shared/api/generated/`.
 - Services, pages, components y stores nunca importan generated directo.
 - Si cambia un endpoint en Swagger y se regenera, solo el adapter necesita
   ajuste. El resto de la feature compila sin cambios.
@@ -103,11 +110,29 @@ Cada feature tiene un archivo `endpoints/<feature>.endpoint.ts` que actua como
 - Los casts `as unknown as` no se usan en adapters; si aparecen, falta tipar el
   endpoint generado o discriminar una union real.
 - Los errores de HTTP se transforman en errores de dominio dentro del adapter.
+- Los payloads que ya coinciden en forma con el request generado se pasan tal
+  cual (`body: payload`, o `const body: GeneratedX = payload` cuando conviene el
+  chequeo explicito). Reescribir campo por campo el mismo nombre es ceremonia:
+  TypeScript rechaza donde las formas no coinciden y esa es la red de seguridad.
+
+### La receta de `ApiHttpClient`
+
+El adapter no normaliza respuestas a mano: `shared/api/core` ya lo hace.
+
+| Metodo                                    | Cuando                                                |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `api.request(endpoint, options?)`         | caso general; desenvuelve el `OperationResult`        |
+| `api.data(endpoint, options?)`            | un item (alias legible de `request`)                  |
+| `api.list(endpoint, mapper?, options?)`   | arrays: normaliza `null`/objeto suelto a `[]` y mapea |
+| `api.requestWithMessage(endpoint, opts?)` | solo si la feature necesita el `message` del envelope |
+
+`api.list` reemplaza cualquier helper privado tipo `fromData`: si escribís
+`Array.isArray(data) ? data : [data]` dentro de un adapter, usá `list`.
 
 ### Ejemplo: auth
 
 ```typescript
-// endpoints/auth.endpoint.ts — UNICO archivo que conoce generated
+// api/auth.api.ts — UNICO archivo que conoce generated
 
 export interface LoginPayload {
   codigoPersona: number;
@@ -118,7 +143,7 @@ export interface LoginResult {
 }
 
 @Injectable({ providedIn: 'root' })
-export class AuthEndpoint {
+export class AuthApi {
   login(payload: LoginPayload): Observable<LoginResult> {
     // Internamente usa postAuthLoginEndpoint (generado)
     // Mapea AuthenticationResponse → LoginResult
@@ -131,7 +156,7 @@ export class AuthEndpoint {
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
-  private readonly endpoint = inject(AuthEndpoint);
+  private readonly endpoint = inject(AuthApi);
 
   login(payload: AuthLoginRequest): Observable<AuthSession> {
     return this.endpoint.login({ ... }).pipe(map(...));
@@ -190,7 +215,7 @@ La distincion clave es la relacion con el router:
 Ejemplo en `auth`:
 
 ```
-Register (page)  ──inject──>  RegistrationService  ──inject──>  AuthEndpoint
+Register (page)  ──inject──>  RegistrationService  ──inject──>  AuthApi
       │
       └──> AuthForm (component)  ← solo inputs: title, heroIcon, cardSize…
 ```
@@ -204,16 +229,19 @@ va a mostrar ni que hacer con ellos.
 
 - Las pages son dueñas del estado de la pantalla: signals de error, loading, pasos de wizard, navegacion. Hacen `inject()` de servicios y reaccionan a sus respuestas.
 - Los components deben quedarse cerca de la presentacion: inputs, outputs, formularios, eventos de usuario, mensajes visibles y bindings. No hacen `inject()` de servicios.
-- Los servicios deben coordinar endpoints, stores y transformaciones de dominio. Pueden exponer `Observable`, signals readonly o metodos imperativos segun el caso de uso.
+- Los servicios que existen deben aportar comportamiento (estado propio,
+  combinacion de llamadas, preparacion de archivos). Pueden exponer `Observable`,
+  signals readonly o metodos imperativos segun el caso de uso. Si el cuerpo de un
+  metodo es un unico `return this.api.mismoMetodo(...)`, borralo y que el
+  consumidor llame al adapter.
 - Los adapters deben usar la receta unica de API: `api.data(endpoint, options)`
   para un item, `api.list(endpoint, mapper?, options?)` para arrays,
   `requestWithMessage(endpoint, options)` solo si la feature necesita `message`,
   y `Observable<void>` para comandos sin data util.
-- Cada feature debe tener un adapter en `endpoints/` que encapsule los imports
-  de generated y DTOs. Los services llaman al adapter, no a `ApiHttpClient`
-  directo. Si la feature es trivial (un solo GET), el adapter puede ser inline
-  en el service como excepcion documentada.
-- Los stores no deben saber de red. Reciben datos ya procesados y exponen estado con `signal`/`computed`.
+- Cada feature debe tener un adapter en `api/` que encapsule los imports
+  de generated y DTOs. Nadie mas usa `ApiHttpClient` directo.
+- Las facades no deben saber de red mas alla de llamar al adapter: reciben datos
+  ya mapeados y exponen estado con `signal`/`computed`.
 - Los modelos tecnicos generados viven en `src/app/shared/api/generated/models/`; no se
   editan manualmente. Si se necesitan tipos de dominio propios, ubicarlos dentro
   de la feature y mapearlos desde/hacia el contrato generado.

@@ -7,7 +7,7 @@ sourcePaths:
   - src/app/features/auth/pages/login/
   - src/app/features/auth/pages/two-factor-validation/
   - src/app/features/auth/services/auth-session.ts
-  - src/app/features/auth/endpoints/auth.endpoint.ts
+  - src/app/features/auth/api/auth.api.ts
   - src/app/core/guards/
   - src/app/core/interceptors/
 ---
@@ -27,7 +27,7 @@ sequenceDiagram
   actor U as Usuario
   participant L as Login UI
   participant S as AuthSessionService
-  participant A as AuthEndpoint
+  participant A as AuthApi
   participant I as Http interceptors
   participant API as AuthController
   participant D as Cookies / DB / Email
@@ -81,7 +81,7 @@ sequenceDiagram
 
 | Accion visible             | Angular                                                                     | Servicio                                   | Adapter y contrato                            | API / Backend                       |
 | -------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------- | ----------------------------------- |
-| Iniciar sesion             | `Login.submit()` en `src/app/features/auth/pages/login/login.ts`            | `AuthSessionService.login()`               | `AuthEndpoint.login()` mapea `LoginResult`    | `POST /auth/login`                  |
+| Iniciar sesion             | `Login.submit()` en `src/app/features/auth/pages/login/login.ts`            | `AuthSessionService.login()`               | `AuthApi.login()` mapea `LoginResult`         | `POST /auth/login`                  |
 | Ver confirmacion de codigo | `/confirmacion-correo/verificar-codigo` usa `TWO_FACTOR_EMAIL_CONFIRMATION` | Contexto 2FA queda en `AuthSessionService` | Respuesta 202 con `sessionId` y `maskedEmail` | Email con codigo 2FA                |
 | Ingresar codigo            | `TwoFactorValidationPage.verify()` y componente `TwoFactorValidation`       | `completeTwoFactor(...)`                   | `verifyTwoFactorCode(...)`                    | `POST /auth/verify-two-factor-code` |
 | Reenviar codigo            | `TwoFactorValidationPage.resend()`                                          | `resendTwoFactorCode(sessionId)`           | `resendTwoFactorCode(...)`                    | `POST /auth/resend-two-factor-code` |
@@ -91,7 +91,7 @@ sequenceDiagram
 
 ## Estados, contratos y sesiones
 
-La UI usa tipos propios de la feature y no consume DTOs generados directamente. `AuthEndpoint` es la unica capa de auth que importa endpoints generados.
+La UI usa tipos propios de la feature y no consume DTOs generados directamente. `AuthApi` es la unica capa de auth que importa endpoints generados.
 
 | Estado              | Origen                                            | Frontend                                                      | Efecto                                        |
 | ------------------- | ------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------- |
@@ -122,7 +122,7 @@ Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend so
 
 ## Fuentes vigentes
 
-- Frontend: <SourceLink repo="frontend" path="src/app/features/auth/pages/login/login.ts">login page</SourceLink>, <SourceLink repo="frontend" path="src/app/features/auth/services/auth-session.ts">session service</SourceLink> y <SourceLink repo="frontend" path="src/app/features/auth/endpoints/auth.endpoint.ts">HTTP adapter</SourceLink>.
+- Frontend: <SourceLink repo="frontend" path="src/app/features/auth/pages/login/login.ts">login page</SourceLink>, <SourceLink repo="frontend" path="src/app/features/auth/services/auth-session.ts">session service</SourceLink> y <SourceLink repo="frontend" path="src/app/features/auth/api/auth.api.ts">HTTP adapter</SourceLink>.
 - Backend: <SourceLink repo="backend" path="WebApiAdmisiones/WebApiAdmisiones/Controllers/AuthController.cs">AuthController</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/Autenticacion/">módulo Autenticacion</SourceLink>.
 
 ## Evidencia
@@ -130,7 +130,7 @@ Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend so
 - Frontend:
   - `src/app/features/auth/pages/login/login.spec.ts`
   - `src/app/features/auth/pages/two-factor-validation/two-factor-validation.spec.ts`
-  - `src/app/features/auth/endpoints/auth.endpoint.spec.ts`
+  - `src/app/features/auth/api/auth.api.spec.ts`
   - `src/app/features/auth/services/auth-session.spec.ts`
   - `src/app/core/interceptors/http.spec.ts`
 - Backend:

@@ -8,8 +8,7 @@ sourcePaths:
   - src/app/features/catalogs/
   - src/app/features/home/pages/dashboard/
   - src/app/features/home/components/
-  - src/app/features/home/services/home.ts
-  - src/app/features/home/endpoints/home.endpoint.ts
+  - src/app/features/home/api/home.api.ts
   - src/app/shared/process-flow/
 ---
 
@@ -29,13 +28,13 @@ autoridad del wire contract.
 
 ## Acciones y evidencia end-to-end
 
-| Acción visible               | Frontend                                                                                                                                                                                                                                                      | HTTP                                                                   | Backend                                                                                                                                                                                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Cargar Mis carreras          | <SourceLink repo="frontend" path="src/app/features/home/endpoints/home.endpoint.ts">HomeEndpoint</SourceLink>                                                                                                                                                 | `GET /person/enrollments`                                              | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/UseCases/GetMyEnrollments.cs">GetMyEnrollments</SourceLink> → vistas Fresco 1/2 y 3/4                                                                                       |
-| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-proposal.ts">EnrollmentProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/RegisterProductInterest.cs">RegisterProductInterest</SourceLink> → Oracle + cola Tivenos                                                                      |
-| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.ts">EnrollmentSurveyFacade</SourceLink> → adapter                                                                                                                    | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/">People</SourceLink> + <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ConfirmPreEnrollment.cs">ConfirmPreEnrollment</SourceLink> |
-| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.ts">EnrollmentPaymentFacade</SourceLink> → adapter                                                                                                                  | `POST /enrollments/start-payment`                                      | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/Payments/StartEnrollmentPayment.cs">StartEnrollmentPayment</SourceLink> → API interna de Enrollments y Pagos                                                  |
-| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/components/dashboard-quick-actions/dashboard-quick-actions.ts">DashboardQuickActions</SourceLink>                                                                                                     | `POST /enrollments/reactivate`                                         | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ReactivateEnrollment.cs">ReactivateEnrollment</SourceLink> → `ConfirmPreEnrollment`                                                                           |
+| Acción visible               | Frontend                                                                                                                                                                                                                                           | HTTP                                                                   | Backend                                                                                                                                                                                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cargar Mis carreras          | <SourceLink repo="frontend" path="src/app/features/home/api/home.api.ts">HomeApi</SourceLink>                                                                                                                                                      | `GET /person/enrollments`                                              | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/UseCases/GetMyEnrollments.cs">GetMyEnrollments</SourceLink> → vistas Fresco 1/2 y 3/4                                                                                       |
+| Continuar propuesta          | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-proposal.ts">EnrollmentProposalFacade</SourceLink> → <SourceLink repo="frontend" path="src/app/features/enrollments/api/enrollments.api.ts">adapter</SourceLink> | `POST /enrollments/product-interest`                                   | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/RegisterProductInterest.cs">RegisterProductInterest</SourceLink> → Oracle + cola Tivenos                                                                      |
+| Confirmar datos personales   | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.ts">EnrollmentSurveyFacade</SourceLink> → adapter                                                                                                         | Documento/foto → encuesta → `POST /enrollments/confirm-pre-enrollment` | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.People/">People</SourceLink> + <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ConfirmPreEnrollment.cs">ConfirmPreEnrollment</SourceLink> |
+| Elegir forma de pago         | <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.ts">EnrollmentPaymentFacade</SourceLink> → adapter                                                                                                       | `POST /enrollments/start-payment`                                      | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/Payments/StartEnrollmentPayment.cs">StartEnrollmentPayment</SourceLink> → API interna de Enrollments y Pagos                                                  |
+| Reactivar desde Mis carreras | <SourceLink repo="frontend" path="src/app/features/home/components/dashboard-quick-actions/dashboard-quick-actions.ts">DashboardQuickActions</SourceLink>                                                                                          | `POST /enrollments/reactivate`                                         | <SourceLink repo="backend" path="WebApiAdmisiones/AppLogic/AppLogic.Enrollments/UseCases/ReactivateEnrollment.cs">ReactivateEnrollment</SourceLink> → `ConfirmPreEnrollment`                                                                           |
 
 Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servidor viven en el backend; si una evidencia contradice esta página, registrar un bloque **Drift detectado** hasta alinear ambos repositorios.
 
@@ -44,7 +43,7 @@ Las rutas y shapes HTTP son autoridad de OpenAPI. Las reglas internas del servid
 - Todos los endpoints de `person`, `enrollments` y `catalogs` usados aquí requieren
   la identidad del usuario autenticado. El backend obtiene `personId` del JWT/cookie;
   nunca acepta la persona desde el request.
-- `EnrollmentsEndpoint` es la frontera anticorrupción del front: traduce los modelos
+- `EnrollmentsApi` es la frontera anticorrupción del front: traduce los modelos
   generados en inglés a tipos propios de la feature. No hay caché HTTP que invalidar:
   `ApiHttpClient` manda cada request a la red, así que detalle, identidad, encuesta y
   reglamento siempre leen el estado vigente.
@@ -330,7 +329,7 @@ cada elemento trae `productId`, `productFullName`, `admissionProcessId`,
 `enrollments[]` con las ofertas concretas (`enrollmentId`, `offeringId`,
 `offeringDescription`, `shiftId`, `intakeId`, `intakeStartDate`, `intakeName`,
 `shiftName`, `referenceDate`).
-`HomeEndpoint.toEnrollmentSummaries()` mapea cada grupo a uno o más
+`HomeApi.toEnrollmentSummaries()` mapea cada grupo a uno o más
 `EnrollmentSummary`; la fuente de la regla de nivel es `isProfessionalUpdateLevel`
 (`src/app/features/catalogs/models/academic-proposal.ts`).
 
@@ -397,7 +396,7 @@ el texto genérico.
 
 ### Drift detectado (resuelto)
 
-El adapter (`HomeEndpoint.toEnrollmentSummaries()`) mapeaba la forma plana vieja
+El adapter (`HomeApi.toEnrollmentSummaries()`) mapeaba la forma plana vieja
 contra `MyEnrollmentsResponse`, el contrato agrupado que el backend
 ya devolvía. Como todos los campos de ese DTO son opcionales, la respuesta
 nueva era estructuralmente asignable y TypeScript compilaba sin error, pero
@@ -496,7 +495,7 @@ estado pendiente se mantiene la pantalla genérica "Inscripción en proceso".
 `pendingPayment` devuelven un array `enrollments[]` (`EnrollmentOfferingSummary`:
 `enrollmentId`, `offeringId`, `intake`, `shift`, `offeringDescription`) junto al
 `summary` plano (`EnrollmentHeader`: `productId`, `degreeProgram`,
-`paymentDueDate`). El adapter (`EnrollmentsEndpoint.toSeminars()`) mapea ese
+`paymentDueDate`). El adapter (`EnrollmentsApi.toSeminars()`) mapea ese
 array completo a `EnrollmentPreEnrollmentResponse.seminars` (y a
 `EnrollmentPendingPaymentDetail.seminars` para "retomar"), además de seguir
 colapsando `enrollments?.[0]` en los campos planos (`summary`, `enrollmentId`) que
@@ -988,5 +987,5 @@ Resumen operativo de reintentos:
 
 ## Evidencia automatizada
 
-- Frontend: <SourceLink repo="frontend" path="src/app/features/enrollments/models/enrollment-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/endpoints/enrollments.endpoint.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/enrollment-summary.spec.ts">dashboard/pagos pendientes</SourceLink>.
+- Frontend: <SourceLink repo="frontend" path="src/app/features/enrollments/models/enrollment-entry.spec.ts">matriz de entrada</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-survey.spec.ts">encuesta</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/facades/enrollment-payment.spec.ts">pago</SourceLink>, <SourceLink repo="frontend" path="src/app/features/enrollments/api/enrollments.api.spec.ts">mapeo HTTP</SourceLink> y <SourceLink repo="frontend" path="src/app/features/home/models/enrollment-summary.spec.ts">dashboard/pagos pendientes</SourceLink>.
 - Backend: <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/EnrollmentUseCasesTests.cs">casos de uso</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/InitialSurveyServiceTests.cs">encuesta</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Services/IdentityDocumentServiceTests.cs">identidad</SourceLink>, <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/InscripcionDetalleContractTests.cs">detalle</SourceLink> y <SourceLink repo="backend" path="WebApiAdmisiones/UnitTesting/AppLogic/Contracts/EnrollmentsAndPaymentsWireContractTests.cs">contrato remoto</SourceLink>.

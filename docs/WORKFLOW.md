@@ -47,7 +47,7 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 ## Estandares de codigo
 
 - Las features deben seguir el flujo `pages/components -> services -> endpoint adapter -> ApiHttpClient -> generated -> API`.
-- Solo `features/*/endpoints/*.endpoint.ts` puede importar contratos generados.
+- Solo `features/*/api/*.endpoint.ts` puede importar contratos generados.
 - Las pages, components, stores, facades y services no deben importar generated ni `HttpClient` directamente.
 - Los servicios son la API interna que consumen los componentes de una feature.
 - `ApiHttpClient` es la unica capa que resuelve URLs y usa `environment.API_URL`.
