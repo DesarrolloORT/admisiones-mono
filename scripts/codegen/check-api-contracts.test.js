@@ -26,7 +26,7 @@ test('detects generated DTOs exposed by public adapter methods', () => {
   const fixture = createFixture({
     'src/app/shared/api/generated/models/backend.ts':
       'export interface BackendDto { value: string; }',
-    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+    'src/app/features/demo/api/demo.api.ts': `
       import type { BackendDto } from '../../../shared/api/generated/models/backend';
       export class DemoEndpoint {
         public load(): BackendDto { return { value: 'x' }; }
@@ -46,7 +46,7 @@ test('detects generated DTOs exposed by public adapter methods', () => {
 test('accepts feature-owned public contracts', () => {
   const fixture = createFixture({
     'src/app/features/demo/models/demo.ts': 'export interface DemoResult { value: string; }',
-    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+    'src/app/features/demo/api/demo.api.ts': `
       import type { DemoResult } from '../models/demo';
       export class DemoEndpoint {
         public load(): DemoResult { return { value: 'x' }; }
@@ -64,7 +64,7 @@ test('accepts feature-owned public contracts', () => {
 
 test('detects unknown and any exposed by public adapter methods', () => {
   const fixture = createFixture({
-    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+    'src/app/features/demo/api/demo.api.ts': `
       interface Observable<T> {}
       interface DemoPayload { value: unknown; }
       interface DemoAny { value: any; }
@@ -103,7 +103,7 @@ test('detects double assertions through unknown in adapters', () => {
 
 test('detects stale request fields hidden behind adapter variables', () => {
   const fixture = createFixture({
-    'src/app/features/demo/endpoints/demo.endpoint.ts': `
+    'src/app/features/demo/api/demo.api.ts': `
       interface ApiEndpoint<TRequest> { readonly __types?: { request: TRequest }; }
       declare const api: {
         request<TRequest>(

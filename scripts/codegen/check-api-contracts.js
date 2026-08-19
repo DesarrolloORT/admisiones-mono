@@ -172,7 +172,7 @@ export function findAdapterUnsafeAssertionViolations(program, root) {
   return violations;
 }
 
-export function findUnsafeAssertionsInSource(sourceText, fileName = 'adapter.endpoint.ts') {
+export function findUnsafeAssertionsInSource(sourceText, fileName = 'adapter.api.ts') {
   const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true);
   const violations = [];
 
@@ -195,7 +195,7 @@ export function findUnsafeAssertionsInSource(sourceText, fileName = 'adapter.end
   visit(sourceFile);
   return violations;
 }
-export function findBodyLaunderingInSource(sourceText, fileName = 'adapter.endpoint.ts') {
+export function findBodyLaunderingInSource(sourceText, fileName = 'adapter.api.ts') {
   const sourceFile = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true);
   const violations = [];
 
@@ -448,9 +448,7 @@ function findFiles(directory, predicate) {
 function isEndpointAdapter(fileName, root) {
   const featureRoot = `${normalizePath(root)}/src/app/features/`;
   return (
-    fileName.startsWith(featureRoot) &&
-    fileName.includes('/endpoints/') &&
-    fileName.endsWith('.endpoint.ts')
+    fileName.startsWith(featureRoot) && fileName.includes('/api/') && fileName.endsWith('.api.ts')
   );
 }
 
