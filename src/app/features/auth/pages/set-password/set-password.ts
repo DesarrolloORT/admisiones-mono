@@ -32,9 +32,9 @@ import {
 } from '../../../../shared/forms/password-validation';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
+import { AuthApi } from '../../api/auth.api';
 import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { AuthSessionService } from '../../services/auth-session';
-import { PasswordActivationService } from '../../services/password-activation';
 
 interface SetPasswordForm {
   password: FormControl<string>;
@@ -60,7 +60,7 @@ export class SetPassword {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly location = inject(Location);
-  private readonly passwordActivation = inject(PasswordActivationService);
+  private readonly authEndpoint = inject(AuthApi);
   private readonly authSession = inject(AuthSessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -158,8 +158,8 @@ export class SetPassword {
 
     this.isSubmittingState.set(true);
 
-    this.passwordActivation
-      .completePassword(this.form.controls.password.value)
+    this.authEndpoint
+      .completePassword({ newPassword: this.form.controls.password.value })
       .pipe(
         switchMap(() => {
           this.snackbar.success(
@@ -211,8 +211,8 @@ export class SetPassword {
       this.isRecovery ? 'flow=recovery' : ''
     );
 
-    this.passwordActivation
-      .activateLink(token)
+    this.authEndpoint
+      .activatePasswordLink({ token })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: () =>

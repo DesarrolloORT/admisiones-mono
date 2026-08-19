@@ -32,53 +32,46 @@ import {
   LocationCity,
   LocationCountry,
   LocationState,
+  Seminar,
   Shift,
 } from '../models/catalog.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class CatalogsEndpoint {
+export class CatalogsApi {
   private readonly api = inject(ApiHttpClient);
 
   public getCountries(): Observable<Country[]> {
-    return this.api.request(getCatalogsCountriesStatesCitiesEndpoint).pipe(
-      map(data =>
-        this.fromData(data, item => ({
-          id: item.countryId ?? 0,
-          label: item.name ?? '',
-        }))
-      )
-    );
+    return this.api.list(getCatalogsCountriesStatesCitiesEndpoint, item => ({
+      id: item.countryId ?? 0,
+      label: item.name ?? '',
+    }));
   }
 
   public getCountryLocations(): Observable<LocationCountry[]> {
-    return this.api
-      .request(getCatalogsCountriesStatesCitiesEndpoint)
-      .pipe(map(data => this.fromData(data, item => this.toLocationCountry(item))));
+    return this.api.list(getCatalogsCountriesStatesCitiesEndpoint, item =>
+      this.toLocationCountry(item)
+    );
   }
 
   public getDegreePrograms(academicProposal: AcademicProposalTypeId): Observable<DegreeProgram[]> {
     return this.api
-      .request(getCatalogsDegreeProgramsEndpoint, {
+      .list(getCatalogsDegreeProgramsEndpoint, level => this.toDegreePrograms(level), {
         queryParams: { academicOffer: academicProposal },
       })
-      .pipe(map(data => this.fromData(data, level => this.toDegreePrograms(level)).flat()));
+      .pipe(map(levels => levels.flat()));
   }
 
   public getIntakes(degreeProgramId: number): Observable<Intake[]> {
-    return this.api
-      .request(getCatalogsIntakesEndpoint, {
-        queryParams: { degreeProgramId: degreeProgramId },
-      })
-      .pipe(
-        map(data =>
-          this.fromData(data, item => ({
-            admissionProcessId: item.admissionProcessId ?? 0,
-            admissionProcessName: item.admissionProcessName ?? '',
-          }))
-        )
-      );
+    return this.api.list(
+      getCatalogsIntakesEndpoint,
+      item => ({
+        admissionProcessId: item.admissionProcessId ?? 0,
+        admissionProcessName: item.admissionProcessName ?? '',
+      }),
+      { queryParams: { degreeProgramId: degreeProgramId } }
+    );
   }
 
   public getInitialSurveyCatalogs(): Observable<InitialSurveyCatalogs> {
@@ -113,54 +106,57 @@ export class CatalogsEndpoint {
   }
 
   public getBanks(): Observable<Bank[]> {
-    return this.api.request(getCatalogsBanksEndpoint).pipe(
-      map(data =>
-        this.fromData(data, bank => ({
-          id: bank.id ?? 0,
-          label: bank.name ?? '',
-          code: bank.sistarbancBankId ?? bank.code?.toString() ?? null,
-        }))
-      )
-    );
+    return this.api.list(getCatalogsBanksEndpoint, bank => ({
+      id: bank.id ?? 0,
+      label: bank.name ?? '',
+      code: bank.sistarbancBankId ?? bank.code?.toString() ?? null,
+    }));
   }
 
   public getInstitutions(
     countryCode: number,
     stateCode: number
   ): Observable<EducationalInstitution[]> {
-    return this.api
-      .request(getCatalogsInstitutionsEndpoint, {
-        queryParams: { countryId: countryCode, stateId: stateCode },
-      })
-      .pipe(
-        map(data =>
-          this.fromData(data, item => ({
-            id: item.id ?? 0,
-            label: item.name ?? '',
-            countryCode,
-            stateCode,
-          }))
-        )
-      );
+    return this.api.list(
+      getCatalogsInstitutionsEndpoint,
+      item => ({
+        id: item.id ?? 0,
+        label: item.name ?? '',
+        countryCode,
+        stateCode,
+      }),
+      { queryParams: { countryId: countryCode, stateId: stateCode } }
+    );
   }
 
   public getShifts(degreeProgramId: number, admissionProcessId: number): Observable<Shift[]> {
-    return this.api
-      .request(getCatalogsShiftsEndpoint, {
+    return this.api.list(
+      getCatalogsShiftsEndpoint,
+      item => ({
+        offeringId: item.offeringId ?? 0,
+        shiftId: item.shift?.shiftId ?? 0,
+        shiftName: item.shift?.shiftName ?? '',
+        referenceSchedule: item.referenceSchedule ?? '',
+        offeringDescription: item.offeringDescription ?? '',
+        referenceDate: item.referenceDate ?? null,
+      }),
+      {
         queryParams: { degreeProgramId: degreeProgramId, admissionProcessId: admissionProcessId },
-      })
-      .pipe(
-        map(data =>
-          this.fromData(data, item => ({
-            offeringId: item.offeringId ?? 0,
-            shiftId: item.shift?.shiftId ?? 0,
-            shiftName: item.shift?.shiftName ?? '',
-            referenceSchedule: item.referenceSchedule ?? '',
-            offeringDescription: item.offeringDescription ?? '',
-            referenceDate: item.referenceDate ?? null,
-          }))
-        )
-      );
+      }
+    );
+  }
+
+  public getSeminars(degreeProgramId: number, admissionProcessId: number): Observable<Seminar[]> {
+    return this.getShifts(degreeProgramId, admissionProcessId).pipe(
+      map(shifts =>
+        shifts.map(shift => ({
+          offeringId: shift.offeringId,
+          admissionProcessId: admissionProcessId,
+          name: shift.offeringDescription,
+          startDate: shift.referenceDate,
+        }))
+      )
+    );
   }
 
   private toDegreePrograms(level: DegreeProgramsByLevelResponse): DegreeProgram[] {
@@ -232,16 +228,5 @@ export class CatalogsEndpoint {
       id: item.value ?? '',
       label: item.label ?? '',
     }));
-  }
-
-  private fromData<TItem, TResult>(
-    data: TItem | TItem[] | null | undefined,
-    mapper: (item: TItem) => TResult
-  ): TResult[] {
-    if (!data) {
-      return [];
-    }
-
-    return (Array.isArray(data) ? data : [data]).map(mapper);
   }
 }

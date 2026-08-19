@@ -50,7 +50,7 @@ import { buildPaymentPayload } from '../models/enrollment-flow-mappers';
 @Injectable({
   providedIn: 'root',
 })
-export class EnrollmentsEndpoint {
+export class EnrollmentsApi {
   private readonly api = inject(ApiHttpClient);
 
   public getDetail(

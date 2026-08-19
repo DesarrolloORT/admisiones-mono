@@ -1,25 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { ScholarshipFormsStore } from '../store/scholarship-forms';
-import { ScholarshipProcessStore } from '../store/scholarship-process';
 import { ScholarshipProposalFacade } from './scholarship-proposal';
 
 describe('ScholarshipProposalFacade', () => {
-  it('advances only with a valid proposal', () => {
+  function setup(): ScholarshipProposalFacade {
     TestBed.configureTestingModule({
-      providers: [
-        ScholarshipFormsStore,
-        ScholarshipProcessStore,
-        ScholarshipProposalFacade,
-        { provide: AcademicProposalSelection, useValue: {} },
-      ],
+      providers: [ScholarshipProposalFacade, { provide: AcademicProposalSelection, useValue: {} }],
     });
-    const facade = TestBed.inject(ScholarshipProposalFacade);
+    return TestBed.inject(ScholarshipProposalFacade);
+  }
 
-    facade.continue();
+  it('blocks continuing with an incomplete proposal', () => {
+    const facade = setup();
+
+    expect(facade.canContinue()).toBe(false);
     expect(facade.submitted()).toBe(true);
-    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('application-info');
+    expect(facade.academicForm.touched).toBe(true);
+  });
+
+  it('allows continuing with a complete proposal', () => {
+    const facade = setup();
 
     facade.academicForm.setValue({
       proposalType: '1',
@@ -28,8 +29,7 @@ describe('ScholarshipProposalFacade', () => {
       shift: '300',
       seminars: [],
     });
-    facade.continue();
 
-    expect(TestBed.inject(ScholarshipProcessStore).flow.currentStep()).toBe('personal-info');
+    expect(facade.canContinue()).toBe(true);
   });
 });

@@ -25,8 +25,11 @@ import { EnrollmentProposalFacade } from '../facades/enrollment-proposal';
 import { EnrollmentSurveyFacade } from '../facades/enrollment-survey';
 import { EnrollmentSurveyIdentityFacade } from '../facades/enrollment-survey-identity';
 import { EnrollmentSurveyOptionsFacade } from '../facades/enrollment-survey-options';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
+import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
+import {
+  createEnrollmentProcessState,
+  ENROLLMENT_PROCESS_STATE,
+} from '../models/enrollment-process';
 import { EnrollmentAcademicStep } from './steps/enrollment-academic-step/enrollment-academic-step';
 import { EnrollmentConfirmationStep } from './steps/enrollment-confirmation-step/enrollment-confirmation-step';
 import { EnrollmentPersonalStep } from './steps/enrollment-personal-step/enrollment-personal-step';
@@ -53,8 +56,8 @@ import { EnrollmentSuccessStep } from './steps/enrollment-success-step/enrollmen
   ],
   providers: [
     AcademicProposalSelection,
-    EnrollmentFormsStore,
-    EnrollmentProcessStore,
+    { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
+    { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
     EnrollmentProposalFacade,
     EnrollmentSurveyOptionsFacade,
     EnrollmentSurveyIdentityFacade,

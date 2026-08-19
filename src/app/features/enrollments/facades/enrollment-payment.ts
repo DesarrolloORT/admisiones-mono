@@ -5,7 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert';
 
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import { FALLBACK_BANK_OPTIONS, toBankOptions } from '../models/enrollment-bank-logo';
 import type {
   EnrollmentConfirmedDetail,
@@ -21,6 +22,7 @@ import type {
   PaymentResult,
   SeminarSummaryItem,
 } from '../models/enrollment-flow';
+import { ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
 import { parseForcedResult } from '../models/enrollment-flow-policy';
 import {
   buildReservationInstructions,
@@ -29,7 +31,11 @@ import {
   formatEnrollmentAmount,
   formatPaymentDeadline,
 } from '../models/enrollment-flow-view';
-import type { EnrollmentOutcome, EnrollmentPaymentView } from '../models/enrollment-process';
+import {
+  ENROLLMENT_PROCESS_STATE,
+  type EnrollmentOutcome,
+  type EnrollmentPaymentView,
+} from '../models/enrollment-process';
 import {
   PAYMENT_OPTIONS,
   type PaymentOption,
@@ -37,24 +43,21 @@ import {
   STUDENT_SERVICE_LINKS,
 } from '../models/enrollment-static-data';
 import { EnrollmentResumeContextStore } from '../services/enrollment-resume-context';
-import { Enrollments } from '../services/enrollments';
 import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 
 export class EnrollmentPaymentFacade {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly catalogs = inject(Catalogs);
-  private readonly enrollments = inject(Enrollments);
+  private readonly catalogs = inject(CatalogsApi);
+  private readonly enrollments = inject(EnrollmentsApi);
   private readonly resumeContext = inject(EnrollmentResumeContextStore);
   private readonly externalPaymentSubmitter = inject(ExternalPaymentSubmitter);
-  private readonly formsStore = inject(EnrollmentFormsStore);
-  private readonly process = inject(EnrollmentProcessStore);
+  private readonly formsStore = inject(ENROLLMENT_FORMS);
+  private readonly process = inject(ENROLLMENT_PROCESS_STATE);
   private readonly proposal = inject(EnrollmentProposalFacade);
 
-  public readonly paymentForm = this.formsStore.paymentForm;
+  public readonly paymentForm = this.formsStore.forms.paymentForm;
   public readonly paymentOptions = computed<readonly PaymentOption[]>(() =>
     PAYMENT_OPTIONS.flatMap(option => this.resolvePaymentOption(option))
   );

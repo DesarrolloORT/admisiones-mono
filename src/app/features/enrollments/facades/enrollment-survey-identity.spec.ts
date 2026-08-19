@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
 import { Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
 import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
 
 describe('EnrollmentSurveyIdentityFacade', () => {
@@ -186,7 +186,7 @@ describe('EnrollmentSurveyIdentityFacade', () => {
   ): EnrollmentSurveyIdentityFacade {
     TestBed.configureTestingModule({
       providers: [
-        EnrollmentFormsStore,
+        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
         EnrollmentSurveyIdentityFacade,
         {
           provide: Enrollments,

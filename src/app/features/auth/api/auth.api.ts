@@ -195,7 +195,7 @@ export interface VerifyTwoFactorCodeResult {
 @Injectable({
   providedIn: 'root',
 })
-export class AuthEndpoint {
+export class AuthApi {
   private readonly api = inject(ApiHttpClient);
 
   /**
@@ -208,11 +208,9 @@ export class AuthEndpoint {
    * Discriminates by presence of `sessionId` in the unwrapped data.
    */
   public login(payload: LoginPayload): Observable<LoginResult> {
-    const body: GeneratedLoginPayload = {
-      documentType: payload.documentType,
-      documentNumber: payload.documentNumber,
-      password: payload.password,
-    };
+    // `LoginPayload` ya coincide en forma con el request generado: el tipado
+    // explicito es la red de seguridad, no hace falta reescribir los campos.
+    const body: GeneratedLoginPayload = payload;
 
     return this.api
       .data(postAuthLoginEndpoint, {
@@ -264,7 +262,7 @@ export class AuthEndpoint {
   public completePassword(payload: CompletePasswordPayload): Observable<void> {
     return this.api
       .request(postAuthCompleteInitialPasswordEndpoint, {
-        body: { newPassword: payload.newPassword },
+        body: payload,
         withCredentials: true,
       })
       .pipe(map(() => undefined));
@@ -333,7 +331,7 @@ export class AuthEndpoint {
   public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
     return this.api
       .requestWithMessage(postRegistrationEvaluateDocumentEndpoint, {
-        body: { documentType: payload.documentType, documentNumber: payload.documentNumber },
+        body: payload,
         withCredentials: true,
         captchaAction: 'EvaluateDocument',
       })
@@ -402,12 +400,7 @@ export class AuthEndpoint {
   ): Observable<VerifyIdentityResult> {
     return this.api
       .request(postRegistrationVerifyIdentityEndpoint, {
-        body: {
-          documentType: payload.documentType,
-          documentNumber: payload.documentNumber,
-          firstSurname: payload.firstSurname,
-          email: payload.email,
-        },
+        body: payload,
         headers: this.getFlowHeaders(flowId),
         withCredentials: true,
         captchaAction: 'VerifyIdentity',
@@ -424,11 +417,7 @@ export class AuthEndpoint {
   public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
     return this.api
       .request(postAuthRecoverPasswordEndpoint, {
-        body: {
-          documentType: payload.documentType,
-          documentNumber: payload.documentNumber,
-          firstSurname: payload.firstSurname,
-        },
+        body: payload,
         withCredentials: true,
         captchaAction: 'RecoverPassword',
       })
@@ -474,7 +463,7 @@ export class AuthEndpoint {
   ): Observable<VerifyTwoFactorCodeResult> {
     return this.api
       .data(postAuthVerifyTwoFactorCodeEndpoint, {
-        body: { sessionId: payload.sessionId, code: payload.code },
+        body: payload,
         withCredentials: true,
       })
       .pipe(

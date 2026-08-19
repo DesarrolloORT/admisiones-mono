@@ -21,10 +21,10 @@ import {
   postPersonPhotoEndpoint,
 } from '../../../shared/api/generated/endpoints/person.endpoints';
 import type { EnrollmentInitialSurveyPayload } from '../models/enrollment-flow';
-import { EnrollmentsEndpoint } from './enrollments.endpoint';
+import { EnrollmentsApi } from './enrollments.api';
 
-describe('EnrollmentsEndpoint', () => {
-  let endpoint: EnrollmentsEndpoint;
+describe('EnrollmentsApi', () => {
+  let endpoint: EnrollmentsApi;
   let apiMock: {
     request: ReturnType<typeof vi.fn>;
   };
@@ -35,9 +35,9 @@ describe('EnrollmentsEndpoint', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [EnrollmentsEndpoint, { provide: ApiHttpClient, useValue: apiMock }],
+      providers: [EnrollmentsApi, { provide: ApiHttpClient, useValue: apiMock }],
     });
-    endpoint = TestBed.inject(EnrollmentsEndpoint);
+    endpoint = TestBed.inject(EnrollmentsApi);
   });
 
   it('maps enrollment detail without exposing generated contracts', async () => {

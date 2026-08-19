@@ -13,10 +13,10 @@ import {
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
 import { SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
 import type { DocumentRecognitionData } from '../models/document-recognition.interface';
-import { AUTH_FLOW_ID_HEADER, AuthEndpoint } from './auth.endpoint';
+import { AUTH_FLOW_ID_HEADER, AuthApi } from './auth.api';
 
-describe('AuthEndpoint', () => {
-  let endpoint: AuthEndpoint;
+describe('AuthApi', () => {
+  let endpoint: AuthApi;
   let httpController: HttpTestingController;
 
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('AuthEndpoint', () => {
       ],
     });
 
-    endpoint = TestBed.inject(AuthEndpoint);
+    endpoint = TestBed.inject(AuthApi);
     httpController = TestBed.inject(HttpTestingController);
   });
 

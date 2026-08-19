@@ -3,28 +3,29 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { ApiHttpClient } from '../../../shared/api/core/api-http-client';
-import { CatalogsEndpoint } from './catalogs.endpoint';
+import { CatalogsApi } from './catalogs.api';
 
-describe('CatalogsEndpoint', () => {
-  let endpoint: CatalogsEndpoint;
-  let apiMock: {
-    request: ReturnType<typeof vi.fn>;
-  };
+describe('CatalogsApi', () => {
+  let endpoint: CatalogsApi;
+  let requestMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    apiMock = {
-      request: vi.fn().mockReturnValue(of([])),
-    };
+    requestMock = vi.fn().mockReturnValue(of([]));
+    // Se stubea solo `request`: `list()` corre su implementacion real, asi que
+    // este spec sigue cubriendo la normalizacion de la respuesta.
+    const apiMock = Object.assign(Object.create(ApiHttpClient.prototype), {
+      request: requestMock,
+    }) as ApiHttpClient;
 
     TestBed.configureTestingModule({
-      providers: [CatalogsEndpoint, { provide: ApiHttpClient, useValue: apiMock }],
+      providers: [CatalogsApi, { provide: ApiHttpClient, useValue: apiMock }],
     });
 
-    endpoint = TestBed.inject(CatalogsEndpoint);
+    endpoint = TestBed.inject(CatalogsApi);
   });
 
   it('should map degreePrograms from API data', () => {
-    apiMock.request.mockReturnValue(
+    requestMock.mockReturnValue(
       of([
         {
           productLevelId: 1,
@@ -79,13 +80,13 @@ describe('CatalogsEndpoint', () => {
       ]);
     });
 
-    expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
+    expect(requestMock).toHaveBeenCalledWith(expect.anything(), {
       queryParams: { academicOffer: 3 },
     });
   });
 
   it('should map initial survey catalogs from API data', () => {
-    apiMock.request.mockReturnValue(
+    requestMock.mockReturnValue(
       of({
         education: {
           lastSecondaryYearLocations: [{ value: 1, label: 'Uruguay' }],
@@ -145,9 +146,7 @@ describe('CatalogsEndpoint', () => {
   });
 
   it('should map bancos from API data', () => {
-    apiMock.request.mockReturnValue(
-      of([{ id: 1, name: 'BROU', code: 11, sistarbancBankId: 'brou' }])
-    );
+    requestMock.mockReturnValue(of([{ id: 1, name: 'BROU', code: 11, sistarbancBankId: 'brou' }]));
 
     endpoint.getBanks().subscribe(result => {
       expect(result).toEqual([{ id: 1, label: 'BROU', code: 'brou' }]);
@@ -155,19 +154,19 @@ describe('CatalogsEndpoint', () => {
   });
 
   it('should map instituciones from API data', () => {
-    apiMock.request.mockReturnValue(of([{ id: 5, name: 'Liceo 1' }]));
+    requestMock.mockReturnValue(of([{ id: 5, name: 'Liceo 1' }]));
 
     endpoint.getInstitutions(1, 10).subscribe(result => {
       expect(result).toEqual([{ id: 5, label: 'Liceo 1', countryCode: 1, stateCode: 10 }]);
     });
 
-    expect(apiMock.request).toHaveBeenCalledWith(expect.anything(), {
+    expect(requestMock).toHaveBeenCalledWith(expect.anything(), {
       queryParams: { countryId: 1, stateId: 10 },
     });
   });
 
   it('should map turnos from API data', () => {
-    apiMock.request.mockReturnValue(
+    requestMock.mockReturnValue(
       of([
         {
           offeringId: 30,

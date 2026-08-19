@@ -4,20 +4,20 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { PasswordActivationService } from '../../services/password-activation';
+import { AuthApi } from '../../api/auth.api';
 import { RecoverAccess } from './recover-access';
 
 describe('RecoverAccess', () => {
   let component: RecoverAccess;
   let fixture: ComponentFixture<RecoverAccess>;
-  let passwordServiceMock: {
+  let authEndpointMock: {
     recoverPassword: ReturnType<typeof vi.fn>;
   };
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
   let snackbarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    passwordServiceMock = {
+    authEndpointMock = {
       recoverPassword: vi.fn().mockReturnValue(of({ success: true })),
     };
     snackbarMock = { error: vi.fn() };
@@ -26,7 +26,7 @@ describe('RecoverAccess', () => {
       imports: [RecoverAccess],
       providers: [
         provideRouter([]),
-        { provide: PasswordActivationService, useValue: passwordServiceMock },
+        { provide: AuthApi, useValue: authEndpointMock },
         { provide: SnackbarHandler, useValue: snackbarMock },
       ],
     });
@@ -50,7 +50,7 @@ describe('RecoverAccess', () => {
 
     component['submit']();
 
-    expect(passwordServiceMock.recoverPassword).toHaveBeenCalledWith({
+    expect(authEndpointMock.recoverPassword).toHaveBeenCalledWith({
       documentType: 'CI',
       documentNumber: '1111111-1',
       firstSurname: 'Silva',
@@ -61,12 +61,12 @@ describe('RecoverAccess', () => {
   it('does not submit invalid data', () => {
     component['submit']();
 
-    expect(passwordServiceMock.recoverPassword).not.toHaveBeenCalled();
+    expect(authEndpointMock.recoverPassword).not.toHaveBeenCalled();
     expect(snackbarMock.error).toHaveBeenCalledWith('Revisá los campos marcados.');
   });
 
   it('shows a friendly error when recovery fails', () => {
-    passwordServiceMock.recoverPassword.mockReturnValue(throwError(() => new Error('boom')));
+    authEndpointMock.recoverPassword.mockReturnValue(throwError(() => new Error('boom')));
     component['form'].setValue({
       documentType: 'CI',
       documentNumber: '11111111',
@@ -81,7 +81,7 @@ describe('RecoverAccess', () => {
   });
 
   it('does not reveal whether an account exists', () => {
-    passwordServiceMock.recoverPassword.mockReturnValue(
+    authEndpointMock.recoverPassword.mockReturnValue(
       throwError(() => ({
         status: 404,
         message: 'Account not found',

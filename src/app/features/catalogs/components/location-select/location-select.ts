@@ -22,9 +22,9 @@ import {
 } from '@angular/forms';
 import { OrtFormFieldModule, OrtSelectModule } from '@desarrolloort/components';
 
+import { CatalogsApi } from '../../api/catalogs.api';
 import { LocationCountry, LocationState } from '../../models/catalog.interface';
 import { LocationValue } from '../../models/location-value';
-import { Catalogs } from '../../services/catalogs';
 
 @Component({
   selector: 'app-location-select',
@@ -46,7 +46,7 @@ import { Catalogs } from '../../services/catalogs';
   ],
 })
 export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Validator {
-  private readonly catalogs = inject(Catalogs);
+  private readonly catalogs = inject(CatalogsApi);
   private readonly injector = inject(Injector);
 
   protected readonly countries = signal<LocationCountry[]>([]);

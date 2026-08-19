@@ -8,20 +8,19 @@ import {
 } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentInitialSurvey } from '../models/enrollment-flow';
-import { buildFormErrors } from '../models/enrollment-flow-forms';
-import { Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
+import { buildFormErrors, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
+import { ENROLLMENT_PROCESS_STATE } from '../models/enrollment-process';
 
 export class EnrollmentProposalFacade {
-  private readonly enrollments = inject(Enrollments);
+  private readonly enrollments = inject(EnrollmentsApi);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly formsStore = inject(EnrollmentFormsStore);
-  private readonly process = inject(EnrollmentProcessStore);
+  private readonly formsStore = inject(ENROLLMENT_FORMS);
+  private readonly process = inject(ENROLLMENT_PROCESS_STATE);
 
   public readonly selection = inject(AcademicProposalSelection);
-  public readonly academicForm = this.formsStore.academicForm;
+  public readonly academicForm = this.formsStore.forms.academicForm;
   public readonly proposalOptions = this.selection.proposalOptions;
   public readonly degreeProgramOptions = this.selection.degreeProgramOptions;
   public readonly intakeOptions = this.selection.intakeOptions;

@@ -4,23 +4,15 @@ import { AuthSessionService } from 'src/app/features/auth/services/auth-session'
 import { ProcessLayout } from 'src/app/shared/ui/process-layout/process-layout';
 
 import { AcademicProposalSelection } from '../../../catalogs/services/academic-proposal-selection';
-import { ScholarshipAcademicStep } from '../../components/scholarship-academic-step/scholarship-academic-step';
-import { ScholarshipPersonalStep } from '../../components/scholarship-personal-step/scholarship-personal-step';
 import { ScholarshipProcessFacade } from '../../facades/scholarship-process';
 import { ScholarshipProposalFacade } from '../../facades/scholarship-proposal';
-import { ScholarshipFormsStore } from '../../store/scholarship-forms';
-import { ScholarshipProcessStore } from '../../store/scholarship-process';
+import { ScholarshipAcademicStep } from './steps/scholarship-academic-step/scholarship-academic-step';
+import { ScholarshipPersonalStep } from './steps/scholarship-personal-step/scholarship-personal-step';
 
 @Component({
   selector: 'app-fbr',
   imports: [ProcessLayout, ScholarshipAcademicStep, ScholarshipPersonalStep],
-  providers: [
-    AcademicProposalSelection,
-    ScholarshipFormsStore,
-    ScholarshipProcessStore,
-    ScholarshipProposalFacade,
-    ScholarshipProcessFacade,
-  ],
+  providers: [AcademicProposalSelection, ScholarshipProposalFacade, ScholarshipProcessFacade],
   templateUrl: './fbr.html',
   styleUrl: './fbr.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import { LocationValue } from '../../catalogs/models/location-value';
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { AuthApi } from '../api/auth.api';
 import {
   type RecognizedFormPatch,
   resolveStateCodeFromBirthplace,
@@ -19,12 +20,13 @@ export interface DocumentPrefillResult {
   providedIn: 'root',
 })
 export class DocumentPrefillService {
-  private readonly catalogs = inject(Catalogs);
+  private readonly catalogs = inject(CatalogsApi);
+  private readonly authEndpoint = inject(AuthApi);
   private readonly documentRecognition = inject(DocumentRecognition);
 
   public async preload(file: File): Promise<DocumentPrefillResult> {
     const payload = await this.documentRecognition.createRequestFromFile(file);
-    const response = await firstValueFrom(this.documentRecognition.recognizeDocument(payload));
+    const response = await firstValueFrom(this.authEndpoint.recognizeDocument(payload));
     const patch = toRecognizedFormPatch(response.fields);
 
     return {

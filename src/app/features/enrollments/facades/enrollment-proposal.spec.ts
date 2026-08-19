@@ -2,28 +2,32 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { Catalogs } from '../../catalogs/services/catalogs';
-import { Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
+import { EnrollmentsApi } from '../api/enrollments.api';
+import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
+import {
+  createEnrollmentProcessState,
+  ENROLLMENT_PROCESS_STATE,
+  type EnrollmentProcessState,
+} from '../models/enrollment-process';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 
 describe('EnrollmentProposalFacade', () => {
   const registerProductInterest = vi.fn();
   let facade: EnrollmentProposalFacade;
-  let process: EnrollmentProcessStore;
+  let process: EnrollmentProcessState;
 
   beforeEach(() => {
     registerProductInterest.mockReset().mockReturnValue(of(true));
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
-        EnrollmentFormsStore,
-        EnrollmentProcessStore,
+        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
+        { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
         EnrollmentProposalFacade,
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms: () =>
               of([
@@ -60,11 +64,11 @@ describe('EnrollmentProposalFacade', () => {
               ]),
           },
         },
-        { provide: Enrollments, useValue: { registerProductInterest } },
+        { provide: EnrollmentsApi, useValue: { registerProductInterest } },
       ],
     });
     facade = TestBed.inject(EnrollmentProposalFacade);
-    process = TestBed.inject(EnrollmentProcessStore);
+    process = TestBed.inject(ENROLLMENT_PROCESS_STATE);
   });
 
   it('registers the proposal before advancing', () => {

@@ -5,7 +5,7 @@
     <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
   </header>
 
-  <form novalidate [formGroup]="facade.academicForm" (ngSubmit)="facade.continue()">
+  <form novalidate [formGroup]="facade.academicForm" (ngSubmit)="process.continue()">
     <app-academic-proposal-select [form]="facade.academicForm" [selection]="facade.selection" />
 
     <footer class="scholarship-footer">

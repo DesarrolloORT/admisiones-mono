@@ -4,20 +4,21 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
-import { Catalogs } from '../../../catalogs/services/catalogs';
+import { CatalogsApi } from '../../../catalogs/api/catalogs.api';
+import { AccountApi } from '../../api/account.api';
+import { AuthApi } from '../../api/auth.api';
 import { RegisterFlowFacade } from '../../facades/register-flow.facade';
-import { AccountService } from '../../services/account';
 import { DocumentPrefillService } from '../../services/document-prefill';
-import { RegistrationService } from '../../services/registration';
 import { Register } from './register';
 
 describe('Register', () => {
   let fixture: ComponentFixture<Register>;
   let component: Register;
-  let registrationMock: {
+  let authMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
-    verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
-    confirmRegistration: ReturnType<typeof vi.fn>;
+    verifyIdentity: ReturnType<typeof vi.fn>;
+    register: ReturnType<typeof vi.fn>;
+    confirmApplicationRequest: ReturnType<typeof vi.fn>;
   };
   let documentPrefillMock: {
     preload: ReturnType<typeof vi.fn>;
@@ -30,7 +31,7 @@ describe('Register', () => {
   let navigateByUrlSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    registrationMock = {
+    authMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
           flowId: 'flow-existing-person',
@@ -42,8 +43,11 @@ describe('Register', () => {
           message: null,
         })
       ),
-      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
-      confirmRegistration: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
+      verifyIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
+      register: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
+      confirmApplicationRequest: vi
+        .fn()
+        .mockReturnValue(of({ pendingReview: false, mailSent: true })),
     };
     documentPrefillMock = {
       preload: vi.fn().mockResolvedValue({
@@ -77,9 +81,9 @@ describe('Register', () => {
       imports: [Register],
       providers: [
         provideRouter([]),
-        { provide: RegistrationService, useValue: registrationMock },
+        { provide: AuthApi, useValue: authMock },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDocumentTypes: vi.fn().mockReturnValue(
               of([
@@ -93,7 +97,10 @@ describe('Register', () => {
         },
         { provide: DocumentPrefillService, useValue: documentPrefillMock },
         { provide: SnackbarHandler, useValue: snackbarMock },
-        { provide: AccountService, useValue: { validatePhone: vi.fn().mockReturnValue(of(true)) } },
+        {
+          provide: AccountApi,
+          useValue: { validatePhone: vi.fn().mockReturnValue(of(true)) },
+        },
       ],
     });
 
@@ -136,9 +143,9 @@ describe('Register', () => {
 
     await facade.continueToPersonalData();
 
-    expect(registrationMock.evaluateDocument).toHaveBeenCalledWith({
+    expect(authMock.evaluateDocument).toHaveBeenCalledWith({
       documentType: 'CI',
-      documentNumber: '11111111',
+      documentNumber: '1111111-1',
     });
     expect(facade.step()).toBe('personal');
     expect(facade.stepViewModel().title).toBe('Verificación de identidad');
@@ -180,13 +187,16 @@ describe('Register', () => {
     await facade.continueToPersonalData();
     facade.submitPersonalData();
 
-    expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
-      flowId: 'flow-existing-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      firstSurname: 'Silva',
-      email: 'ana@example.com',
-    });
-    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
+    expect(authMock.verifyIdentity).toHaveBeenCalledWith(
+      {
+        documentType: 'CI',
+        documentNumber: '1111111-1',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
+      },
+      'flow-existing-person'
+    );
+    expect(authMock.register).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/registro');
@@ -205,16 +215,19 @@ describe('Register', () => {
     await facade.continueToPersonalData();
     facade.submitPersonalData();
 
-    expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
-      flowId: 'flow-existing-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      firstSurname: 'Silva',
-      email: 'ana@example.com',
-    });
+    expect(authMock.verifyIdentity).toHaveBeenCalledWith(
+      {
+        documentType: 'CI',
+        documentNumber: '1111111-1',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
+      },
+      'flow-existing-person'
+    );
   });
 
   it('should create a new account directly from personal data', async () => {
-    registrationMock.evaluateDocument.mockReturnValue(
+    authMock.evaluateDocument.mockReturnValue(
       of({
         flowId: 'flow-new-person',
         requiresPersonCreation: true,
@@ -235,12 +248,14 @@ describe('Register', () => {
     await facade.continueToPersonalData();
     facade.submitPersonalData();
 
-    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith({
-      flow: 'new-person',
-      flowId: 'flow-new-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      personal: expect.objectContaining({ firstName: 'Ana' }),
-    });
+    expect(authMock.register).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentType: 'CI',
+        documentNumber: '1111111-1',
+        firstName: 'Ana',
+      }),
+      'flow-new-person'
+    );
     expect(facade.isCompleted()).toBe(true);
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/confirmacion-correo/registro');
     expect(snackbarMock.success).not.toHaveBeenCalled();

@@ -6,18 +6,25 @@ import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 
-import { toPhoneValidationValue } from '../../../shared/forms/phone';
+import { toBackendPhone } from '../../../shared/forms/phone';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
+import { AccountApi } from '../api/account.api';
+import { AuthApi } from '../api/auth.api';
 import {
   createIdentityForm,
   createPersonalForm,
   syncDocumentNumberValidators,
 } from '../forms/auth-forms';
-import { toAuthRegisterPersonalData } from '../mappers/registration.mapper';
+import {
+  toAuthRegisterPersonalData,
+  toRegisterPayload,
+  toVerifyIdentityPayload,
+} from '../mappers/registration.mapper';
 import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
   cleanDocumentNumber,
+  formatDocumentForBackend,
   getDocumentNumberLabel,
   NATIONAL_ID_DOCUMENT_TYPE,
 } from '../models/document-number';
@@ -31,15 +38,13 @@ import {
   resolveRegistrationEnding,
 } from '../models/register-flow';
 import { REGISTER_STEP_VIEW_MODELS, RegisterStep } from '../models/register-step';
-import { AccountService } from '../services/account';
 import { DocumentPrefillResult, DocumentPrefillService } from '../services/document-prefill';
-import { RegistrationService } from '../services/registration';
 
 export class RegisterFlowFacade {
-  private readonly account = inject(AccountService);
+  private readonly account = inject(AccountApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthApi);
   private readonly documentPrefill = inject(DocumentPrefillService);
-  private readonly registration = inject(RegistrationService);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -121,7 +126,12 @@ export class RegisterFlowFacade {
 
     const identity = this.getCleanIdentityValues();
     try {
-      const result = await firstValueFrom(this.registration.evaluateDocument(identity));
+      const result = await firstValueFrom(
+        this.auth.evaluateDocument({
+          documentType: identity.documentType,
+          documentNumber: formatDocumentForBackend(identity.documentType, identity.documentNumber),
+        })
+      );
       const flow = resolveRegisterFlow(identity.documentType, result);
 
       this.registrationFlow.set(flow);
@@ -217,13 +227,15 @@ export class RegisterFlowFacade {
     this.isCompleted.set(false);
     this.isSubmitting.set(true);
 
-    this.registration
-      .confirmRegistration({
-        flow,
-        flowId,
-        identity: this.getCleanIdentityValues(),
-        personal: toAuthRegisterPersonalData(this.personalForm.getRawValue()),
-      })
+    const payload = toRegisterPayload({
+      identity: this.getCleanIdentityValues(),
+      personal: toAuthRegisterPersonalData(this.personalForm.getRawValue()),
+    });
+
+    (flow === 'new-person'
+      ? this.auth.register(payload, flowId)
+      : this.auth.confirmApplicationRequest(payload, flowId)
+    )
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -258,13 +270,15 @@ export class RegisterFlowFacade {
     this.isCompleted.set(false);
     this.isSubmitting.set(true);
 
-    this.registration
-      .verifyExistingPersonIdentity({
-        flowId,
-        identity: this.getCleanIdentityValues(),
-        firstSurname: firstSurname.value,
-        email: email.value,
-      })
+    this.auth
+      .verifyIdentity(
+        toVerifyIdentityPayload({
+          identity: this.getCleanIdentityValues(),
+          firstSurname: firstSurname.value,
+          email: email.value,
+        }),
+        flowId
+      )
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -288,7 +302,7 @@ export class RegisterFlowFacade {
         return of(null);
       }
 
-      return this.account.validatePhone(toPhoneValidationValue(value)).pipe(
+      return this.account.validatePhone(toBackendPhone(value)).pipe(
         map(isValid => (isValid ? null : { phone: true })),
         catchError(() => of(null))
       );

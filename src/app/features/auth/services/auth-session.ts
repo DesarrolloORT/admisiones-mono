@@ -3,10 +3,10 @@ import { Router } from '@angular/router';
 import { EMPTY, Observable, of } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
 
-import { AuthEndpoint, LoginResult, ResendTwoFactorCodeResult } from '../endpoints/auth.endpoint';
+import { AccountApi } from '../api/account.api';
+import { AuthApi, LoginResult, ResendTwoFactorCodeResult } from '../api/auth.api';
 import { AuthLoginRequest, AuthSession } from '../models/auth.interface';
 import { formatDocumentForBackend } from '../models/document-number';
-import { AccountService } from './account';
 
 /**
  * Outcome of `AuthSessionService.login`.
@@ -27,8 +27,8 @@ interface PendingTwoFactorContext {
   providedIn: 'root',
 })
 export class AuthSessionService {
-  private readonly endpoint = inject(AuthEndpoint);
-  private readonly account = inject(AccountService);
+  private readonly endpoint = inject(AuthApi);
+  private readonly account = inject(AccountApi);
   private readonly router = inject(Router);
   private readonly sessionState = signal<AuthSession | null>(null);
   private pendingTwoFactorContext: PendingTwoFactorContext | null = null;

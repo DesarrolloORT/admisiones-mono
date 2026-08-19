@@ -2,15 +2,15 @@ import { computed, DestroyRef, effect, inject, type Signal, signal } from '@angu
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import type {
   BaccalaureateYearGroup,
   InitialSurveyCatalogs,
   LocationCountry,
 } from '../../catalogs/models/catalog.interface';
-import { Catalogs } from '../../catalogs/services/catalogs';
 import type { EnrollmentOption } from '../models/enrollment-flow';
+import { ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
 import { toCatalogOptions } from '../models/enrollment-flow-options';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
 
 const URUGUAY_COUNTRY_CODE = 1;
 
@@ -29,9 +29,9 @@ export interface SurveyOptionsCallbacks {
  * inyectarse mutuamente, evitando el ciclo de DI.
  */
 export class EnrollmentSurveyOptionsFacade {
-  private readonly catalogs = inject(Catalogs);
+  private readonly catalogs = inject(CatalogsApi);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly educationForm = inject(EnrollmentFormsStore).educationForm;
+  private readonly educationForm = inject(ENROLLMENT_FORMS).forms.educationForm;
 
   private uruguayCountryCode: number | null = null;
   private callbacks: SurveyOptionsCallbacks = {

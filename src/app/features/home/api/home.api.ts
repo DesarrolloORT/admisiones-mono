@@ -12,24 +12,18 @@ import { EnrollmentSeminarSummary, EnrollmentSummary } from '../models/enrollmen
 @Injectable({
   providedIn: 'root',
 })
-export class HomeEndpoint {
+export class HomeApi {
   private readonly api = inject(ApiHttpClient);
 
   public getMyEnrollments(): Observable<EnrollmentSummary[]> {
-    return this.api.request(getPersonEnrollmentsEndpoint).pipe(
-      catchError((error: HttpErrorResponse) =>
-        error.status === 404 ? of([]) : throwError(() => error)
-      ),
-      map(data => this.toEnrollmentSummaries(data))
-    );
-  }
-
-  private toEnrollmentSummaries(
-    data: { data: MyEnrollmentsResponse[] | null } | MyEnrollmentsResponse[] | null | undefined
-  ): EnrollmentSummary[] {
-    const groups = Array.isArray(data) ? data : (data?.data ?? []);
-
-    return groups.flatMap(group => this.toEnrollmentSummariesFromGroup(group));
+    return this.api
+      .list(getPersonEnrollmentsEndpoint, group => this.toEnrollmentSummariesFromGroup(group))
+      .pipe(
+        map(groups => groups.flat()),
+        catchError((error: HttpErrorResponse) =>
+          error.status === 404 ? of([]) : throwError(() => error)
+        )
+      );
   }
 
   private toEnrollmentSummariesFromGroup(group: MyEnrollmentsResponse): EnrollmentSummary[] {

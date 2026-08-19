@@ -1,8 +1,7 @@
 import { inject, signal } from '@angular/core';
 
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { ScholarshipFormsStore } from '../store/scholarship-forms';
-import { ScholarshipProcessStore } from '../store/scholarship-process';
+import { createScholarshipAcademicForm } from '../models/scholarship-process';
 
 /**
  * Fachada del paso "Información de postulación" (propuesta académica). Es el
@@ -10,29 +9,29 @@ import { ScholarshipProcessStore } from '../store/scholarship-process';
  * endpoints de becas todavía no están definidos.
  *
  * Expone el formulario académico y el servicio de selección que consume el
- * `app-academic-proposal-select`, y decide el avance en `continue()`: valida el
- * form y, si está OK, llama a `this.process.flow.next()`. Cuando exista el
- * endpoint de registro de interés, se agrega la llamada antes del `next()`
- * (igual que hace inscripciones con `registerProductInterest`).
+ * `app-academic-proposal-select`. No avanza el flujo: `canContinue()` sólo
+ * responde si la sección está en condiciones de avanzar y
+ * `ScholarshipProcessFacade` decide. Esa dirección (proceso → sección) es lo
+ * que permite que el estado del proceso viva en la fachada de proceso.
  */
 export class ScholarshipProposalFacade {
-  private readonly formsStore = inject(ScholarshipFormsStore);
-  private readonly process = inject(ScholarshipProcessStore);
-
   public readonly selection = inject(AcademicProposalSelection);
-  public readonly academicForm = this.formsStore.academicForm;
+  public readonly academicForm = createScholarshipAcademicForm();
 
   /** `true` una vez que el usuario intentó continuar; habilita mostrar errores. */
   public readonly submitted = signal(false);
 
-  public continue(): void {
+  /**
+   * Valida la sección. Devuelve `true` cuando el proceso puede avanzar.
+   * Punto de extensión: cuando exista el endpoint, registrar el interés por la
+   * propuesta acá antes de devolver `true`.
+   */
+  public canContinue(): boolean {
     this.submitted.set(true);
     if (this.academicForm.invalid) {
       this.academicForm.markAllAsTouched();
-      return;
+      return false;
     }
-    // Punto de extensión: cuando exista el endpoint, registrar el interés por la
-    // propuesta acá antes de avanzar (ver EnrollmentProposalFacade.continue).
-    this.process.flow.next();
+    return true;
   }
 }

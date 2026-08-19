@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
-import { NEVER, of, Subject } from 'rxjs';
-import { AccountService } from 'src/app/features/auth/services/account';
-import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
+import { NEVER, of, Subject, throwError } from 'rxjs';
+import { AccountApi } from 'src/app/features/auth/api/account.api';
+import { CatalogsApi } from 'src/app/features/catalogs/api/catalogs.api';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
 import { PersonalData } from './personal-data';
@@ -72,9 +72,9 @@ describe('PersonalData', () => {
       imports: [PersonalData],
       providers: [
         provideRouter([]),
-        { provide: AccountService, useValue: service },
+        { provide: AccountApi, useValue: service },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getCountryLocations: vi.fn().mockReturnValue(
               of([
@@ -157,10 +157,8 @@ describe('PersonalData', () => {
     });
 
     expect(service.validatePhone).toHaveBeenCalledWith({
+      nationalNumber: '99123456',
       iso2: 'UY',
-      countryPrefix: 598,
-      number: '99123456',
-      numberE164: '+59899123456',
     });
   });
 
@@ -187,6 +185,26 @@ describe('PersonalData', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Datos personales actualizados.');
   });
 
+  it('should explain a phone rejected by the backend', () => {
+    service.updatePersonalData.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        errorCode: 'PER_ADP_07',
+        message: 'Telefono invalido',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: null,
+      }))
+    );
+    fixture.detectChanges();
+
+    component.submit();
+
+    expect(snackbar.error).toHaveBeenCalledWith(
+      'El celular no es válido para el país seleccionado. Revisá el número y el país.'
+    );
+  });
+
   it('should submit international phone numbers with their prefix', () => {
     fixture.detectChanges();
 
@@ -211,10 +229,8 @@ describe('PersonalData', () => {
     fixture.detectChanges();
 
     expect(service.validatePhone).toHaveBeenCalledWith({
+      nationalNumber: '99123456',
       iso2: 'UY',
-      countryPrefix: 598,
-      number: '99123456',
-      numberE164: '+59899123456',
     });
     expect(component.form.controls.phone.touched).toBe(false);
   });

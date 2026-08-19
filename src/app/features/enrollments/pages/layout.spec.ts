@@ -3,22 +3,57 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import { EnrollmentPaymentFacade } from '../facades/enrollment-payment';
 import { EnrollmentSurveyFacade } from '../facades/enrollment-survey';
+import {
+  ENROLLMENT_PROCESS_STATE,
+  type EnrollmentProcessState,
+} from '../models/enrollment-process';
 import { Enrollments } from '../services/enrollments';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
 import { Layout } from './layout';
 
 describe('Layout', () => {
   let fixture: ComponentFixture<Layout>;
-  let process: EnrollmentProcessStore;
+  let process: EnrollmentProcessState;
   let payment: EnrollmentPaymentFacade;
   let survey: EnrollmentSurveyFacade;
 
   beforeEach(() => {
     sessionStorage.clear();
+    const enrollmentsMock = {
+      confirmPreEnrollment: vi.fn().mockReturnValue(
+        of({
+          confirmed: true,
+          paymentDueDate: null,
+          enrollmentDeposit: null,
+          accountBalance: null,
+          summary: null,
+        })
+      ),
+      getIdentityPreload: vi
+        .fn()
+        .mockReturnValue(of({ front: null, back: null, selfie: null, expirationDate: null })),
+      getStudentRegulationAcceptance: vi
+        .fn()
+        .mockReturnValue(of({ acceptedStudentRegulation: false, acceptanceDate: null })),
+      getInitialSurvey: vi.fn().mockReturnValue(
+        of({
+          isEligibleForSurvey: true,
+          survey: null,
+          consideredUniversities: [],
+          otherConsideredUniversities: [],
+          higherEducationUniversities: [],
+          otherHigherEducationUniversities: [],
+          selectedReasonOptions: [],
+          selectedAdvertisingOptions: [],
+        })
+      ),
+      registerProductInterest: vi.fn().mockReturnValue(of(true)),
+      saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
+    };
     TestBed.configureTestingModule({
       imports: [Layout],
       providers: [
@@ -48,7 +83,7 @@ describe('Layout', () => {
           },
         },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms: vi.fn().mockReturnValue(
               of([
@@ -102,43 +137,17 @@ describe('Layout', () => {
         },
         {
           provide: Enrollments,
-          useValue: {
-            confirmPreEnrollment: vi.fn().mockReturnValue(
-              of({
-                confirmed: true,
-                paymentDueDate: null,
-                enrollmentDeposit: null,
-                accountBalance: null,
-                summary: null,
-              })
-            ),
-            getIdentityPreload: vi
-              .fn()
-              .mockReturnValue(of({ front: null, back: null, selfie: null, expirationDate: null })),
-            getStudentRegulationAcceptance: vi
-              .fn()
-              .mockReturnValue(of({ acceptedStudentRegulation: false, acceptanceDate: null })),
-            getInitialSurvey: vi.fn().mockReturnValue(
-              of({
-                isEligibleForSurvey: true,
-                survey: null,
-                consideredUniversities: [],
-                otherConsideredUniversities: [],
-                higherEducationUniversities: [],
-                otherHigherEducationUniversities: [],
-                selectedReasonOptions: [],
-                selectedAdvertisingOptions: [],
-              })
-            ),
-            registerProductInterest: vi.fn().mockReturnValue(of(true)),
-            saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
-          },
+          useValue: enrollmentsMock,
+        },
+        {
+          provide: EnrollmentsApi,
+          useValue: enrollmentsMock,
         },
       ],
     });
 
     fixture = TestBed.createComponent(Layout);
-    process = fixture.debugElement.injector.get(EnrollmentProcessStore);
+    process = fixture.debugElement.injector.get(ENROLLMENT_PROCESS_STATE);
     payment = fixture.debugElement.injector.get(EnrollmentPaymentFacade);
     survey = fixture.debugElement.injector.get(EnrollmentSurveyFacade);
   });

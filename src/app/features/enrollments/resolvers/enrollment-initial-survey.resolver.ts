@@ -3,12 +3,12 @@ import { ResolveFn } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
+import { EnrollmentsApi } from '../api/enrollments.api';
 import {
   EMPTY_INITIAL_SURVEY_RESPONSE,
   type EnrollmentInitialSurveyResolved,
 } from '../models/enrollment-entry';
 import type { EnrollmentInitialSurveyResponse } from '../models/enrollment-flow';
-import { Enrollments } from '../services/enrollments';
 
 export type { EnrollmentInitialSurveyResolved };
 
@@ -31,7 +31,7 @@ export function resolveInitialSurvey(
 }
 
 export const enrollmentInitialSurveyResolver: ResolveFn<EnrollmentInitialSurveyResolved> = () =>
-  resolveInitialSurvey(inject(Enrollments).getInitialSurvey());
+  resolveInitialSurvey(inject(EnrollmentsApi).getInitialSurvey());
 
 export function isNotFoundError(error: unknown): error is { status: number } {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404;

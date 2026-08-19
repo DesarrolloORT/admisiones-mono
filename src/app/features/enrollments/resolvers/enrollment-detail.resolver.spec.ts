@@ -8,11 +8,11 @@ import {
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentDetail } from '../models/enrollment-detail';
 import type { EnrollmentEntryResolved } from '../models/enrollment-entry';
 import { EnrollmentResumeContextStore } from '../services/enrollment-resume-context';
-import { Enrollments } from '../services/enrollments';
 import { enrollmentDetailResolver, resolveEntryIntent } from './enrollment-detail.resolver';
 
 const REACTIVATION_RESPONSE = {
@@ -45,8 +45,8 @@ describe('enrollmentDetailResolver', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: Enrollments, useValue: { getDetail } },
-        { provide: Catalogs, useValue: { getDegreePrograms } },
+        { provide: EnrollmentsApi, useValue: { getDetail } },
+        { provide: CatalogsApi, useValue: { getDegreePrograms } },
       ],
     });
   });

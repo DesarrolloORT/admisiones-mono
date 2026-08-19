@@ -12,7 +12,10 @@ import {
   type EnrollmentInitialSurveyResolved,
 } from '../models/enrollment-entry';
 import type { EnrollmentInitialSurvey, EnrollmentOfferingSummary } from '../models/enrollment-flow';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
+import {
+  createEnrollmentProcessState,
+  ENROLLMENT_PROCESS_STATE,
+} from '../models/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProcessFacade } from './enrollment-process';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
@@ -540,7 +543,7 @@ function createFacade(
   TestBed.configureTestingModule({
     providers: [
       EnrollmentProcessFacade,
-      EnrollmentProcessStore,
+      { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
       {
         provide: ActivatedRoute,
         useValue: { snapshot: { data: { entry, initialSurvey: surveyResolved } } },
@@ -552,7 +555,7 @@ function createFacade(
     ],
   });
 
-  const process = TestBed.inject(EnrollmentProcessStore);
+  const process = TestBed.inject(ENROLLMENT_PROCESS_STATE);
   if (options.spyGoTo) vi.spyOn(process.flow, 'goTo');
   const facade = TestBed.inject(EnrollmentProcessFacade);
 

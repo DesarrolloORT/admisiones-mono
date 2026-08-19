@@ -1,14 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ScholarshipProcessStore } from '../store/scholarship-process';
 import { ScholarshipProcessFacade } from './scholarship-process';
+import { ScholarshipProposalFacade } from './scholarship-proposal';
 
 describe('ScholarshipProcessFacade', () => {
-  it('describes and navigates the process', () => {
+  function setup(canContinue: boolean): ScholarshipProcessFacade {
     TestBed.configureTestingModule({
-      providers: [ScholarshipProcessFacade, ScholarshipProcessStore],
+      providers: [
+        ScholarshipProcessFacade,
+        { provide: ScholarshipProposalFacade, useValue: { canContinue: () => canContinue } },
+      ],
     });
-    const facade = TestBed.inject(ScholarshipProcessFacade);
+    return TestBed.inject(ScholarshipProcessFacade);
+  }
+
+  it('describes and navigates the process', () => {
+    const facade = setup(true);
 
     expect(facade.stepLabel()).toBe('Paso 1 de 3 - Información de postulación');
 
@@ -16,6 +23,14 @@ describe('ScholarshipProcessFacade', () => {
     expect(facade.currentStep()).toBe('personal-info');
 
     facade.back();
+    expect(facade.currentStep()).toBe('application-info');
+  });
+
+  it('does not advance when the active section is not ready', () => {
+    const facade = setup(false);
+
+    facade.continue();
+
     expect(facade.currentStep()).toBe('application-info');
   });
 });

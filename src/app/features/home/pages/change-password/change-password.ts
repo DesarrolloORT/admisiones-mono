@@ -18,7 +18,7 @@ import {
   PasswordRequirementStatus,
 } from '../../../../shared/forms/password-validation';
 import { createPasswordVisibility } from '../../../../shared/forms/password-visibility';
-import { AccountService } from '../../../auth/services/account';
+import { AccountApi } from '../../../auth/api/account.api';
 
 interface ChangePasswordForm {
   currentPassword: FormControl<string>;
@@ -41,7 +41,7 @@ interface ChangePasswordForm {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChangePassword {
-  private readonly account = inject(AccountService);
+  private readonly account = inject(AccountApi);
   private readonly router = inject(Router);
 
   protected readonly form = new FormGroup<ChangePasswordForm>(

@@ -35,10 +35,3 @@ export interface AccountChangePasswordPayload {
   currentPassword: string;
   password: string;
 }
-
-export interface AccountPhoneValidationPayload {
-  iso2: string | null;
-  countryPrefix: number | null;
-  number: string;
-  numberE164: string | null;
-}

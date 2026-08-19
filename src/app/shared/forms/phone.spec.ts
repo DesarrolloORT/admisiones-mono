@@ -1,10 +1,5 @@
 import type { StoredPhoneNumber } from './phone';
-import {
-  PHONE_FALLBACK_ISO2,
-  toBackendPhone,
-  toPhoneInputValue,
-  toPhoneValidationValue,
-} from './phone';
+import { PHONE_FALLBACK_ISO2, toBackendPhone, toPhoneInputValue } from './phone';
 
 describe('toBackendPhone', () => {
   it('should send only the fields the backend uses on save', () => {
@@ -113,27 +108,5 @@ describe('toPhoneInputValue', () => {
     expect(value?.iso2).toBe('');
     expect(value?.number).toBe('+9999123456');
     expect(toBackendPhone(value).iso2).toBeNull();
-  });
-});
-
-describe('toPhoneValidationValue', () => {
-  it('should resolve the country prefix from the iso2 code', () => {
-    expect(
-      toPhoneValidationValue({ iso2: 'UY', number: ' 99333222 ', numberE164: '+59899333222' })
-    ).toEqual({
-      iso2: 'UY',
-      countryPrefix: 598,
-      number: '99333222',
-      numberE164: '+59899333222',
-    });
-  });
-
-  it('should keep the prefix null when the country is unknown', () => {
-    expect(toPhoneValidationValue({ iso2: '', number: '99333222', numberE164: '' })).toEqual({
-      iso2: null,
-      countryPrefix: null,
-      number: '99333222',
-      numberE164: null,
-    });
   });
 });

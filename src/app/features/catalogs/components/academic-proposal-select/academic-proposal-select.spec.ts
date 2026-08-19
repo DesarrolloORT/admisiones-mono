@@ -7,9 +7,9 @@ import { of } from 'rxjs';
 import { ResponsiveSelect } from 'src/app/shared/ui/responsive-select/responsive-select';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../../api/catalogs.api';
 import type { AcademicProposalForm } from '../../models/academic-proposal';
 import { AcademicProposalSelection } from '../../services/academic-proposal-selection';
-import { Catalogs } from '../../services/catalogs';
 import { AcademicProposalSelect } from './academic-proposal-select';
 
 describe('AcademicProposalSelect', () => {
@@ -48,7 +48,7 @@ describe('AcademicProposalSelect', () => {
         AcademicProposalSelection,
         { provide: BreakpointService, useValue: { breakpoint } },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms: () =>
               of([

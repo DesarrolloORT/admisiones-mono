@@ -3,16 +3,16 @@ import { ParamMap, ResolveFn } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import {
   ACADEMIC_PROPOSAL_TYPE_IDS,
   getAcademicProposalTypeByLevel,
 } from '../../catalogs/models/academic-proposal';
 import type { DegreeProgram } from '../../catalogs/models/catalog.interface';
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentDetail } from '../models/enrollment-detail';
 import type { EnrollmentEntryResolved } from '../models/enrollment-entry';
 import { EnrollmentResumeContextStore } from '../services/enrollment-resume-context';
-import { Enrollments } from '../services/enrollments';
 
 /**
  * Lo que la URL pide, ya validado: empezar de cero, o entrar a UNA inscripción
@@ -106,14 +106,14 @@ function loadDetail(
   admissionProcessId: number,
   status: string | null
 ): Observable<EnrollmentDetail | null> {
-  return inject(Enrollments)
+  return inject(EnrollmentsApi)
     .getDetail(productId, admissionProcessId, status)
     .pipe(catchError(() => of(null)));
 }
 
 /** Carreras de todas las propuestas, solo para deducir el nivel del producto. */
 function loadDegreePrograms(): Observable<DegreeProgram[]> {
-  const catalogs = inject(Catalogs);
+  const catalogs = inject(CatalogsApi);
   return forkJoin(ACADEMIC_PROPOSAL_TYPE_IDS.map(type => catalogs.getDegreePrograms(type))).pipe(
     map(groups => groups.flat()),
     catchError(() => of([]))

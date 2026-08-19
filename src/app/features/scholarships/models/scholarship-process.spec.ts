@@ -1,4 +1,4 @@
-import { SCHOLARSHIP_STEPS } from './scholarship-process';
+import { createScholarshipAcademicForm, SCHOLARSHIP_STEPS } from './scholarship-process';
 
 describe('SCHOLARSHIP_STEPS', () => {
   it('defines the three ordered scholarship steps', () => {
@@ -7,5 +7,23 @@ describe('SCHOLARSHIP_STEPS', () => {
       'personal-info',
       'confirmation',
     ]);
+  });
+});
+
+describe('createScholarshipAcademicForm', () => {
+  it('requires a complete academic proposal', () => {
+    const form = createScholarshipAcademicForm();
+
+    expect(form.invalid).toBe(true);
+
+    form.setValue({
+      proposalType: '1',
+      degreeProgram: '20',
+      intake: '200',
+      shift: '300',
+      seminars: [],
+    });
+
+    expect(form.valid).toBe(true);
   });
 });

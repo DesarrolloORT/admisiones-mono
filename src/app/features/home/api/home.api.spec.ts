@@ -4,20 +4,24 @@ import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
 import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
-import { HomeEndpoint } from './home.endpoint';
+import { HomeApi } from './home.api';
 
-describe('HomeEndpoint', () => {
-  let endpoint: HomeEndpoint;
+describe('HomeApi', () => {
+  let endpoint: HomeApi;
   let api: { request: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    api = { request: vi.fn() };
+    // Se stubea solo `request`: `list()` corre su implementacion real, asi que
+    // este spec sigue cubriendo la normalizacion de la respuesta.
+    api = Object.assign(Object.create(ApiHttpClient.prototype), {
+      request: vi.fn(),
+    }) as { request: ReturnType<typeof vi.fn> };
 
     TestBed.configureTestingModule({
-      providers: [HomeEndpoint, { provide: ApiHttpClient, useValue: api }],
+      providers: [HomeApi, { provide: ApiHttpClient, useValue: api }],
     });
 
-    endpoint = TestBed.inject(HomeEndpoint);
+    endpoint = TestBed.inject(HomeApi);
   });
 
   it('should map Persona/Enrollments into dashboard cards', async () => {
@@ -60,7 +64,7 @@ describe('HomeEndpoint', () => {
         seminars: [],
       },
     ]);
-    expect(api.request).toHaveBeenCalledWith(getPersonEnrollmentsEndpoint);
+    expect(api.request.mock.calls[0][0]).toBe(getPersonEnrollmentsEndpoint);
   });
 
   it('should group levels 3 and 4 into a single card with seminarios', async () => {

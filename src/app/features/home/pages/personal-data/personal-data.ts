@@ -26,10 +26,11 @@ import {
   OrtSelectModule,
   OrtSkeletonModule,
 } from '@desarrolloort/components';
+import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { forkJoin, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 import { isNationalIdDocumentType } from 'src/app/features/auth/models/document-number';
-import { Catalogs } from 'src/app/features/catalogs/services/catalogs';
+import { CatalogsApi } from 'src/app/features/catalogs/api/catalogs.api';
 import {
   buildFormErrorSummary,
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
@@ -38,15 +39,11 @@ import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
-import {
-  toBackendPhone,
-  toPhoneInputValue,
-  toPhoneValidationValue,
-} from 'src/app/shared/forms/phone';
+import { toBackendPhone, toPhoneInputValue } from 'src/app/shared/forms/phone';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
-import type { PersonalDataRecord } from '../../../auth/services/account';
-import { AccountService } from '../../../auth/services/account';
+import { AccountApi } from '../../../auth/api/account.api';
+import type { AccountPersonalData } from '../../../auth/models/account.interface';
 import { LocationCountry, LocationState } from '../../../catalogs/models/catalog.interface';
 
 interface PersonalDataForm {
@@ -84,8 +81,8 @@ interface PersonalDataForm {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PersonalData implements OnInit {
-  private readonly account = inject(AccountService);
-  private readonly catalogs = inject(Catalogs);
+  private readonly account = inject(AccountApi);
+  private readonly catalogs = inject(CatalogsApi);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -248,8 +245,13 @@ export class PersonalData implements OnInit {
 
           this.snackbar.success('Datos personales actualizados.');
         },
-        error: () => {
-          this.snackbar.error('No se pudieron guardar los datos personales.');
+        error: (error: unknown) => {
+          // PER_ADP_07: el backend rechazo el celular.
+          this.snackbar.error(
+            isNormalizedApiError(error) && error.errorCode === 'PER_ADP_07'
+              ? 'El celular no es válido para el país seleccionado. Revisá el número y el país.'
+              : 'No se pudieron guardar los datos personales.'
+          );
         },
       });
   }
@@ -277,7 +279,7 @@ export class PersonalData implements OnInit {
       });
   }
 
-  private patchForm(data: PersonalDataRecord): void {
+  private patchForm(data: AccountPersonalData): void {
     this.identityRestricted.set(data.identityRestricted);
     this.selectedCountryCode.set(data.countryCode);
     this.selectedStateCode.set(data.stateCode);
@@ -348,7 +350,7 @@ export class PersonalData implements OnInit {
         return of(null);
       }
 
-      return this.account.validatePhone(toPhoneValidationValue(value)).pipe(
+      return this.account.validatePhone(toBackendPhone(value)).pipe(
         map(isValid => (isValid ? null : { phone: true })),
         catchError(() => of(null))
       );

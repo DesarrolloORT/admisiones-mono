@@ -8,10 +8,10 @@ import {
   provideOrtApiErrorHandling,
 } from '@desarrolloort/ngx-utils';
 
-import { AccountEndpoint } from './account.endpoint';
+import { AccountApi } from './account.api';
 
-describe('AccountEndpoint', () => {
-  let endpoint: AccountEndpoint;
+describe('AccountApi', () => {
+  let endpoint: AccountApi;
   let httpController: HttpTestingController;
 
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe('AccountEndpoint', () => {
       ],
     });
 
-    endpoint = TestBed.inject(AccountEndpoint);
+    endpoint = TestBed.inject(AccountApi);
     httpController = TestBed.inject(HttpTestingController);
   });
 
@@ -249,12 +249,7 @@ describe('AccountEndpoint', () => {
 
   it('should validate mobile phone numbers', () => {
     endpoint
-      .validatePhone({
-        iso2: 'UY',
-        countryPrefix: 598,
-        number: '99123456',
-        numberE164: '+59899123456',
-      })
+      .validatePhone({ nationalNumber: '99123456', iso2: 'UY' })
       .subscribe(result => expect(result).toBe(true));
 
     const req = httpController.expectOne(
@@ -264,12 +259,7 @@ describe('AccountEndpoint', () => {
         r.params.get('isPrimaryPhone') === 'true'
     );
 
-    expect(req.request.body).toEqual({
-      e164: '+59899123456',
-      iso2: 'UY',
-      countryCode: 598,
-      nationalNumber: '99123456',
-    });
+    expect(req.request.body).toEqual({ nationalNumber: '99123456', iso2: 'UY' });
     expect(req.request.withCredentials).toBeFalsy();
 
     req.flush({ success: true, httpCode: 200, data: true });
@@ -277,12 +267,7 @@ describe('AccountEndpoint', () => {
 
   it('should return false when the phone number is invalid', () => {
     endpoint
-      .validatePhone({
-        iso2: 'UY',
-        countryPrefix: 598,
-        number: '123',
-        numberE164: null,
-      })
+      .validatePhone({ nationalNumber: '123', iso2: 'UY' })
       .subscribe(result => expect(result).toBe(false));
 
     const req = httpController.expectOne(
@@ -295,18 +280,11 @@ describe('AccountEndpoint', () => {
   it('should propagate normalized API failures when validating phone numbers', () => {
     let caught: unknown;
 
-    endpoint
-      .validatePhone({
-        iso2: null,
-        countryPrefix: null,
-        number: '',
-        numberE164: null,
-      })
-      .subscribe({
-        error: error => {
-          caught = error;
-        },
-      });
+    endpoint.validatePhone({ nationalNumber: '', iso2: null }).subscribe({
+      error: error => {
+        caught = error;
+      },
+    });
 
     const req = httpController.expectOne(
       r => r.url.includes('/person/validate-phone-number') && r.method === 'POST'

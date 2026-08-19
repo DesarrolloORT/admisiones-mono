@@ -4,18 +4,19 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
-import { Catalogs } from '../../catalogs/services/catalogs';
-import { AccountService } from '../services/account';
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
+import { AccountApi } from '../api/account.api';
+import { AuthApi } from '../api/auth.api';
 import { DocumentPrefillService } from '../services/document-prefill';
-import { RegistrationService } from '../services/registration';
 import { RegisterFlowFacade } from './register-flow.facade';
 
 describe('RegisterFlowFacade', () => {
   let facade: RegisterFlowFacade;
-  let registrationMock: {
+  let authMock: {
     evaluateDocument: ReturnType<typeof vi.fn>;
-    verifyExistingPersonIdentity: ReturnType<typeof vi.fn>;
-    confirmRegistration: ReturnType<typeof vi.fn>;
+    verifyIdentity: ReturnType<typeof vi.fn>;
+    register: ReturnType<typeof vi.fn>;
+    confirmApplicationRequest: ReturnType<typeof vi.fn>;
   };
   let snackbarMock: {
     show: ReturnType<typeof vi.fn>;
@@ -30,7 +31,7 @@ describe('RegisterFlowFacade', () => {
 
   beforeEach(() => {
     accountMock = { validatePhone: vi.fn().mockReturnValue(of(true)) };
-    registrationMock = {
+    authMock = {
       evaluateDocument: vi.fn().mockReturnValue(
         of({
           flowId: 'flow-existing-person',
@@ -42,8 +43,11 @@ describe('RegisterFlowFacade', () => {
           message: null,
         })
       ),
-      verifyExistingPersonIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
-      confirmRegistration: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
+      verifyIdentity: vi.fn().mockReturnValue(of({ mailSent: true })),
+      register: vi.fn().mockReturnValue(of({ pendingReview: false, mailSent: true })),
+      confirmApplicationRequest: vi
+        .fn()
+        .mockReturnValue(of({ pendingReview: false, mailSent: true })),
     };
     snackbarMock = {
       show: vi.fn(),
@@ -58,9 +62,9 @@ describe('RegisterFlowFacade', () => {
     TestBed.configureTestingModule({
       providers: [
         RegisterFlowFacade,
-        { provide: RegistrationService, useValue: registrationMock },
+        { provide: AuthApi, useValue: authMock },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDocumentTypes: vi.fn().mockReturnValue(of([])),
           },
@@ -70,7 +74,7 @@ describe('RegisterFlowFacade', () => {
           useValue: { preload: vi.fn() },
         },
         {
-          provide: AccountService,
+          provide: AccountApi,
           useValue: accountMock,
         },
         {
@@ -141,13 +145,17 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.registrationFlow()).toBe('existing-person');
     expect(facade.personalMode()).toBe('verification');
-    expect(registrationMock.verifyExistingPersonIdentity).toHaveBeenCalledWith({
-      flowId: 'flow-existing-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      firstSurname: 'Silva',
-      email: 'ana@example.com',
-    });
-    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
+    expect(authMock.verifyIdentity).toHaveBeenCalledWith(
+      {
+        documentType: 'CI',
+        documentNumber: '1111111-1',
+        firstSurname: 'Silva',
+        email: 'ana@example.com',
+      },
+      'flow-existing-person'
+    );
+    expect(authMock.register).not.toHaveBeenCalled();
+    expect(authMock.confirmApplicationRequest).not.toHaveBeenCalled();
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
@@ -164,16 +172,16 @@ describe('RegisterFlowFacade', () => {
 
     expect(facade.registrationFlow()).toBe('new-person');
     expect(facade.personalMode()).toBe('complete');
-    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith({
-      flow: 'new-person',
-      flowId: 'flow-new-person',
-      identity: { documentType: 'CI', documentNumber: '11111111' },
-      personal: expect.objectContaining({
+    expect(authMock.register).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentType: 'CI',
+        documentNumber: '1111111-1',
         firstName: 'Ana',
         firstSurname: 'Silva',
         email: 'ana@example.com',
       }),
-    });
+      'flow-new-person'
+    );
     expect(facade.step()).toBe('personal');
     expect(facade.isCompleted()).toBe(true);
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/confirmacion-correo/registro');
@@ -196,7 +204,7 @@ describe('RegisterFlowFacade', () => {
 
   it('should collect full data and confirm a non-CI application request', async () => {
     mockEvaluation({ requiresApplicationCreation: true, flowId: 'flow-new-application' });
-    registrationMock.confirmRegistration.mockReturnValue(
+    authMock.confirmApplicationRequest.mockReturnValue(
       of({ pendingReview: true, mailSent: false })
     );
     facade.identityForm.setValue({ documentType: 'PS', documentNumber: 'AB123456' });
@@ -206,12 +214,9 @@ describe('RegisterFlowFacade', () => {
     facade.submitPersonalData();
 
     expect(facade.registrationFlow()).toBe('new-application');
-    expect(registrationMock.confirmRegistration).toHaveBeenCalledWith(
-      expect.objectContaining({
-        flow: 'new-application',
-        flowId: 'flow-new-application',
-        identity: { documentType: 'PS', documentNumber: 'AB123456' },
-      })
+    expect(authMock.confirmApplicationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ documentType: 'PS', documentNumber: 'AB123456' }),
+      'flow-new-application'
     );
     expect(facade.isCompleted()).toBe(true);
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith(
@@ -224,9 +229,7 @@ describe('RegisterFlowFacade', () => {
     // Un CI con pendingReview termina en la pantalla de solicitud en revision:
     // la unica fuente de verdad es el backend, no el tipo de documento.
     mockEvaluation({ requiresPersonCreation: true, flowId: 'flow-new-person' });
-    registrationMock.confirmRegistration.mockReturnValue(
-      of({ pendingReview: true, mailSent: false })
-    );
+    authMock.register.mockReturnValue(of({ pendingReview: true, mailSent: false }));
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
@@ -241,9 +244,7 @@ describe('RegisterFlowFacade', () => {
 
   it('should offer password recovery when the activation email was not sent', async () => {
     mockEvaluation({ requiresPersonCreation: true, flowId: 'flow-new-person' });
-    registrationMock.confirmRegistration.mockReturnValue(
-      of({ pendingReview: false, mailSent: false })
-    );
+    authMock.register.mockReturnValue(of({ pendingReview: false, mailSent: false }));
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
@@ -262,7 +263,7 @@ describe('RegisterFlowFacade', () => {
 
   it('should offer password recovery when identity verification sent no email', async () => {
     mockEvaluation({ requiresVerification: true });
-    registrationMock.verifyExistingPersonIdentity.mockReturnValue(of({ mailSent: false }));
+    authMock.verifyIdentity.mockReturnValue(of({ mailSent: false }));
     facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
     setValidPersonalForm(facade);
 
@@ -282,11 +283,12 @@ describe('RegisterFlowFacade', () => {
     facade.submitPersonalData();
 
     expect(snackbarMock.error).toHaveBeenCalledWith('Primero evaluá el documento para continuar.');
-    expect(registrationMock.confirmRegistration).not.toHaveBeenCalled();
+    expect(authMock.register).not.toHaveBeenCalled();
+    expect(authMock.confirmApplicationRequest).not.toHaveBeenCalled();
   });
 
   it('should surface evaluate document errors', async () => {
-    registrationMock.evaluateDocument.mockReturnValue(
+    authMock.evaluateDocument.mockReturnValue(
       throwError(() => ({
         status: 409,
         errorCode: 'USER_EXISTS',
@@ -316,7 +318,7 @@ describe('RegisterFlowFacade', () => {
       message: string | null;
     }>
   ): void {
-    registrationMock.evaluateDocument.mockReturnValue(
+    authMock.evaluateDocument.mockReturnValue(
       of({
         flowId: 'flow-existing-person',
         requiresPersonCreation: false,
@@ -329,14 +331,12 @@ describe('RegisterFlowFacade', () => {
       })
     );
   }
-  it('should validate the phone with the resolved country prefix', () => {
+  it('should validate the phone with the country the user picked', () => {
     setValidPersonalForm(facade);
 
     expect(accountMock.validatePhone).toHaveBeenCalledWith({
+      nationalNumber: '099123456',
       iso2: 'UY',
-      countryPrefix: 598,
-      number: '099123456',
-      numberE164: '+59899123456',
     });
   });
 });

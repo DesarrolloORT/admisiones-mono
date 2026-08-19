@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
+import { AuthApi } from '../api/auth.api';
 import { DocumentPrefillService } from './document-prefill';
 import { DocumentRecognition } from './document-recognition';
 
@@ -10,6 +11,8 @@ describe('DocumentPrefillService', () => {
   let service: DocumentPrefillService;
   let documentRecognitionMock: {
     createRequestFromFile: ReturnType<typeof vi.fn>;
+  };
+  let authEndpointMock: {
     recognizeDocument: ReturnType<typeof vi.fn>;
   };
 
@@ -19,6 +22,8 @@ describe('DocumentPrefillService', () => {
         mimeType: 'application/pdf',
         attachment: { fileName: 'identity-document.pdf', content: 'base64' },
       }),
+    };
+    authEndpointMock = {
       recognizeDocument: vi.fn().mockReturnValue(
         of({
           fields: {
@@ -36,8 +41,9 @@ describe('DocumentPrefillService', () => {
       providers: [
         DocumentPrefillService,
         { provide: DocumentRecognition, useValue: documentRecognitionMock },
+        { provide: AuthApi, useValue: authEndpointMock },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getCountryLocations: vi.fn().mockReturnValue(
               of([
@@ -66,7 +72,7 @@ describe('DocumentPrefillService', () => {
     const result = await service.preload(file);
 
     expect(documentRecognitionMock.createRequestFromFile).toHaveBeenCalledWith(file);
-    expect(documentRecognitionMock.recognizeDocument).toHaveBeenCalled();
+    expect(authEndpointMock.recognizeDocument).toHaveBeenCalled();
     expect(result.patch?.identity).toEqual({ documentType: 'CI', documentNumber: '11111111' });
     expect(result.patch?.personal).toEqual({ firstName: 'Ana', firstSurname: 'Silva' });
     expect(result.location).toEqual({
