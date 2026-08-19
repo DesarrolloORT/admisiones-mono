@@ -36,6 +36,7 @@ ambos repositorios queden alineados.
 | [Login](./flujos/login.md)                 | `admisiones.login`         | Credenciales, captcha, 2FA, cookies, refresh y guards |
 | [Registro](./flujos/registro.md)           | `admisiones.registro`      | OCR, identidad, alta, activación y contraseña         |
 | [Inscripciones](./flujos/inscripciones.md) | `admisiones.inscripciones` | Propuesta, encuesta, identidad, confirmación y pago   |
+| [Becas](./flujos/becas.md)                 | `admisiones.becas`         | Catálogo, gating por inscripción previa y postulación |
 
 Cada página sigue la acción desde la UI hasta controller/service backend. OpenAPI
 conserva la autoridad sobre rutas y shapes; las páginas explican decisiones,
@@ -52,6 +53,7 @@ errores, estados y efectos que el contrato no expresa.
 - [Accesibilidad](./ACCESSIBILITY.md)
 - [E2E guardrails](./E2E-GUARDRAILS.md)
 - [Runbook](./RUNBOOK.md)
+- [Releases](./RELEASES.md) — incluye la puerta de exposicion antes de prod
 
 ## Mantenimiento
 
