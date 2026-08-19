@@ -18,7 +18,8 @@
     CoreWCF 1.9.1 exige Microsoft.IdentityModel.Tokens >= 8.19.1; por eso UnitTesting y
     AppLogic.Authentication pasaron de 8.17.0 a 8.22.0.
 
-    Al actualizar Core, borrar este archivo y verificar con:
+    Al actualizar Core, borrar el ItemGroup de abajo (no el archivo: el PropertyGroup sigue) y
+    verificar con:
       dotnet build WebApiAdmisiones.sln -v q 2>&1 | grep -c NU190
   -->
   <ItemGroup>
@@ -26,5 +27,15 @@
     <PackageReference Include="CoreWCF.NetFramingBase" Version="1.9.1" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
   </ItemGroup>
+
+  <!--
+    Swagger incluye los XML docs de AppLogic.* para que los DTOs de respuesta lleguen al spec con
+    descripción (ver Program.cs). Sin GenerateDocumentationFile acá esos .xml no existen.
+    1591/1587 silenciados porque AppLogic.DevartDtos es código generado sin comentarios.
+  -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;1587</NoWarn>
+  </PropertyGroup>
 
 </Project>

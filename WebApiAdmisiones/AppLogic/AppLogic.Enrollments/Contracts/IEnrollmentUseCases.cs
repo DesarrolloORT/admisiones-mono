@@ -24,6 +24,9 @@ public interface IReactivateEnrollment
 /// <summary>Detalle de una inscripción de "Mis carreras" según su estado.</summary>
 public interface IGetEnrollmentDetails
 {
+    /// <param name="personId">Persona dueña de la inscripción.</param>
+    /// <param name="productId">Producto de la tarjeta que se abrió.</param>
+    /// <param name="admissionProcessId">Proceso de admisión de la tarjeta que se abrió.</param>
     /// <param name="status">
     /// Estado de la tarjeta que se abrió. Un producto y proceso puede tener ofertas en más de un
     /// estado (seminarios de nivel 3 y 4), y cada estado es una tarjeta distinta en "Mis carreras":

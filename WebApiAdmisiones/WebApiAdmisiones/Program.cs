@@ -43,12 +43,21 @@ builder.Services.AddApiControllers();
 
 builder.Services.AddSwaggerGen(static options =>
 {
-    var xmlCommentsPath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+    // Los DTOs de respuesta viven en AppLogic.*, no en este assembly: incluir solo el XML propio
+    // deja los campos del spec sin descripción y el cliente generado sin documentar nada.
+    var xmlCommentsPaths = Directory
+        .EnumerateFiles(AppContext.BaseDirectory, "AppLogic.*.xml")
+        .Append(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
 
-    if (File.Exists(xmlCommentsPath))
+    foreach (var xmlCommentsPath in xmlCommentsPaths.Where(File.Exists))
     {
         options.IncludeXmlComments(xmlCommentsPath);
     }
+
+    // Hace que el spec distinga lo que nunca es null: las propiedades declaradas sin `?` salen sin
+    // nullable:true y dentro de required, en vez de que el cliente reciba todo como opcional.
+    // Depende de que las anotaciones sean honestas: lo que puede venir null va declarado `string?`.
+    options.SupportNonNullableReferenceTypes();
 
     options.SwaggerDoc("v1", new OpenApiInfo
     {
