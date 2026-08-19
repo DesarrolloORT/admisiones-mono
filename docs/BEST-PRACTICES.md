@@ -199,8 +199,8 @@ Ejemplo en `auth`:
 - `AuthRequest` y `AuthenticationResponse` vienen del contrato generado.
 - `AuthLoginRequest` y `AuthSession` son tipos de feature para formulario y
   estado de sesion.
-- Los services de auth (`AuthSessionService`, `RegistrationService`,
-  `PasswordActivationService`) transforman entre ambos modelos.
+- `AuthSessionService` y los mappers de `mappers/registration.mapper.ts`
+  transforman entre ambos modelos.
 
 Cuando una feature crece, se debe dividir por subdominio antes que agregar
 archivos genericos como `utils.ts`, `helpers.ts` o `common.ts`.
@@ -215,15 +215,15 @@ La distincion clave es la relacion con el router:
 Ejemplo en `auth`:
 
 ```
-Register (page)  ──inject──>  RegistrationService  ──inject──>  AuthApi
+Register (page)  ──provide──>  RegisterFlowFacade  ──inject──>  AuthApi
       │
       └──> AuthForm (component)  ← solo inputs: title, heroIcon, cardSize…
 ```
 
-`Register` es una page: maneja el estado del formulario multi-paso, llama a
-`RegistrationService` y `DocumentPrefillService`, y orquesta la navegacion entre
-pasos. `AuthForm` es un component: solo estructura visual que no sabe que datos
-va a mostrar ni que hacer con ellos.
+`Register` es una page: provee la facade dueña del estado del formulario
+multi-paso, que llama al adapter y a `DocumentPrefillService` y orquesta la
+navegacion entre pasos. `AuthForm` es un component: solo estructura visual que
+no sabe que datos va a mostrar ni que hacer con ellos.
 
 ## Responsabilidades
 
