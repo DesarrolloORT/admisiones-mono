@@ -1,35 +1,62 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 
-import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
+import { ScholarshipAcademicData } from '../services/scholarship-academic-data';
+import { ScholarshipProcessFacade } from './scholarship-process';
 import { ScholarshipProposalFacade } from './scholarship-proposal';
 
 describe('ScholarshipProposalFacade', () => {
-  function setup(): ScholarshipProposalFacade {
+  function setup(data: { carrera: string; comienzo: string; turno: string }[] = []): {
+    facade: ScholarshipProposalFacade;
+    process: ScholarshipProcessFacade;
+  } {
     TestBed.configureTestingModule({
-      providers: [ScholarshipProposalFacade, { provide: AcademicProposalSelection, useValue: {} }],
+      providers: [
+        ScholarshipProcessFacade,
+        ScholarshipProposalFacade,
+        {
+          provide: ScholarshipAcademicData,
+          useValue: { getAcademicStepData: vi.fn().mockReturnValue(of(data)) },
+        },
+      ],
     });
-    return TestBed.inject(ScholarshipProposalFacade);
+
+    return {
+      facade: TestBed.inject(ScholarshipProposalFacade),
+      process: TestBed.inject(ScholarshipProcessFacade),
+    };
   }
 
-  it('blocks continuing with an incomplete proposal', () => {
-    const facade = setup();
+  it('preselects the only inscription available', () => {
+    const { facade } = setup([{ carrera: 'Ingeniería', comienzo: 'Marzo', turno: 'Noche' }]);
 
-    expect(facade.canContinue()).toBe(false);
-    expect(facade.submitted()).toBe(true);
-    expect(facade.academicForm.touched).toBe(true);
+    expect(facade.selectedInscription()).toBe('Ingeniería');
+    expect(facade.selectedAcademicStepData().comienzo).toBe('Marzo');
   });
 
-  it('allows continuing with a complete proposal', () => {
-    const facade = setup();
+  it('does not advance the process with an incomplete section', () => {
+    const { facade, process } = setup([
+      { carrera: 'Ingeniería', comienzo: 'Marzo', turno: 'Noche' },
+      { carrera: 'Diseño', comienzo: 'Agosto', turno: 'Mañana' },
+    ]);
 
-    facade.academicForm.setValue({
-      proposalType: '1',
-      degreeProgram: '20',
-      intake: '200',
-      shift: '300',
-      seminars: [],
-    });
+    facade.continue();
 
-    expect(facade.canContinue()).toBe(true);
+    expect(facade.showErrorAlert()).toBe(true);
+    expect(process.currentStep()).toBe('application-info');
+  });
+
+  it('advances the process once the section is complete', () => {
+    const { facade, process } = setup([
+      { carrera: 'Ingeniería', comienzo: 'Marzo', turno: 'Noche' },
+      { carrera: 'Diseño', comienzo: 'Agosto', turno: 'Mañana' },
+    ]);
+
+    facade.onInscriptionSelectionChange('Diseño');
+    facade.continue();
+
+    expect(facade.showErrorAlert()).toBe(false);
+    expect(process.currentStep()).toBe('personal-info');
   });
 });

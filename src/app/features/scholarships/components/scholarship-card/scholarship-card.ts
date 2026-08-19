@@ -6,6 +6,8 @@ interface ScholarshipCardModel {
   title: string;
   description: string;
   requiresExam: boolean;
+  /** Si la beca exige tener la inscripcion paga antes de poder postularse. */
+  requiresEnrollment: boolean;
   route: string;
 }
 

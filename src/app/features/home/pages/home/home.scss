@@ -1,18 +1,39 @@
 /* stylelint-disable declaration-property-unit-allowed-list -- Home follows Figma px measurements and ORT token fallbacks. */
 :host {
-  display: block;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .home-status {
   display: grid;
-  gap: var(--ort-sys-spacing-8);
+  flex: 1;
+  gap: var(--ort-sys-spacing-24);
+  align-content: center;
+  justify-items: center;
   width: min(55.25rem, calc(100% - 6rem));
   margin: 0 auto;
   padding-block: var(--ort-sys-spacing-64);
+  text-align: center;
 
-  h1,
+  h1 {
+    margin: 0;
+    font-size: var(--ort-sys-font-size-24);
+    line-height: var(--ort-sys-line-height-36);
+  }
+
+  &__section {
+    display: grid;
+    gap: var(--ort-sys-spacing-4);
+    justify-items: center;
+  }
+
   p {
     margin: 0;
+    color: var(--home-body);
+    font-size: var(--ort-sys-font-size-16);
+    line-height: var(--ort-sys-line-height-24);
   }
 }
 

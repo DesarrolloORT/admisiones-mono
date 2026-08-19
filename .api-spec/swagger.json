@@ -1448,6 +1448,37 @@
         }
       }
     },
+    "/person/scholarships": {
+      "get": {
+        "tags": [
+          "Person"
+        ],
+        "summary": "[Privado] Obtiene las postulaciones a becas de la persona autenticada.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Datos obtenidos correctamente. La lista vacía significa que no se postuló a ninguna beca.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyScholarshipsResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyScholarshipsResponseIEnumerableOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/change-password": {
       "post": {
         "tags": [
@@ -2086,6 +2117,140 @@
         }
       }
     },
+    "/scholarships/available": {
+      "get": {
+        "tags": [
+          "Scholarships"
+        ],
+        "summary": "[Privado] Obtiene las becas a las que la persona autenticada puede postularse. Si no tiene una\ninscripcion que la habilite, devuelve el catalogo de fondos vigentes con\n`RequiresPriorEnrollment` en true.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "responses": {
+          "200": {
+            "description": "Becas disponibles obtenidas correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableScholarshipsResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida o error funcional al obtener las becas disponibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableScholarshipsResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scholarships/application-options": {
+      "get": {
+        "tags": [
+          "Scholarships"
+        ],
+        "summary": "[Privado] Obtiene las opciones del paso 1 de postulacion a un fondo de beca: las inscripciones que la\npersona puede usar, las modalidades del fondo y las pruebas que puede rendir.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "parameters": [
+          {
+            "name": "scholarshipTypeId",
+            "in": "query",
+            "description": "Cualquiera de los fondos de la card (una card puede agrupar mas de uno): se devuelven todas\nsus modalidades.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opciones obtenidas correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScholarshipApplicationOptionsResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El fondo indicado no esta disponible para la persona autenticada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScholarshipApplicationOptionsResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scholarships/applications": {
+      "post": {
+        "tags": [
+          "Scholarships"
+        ],
+        "summary": "[Privado] Da de alta la postulacion a un fondo de beca con la prueba y la inscripcion elegidas en el\npaso 1. Crea tambien la declaracion jurada, que es lo que continua el paso 2.",
+        "description": "Endpoint privado. Requiere una cookie de autenticación válida.",
+        "requestBody": {
+          "description": "Prueba e inscripcion elegidas, de scholarships/application-options.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScholarshipApplicationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScholarshipApplicationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScholarshipApplicationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Postulacion dada de alta correctamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScholarshipApplicationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "La API de Inscripciones y Pagos rechazo el alta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScholarshipApplicationResponseOperationResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La prueba indicada no esta disponible para esa inscripcion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScholarshipApplicationResponseOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contracts": {
       "get": {
         "tags": [
@@ -2200,8 +2365,7 @@
             "$ref": "#/components/schemas/AuthenticatedPerson"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -2220,19 +2384,81 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/AuthenticationResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvailableScholarshipResponse": {
+        "type": "object",
+        "properties": {
+          "scholarshipTypeIds": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "requiresTest": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvailableScholarshipsResponse": {
+        "type": "object",
+        "properties": {
+          "requiresPriorEnrollment": {
+            "type": "boolean"
+          },
+          "scholarships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailableScholarshipResponse"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvailableScholarshipsResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AvailableScholarshipsResponse"
           }
         },
         "additionalProperties": false
@@ -2245,8 +2471,7 @@
             "format": "int64"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "code": {
             "type": "integer",
@@ -2273,16 +2498,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -2308,16 +2530,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "boolean"
@@ -2339,16 +2558,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "string",
@@ -2406,8 +2622,7 @@
             "format": "int64"
           },
           "label": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -2439,8 +2654,7 @@
             "items": {
               "type": "integer",
               "format": "int64"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2464,8 +2678,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnrollmentOffering"
-            },
-            "nullable": true
+            }
           },
           "depositAmount": {
             "type": "number",
@@ -2488,16 +2701,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/ConfirmPreEnrollmentResponse"
@@ -2536,8 +2746,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Subject"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2567,8 +2776,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ConfirmedEnrollment"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2667,16 +2875,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -2717,8 +2922,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/StateWithCitiesResponse"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2737,16 +2941,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -2754,6 +2955,20 @@
               "$ref": "#/components/schemas/CountryStateCityResponse"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateScholarshipApplicationRequest": {
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "enrollmentId": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -2802,8 +3017,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DegreeProgramsBySchoolResponse"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2822,16 +3036,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -2881,8 +3092,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DegreeProgramResponse"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2926,16 +3136,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/DocumentEvaluationResponse"
@@ -2959,8 +3166,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -2979,16 +3185,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/DocumentRecognitionResponse"
@@ -3000,8 +3203,7 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "inProgress": {
             "$ref": "#/components/schemas/InProgressDetails"
@@ -3032,16 +3234,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/EnrollmentDetailsResponse"
@@ -3157,16 +3356,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/GetInitialSurveyResponse"
@@ -3182,8 +3378,7 @@
             "format": "int64"
           },
           "label": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "track": {
             "type": "string",
@@ -3204,15 +3399,13 @@
             "format": "int64"
           },
           "label": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "tracks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/HighSchoolTrackCatalog"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -3242,8 +3435,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnrollmentOffering"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -3277,16 +3469,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/InitialSurveyCatalogsResponse"
@@ -3481,8 +3670,7 @@
             "format": "int64"
           },
           "status": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3495,8 +3683,7 @@
             "format": "int64"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3515,16 +3702,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -3564,16 +3748,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -3589,8 +3770,7 @@
         "type": "object",
         "properties": {
           "paymentType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "documentNumber": {
             "type": "string",
@@ -3694,8 +3874,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MyEnrollmentItem"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -3714,21 +3893,145 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MyEnrollmentsResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MyScholarshipsResponse": {
+        "type": "object",
+        "properties": {
+          "applicationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "intakeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intakeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "productLevelId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "admissionProcessId": {
+            "type": "number",
+            "format": "double"
+          },
+          "testEnrollmentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "testId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "testEnrollmentStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "affidavitWebStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "scholarshipTypeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scholarshipTypeName": {
+            "type": "string"
+          },
+          "applicationCloseDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "applicationCloseTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "affidavitDeadlineDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "affidavitDeadlineTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "examDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "examTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "resultTime": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MyScholarshipsResponseIEnumerableOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyScholarshipsResponse"
             },
             "nullable": true
           }
@@ -3749,16 +4052,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "enum": [
@@ -3808,16 +4108,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "array",
@@ -3842,8 +4139,7 @@
             "nullable": true
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3862,16 +4158,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/PasswordActivationSession"
@@ -3883,12 +4176,10 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "value": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3897,36 +4188,29 @@
         "type": "object",
         "properties": {
           "documentType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "documentNumber": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstSurname": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "secondSurname": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "birthDate": {
             "type": "string",
             "format": "date-time"
           },
           "sex": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "countryId": {
             "type": "integer",
@@ -3941,19 +4225,16 @@
             "format": "int64"
           },
           "address": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "primaryPhone": {
             "$ref": "#/components/schemas/PhoneNumber"
           },
           "email": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "emailConfirmation": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "hasRestrictedIdentity": {
             "type": "boolean"
@@ -3975,16 +4256,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/PersonDetailsResponse"
@@ -4023,16 +4301,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/PersonIdentityDocumentResponse"
@@ -4087,8 +4362,7 @@
             "items": {
               "type": "integer",
               "format": "int64"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4101,8 +4375,7 @@
             "items": {
               "type": "integer",
               "format": "int64"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4183,16 +4456,13 @@
         "properties": {
           "content": {
             "type": "string",
-            "format": "byte",
-            "nullable": true
+            "format": "byte"
           },
           "fileName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "contentType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -4327,16 +4597,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/RegistrationConfirmationResponse"
@@ -4348,8 +4615,7 @@
         "type": "object",
         "properties": {
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "mailSent": {
             "type": "boolean"
@@ -4374,16 +4640,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/RegistrationFlowResult"
@@ -4597,22 +4860,19 @@
             "format": "int64"
           },
           "status": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "pendingSections": {
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           },
           "pendingFields": {
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4631,19 +4891,200 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/SaveInitialSurveyResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipApplicationOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "modalities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScholarshipModalityOption"
+            }
+          },
+          "enrollments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScholarshipEnrollmentOption"
+            }
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScholarshipTestOption"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipApplicationOptionsResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ScholarshipApplicationOptionsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipApplicationResponse": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "affidavitId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "affidavitStatus": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipApplicationResponseOperationResult": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "httpCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ScholarshipApplicationResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipEnrollmentOption": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "intakeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "degreeProgram": {
+            "type": "string"
+          },
+          "intakeName": {
+            "type": "string"
+          },
+          "shiftName": {
+            "type": "string",
+            "nullable": true
+          },
+          "enrollmentDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipModalityOption": {
+        "type": "object",
+        "properties": {
+          "scholarshipTypeId": {
+            "type": "number",
+            "format": "double"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScholarshipTestOption": {
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scholarshipTypeId": {
+            "type": "number",
+            "format": "double"
+          },
+          "intakeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "examDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "examTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "applicationCloseDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "affidavitDeadlineDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4670,12 +5111,10 @@
             "items": {
               "type": "integer",
               "format": "int64"
-            },
-            "nullable": true
+            }
           },
           "paymentType": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "sistarbancBankId": {
             "type": "string",
@@ -4688,8 +5127,7 @@
         "type": "object",
         "properties": {
           "result": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "paymentUrl": {
             "type": "string",
@@ -4703,8 +5141,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PaymentMessage"
-            },
-            "nullable": true
+            }
           },
           "confirmed": {
             "$ref": "#/components/schemas/ConfirmedEnrollmentDetailsResponse"
@@ -4726,16 +5163,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/StartPaymentResponse"
@@ -4762,8 +5196,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CityResponse"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4782,16 +5215,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "type": "string",
@@ -4842,16 +5272,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/StudentRegulationsAcceptanceResponse"
@@ -4880,36 +5307,31 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "decisionSupports": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "decisionLevels": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "universities": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UniversityCatalog"
-            },
-            "nullable": true
+            }
           },
           "ortChoiceReasons": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4921,43 +5343,37 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "lastSecondaryYearLocations": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "highSchoolYears": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/HighSchoolYearCatalog"
-            },
-            "nullable": true
+            }
           },
           "previousHigherEducationOptions": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "universities": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UniversityCatalog"
-            },
-            "nullable": true
+            }
           },
           "educationLevels": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4969,22 +5385,19 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "ratings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           },
           "ortAdvertisements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComboOption"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -4996,16 +5409,13 @@
         "type": "object",
         "properties": {
           "sessionId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "maskedEmail": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -5024,16 +5434,13 @@
             "format": "int32"
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "method": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "data": {
             "$ref": "#/components/schemas/TwoFactorRequiredResponse"
@@ -5049,8 +5456,7 @@
             "format": "int64"
           },
           "label": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -5104,19 +5510,16 @@
             "format": "int64"
           },
           "address": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "primaryPhone": {
             "$ref": "#/components/schemas/PhoneNumber"
           },
           "email": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "emailConfirmation": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -1,0 +1,107 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+
+<div class="scholarship-accordion__content" [formGroup]="educationInfoFbrForm">
+  <ort-radio-group
+    divider="true"
+    formControlName="schoolLocation"
+    legend="¿Dónde cursaste el último año de secundaria?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
+    [orientation]="radioGroupOrientation()"
+    [required]="true">
+    <ort-radio-button class="inscription-radio-option" value="uruguay">Uruguay</ort-radio-button>
+    <ort-radio-button class="inscription-radio-option" value="exterior">
+      En el exterior
+    </ort-radio-button>
+  </ort-radio-group>
+  @if (schoolLocationControl.invalid && (facade.submitted() || schoolLocationControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
+
+  <ort-radio-group
+    divider="true"
+    formControlName="lastYear"
+    legend="Indica el último año cursado"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
+    [orientation]="radioGroupOrientation()"
+    [required]="true">
+    <ort-radio-button class="inscription-radio-option" value="2ems">
+      2º EMS (5º año)
+    </ort-radio-button>
+    <ort-radio-button class="inscription-radio-option" value="3ems">
+      3º EMS (6º año)
+    </ort-radio-button>
+  </ort-radio-group>
+  @if (lastYearControl.invalid && (facade.submitted() || lastYearControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
+
+  <ort-radio-group
+    divider="true"
+    formControlName="universityLocation"
+    legend="¿Dónde cursaste los estudios universitarios a revalidar?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
+    [orientation]="radioGroupOrientation()"
+    [required]="true">
+    <ort-radio-button class="inscription-radio-option" value="uruguay">En Uruguay</ort-radio-button>
+    <ort-radio-button class="inscription-radio-option" value="exterior">
+      En el exterior
+    </ort-radio-button>
+  </ort-radio-group>
+  @if (universityLocationControl.invalid && (facade.submitted() ||
+  universityLocationControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label>Carrera cursada o en curso</ort-label>
+    <input formControlName="career" ortInput required />
+  </ort-form-field>
+  @if (careerControl.invalid && (facade.submitted() || careerControl.touched)) {
+  <ort-error>Ingresá la carrera cursada o en curso</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label>Cantidad de materias aprobadas</ort-label>
+    <input formControlName="approvedSubjects" ortNumberInput required />
+  </ort-form-field>
+  @if (approvedSubjectsControl.invalid && (facade.submitted() || approvedSubjectsControl.touched)) {
+  <ort-error>Ingresá la cantidad de materias aprobadas</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label>Cantidad de materias</ort-label>
+    <input formControlName="totalSubjects" ortNumberInput required />
+  </ort-form-field>
+  @if (totalSubjectsControl.invalid && (facade.submitted() || totalSubjectsControl.touched)) {
+  <ort-error>Ingresá la cantidad de materias</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label>Promedio de calificaciones</ort-label>
+    <input formControlName="average" ortNumberInput required />
+    <ort-hint>Considerando materias y exámenes aprobados.</ort-hint>
+  </ort-form-field>
+  @if (averageControl.invalid && (facade.submitted() || averageControl.touched)) {
+  <ort-error>Ingresá el promedio de calificaciones</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label>Promedio total de calificaciones</ort-label>
+    <input formControlName="averageRevalidation" ortNumberInput required />
+    <ort-hint>Considerando materias y exámenes aprobados y reprobados.</ort-hint>
+  </ort-form-field>
+  @if (averageRevalidationControl.invalid && (facade.submitted() ||
+  averageRevalidationControl.touched)) {
+  <ort-error>Ingresá el promedio total de calificaciones</ort-error>
+  }
+
+  <ort-file-uploader
+    label="Formulario de reválidas *"
+    [acceptedTypes]="['.pdf']"
+    [display]="fileUploaderDisplay()"
+    (filesChanged)="onRevalidationFormFilesChanged($event)" />
+  @if (revalidationFormFileControl.invalid && (facade.submitted() ||
+  revalidationFormFileControl.touched)) {
+  <ort-error>Adjuntá el formulario de reválidas</ort-error>
+  }
+</div>

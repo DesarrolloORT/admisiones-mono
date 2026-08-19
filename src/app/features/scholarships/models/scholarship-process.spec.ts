@@ -1,4 +1,4 @@
-import { createScholarshipAcademicForm, SCHOLARSHIP_STEPS } from './scholarship-process';
+import { createScholarshipApplicationForm, SCHOLARSHIP_STEPS } from './scholarship-process';
 
 describe('SCHOLARSHIP_STEPS', () => {
   it('defines the three ordered scholarship steps', () => {
@@ -10,20 +10,20 @@ describe('SCHOLARSHIP_STEPS', () => {
   });
 });
 
-describe('createScholarshipAcademicForm', () => {
-  it('requires a complete academic proposal', () => {
-    const form = createScholarshipAcademicForm();
+describe('createScholarshipApplicationForm', () => {
+  it('requires choosing an inscription', () => {
+    const form = createScholarshipApplicationForm();
 
     expect(form.invalid).toBe(true);
 
-    form.setValue({
-      proposalType: '1',
-      degreeProgram: '20',
-      intake: '200',
-      shift: '300',
-      seminars: [],
-    });
+    form.controls.inscription.controls.selectedInscription.setValue('Ingeniería');
 
     expect(form.valid).toBe(true);
+  });
+
+  it('leaves the evaluation period optional by default', () => {
+    const form = createScholarshipApplicationForm();
+
+    expect(form.controls.evaluation.valid).toBe(true);
   });
 });

@@ -7,10 +7,11 @@ import {
   inject,
   input,
   OnDestroy,
+  signal,
   ViewEncapsulation,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { OrtAlertModule } from '@desarrolloort/components';
+import { OrtAlertModule, OrtButton, OrtDialog, OrtIconModule } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -20,6 +21,7 @@ import { EnrollmentResumeContextStore } from '../../../enrollments/services/enro
 import { DashboardActionCard } from '../../components/dashboard-action-card/dashboard-action-card';
 import { DashboardEnrollmentsSection } from '../../components/dashboard-enrollments-section/dashboard-enrollments-section';
 import { DashboardScholarshipsSection } from '../../components/dashboard-scholarships-section/dashboard-scholarships-section';
+import { ReviewScholarshipResult } from '../../components/review-scholarship-result/review-scholarship-result';
 import {
   buildPendingPaymentSummary,
   EnrollmentSummary,
@@ -38,6 +40,10 @@ import { ScholarshipSummary } from '../../models/scholarship-summary';
     DashboardEnrollmentsSection,
     OrtAlertModule,
     DashboardScholarshipsSection,
+    OrtDialog,
+    OrtButton,
+    OrtIconModule,
+    ReviewScholarshipResult,
   ],
 })
 export class Dashboard implements AfterViewInit, OnDestroy {
@@ -93,6 +99,25 @@ export class Dashboard implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.swipers.forEach(swiper => swiper.destroy());
+  }
+
+  readonly isDialogOpen = signal(false);
+  readonly showScholarshipResult = signal(false);
+
+  public openDialog(): void {
+    this.isDialogOpen.set(true);
+  }
+
+  public closeDialog(): void {
+    this.isDialogOpen.set(false);
+  }
+
+  public showScholarshipReview(): void {
+    this.showScholarshipResult.set(true);
+  }
+
+  public closeReview(): void {
+    this.showScholarshipResult.set(false);
   }
 
   protected navigateToPendingPayment(): void {

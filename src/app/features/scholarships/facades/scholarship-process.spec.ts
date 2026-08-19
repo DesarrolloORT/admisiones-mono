@@ -1,21 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 
 import { ScholarshipProcessFacade } from './scholarship-process';
-import { ScholarshipProposalFacade } from './scholarship-proposal';
 
 describe('ScholarshipProcessFacade', () => {
-  function setup(canContinue: boolean): ScholarshipProcessFacade {
-    TestBed.configureTestingModule({
-      providers: [
-        ScholarshipProcessFacade,
-        { provide: ScholarshipProposalFacade, useValue: { canContinue: () => canContinue } },
-      ],
-    });
+  function setup(): ScholarshipProcessFacade {
+    TestBed.configureTestingModule({ providers: [ScholarshipProcessFacade] });
     return TestBed.inject(ScholarshipProcessFacade);
   }
 
   it('describes and navigates the process', () => {
-    const facade = setup(true);
+    const facade = setup();
 
     expect(facade.stepLabel()).toBe('Paso 1 de 3 - Información de postulación');
 
@@ -26,11 +20,24 @@ describe('ScholarshipProcessFacade', () => {
     expect(facade.currentStep()).toBe('application-info');
   });
 
-  it('does not advance when the active section is not ready', () => {
-    const facade = setup(false);
+  it('stops at the last step', () => {
+    const facade = setup();
 
     facade.continue();
+    facade.continue();
+    facade.continue();
 
-    expect(facade.currentStep()).toBe('application-info');
+    expect(facade.currentStep()).toBe('confirmation');
+  });
+
+  it('owns the forms so they survive step changes', () => {
+    const facade = setup();
+
+    facade.applicationForm.controls.inscription.controls.applicationMode.setValue(
+      'sin declaracion'
+    );
+    facade.continue();
+
+    expect(facade.applicationMode()).toBe('sin declaracion');
   });
 });

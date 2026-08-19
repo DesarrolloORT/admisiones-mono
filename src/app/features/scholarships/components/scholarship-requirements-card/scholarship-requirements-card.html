@@ -15,3 +15,23 @@
     }
   </ul>
 </section>
+
+@if (config().methods.length > 0) {
+<section class="scholarship-requirements__card">
+  <h3 class="scholarship-requirements__title">Modalidades</h3>
+  <ul class="scholarship-requirements__list">
+    @for (method of config().methods; track method.title) {
+    <li class="scholarship-requirements__list-item">
+      <ort-icon aria-hidden="true" class="scholarship-requirements__list-marker" size="md">
+        chevron_right
+      </ort-icon>
+
+      <div class="scholarship-requirements__list-item-content">
+        <strong>{{ method.title }}:</strong>
+        {{ method.description }}
+      </div>
+    </li>
+    }
+  </ul>
+</section>
+}

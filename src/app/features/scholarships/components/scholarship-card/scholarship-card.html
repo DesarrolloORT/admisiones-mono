@@ -11,13 +11,22 @@
 
   @if (scholarship().requiresExam) {
   <ort-chip label="Requiere rendir prueba" type="status" variant="primary" />
-  } @if (isEnrolled() || scholarship().title === 'Beca de Reválidas') {
+  } @if (isEnrolled() || !scholarship().requiresEnrollment) {
   <a
     class="scholarship-card__btn"
     ort-primary-button
     [attr.aria-label]="'Postularme a Fondo ' + scholarship().title"
     [routerLink]="scholarship().route">
     Postularme
+  </a>
+  } @else {
+  <ort-chip label="Requiere inscripción previa" type="status" variant="primary" />
+  <a
+    class="scholarship-card__btn"
+    ort-secondary-button
+    routerLink="/inscripciones"
+    [attr.aria-label]="'Ir a inscripciones'">
+    Ir a inscripciones
   </a>
   }
 </article>

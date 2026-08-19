@@ -8,6 +8,7 @@ export interface MockApiOptions {
   identityPreload?: 'none' | 'complete';
   enrollmentDetail?: 'offers-missing' | 'pending-payment' | 'duplicate-status' | 'in-progress';
   registerFlow?: RegisterFlowKind;
+  scholarshipEnrollments?: 'none' | 'confirmed';
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
 }
@@ -329,6 +330,22 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
 
     if (path === '/person/scholarships' && request.method() === 'GET') {
       return fulfillOperation(route, []);
+    }
+
+    if (path === '/scholarships/enrollments' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.scholarshipEnrollments === 'confirmed'
+          ? [
+              {
+                enrollmentId: 1,
+                enrollmentDate: '2026-03-01',
+                enrollmentStatus: 'CONFIRMADA',
+                productFullName: 'Licenciatura en Diseno Grafico',
+              },
+            ]
+          : []
+      );
     }
 
     if (path === '/enrollments/product-interest') {

@@ -1,0 +1,47 @@
+<section aria-labelledby="review-title" class="review-screen">
+  <div class="review-screen__header">
+    <h1 id="review-title">Consultar resultado</h1>
+    <p>
+      Si considerás que tu resultado requiere revisión, podés enviarnos tu consulta a través de este
+      formulario.
+    </p>
+  </div>
+
+  <div class="result-summary">
+    @for (item of items; track item.label) {
+    <div class="result-summary__item">
+      <ort-icon aria-hidden="true" class="result-summary__icon" size="md">{{ item.icon }}</ort-icon>
+      <p class="result-summary__text">
+        <span class="result-summary__label">{{ item.label }}</span>
+        <span class="result-summary__value">{{ item.value }}</span>
+      </p>
+    </div>
+    }
+  </div>
+
+  <form class="review-screen__form">
+    <ort-form-field>
+      <ort-label>Motivo de la consulta</ort-label>
+      <textarea
+        #textarea
+        ortInput
+        placeholder="Describí tu consulta o los aspectos que considerás deben revisarse...."
+        required
+        rows="4"></textarea>
+      <ort-hint align="end">{{textarea.value.length}}/400</ort-hint>
+    </ort-form-field>
+    <button ort-primary-button type="submit">Enviar consulta</button>
+    <p>
+      Las solicitudes serán evaluadas por el comité académico. La respuesta será enviada a tu correo
+      electrónico.
+    </p>
+  </form>
+
+  <div class="review-screen__footer">
+    <button ort-tonal-button type="button">
+      <ort-icon name="calendar_today" ortButtonLeadingIcon />
+      Agendá una entrevista
+    </button>
+    <button ort-secondary-button type="button" (click)="onCancelarClick()">Cancelar</button>
+  </div>
+</section>

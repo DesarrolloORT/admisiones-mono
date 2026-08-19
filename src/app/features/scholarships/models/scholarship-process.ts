@@ -1,14 +1,12 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import type { ProcessStepDefinition } from 'src/app/shared/process-flow/process-flow';
 
-import type { AcademicProposalForm } from '../../catalogs/models/academic-proposal';
-
 /**
  * Identificadores de los pasos del flujo de postulación a becas.
  *
  * Es el equivalente de `EnrollmentStep` en inscripciones. Cada id se usa como
  * `currentStepId` del `app-process-layout` y como discriminante del `@switch`
- * que decide qué step component se muestra en `fbr.html`.
+ * que decide qué step component se muestra en `scholarship-process.html`.
  */
 export type ScholarshipStep = 'application-info' | 'personal-info' | 'confirmation';
 
@@ -24,15 +22,20 @@ export const SCHOLARSHIP_STEPS: readonly ProcessStepDefinition<ScholarshipStep>[
 ];
 
 /**
- * Crea el `FormGroup` de la propuesta académica del paso 1. La fachada de
- * sección lo invoca y es su dueña: no hay una capa `store/` intermedia.
+ * Crea el `FormGroup` del paso 1: la inscripción sobre la que se postula y, en
+ * las becas que lo piden, el período de evaluación. La fachada de proceso es su
+ * dueña porque tiene que sobrevivir al cambio de paso.
  */
-export function createScholarshipAcademicForm(): FormGroup<AcademicProposalForm> {
-  return new FormGroup<AcademicProposalForm>({
-    proposalType: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    degreeProgram: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    intake: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    shift: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    seminars: new FormControl<string[]>([], { nonNullable: true }),
+export function createScholarshipApplicationForm() {
+  return new FormGroup({
+    inscription: new FormGroup({
+      selectedInscription: new FormControl<string | null>(null, Validators.required),
+      applicationMode: new FormControl<string | null>(null),
+    }),
+    evaluation: new FormGroup({
+      evaluationDate: new FormControl<string | null>(null),
+    }),
   });
 }
+
+export type ScholarshipApplicationForm = ReturnType<typeof createScholarshipApplicationForm>;

@@ -4,10 +4,14 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import {
+  getPersonEnrollmentsEndpoint,
+  getPersonScholarshipsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
 import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
 
 import { EnrollmentSeminarSummary, EnrollmentSummary } from '../models/enrollment-summary';
+import { ScholarshipSummary } from '../models/scholarship-summary';
 
 @Injectable({
   providedIn: 'root',
@@ -24,6 +28,28 @@ export class HomeApi {
           error.status === 404 ? of([]) : throwError(() => error)
         )
       );
+  }
+
+  /**
+   * Postulaciones a becas de la persona. Lista vacia = no se postulo a ninguna.
+   *
+   * Las fechas viajan como el `string` que manda la API (ISO): armar el texto visible
+   * —unir fecha y hora, formato corto— es trabajo de la UI, no del adapter.
+   *
+   * `examResult` y `benefit` quedan vacios: `MyScholarshipsResponse` todavia no los trae.
+   */
+  public getMyScholarships(): Observable<ScholarshipSummary[]> {
+    return this.api.list(getPersonScholarshipsEndpoint, item => ({
+      id: item.testEnrollmentId ?? 0,
+      scholarshipName: item.scholarshipTypeName ?? '',
+      degreeProgramName: item.productName ?? '',
+      status: item.testEnrollmentStatus ?? '',
+      applicationDeadline: item.applicationCloseDate ?? '',
+      examDate: item.examDate ?? '',
+      examResult: '',
+      benefit: '',
+      resultsDate: item.resultDate ?? '',
+    }));
   }
 
   private toEnrollmentSummariesFromGroup(group: MyEnrollmentsResponse): EnrollmentSummary[] {

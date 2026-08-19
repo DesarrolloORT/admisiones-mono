@@ -1,0 +1,159 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -->
+<section
+  aria-labelledby="scholarship-postulation-title"
+  class="scholarship-screen scholarship-screen--narrow">
+  <header class="scholarship-screen__header">
+    <h1 id="scholarship-postulation-title">Información personal</h1>
+    <p>Ingresá tus datos personales y educativos.</p>
+    <span>Los campos marcados con un asterisco (*) son obligatorios.</span>
+  </header>
+  @if (facade.showErrorAlert()) {
+  <app-error-alert />
+  }
+  <form>
+    <ort-accordion>
+      @if (facade.isSectionVisible('datos-personales')) {
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('datos-personales').isComplete()"
+        [expanded]="true">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [filled]="facade.sectionStatus('datos-personales').isComplete()"
+                [name]="facade.sectionStatus('datos-personales').isComplete() ? 'check_circle' : 'person'" />
+              @if (facade.sectionStatus('datos-personales').hasError()){
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
+            <div class="scholarship-accordion-item__title-group">
+              Datos personales @if (facade.sectionStatus('datos-personales').hasError()) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-scholarship-personal-data-section />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      }
+
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus(facade.educationSectionId()).isComplete()"
+        [expanded]="!facade.isSectionVisible('datos-personales')">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [filled]="facade.sectionStatus(facade.educationSectionId()).isComplete()"
+                [name]="facade.sectionStatus(facade.educationSectionId()).isComplete() ? 'check_circle' : 'auto_stories'" />
+              @if (facade.sectionStatus(facade.educationSectionId()).hasError()){
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
+            <div class="scholarship-accordion-item__title-group">
+              Información educativa @if
+              (facade.sectionStatus(facade.educationSectionId()).hasError()) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+
+        <ort-accordion-body>
+          @if (facade.isSectionVisible('educacion-fbr')) {
+          <app-scholarship-education-info-fbr-section />
+          } @else if (facade.isSectionVisible('educacion-fcl')){
+          <app-scholarship-education-info-fcl-section />
+          } @else {
+          <app-scholarship-education-info-section />
+          }
+        </ort-accordion-body>
+      </ort-accordion-item>
+
+      @if (facade.isSectionVisible('antecedentes-laborales')) {
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('antecedentes-laborales').isComplete()">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [filled]="facade.sectionStatus('antecedentes-laborales').isComplete()"
+                [name]="facade.sectionStatus('antecedentes-laborales').isComplete() ? 'check_circle' : 'work_outline'" />
+              @if (facade.sectionStatus('antecedentes-laborales').hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
+            <div class="scholarship-accordion-item__title-group">
+              Antecedentes laborales @if (facade.sectionStatus('antecedentes-laborales').hasError())
+              {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-scholarship-work-history-section />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      } @if (facade.isSectionVisible('declaracion')){
+      <ort-accordion-item
+        [class.scholarship-accordion-item--complete]="facade.sectionStatus('declaracion').isComplete()">
+        <ort-accordion-header>
+          <ort-accordion-title>
+            <div class="scholarship-accordion-item__icon-wrapper" ortAccordionTitleLeadingIcon>
+              <ort-icon
+                class="scholarship-accordion-item__icon"
+                size="md"
+                [filled]="facade.sectionStatus('declaracion').isComplete()"
+                [name]="facade.sectionStatus('declaracion').isComplete() ? 'check_circle' : 'description'" />
+              @if (facade.sectionStatus('declaracion').hasError()) {
+              <ort-badge
+                class="scholarship-accordion-item__icon-badge"
+                color="primary"
+                type="dot" />
+              }
+            </div>
+            <div class="scholarship-accordion-item__title-group">
+              Declaración jurada @if (facade.sectionStatus('declaracion').hasError()) {
+              <ort-accordion-description>Información pendiente</ort-accordion-description>
+              }
+            </div>
+          </ort-accordion-title>
+        </ort-accordion-header>
+        <ort-accordion-body>
+          <app-scholarship-declaration-section />
+        </ort-accordion-body>
+      </ort-accordion-item>
+      }
+    </ort-accordion>
+  </form>
+  <div class="scholarship-step__footer">
+    <button class="scholarship-step-button" ort-primary-button type="button" (click)="onContinue()">
+      Continuar
+    </button>
+    <button
+      class="scholarship-step-button scholarship-step-button--back"
+      ort-secondary-button
+      type="button"
+      (click)="facade.back()">
+      Volver al paso anterior
+    </button>
+  </div>
+</section>

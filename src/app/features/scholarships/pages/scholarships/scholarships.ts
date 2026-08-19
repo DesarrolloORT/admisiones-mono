@@ -9,32 +9,34 @@ import { ScholarshipCard } from '../../components/scholarship-card/scholarship-c
 
 const SCHOLARSHIPS = [
   {
-    title: 'Beca de Reválidas',
+    title: 'Becas de Reválidas',
     description:
       'Dirigida a estudiantes que solicitan reválida de materias cursadas en otras universidades, nacionales o extranjeras.',
     requiresExam: false,
+    requiresEnrollment: false,
     route: '/becas/fbr',
   },
   {
-    title: 'Excelencia Académica',
+    title: 'Becas de Excelencia Académica',
     description:
       'Dirigida a estudiantes que comienzan una carrera y cuentan con un destacado desempeño académico en secundaria.',
     requiresExam: true,
-    route: '',
+    requiresEnrollment: true,
+    route: '/becas/fexa',
   },
   {
     title: 'Becas Concursables',
-    description:
-      'Dirigidas a estudiantes que comienzan una carrera y han aprobado bachillerato o tienen exámenes de 6.º año pendientes.',
+    description: 'Dirigidas a estudiantes que comienzan una carrera universitaria.',
     requiresExam: true,
-    route: '',
+    requiresEnrollment: true,
+    route: '/becas/fbc',
   },
   {
-    title: 'Carreras Cortas / Capacitación Laboral',
-    description:
-      'Dirigida a estudiantes que desean cursar una carrera corta y cuentan con al menos 4.º año de secundaria aprobado.',
+    title: 'Becas de Capacitación Laboral',
+    description: 'Dirigido a estudiantes que desean cursar una tecnicatura.',
     requiresExam: false,
-    route: '',
+    requiresEnrollment: true,
+    route: '/becas/fcl',
   },
 ];
 

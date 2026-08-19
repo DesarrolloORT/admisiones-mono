@@ -105,25 +105,45 @@ comportamiento propio (combina llamadas, guarda estado, prepara archivos).
 
 - **`models/scholarship-process.ts`** — `SCHOLARSHIP_STEPS`
   (`application-info` → `personal-info` → `confirmation`) y
-  `createScholarshipAcademicForm()`. Editá el array para agregar, quitar o
+  `createScholarshipApplicationForm()`. Editá el array para agregar, quitar o
   reordenar pasos.
-- **`facades/scholarship-process.ts`** — dueña del estado del proceso
-  (`createProcessFlow`) y de la navegación. Se provee en `pages/fbr`.
-  `continue()` pregunta `canContinue()` a la fachada de la sección activa y
-  **es el proceso el que avanza** el flow.
-- **`facades/scholarship-proposal.ts`** — fachada del paso 1: dueña del
-  `FormGroup` y de `canContinue()`. Las secciones nunca llaman a `flow.next()`,
-  y el template nunca avanza el flow: siempre `process.continue()`.
-- **`pages/fbr/steps/scholarship-*-step`** — los steps. Viven dentro de la page
-  que los renderiza (igual que `enrollments/pages/steps/`), porque inyectan la
-  fachada del proceso: `components/` queda solo para presentación sin `inject()`.
-  Las secciones que usa un único paso cuelgan de él, en `<step>/sections/`.
-  El paso 3 es el punto de extensión: montarlo en el `@switch` de
-  `pages/fbr/fbr.html`.
+- **`facades/scholarship-process.ts`** — el único objeto con scope de página.
+  Es dueña del flow (`createProcessFlow`) y de **todos los `FormGroup`**: los
+  steps se destruyen al navegar, así que si los forms fueran suyos, volver atrás
+  perdería lo cargado. No hay capa `store/`; los forms salen de las factories de
+  `models/`.
+- **`facades/scholarship-personal.ts` y `facades/scholarship-proposal.ts`** — las
+  fachadas de sección. Cada step **se las provee a sí mismo**, así que solo viven
+  mientras ese paso está montado. Validan lo suyo y, si está OK, llaman a
+  `process.continue()`. Por eso la fachada de proceso no las conoce: cuando ella
+  se crea, todavía no existen.
+- **`pages/scholarship-process/steps/scholarship-*-step`** — los steps, dentro de
+  la page que los renderiza (igual que `enrollments/pages/steps/`). `components/`
+  queda solo para presentación sin `inject()`. Las secciones que usa un único
+  paso cuelgan de él, en `<step>/sections/`.
+
+## Una page para las cuatro becas
+
+`fbr`, `fexa`, `fcl` y `fbc` son la misma pantalla: cuatro rutas apuntando a
+`ScholarshipProcess`, que recibe cuál es por `data.kind` y de ahí deriva la
+`ScholarshipVariant` que decide qué secciones y validadores aplican. `fexa` es la
+excepción: se parte en `fexaCon`/`fexaSin` según el modo de postulación que se
+elige en el paso 1, así que su variante sale del formulario, no de la ruta.
+
+Para agregar una beca: una entrada en `scholarships.routes.ts`, un valor en
+`ScholarshipVariant` y sus casos en `getVisiblePersonalSections()` y
+`SCHOLARSHIP_REQUIREMENTS_CONFIG`. No se crea una page nueva.
 
 ## Qué falta
 
-- Endpoints de postulación (crear, guardar borrador, confirmar): se agregan como
-  métodos de `api/scholarships.api.ts`.
-- Fachadas de las secciones 2 y 3, con su `canContinue()`.
+Los endpoints de becas ya existen en el spec (ver `.api-spec/contracts/becas.contract.json`,
+que es la autoridad de estas pantallas) y todavía no tienen consumidor. Cada uno se
+agrega como un método de `api/scholarships.api.ts`:
+
+| Endpoint                                | Para qué                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `GET /scholarships/available`           | reemplaza el array estático de la page y el `isEnrolled` derivado: trae las cards y `requiresPriorEnrollment` |
+| `GET /scholarships/application-options` | opciones del paso 1 (inscripciones, modalidades y pruebas) para un `scholarshipTypeId` de la card             |
+| `POST /scholarships/applications`       | el alta de la postulación (`testId` + `enrollmentId`)                                                         |
+
 - Resolvers de precarga, si la postulación necesita datos antes de activar la ruta.

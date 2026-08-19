@@ -2,7 +2,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import {
+  getPersonEnrollmentsEndpoint,
+  getPersonScholarshipsEndpoint,
+} from 'src/app/shared/api/generated/endpoints/person.endpoints';
 
 import { HomeApi } from './home.api';
 
@@ -246,5 +249,60 @@ describe('HomeApi', () => {
     api.request.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
 
     await expect(firstValueFrom(endpoint.getMyEnrollments())).resolves.toEqual([]);
+  });
+
+  it('should map Persona/Becas into dashboard scholarship cards', async () => {
+    api.request.mockReturnValueOnce(
+      of([
+        {
+          testEnrollmentId: 900,
+          scholarshipTypeName: 'Beca de Revalidas',
+          productName: 'Analista Programador',
+          testEnrollmentStatus: 'En proceso',
+          applicationCloseDate: '2027-02-28T00:00:00',
+          examDate: '2027-03-10T00:00:00',
+          resultDate: '2027-03-20T00:00:00',
+        },
+      ])
+    );
+
+    await expect(firstValueFrom(endpoint.getMyScholarships())).resolves.toEqual([
+      {
+        id: 900,
+        scholarshipName: 'Beca de Revalidas',
+        degreeProgramName: 'Analista Programador',
+        status: 'En proceso',
+        applicationDeadline: '2027-02-28T00:00:00',
+        examDate: '2027-03-10T00:00:00',
+        examResult: '',
+        benefit: '',
+        resultsDate: '2027-03-20T00:00:00',
+      },
+    ]);
+    expect(api.request.mock.calls[0][0]).toBe(getPersonScholarshipsEndpoint);
+  });
+
+  it('should collapse a missing scholarship payload to an empty list', async () => {
+    api.request.mockReturnValueOnce(of(null));
+
+    await expect(firstValueFrom(endpoint.getMyScholarships())).resolves.toEqual([]);
+  });
+
+  it('should collapse nullable scholarship fields to safe defaults', async () => {
+    api.request.mockReturnValueOnce(of([{}]));
+
+    await expect(firstValueFrom(endpoint.getMyScholarships())).resolves.toEqual([
+      {
+        id: 0,
+        scholarshipName: '',
+        degreeProgramName: '',
+        status: '',
+        applicationDeadline: '',
+        examDate: '',
+        examResult: '',
+        benefit: '',
+        resultsDate: '',
+      },
+    ]);
   });
 });

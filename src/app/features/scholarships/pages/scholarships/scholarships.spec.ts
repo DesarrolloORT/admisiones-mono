@@ -34,7 +34,7 @@ describe('Scholarships', () => {
 
     expect(text).toContain('Admisiones');
     expect(text).toContain('Postulación a becas');
-    expect(text).toContain('Beca de Reválidas');
+    expect(text).toContain('Becas de Reválidas');
   });
 
   it('marks the person as enrolled when the API returns confirmed enrollments', () => {
