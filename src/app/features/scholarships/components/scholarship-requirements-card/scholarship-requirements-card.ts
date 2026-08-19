@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { OrtIconModule } from '@desarrolloort/components';
 
-export type ScholarshipType = 'revalidation' | 'academic' | 'socioeconomic';
+import { ScholarshipVariant } from '../../models/scholarship-personal-forms';
 
 interface ScholarshipRequirement {
   title: string;
@@ -10,15 +10,16 @@ interface ScholarshipRequirement {
 
 interface ScholarshipConfig {
   requirements: ScholarshipRequirement[];
+  methods: ScholarshipRequirement[];
 }
 
-export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, ScholarshipConfig> = {
-  revalidation: {
+export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipVariant, ScholarshipConfig> = {
+  fbr: {
     requirements: [
       {
-        title: 'Perfil del estudiante',
+        title: 'Declaración jurada de ingresos',
         description:
-          'Dirigido a quienes revalidan materias de otras universidades (nacionales o extranjeras).',
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
       },
       {
         title: 'Antecedentes académicos',
@@ -31,33 +32,97 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, Scholarshi
           'Es necesario adjuntar el formulario de reválidas firmado por la Coordinación Académica de Universidad ORT.',
       },
     ],
+    methods: [],
   },
-
-  academic: {
+  fexaCon: {
     requirements: [
       {
-        title: 'Promedio académico',
-        description: 'Dirigido a estudiantes con alto rendimiento académico comprobable.',
-      },
-      {
-        title: 'Regularidad',
-        description: 'El estudiante deberá mantener la regularidad en la carrera.',
-      },
-    ],
-  },
-
-  socioeconomic: {
-    requirements: [
-      {
-        title: 'Situación económica',
-        description: 'Dirigido a estudiantes que acrediten necesidad de apoyo económico.',
-      },
-      {
-        title: 'Documentación respaldatoria',
+        title: 'Calificación mínima exigida',
         description:
-          'Se deberá presentar documentación que permita evaluar la situación socioeconómica.',
+          '8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.',
+      },
+      {
+        title: 'Cursado de 3.º de EMS',
+        description:
+          'Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.',
+      },
+      {
+        title: 'Certificado de secundaria',
+        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
       },
     ],
+    methods: [
+      {
+        title: 'Con declaración jurada',
+        description:
+          'otorga hasta 60% de beca. Deberás completar información sobre ingresos y gastos de tu núcleo familiar.',
+      },
+      {
+        title: 'Sin declaración jurada',
+        description: 'otorga hasta un 35% de beca. No requiere información económica.',
+      },
+    ],
+  },
+  fexaSin: {
+    requirements: [
+      {
+        title: 'Calificación mínima exigida',
+        description:
+          '8 o más en 2.° de EMS, o 7 en 2.º de EMS y 8 o más en 3.º de EMS, o Bachillerato Internacional (IB) aprobado.',
+      },
+      {
+        title: 'Cursado de 3.º de EMS',
+        description:
+          'Haber cursado 3.° de EMS en el año lectivo inmediato anterior al inicio de la carrera.',
+      },
+      {
+        title: 'Certificado de secundaria',
+        description: 'Es necesario presentar la Fórmula 69 para validar tus notas.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
+      },
+    ],
+    methods: [
+      {
+        title: 'Con declaración jurada',
+        description:
+          'otorga hasta 60% de beca. Deberás completar información sobre ingresos y gastos de tu núcleo familiar.',
+      },
+      {
+        title: 'Sin declaración jurada',
+        description: 'otorga hasta un 35% de beca. No requiere información económica.',
+      },
+    ],
+  },
+  fbc: {
+    requirements: [
+      {
+        title: 'Declaración jurada de ingresos',
+        description:
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
+      },
+      {
+        title: 'Prueba de aptitud académica',
+        description: 'Deberás seleccionar una fecha para rendir la prueba.',
+      },
+    ],
+    methods: [],
+  },
+  fcl: {
+    requirements: [
+      {
+        title: 'Declaración jurada de ingresos',
+        description:
+          'Deberás presentar información sobre los ingresos y egresos de tu núcleo familiar.',
+      },
+    ],
+    methods: [],
   },
 };
 
@@ -69,7 +134,7 @@ export const SCHOLARSHIP_REQUIREMENTS_CONFIG: Record<ScholarshipType, Scholarshi
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScholarshipRequirementsCard {
-  readonly variant = input.required<ScholarshipType>();
+  readonly variant = input.required<ScholarshipVariant>();
 
   protected readonly config = computed<ScholarshipConfig>(
     () => SCHOLARSHIP_REQUIREMENTS_CONFIG[this.variant()]

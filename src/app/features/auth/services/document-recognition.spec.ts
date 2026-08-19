@@ -1,28 +1,19 @@
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
 import {
   IMAGE_COMPRESSION_THRESHOLD_BYTES,
   MAX_IMAGE_SIZE_BYTES,
 } from 'src/app/shared/files/image-upload';
 import { vi } from 'vitest';
 
-import { AuthEndpoint } from '../endpoints/auth.endpoint';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 import { DocumentRecognition } from './document-recognition';
 
 describe('DocumentRecognition', () => {
   let service: DocumentRecognition;
-  let endpointMock: {
-    recognizeDocument: ReturnType<typeof vi.fn>;
-  };
 
   beforeEach(() => {
-    endpointMock = {
-      recognizeDocument: vi.fn().mockReturnValue(of({ fields: { firstName: 'Ana' } })),
-    };
-
     TestBed.configureTestingModule({
-      providers: [DocumentRecognition, { provide: AuthEndpoint, useValue: endpointMock }],
+      providers: [DocumentRecognition],
     });
 
     service = TestBed.inject(DocumentRecognition);
@@ -31,41 +22,6 @@ describe('DocumentRecognition', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
-  });
-
-  it('should delegate document recognition payload to the endpoint', () => {
-    const payload = {
-      mimeType: 'image/jpeg',
-      attachment: {
-        fileName: 'identity-document.jpg',
-        content: 'base64-content',
-      },
-    };
-
-    service.recognizeDocument(payload).subscribe(response => {
-      expect(response.fields?.firstName).toBe('Ana');
-    });
-
-    expect(endpointMock.recognizeDocument).toHaveBeenCalledWith(payload);
-  });
-
-  it('should propagate errors from the endpoint adapter', () => {
-    const requestError = new Error('request failed');
-    endpointMock.recognizeDocument.mockReturnValueOnce(throwError(() => requestError));
-
-    service
-      .recognizeDocument({
-        mimeType: 'image/jpeg',
-        attachment: {
-          fileName: 'identity-document.jpg',
-          content: 'base64-content',
-        },
-      })
-      .subscribe({
-        error: error => {
-          expect(error).toBe(requestError);
-        },
-      });
   });
 
   it('should create a base64 request from a valid image file', async () => {

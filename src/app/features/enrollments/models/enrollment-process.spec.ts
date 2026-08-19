@@ -1,6 +1,7 @@
 import { createProcessFlow } from 'src/app/shared/process-flow/process-flow';
 
-import { ENROLLMENT_STEPS } from './enrollment-process';
+import type { EnrollmentPreEnrollmentResponse } from './enrollment-flow';
+import { createEnrollmentProcessState, ENROLLMENT_STEPS } from './enrollment-process';
 
 describe('ENROLLMENT_STEPS', () => {
   it('declares the enrollment steps in order', () => {
@@ -61,5 +62,30 @@ describe('createProcessFlow with ENROLLMENT_STEPS', () => {
     expect(flow.currentStep()).toBe('proposal');
     expect(flow.currentIndex()).toBe(0);
     expect(flow.canGoBack()).toBe(false);
+  });
+});
+
+describe('createEnrollmentProcessState', () => {
+  it('starts the flow at the proposal step with an empty pre-enrollment response', () => {
+    const state = createEnrollmentProcessState();
+
+    expect(state.flow.currentStep()).toBe('proposal');
+    expect(state.preEnrollmentResponse()).toBeNull();
+  });
+
+  it('holds the pre-enrollment response', () => {
+    const state = createEnrollmentProcessState();
+    const response: EnrollmentPreEnrollmentResponse = {
+      enrollmentId: 1072704,
+      confirmed: false,
+      paymentDueDate: '2027-03-04',
+      enrollmentDeposit: 15500,
+      accountBalance: 1200,
+      summary: { degreeProgram: 'Sistemas', intake: 'Marzo 2027', shift: 'Noche' },
+    };
+
+    state.preEnrollmentResponse.set(response);
+
+    expect(state.preEnrollmentResponse()).toBe(response);
   });
 });

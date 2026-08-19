@@ -3,7 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { AccountService } from '../../../auth/services/account';
+import { AccountApi } from '../../../auth/api/account.api';
 import { ChangePassword } from './change-password';
 
 describe('ChangePassword', () => {
@@ -19,7 +19,7 @@ describe('ChangePassword', () => {
 
     TestBed.configureTestingModule({
       imports: [ChangePassword],
-      providers: [provideRouter([]), { provide: AccountService, useValue: account }],
+      providers: [provideRouter([]), { provide: AccountApi, useValue: account }],
     });
 
     navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -32,7 +32,7 @@ describe('ChangePassword', () => {
     vi.restoreAllMocks();
   });
 
-  it('should submit a valid password change through AccountService', () => {
+  it('should submit a valid password change through AccountApi', () => {
     component['form'].setValue({
       currentPassword: 'ActualPassword1!',
       password: 'NuevaPassword1!',

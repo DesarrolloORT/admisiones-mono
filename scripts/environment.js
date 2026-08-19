@@ -69,6 +69,12 @@ run(
 
 if (action === 'start') run('ng', ANGULAR_CLI, ['serve', ...args]);
 if (action === 'build') {
+  // Puerta de release: en preprod/prod falla si la documentacion de la API sigue
+  // expuesta o si el contrato servido todavia trae implementacion interna.
+  run('node ./scripts/quality/check-prod-exposure.js', './scripts/quality/check-prod-exposure.js', [
+    '--env',
+    environment,
+  ]);
   run('node ./scripts/codegen/update-api.js', './scripts/codegen/update-api.js', ['--skip-build']);
   run('ng', ANGULAR_CLI, ['build', '--configuration', buildConfiguration(environment), ...args]);
   run('node ./scripts/build/inject-script-nonce.js', './scripts/build/inject-script-nonce.js', []);

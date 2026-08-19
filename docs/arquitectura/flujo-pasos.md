@@ -54,16 +54,20 @@ devuelve un `ProcessFlow` con señales (`currentStep`, `currentIndex`, `stepItem
 Avanza por **índice** sobre el array de definiciones. No sabe nada de
 inscripciones ni de validación: solo "en qué paso estoy y cómo me muevo".
 
-### 3. `store/` — estado del proceso
+### 3. `models/` — estado del proceso
 
-- **`enrollment-process.ts`** (`EnrollmentProcessStore`) envuelve
-  `createProcessFlow(ENROLLMENT_STEPS, 'propuesta')` y le suma estado propio del
-  flujo: `preEnrollmentResponse`. Es la **fuente de verdad del paso actual**.
-- **`enrollment-forms.ts`** (`EnrollmentFormsStore`) crea y guarda todos los
-  `FormGroup` y el `sectionConfig`. Las fachadas leen los forms desde acá.
+- **`models/enrollment-process.ts`** exporta `createEnrollmentProcessState()`
+  —`createProcessFlow(ENROLLMENT_STEPS, 'proposal')` más
+  `preEnrollmentResponse`— y el token `ENROLLMENT_PROCESS_STATE`. Es la
+  **fuente de verdad del paso actual**.
+- **`models/enrollment-flow-forms.ts`** exporta `createEnrollmentFormsState()`
+  (los `FormGroup` + el `sectionConfig`) y el token `ENROLLMENT_FORMS`. Las
+  fachadas leen los forms desde ahí (`formsStore.forms.<form>`).
 
-Ambos stores se proveen **a nivel de página** (no en root), así cada inscripción
-tiene su propio estado.
+Los dos tokens se proveen **a nivel de página** (`useFactory`), así cada
+inscripción tiene su propio estado. En becas no hace falta token: el estado del
+proceso vive directamente en `ScholarshipProcessFacade`, que también se provee en
+la página.
 
 ### 4. `facades/` — orquestación (acá vive la lógica de "pasar de paso")
 
@@ -88,13 +92,14 @@ tiene su propio estado.
 > **Quién decide el avance:** la fachada de sección, no el template. El template
 > solo invoca `process.continue()` / `process.back()`.
 
-### 5. `services/` + `endpoints/` — datos
+### 5. `api/` (+ `services/` cuando aportan) — datos
 
-- **`endpoints/`** son los adapters que importan los contratos generados
+- **`api/`** son los adapters que importan los contratos generados
   (`shared/api/generated/**`). **Solo acá** se permiten esos imports. Mapean
   request/response a tipos propios de la feature.
-- **`services/`** orquestan endpoints y exponen Observables con tipos de la
-  feature.
+- **`services/`** existen solo si agregan comportamiento (combinan llamadas,
+  preparan archivos, guardan estado propio). Un service que solo reenvía al
+  adapter no existe: la fachada, la page o el resolver inyectan el adapter.
 
 ### 6. `resolvers/` — precarga e **intención de entrada**
 
@@ -174,8 +179,8 @@ nada hacia atrás. Un proceso que sí admita retroceder entre pasos puede seguir
 | Cambiar cuándo se puede avanzar/volver              | la fachada de la sección (validación) y `canGoBack` en `ProcessFacade`                                                                           |
 | Cambiar la lógica de avance de un paso              | la fachada de ese paso (`proposal` / `survey` / `payment`)                                                                                       |
 | Agregar un campo a un formulario                    | `models/enrollment-flow-forms.ts` (form) + el componente del paso                                                                                |
-| Llamar a un endpoint nuevo                          | `endpoints/` (adapter) → `services/` → la fachada                                                                                                |
-| Tocar el contrato con la API                        | **solo** en `endpoints/` (única capa que ve `generated/**`)                                                                                      |
+| Llamar a un endpoint nuevo                          | `api/` (adapter) → la fachada (sin service intermedio)                                                                                           |
+| Tocar el contrato con la API                        | **solo** en `api/` (única capa que ve `generated/**`)                                                                                            |
 | Cambiar el chrome (header, stepper, botón cerrar)   | `shared/ui/process-layout`                                                                                                                       |
 | Tocar el motor de pasos genérico                    | `shared/process-flow/process-flow.ts` (afecta a todas las features)                                                                              |
 | Cambiar qué muestra cada intención/estado al entrar | `models/enrollment-entry.ts` (`deriveInitialEnrollmentState`) + su tabla `enrollment-entry.spec.ts`; la aplica `ProcessFacade.applyInitialState` |
@@ -186,11 +191,11 @@ nada hacia atrás. Un proceso que sí admita retroceder entre pasos puede seguir
 ## Reglas que el patrón da por sentadas
 
 - El template **nunca** cambia el paso directamente: siempre vía una fachada.
-- Solo los `endpoints/` importan de `shared/api/generated/**`; el resto usa tipos
-  propios de la feature.
+- Solo los adapters de `api/` importan de `shared/api/generated/**`; el resto usa
+  tipos propios de la feature.
 - Las fechas son `string | null` en los contratos; la conversión a `Date` es
   explícita en fachadas/UI.
-- Stores y fachadas se proveen **en la página**, no en root.
+- El estado del proceso y las fachadas se proveen **en la página**, no en root.
 - Los constructores de las fachadas de sección **no posicionan el flujo ni leen la
   ruta**: el estado inicial lo deriva `deriveInitialEnrollmentState` (pura) y lo
   aplica solo `ProcessFacade.applyInitialState`.

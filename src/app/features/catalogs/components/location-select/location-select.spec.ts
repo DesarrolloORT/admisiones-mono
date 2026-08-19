@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
-import { Catalogs } from '../../services/catalogs';
+import { CatalogsApi } from '../../api/catalogs.api';
 import { LocationSelect } from './location-select';
 
 @Component({
@@ -73,7 +73,7 @@ describe('LocationSelect', () => {
 
     TestBed.configureTestingModule({
       imports: [LocationSelect, ReactiveFormsModule],
-      providers: [{ provide: Catalogs, useValue: catalogsMock }],
+      providers: [{ provide: CatalogsApi, useValue: catalogsMock }],
     });
 
     fixture = TestBed.createComponent(LocationSelect);
@@ -85,7 +85,7 @@ describe('LocationSelect', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       imports: [TestHostComponent],
-      providers: [{ provide: Catalogs, useValue: catalogsMock }],
+      providers: [{ provide: CatalogsApi, useValue: catalogsMock }],
     });
 
     const hostFixture = TestBed.createComponent(TestHostComponent);

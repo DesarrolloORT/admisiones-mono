@@ -3,15 +3,19 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { type Observable, of, Subject, throwError } from 'rxjs';
 import { afterEach, vi } from 'vitest';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import { FALLBACK_BANK_OPTIONS } from '../models/enrollment-bank-logo';
 import type { EnrollmentPaymentResponse, PaymentMethod } from '../models/enrollment-flow';
+import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
+import {
+  createEnrollmentProcessState,
+  ENROLLMENT_PROCESS_STATE,
+  type EnrollmentProcessState,
+} from '../models/enrollment-process';
 import { EnrollmentResumeContextStore } from '../services/enrollment-resume-context';
-import { Enrollments } from '../services/enrollments';
 import { ExternalPaymentSubmitter } from '../services/external-payment-submitter';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 
@@ -59,7 +63,7 @@ const CONFIRMED_DETAIL = {
 
 describe('EnrollmentPaymentFacade', () => {
   let facade: EnrollmentPaymentFacade;
-  let process: EnrollmentProcessStore;
+  let process: EnrollmentProcessState;
   let getBanks: ReturnType<typeof vi.fn>;
   let enrollments: { pay: ReturnType<typeof vi.fn>; getDetail: ReturnType<typeof vi.fn> };
   let externalPaymentSubmitter: { submit: ReturnType<typeof vi.fn> };
@@ -98,8 +102,8 @@ describe('EnrollmentPaymentFacade', () => {
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
-        EnrollmentFormsStore,
-        EnrollmentProcessStore,
+        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
+        { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
         EnrollmentProposalFacade,
         EnrollmentPaymentFacade,
         {
@@ -107,7 +111,7 @@ describe('EnrollmentPaymentFacade', () => {
           useValue: { snapshot: { queryParamMap: convertToParamMap(options.queryParams ?? {}) } },
         },
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms: () => of([]),
             getIntakes: () => of([]),
@@ -115,12 +119,12 @@ describe('EnrollmentPaymentFacade', () => {
             getBanks,
           },
         },
-        { provide: Enrollments, useValue: enrollments },
+        { provide: EnrollmentsApi, useValue: enrollments },
         { provide: ExternalPaymentSubmitter, useValue: externalPaymentSubmitter },
       ],
     });
     facade = TestBed.inject(EnrollmentPaymentFacade);
-    process = TestBed.inject(EnrollmentProcessStore);
+    process = TestBed.inject(ENROLLMENT_PROCESS_STATE);
     process.preEnrollmentResponse.set({
       enrollmentId: 1072704,
       confirmed: false,
@@ -271,9 +275,9 @@ describe('EnrollmentPaymentFacade', () => {
   });
 
   it('loads the confirmed detail after a confirmed payment', () => {
-    const forms = TestBed.inject(EnrollmentFormsStore);
-    forms.academicForm.controls.degreeProgram.setValue('20');
-    forms.academicForm.controls.intake.setValue('200');
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
+    forms.forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.forms.academicForm.controls.intake.setValue('200');
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
@@ -297,9 +301,9 @@ describe('EnrollmentPaymentFacade', () => {
   });
 
   it('uses the confirmed detail from the pay response without re-fetching', () => {
-    const forms = TestBed.inject(EnrollmentFormsStore);
-    forms.academicForm.controls.degreeProgram.setValue('20');
-    forms.academicForm.controls.intake.setValue('200');
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
+    forms.forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.forms.academicForm.controls.intake.setValue('200');
     enrollments.pay.mockReturnValueOnce(
       of({ ...PAYMENT_OK, result: 'confirmada', confirmed: CONFIRMED_DETAIL })
     );
@@ -325,9 +329,9 @@ describe('EnrollmentPaymentFacade', () => {
   });
 
   it('loads the reservation data after an Abitab reserva from the fresh flow', () => {
-    const forms = TestBed.inject(EnrollmentFormsStore);
-    forms.academicForm.controls.degreeProgram.setValue('20');
-    forms.academicForm.controls.intake.setValue('200');
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
+    forms.forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.forms.academicForm.controls.intake.setValue('200');
     enrollments.getDetail.mockReturnValueOnce(
       of({
         status: 'Pago pendiente',
@@ -359,9 +363,9 @@ describe('EnrollmentPaymentFacade', () => {
   });
 
   it('degrades to the amount-only reservation when getDetail fails on a reserva', () => {
-    const forms = TestBed.inject(EnrollmentFormsStore);
-    forms.academicForm.controls.degreeProgram.setValue('20');
-    forms.academicForm.controls.intake.setValue('200');
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
+    forms.forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.forms.academicForm.controls.intake.setValue('200');
     enrollments.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.paymentMethod.setValue('abitab');
 
@@ -375,9 +379,9 @@ describe('EnrollmentPaymentFacade', () => {
   });
 
   it('keeps the success screen without detail sections when getDetail fails', () => {
-    const forms = TestBed.inject(EnrollmentFormsStore);
-    forms.academicForm.controls.degreeProgram.setValue('20');
-    forms.academicForm.controls.intake.setValue('200');
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
+    forms.forms.academicForm.controls.degreeProgram.setValue('20');
+    forms.forms.academicForm.controls.intake.setValue('200');
     enrollments.pay.mockReturnValueOnce(of({ ...PAYMENT_OK, result: 'confirmada' }));
     enrollments.getDetail.mockReturnValueOnce(throwError(() => new Error('network error')));
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');

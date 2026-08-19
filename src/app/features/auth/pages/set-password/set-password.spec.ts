@@ -4,15 +4,15 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
+import { AuthApi } from '../../api/auth.api';
 import { AuthSessionService } from '../../services/auth-session';
-import { PasswordActivationService } from '../../services/password-activation';
 import { SetPassword } from './set-password';
 
 describe('SetPassword', () => {
   let fixture: ComponentFixture<SetPassword>;
   let component: SetPassword;
-  let passwordActivationMock: {
-    activateLink: ReturnType<typeof vi.fn>;
+  let authEndpointMock: {
+    activatePasswordLink: ReturnType<typeof vi.fn>;
     completePassword: ReturnType<typeof vi.fn>;
   };
   let authSessionMock: {
@@ -21,8 +21,8 @@ describe('SetPassword', () => {
   let snackbarMock: { error: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn> };
 
   function setup(queryParams: Record<string, string | null> = { token: 'token-123' }) {
-    passwordActivationMock = {
-      activateLink: vi.fn().mockReturnValue(of(undefined)),
+    authEndpointMock = {
+      activatePasswordLink: vi.fn().mockReturnValue(of(undefined)),
       completePassword: vi.fn().mockReturnValue(of(undefined)),
     };
     authSessionMock = {
@@ -34,7 +34,7 @@ describe('SetPassword', () => {
       imports: [SetPassword],
       providers: [
         provideRouter([]),
-        { provide: PasswordActivationService, useValue: passwordActivationMock },
+        { provide: AuthApi, useValue: authEndpointMock },
         { provide: AuthSessionService, useValue: authSessionMock },
         { provide: SnackbarHandler, useValue: snackbarMock },
         {
@@ -71,7 +71,7 @@ describe('SetPassword', () => {
   it('should activate the token on creation', () => {
     setup();
 
-    expect(passwordActivationMock.activateLink).toHaveBeenCalledWith('token-123');
+    expect(authEndpointMock.activatePasswordLink).toHaveBeenCalledWith({ token: 'token-123' });
     expect(component['tokenError']()).toBeNull();
   });
 
@@ -95,7 +95,9 @@ describe('SetPassword', () => {
     });
     component['submit']();
 
-    expect(passwordActivationMock.completePassword).toHaveBeenCalledWith('NuevaPassword1!');
+    expect(authEndpointMock.completePassword).toHaveBeenCalledWith({
+      newPassword: 'NuevaPassword1!',
+    });
     expect(authSessionMock.hydrateAuthenticatedSession).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith('/inicio');
   });
@@ -116,7 +118,7 @@ describe('SetPassword', () => {
 
   it('should report an expired or already used token', () => {
     setup();
-    passwordActivationMock.activateLink.mockReturnValue(throwError(() => new Error('expired')));
+    authEndpointMock.activatePasswordLink.mockReturnValue(throwError(() => new Error('expired')));
 
     component['activateToken']();
 
@@ -142,7 +144,7 @@ describe('SetPassword', () => {
 
   it('should show password creation errors in snackbar', () => {
     setup();
-    passwordActivationMock.completePassword.mockReturnValue(
+    authEndpointMock.completePassword.mockReturnValue(
       throwError(() => new Error('request failed'))
     );
 

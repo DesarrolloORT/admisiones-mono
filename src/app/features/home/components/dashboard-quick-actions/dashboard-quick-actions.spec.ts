@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
+import { EnrollmentsApi } from '../../../enrollments/api/enrollments.api';
 import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
-import { Enrollments } from '../../../enrollments/services/enrollments';
 import { DashboardQuickActions } from './dashboard-quick-actions';
 
 const REACTIVATION_RESPONSE = {
@@ -41,7 +41,7 @@ describe('DashboardQuickActions', () => {
 
     TestBed.configureTestingModule({
       imports: [DashboardQuickActions],
-      providers: [provideRouter([]), { provide: Enrollments, useValue: enrollments }],
+      providers: [provideRouter([]), { provide: EnrollmentsApi, useValue: enrollments }],
     });
   });
 

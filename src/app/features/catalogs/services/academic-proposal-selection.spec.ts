@@ -3,9 +3,9 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../api/catalogs.api';
 import type { AcademicProposalForm } from '../models/academic-proposal';
 import { AcademicProposalSelection } from './academic-proposal-selection';
-import { Catalogs } from './catalogs';
 
 describe('AcademicProposalSelection', () => {
   const getDegreePrograms = vi.fn();
@@ -63,7 +63,7 @@ describe('AcademicProposalSelection', () => {
       providers: [
         AcademicProposalSelection,
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms,
             getIntakes,

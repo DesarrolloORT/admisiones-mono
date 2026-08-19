@@ -2,88 +2,28 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { EnrollmentsEndpoint } from '../endpoints/enrollments.endpoint';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import { Enrollments } from './enrollments';
 
 describe('Enrollments', () => {
   let service: Enrollments;
   let endpointMock: {
-    confirmPreEnrollment: ReturnType<typeof vi.fn>;
-    reactivate: ReturnType<typeof vi.fn>;
-    getDetail: ReturnType<typeof vi.fn>;
     getIdentityDocument: ReturnType<typeof vi.fn>;
     getIdentityPhoto: ReturnType<typeof vi.fn>;
     uploadIdentityDocument: ReturnType<typeof vi.fn>;
     uploadIdentityPhoto: ReturnType<typeof vi.fn>;
-    getInitialSurvey: ReturnType<typeof vi.fn>;
-    getStudentRegulationAcceptance: ReturnType<typeof vi.fn>;
-    saveInitialSurvey: ReturnType<typeof vi.fn>;
-    registerProductInterest: ReturnType<typeof vi.fn>;
-    pay: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     endpointMock = {
-      confirmPreEnrollment: vi.fn().mockReturnValue(
-        of({
-          confirmed: true,
-          paymentDueDate: null,
-          enrollmentDeposit: null,
-          accountBalance: null,
-          summary: null,
-        })
-      ),
-      reactivate: vi.fn().mockReturnValue(
-        of({
-          confirmed: false,
-          paymentDueDate: null,
-          enrollmentDeposit: 15500,
-          accountBalance: null,
-          summary: null,
-        })
-      ),
-      getDetail: vi
-        .fn()
-        .mockReturnValue(
-          of({ status: 'A la espera', summary: null, pendingPayment: null, confirmed: null })
-        ),
       getIdentityDocument: vi.fn().mockReturnValue(of({})),
       getIdentityPhoto: vi.fn().mockReturnValue(of(new Blob())),
       uploadIdentityDocument: vi.fn().mockReturnValue(of(true)),
       uploadIdentityPhoto: vi.fn().mockReturnValue(of(true)),
-      getInitialSurvey: vi.fn().mockReturnValue(
-        of({
-          isEligibleForSurvey: true,
-          survey: null,
-          consideredUniversities: [],
-          otherConsideredUniversities: [],
-          higherEducationUniversities: [],
-          otherHigherEducationUniversities: [],
-          selectedReasonOptions: [],
-          selectedAdvertisingOptions: [],
-        })
-      ),
-      getStudentRegulationAcceptance: vi
-        .fn()
-        .mockReturnValue(of({ acceptedStudentRegulation: false, acceptanceDate: null })),
-      saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
-      registerProductInterest: vi.fn().mockReturnValue(of(true)),
-      pay: vi.fn().mockReturnValue(
-        of({
-          success: true,
-          result: null,
-          paymentUrl: null,
-          encryptedParameters: null,
-          messages: [],
-          confirmed: null,
-          message: null,
-          errorCode: null,
-        })
-      ),
     };
 
     TestBed.configureTestingModule({
-      providers: [Enrollments, { provide: EnrollmentsEndpoint, useValue: endpointMock }],
+      providers: [Enrollments, { provide: EnrollmentsApi, useValue: endpointMock }],
     });
     service = TestBed.inject(Enrollments);
   });
@@ -156,92 +96,5 @@ describe('Enrollments', () => {
     expect(endpointMock.uploadIdentityPhoto).toHaveBeenCalledWith({
       attachedFile: { fileName: 'selfie.png', content: 'cGhvdG8=' },
     });
-  });
-  it('delegates initial survey loading and saving', () => {
-    const payload = {
-      degreeProgramId: 20,
-      intakeId: 200,
-      highSchoolOrientationId: null,
-      highSchoolYear: null,
-      currentlyStudiesHighSchool: null,
-      highSchoolYearRepeatCount: null,
-      repeatsHighSchoolYear: null,
-      fatherOrGuardianEducationLevelId: null,
-      motherOrGuardianEducationLevelId: null,
-      degreeProgramDecisionYearId: null,
-      ortDecisionYearId: null,
-      researchedOtherUniversities: null,
-      otherUniversitiesInfoLine1: null,
-      otherUniversitiesInfoLine2: null,
-      decisionSupportId: null,
-      highSchoolInstitutionId: null,
-      highSchoolInstitutionName: null,
-      finalHighSchoolYearLocationId: null,
-      priorHigherEducationStatusId: null,
-      decisionLevelId: null,
-      hadOrtAdvising: null,
-      ortAdvisingRatingId: null,
-      visitedOrtWebsite: null,
-      ortWebsiteRatingId: null,
-      visitedOrtCampus: null,
-      ortCampusRatingId: null,
-      recallsOrtAdvertising: null,
-      isMotherOrGuardianOrtGraduate: null,
-      isFatherOrGuardianOrtGraduate: null,
-      consideredUniversityIds: null,
-      otherConsideredUniversities: null,
-      higherEducationUniversityIds: null,
-      otherHigherEducationUniversities: null,
-      ortAdvertisingIds: null,
-      ortChoiceReasonIds: null,
-    };
-
-    service.getInitialSurvey().subscribe();
-    service.saveInitialSurvey(payload).subscribe();
-
-    expect(endpointMock.getInitialSurvey).toHaveBeenCalledOnce();
-    expect(endpointMock.saveInitialSurvey).toHaveBeenCalledWith(payload);
-  });
-
-  it('delegates enrollment detail loading', () => {
-    service.getDetail(20, 200, 'Pago pendiente').subscribe();
-
-    expect(endpointMock.getDetail).toHaveBeenCalledWith(20, 200, 'Pago pendiente');
-  });
-
-  it('delegates student regulation acceptance loading', () => {
-    service.getStudentRegulationAcceptance().subscribe();
-
-    expect(endpointMock.getStudentRegulationAcceptance).toHaveBeenCalledOnce();
-  });
-
-  it('delegates pre-enrollment confirmation', () => {
-    const payload = {
-      acceptedRegulation: true,
-      isCorporateEnrollment: false,
-      selectedOfferingIds: [300],
-    };
-
-    service.confirmPreEnrollment(payload).subscribe();
-
-    expect(endpointMock.confirmPreEnrollment).toHaveBeenCalledWith(payload);
-  });
-
-  it('delegates enrollment reactivation', () => {
-    service.reactivate([100, 101]).subscribe();
-
-    expect(endpointMock.reactivate).toHaveBeenCalledWith([100, 101]);
-  });
-
-  it('delegates payment', () => {
-    const payload = {
-      enrollmentIds: [1072704],
-      paymentMethod: 'bank-account' as const,
-      sistarbancBankId: 'brou',
-    };
-
-    service.pay(payload).subscribe();
-
-    expect(endpointMock.pay).toHaveBeenCalledWith(payload);
   });
 });

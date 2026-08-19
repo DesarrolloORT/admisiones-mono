@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
+import { EnrollmentsApi } from '../../../enrollments/api/enrollments.api';
 import type { EnrollmentPreEnrollmentResponse } from '../../../enrollments/models/enrollment-flow';
 import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
-import { Enrollments } from '../../../enrollments/services/enrollments';
 
 type CardType = 'enrollments' | 'scholarships';
 
@@ -42,7 +42,7 @@ const DEFAULT_ACTION: ActionConfig = { type: 'secondary', label: 'Ver detalle' }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardQuickActions {
-  private readonly enrollments = inject(Enrollments);
+  private readonly enrollments = inject(EnrollmentsApi);
   private readonly router = inject(Router);
   private readonly resumeContext = inject(EnrollmentResumeContextStore);
 

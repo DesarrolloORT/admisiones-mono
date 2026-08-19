@@ -2,23 +2,28 @@
 <main class="scholarships-main">
   <section aria-labelledby="scholarships-title" class="scholarships-screen">
     <div class="scholarships-screen__header">
-      <h1 class="scholarships-title">Postulación a becas</h1>
+      <h1 class="scholarships-title" id="scholarships-title">Postulación a becas</h1>
       <p class="scholarships-description">Conocé las becas disponibles y sus requisitos.</p>
     </div>
 
-    @if (isEnrolled()) {
+    @if (!hasScholarships()) {
+    <p class="scholarships-description">No hay becas disponibles en este momento.</p>
+    } @else if (isEnrolled()) {
     <ul class="scholarship-list">
-      @for (scholarship of scholarships(); track $index) {
+      @for (scholarship of cards(); track scholarship.title) {
       <li>
         <app-scholarship-card [isEnrolled]="isEnrolled()" [scholarship]="scholarship" />
       </li>
       }
     </ul>
-    } @else{
+    } @else {
+    <!-- Sin inscripción habilitante: primero las becas que igual se pueden pedir. -->
+    @for (scholarship of withoutEnrollment(); track scholarship.title) {
     <app-scholarship-card
       [isEnrolled]="isEnrolled()"
-      [scholarship]="scholarships()[0]"
-      [single]="true" />
+      [scholarship]="scholarship"
+      [single]="withoutEnrollment().length === 1" />
+    } @if (withEnrollment().length) {
     <div class="with-enrollment__container">
       <div class="enrollment-separation__container">
         <div class="enrollment-separation">
@@ -30,7 +35,7 @@
         </p>
       </div>
       <ul class="scholarship-list scholarship-list__grid">
-        @for (scholarship of scholarships().slice(1); track $index) {
+        @for (scholarship of withEnrollment(); track scholarship.title) {
         <li>
           <app-scholarship-card
             [isEnrolled]="isEnrolled()"
@@ -40,7 +45,6 @@
         }
       </ul>
     </div>
-
-    }
+    } }
   </section>
 </main>

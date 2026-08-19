@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
+import { OrtButtonModule, OrtIconModule, OrtStatusIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
 import { HomeData } from '../../models/home-data';
@@ -41,7 +41,7 @@ const ACTION_CARDS: HomeActionCard[] = [
 
 @Component({
   selector: 'app-home',
-  imports: [Dashboard, OrtButtonModule, OrtIconModule, RouterLink],
+  imports: [Dashboard, OrtButtonModule, OrtIconModule, RouterLink, OrtStatusIconModule],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

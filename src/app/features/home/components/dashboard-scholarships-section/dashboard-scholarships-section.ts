@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { ScholarshipSummary } from '../../models/scholarship-summary';
 
@@ -11,4 +11,6 @@ import { ScholarshipSummary } from '../../models/scholarship-summary';
 export class DashboardScholarshipsSection {
   readonly scholarships = input.required<ScholarshipSummary[]>();
   readonly singleRow = input.required<boolean>();
+  readonly openDialog = output<void>();
+  readonly consultar = output<void>();
 }

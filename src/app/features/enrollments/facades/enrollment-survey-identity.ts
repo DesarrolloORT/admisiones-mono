@@ -7,10 +7,13 @@ import { map } from 'rxjs/operators';
 import { ACCEPTED_IMAGE_MIME_TYPES } from 'src/app/shared/files/image-upload';
 
 import type { IdentityFiles } from '../models/enrollment-flow';
-import type { IdentityFileTarget, IdentityPreloadedFileMap } from '../models/enrollment-flow-forms';
+import {
+  ENROLLMENT_FORMS,
+  type IdentityFileTarget,
+  type IdentityPreloadedFileMap,
+} from '../models/enrollment-flow-forms';
 import { parseDate, serializeDate } from '../models/enrollment-flow-mappers';
 import { type EnrollmentIdentityPreload, Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
 
 export interface SurveyIdentityContext {
   /** La sección de identidad está visible (paso encuesta + sección activa). */
@@ -29,7 +32,7 @@ export class EnrollmentSurveyIdentityFacade {
   private readonly enrollments = inject(Enrollments);
   private readonly destroyRef = inject(DestroyRef);
 
-  public readonly identityForm = inject(EnrollmentFormsStore).identityForm;
+  public readonly identityForm = inject(ENROLLMENT_FORMS).forms.identityForm;
   public readonly acceptedImageTypes = [...ACCEPTED_IMAGE_MIME_TYPES];
 
   private readonly context = signal<SurveyIdentityContext | null>(null);

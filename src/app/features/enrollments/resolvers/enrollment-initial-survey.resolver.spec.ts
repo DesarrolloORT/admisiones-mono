@@ -3,8 +3,8 @@ import { ActivatedRouteSnapshot, provideRouter, RouterStateSnapshot } from '@ang
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentInitialSurveyResponse } from '../models/enrollment-flow';
-import { Enrollments } from '../services/enrollments';
 import {
   EnrollmentInitialSurveyResolved,
   enrollmentInitialSurveyResolver,
@@ -30,7 +30,7 @@ describe('enrollmentInitialSurveyResolver', () => {
   beforeEach(() => {
     getInitialSurvey = vi.fn();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Enrollments, useValue: { getInitialSurvey } }],
+      providers: [provideRouter([]), { provide: EnrollmentsApi, useValue: { getInitialSurvey } }],
     });
   });
 

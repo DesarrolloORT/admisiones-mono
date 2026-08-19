@@ -1,39 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
+import { catchError, of } from 'rxjs';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
+import { ScholarshipsApi } from '../../api/scholarships.api';
+import type { ScholarshipCardModel } from '../../components/scholarship-card/scholarship-card';
 import { ScholarshipCard } from '../../components/scholarship-card/scholarship-card';
+import type { AvailableScholarships } from '../../models/available-scholarship.interface';
+import { resolveScholarshipCatalogEntry } from '../../models/scholarship-catalog';
 
-const SCHOLARSHIPS = [
-  {
-    title: 'Beca de Reválidas',
-    description:
-      'Dirigida a estudiantes que solicitan reválida de materias cursadas en otras universidades, nacionales o extranjeras.',
-    requiresExam: false,
-    route: '/becas/fbr',
-  },
-  {
-    title: 'Excelencia Académica',
-    description:
-      'Dirigida a estudiantes que comienzan una carrera y cuentan con un destacado desempeño académico en secundaria.',
-    requiresExam: true,
-    route: '',
-  },
-  {
-    title: 'Becas Concursables',
-    description:
-      'Dirigidas a estudiantes que comienzan una carrera y han aprobado bachillerato o tienen exámenes de 6.º año pendientes.',
-    requiresExam: true,
-    route: '',
-  },
-  {
-    title: 'Carreras Cortas / Capacitación Laboral',
-    description:
-      'Dirigida a estudiantes que desean cursar una carrera corta y cuentan con al menos 4.º año de secundaria aprobado.',
-    requiresExam: false,
-    route: '',
-  },
-];
+/**
+ * Estado inicial y de error: el caso restrictivo. Mientras la respuesta no
+ * llegue (o si falla) no se ofrece postularse a nada.
+ */
+const EMPTY_CATALOG: AvailableScholarships = {
+  requiresPriorEnrollment: true,
+  scholarships: [],
+};
 
 @Component({
   selector: 'app-scholarships',
@@ -44,11 +28,53 @@ const SCHOLARSHIPS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Scholarships {
-  protected readonly scholarships = signal(SCHOLARSHIPS);
-
-  protected isEnrolled = signal(false);
-
+  private readonly scholarshipsApi = inject(ScholarshipsApi);
   private readonly breakpointService = inject(BreakpointService);
+
+  /**
+   * La page inyecta **el adapter de su feature** — no hay service de reenvio ni
+   * store. `toSignal` convierte el Observable en signal para que el template lo
+   * lea con `@for`; el `catchError` evita que un backend caido deje la pantalla
+   * en blanco.
+   */
+  private readonly available = toSignal(
+    this.scholarshipsApi.getAvailableScholarships().pipe(catchError(() => of(EMPTY_CATALOG))),
+    { initialValue: EMPTY_CATALOG }
+  );
+
+  /** `requiresPriorEnrollment` es la respuesta del backend a "¿puede postularse?". */
+  protected readonly isEnrolled = computed(() => !this.available().requiresPriorEnrollment);
+
+  /**
+   * El unico lugar donde se une lo que dice la API (textos) con lo que sabe el
+   * front (a donde lleva la card y si exige inscripcion previa).
+   */
+  protected readonly cards = computed<ScholarshipCardModel[]>(() =>
+    this.available().scholarships.map(scholarship => {
+      const entry = resolveScholarshipCatalogEntry(
+        scholarship.scholarshipTypeIds,
+        scholarship.name
+      );
+
+      return {
+        title: scholarship.name,
+        description: scholarship.description,
+        requiresExam: scholarship.requiresTest,
+        requiresEnrollment: entry?.requiresEnrollment ?? true,
+        route: entry?.route ?? null,
+      };
+    })
+  );
+
+  protected readonly withoutEnrollment = computed(() =>
+    this.cards().filter(card => !card.requiresEnrollment)
+  );
+
+  protected readonly withEnrollment = computed(() =>
+    this.cards().filter(card => card.requiresEnrollment)
+  );
+
+  protected readonly hasScholarships = computed(() => this.cards().length > 0);
 
   readonly showBack = computed(() => {
     const breakpoint = this.breakpointService.breakpoint();

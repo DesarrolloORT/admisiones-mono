@@ -9,6 +9,7 @@ import {
   type ErrorAlertState,
 } from 'src/app/shared/ui/error-alert/error-alert';
 
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentSurveyInit } from '../models/enrollment-entry';
 import type {
   EnrollmentInitialSurvey,
@@ -21,6 +22,7 @@ import type {
 import {
   buildFormErrors,
   disallowedHighSchoolYearForUniversity,
+  ENROLLMENT_FORMS,
   type IdentityFileTarget,
   UNIVERSITY_LEVEL,
 } from '../models/enrollment-flow-forms';
@@ -32,13 +34,11 @@ import {
   patchBackendSurveyForms,
 } from '../models/enrollment-flow-mappers';
 import { getVisibleSections } from '../models/enrollment-flow-policy';
+import { ENROLLMENT_PROCESS_STATE } from '../models/enrollment-process';
 import {
   type EnrollmentInitialSurveyResolved,
   resolveInitialSurvey,
 } from '../resolvers/enrollment-initial-survey.resolver';
-import { Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
@@ -60,10 +60,10 @@ const EMPTY_PROGRESS: SectionProgress = { completed: false, submitted: false };
  * `EnrollmentSurveyIdentityFacade` (`identity`).
  */
 export class EnrollmentSurveyFacade {
-  private readonly enrollments = inject(Enrollments);
+  private readonly enrollments = inject(EnrollmentsApi);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly formsStore = inject(EnrollmentFormsStore);
-  private readonly process = inject(EnrollmentProcessStore);
+  private readonly formsStore = inject(ENROLLMENT_FORMS);
+  private readonly process = inject(ENROLLMENT_PROCESS_STATE);
   private readonly payment = inject(EnrollmentPaymentFacade);
   private readonly proposal = inject(EnrollmentProposalFacade);
 
@@ -75,12 +75,12 @@ export class EnrollmentSurveyFacade {
   // `includeAcademicSelection` original.
   private appliedSurveyState: Extract<EnrollmentSurveyInit, { kind: 'prefilled' }> | null = null;
 
-  public readonly educationForm = this.formsStore.educationForm;
-  public readonly academicDecisionForm = this.formsStore.academicDecisionForm;
-  public readonly ortExperienceForm = this.formsStore.ortExperienceForm;
-  public readonly workForm = this.formsStore.workForm;
-  public readonly identityForm = this.formsStore.identityForm;
-  public readonly regulationForm = this.formsStore.regulationForm;
+  public readonly educationForm = this.formsStore.forms.educationForm;
+  public readonly academicDecisionForm = this.formsStore.forms.academicDecisionForm;
+  public readonly ortExperienceForm = this.formsStore.forms.ortExperienceForm;
+  public readonly workForm = this.formsStore.forms.workForm;
+  public readonly identityForm = this.formsStore.forms.identityForm;
+  public readonly regulationForm = this.formsStore.forms.regulationForm;
   private readonly sectionConfig = this.formsStore.sectionConfig;
 
   // Estado por sección en un único registro; `getSectionState` es el contrato
@@ -304,7 +304,7 @@ export class EnrollmentSurveyFacade {
   }
 
   public isUniversityDegreeProgram(): boolean {
-    const selectedDegreeProgram = this.formsStore.academicForm.controls.degreeProgram.value;
+    const selectedDegreeProgram = this.formsStore.forms.academicForm.controls.degreeProgram.value;
     if (!selectedDegreeProgram) return false;
     const level = this.proposal
       .degreePrograms()
@@ -543,8 +543,8 @@ export class EnrollmentSurveyFacade {
 
   private configureConditionalValidators(): void {
     merge(
-      this.formsStore.academicForm.controls.proposalType.valueChanges,
-      this.formsStore.academicForm.controls.degreeProgram.valueChanges,
+      this.formsStore.forms.academicForm.controls.proposalType.valueChanges,
+      this.formsStore.forms.academicForm.controls.degreeProgram.valueChanges,
       this.educationForm.controls.highSchoolYear.valueChanges,
       this.educationForm.controls.studiesHighSchool.valueChanges,
       this.educationForm.controls.highSchoolLocation.valueChanges,

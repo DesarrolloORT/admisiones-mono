@@ -3,17 +3,26 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import { AcademicProposalSelection } from '../../catalogs/services/academic-proposal-selection';
-import { Catalogs } from '../../catalogs/services/catalogs';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentDetail } from '../models/enrollment-detail';
 import {
   deriveInitialEnrollmentState,
   type EnrollmentInitialSurveyResolved,
 } from '../models/enrollment-entry';
 import type { EnrollmentInitialSurvey } from '../models/enrollment-flow';
+import {
+  createEnrollmentFormsState,
+  ENROLLMENT_FORMS,
+  type EnrollmentFormsState,
+} from '../models/enrollment-flow-forms';
+import {
+  createEnrollmentProcessState,
+  ENROLLMENT_PROCESS_STATE,
+  type EnrollmentProcessState,
+} from '../models/enrollment-process';
 import { type EnrollmentIdentityPreload, Enrollments } from '../services/enrollments';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 import { EnrollmentSurveyFacade } from './enrollment-survey';
@@ -103,13 +112,13 @@ describe('EnrollmentSurveyFacade', () => {
 
     expect(survey.activeSection()).toBe('education');
 
-    forms.academicForm.controls.proposalType.setValue('3');
-    forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.forms.academicForm.controls.proposalType.setValue('3');
+    forms.forms.academicForm.controls.degreeProgram.setValue('30');
     TestBed.tick();
 
     expect(survey.visibleSections()).toEqual(['work-situation', 'identity', 'regulation']);
     expect(survey.activeSection()).toBe('work-situation');
-    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+    expect(forms.forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
   });
 
   it('asks for a corporate enrollment before identity when AP has no survey rights', () => {
@@ -121,8 +130,8 @@ describe('EnrollmentSurveyFacade', () => {
 
     expect(survey.activeSection()).toBe('identity');
 
-    forms.academicForm.controls.proposalType.setValue('3');
-    forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.forms.academicForm.controls.proposalType.setValue('3');
+    forms.forms.academicForm.controls.degreeProgram.setValue('30');
     TestBed.tick();
 
     expect(survey.visibleSections()).toEqual(['work-situation', 'identity', 'regulation']);
@@ -131,7 +140,7 @@ describe('EnrollmentSurveyFacade', () => {
 
   it('does not persist the initial survey for AP even with survey rights', async () => {
     const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.proposalType.setValue('3');
+    forms.forms.academicForm.controls.proposalType.setValue('3');
 
     await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
     expect(saveInitialSurvey).not.toHaveBeenCalled();
@@ -139,14 +148,14 @@ describe('EnrollmentSurveyFacade', () => {
 
   it('confirms a personal AP pre-enrollment and advances to payment', () => {
     const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.proposalType.setValue('3');
-    forms.academicForm.controls.degreeProgram.setValue('30');
-    forms.academicForm.controls.seminars.setValue(['300']);
+    forms.forms.academicForm.controls.proposalType.setValue('3');
+    forms.forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.forms.academicForm.controls.seminars.setValue(['300']);
     process.flow.goTo('survey');
     TestBed.tick();
 
-    expect(forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
-    forms.workForm.controls.isCorporate.setValue(false);
+    expect(forms.forms.workForm.controls.isCorporate.hasError('required')).toBe(true);
+    forms.forms.workForm.controls.isCorporate.setValue(false);
     const front = preloadFile('front.png');
     const back = preloadFile('back.png');
     const selfie = preloadFile('selfie.png');
@@ -185,10 +194,10 @@ describe('EnrollmentSurveyFacade', () => {
       })
     );
     const { survey, forms, process } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
-    forms.academicForm.controls.proposalType.setValue('3');
-    forms.academicForm.controls.degreeProgram.setValue('30');
-    forms.academicForm.controls.seminars.setValue(['300']);
-    forms.workForm.controls.isCorporate.setValue(true);
+    forms.forms.academicForm.controls.proposalType.setValue('3');
+    forms.forms.academicForm.controls.degreeProgram.setValue('30');
+    forms.forms.academicForm.controls.seminars.setValue(['300']);
+    forms.forms.workForm.controls.isCorporate.setValue(true);
     process.flow.goTo('survey');
     TestBed.tick();
 
@@ -268,7 +277,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.identity.updateIdentityFile('selfie', preloadedFileEvent(selfie));
     survey.identityForm.controls.isIdentityCorrect.setValue(true);
     survey.regulationForm.controls.acceptsRegulation.setValue(true);
-    forms.academicForm.controls.shift.setValue('300');
+    forms.forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -308,7 +317,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.identityForm.controls.documentExpiration.markAsDirty();
     survey.identityForm.controls.isIdentityCorrect.setValue(true);
     survey.regulationForm.controls.acceptsRegulation.setValue(true);
-    forms.academicForm.controls.shift.setValue('300');
+    forms.forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -344,7 +353,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.identityForm.controls.documentExpiration.markAsDirty();
     survey.identityForm.controls.isIdentityCorrect.setValue(true);
     survey.regulationForm.controls.acceptsRegulation.setValue(true);
-    forms.academicForm.controls.shift.setValue('300');
+    forms.forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -401,7 +410,7 @@ describe('EnrollmentSurveyFacade', () => {
     survey.identity.updateIdentityFile('back', fileEvent(back));
     survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     survey.regulationForm.controls.acceptsRegulation.setValue(true);
-    forms.academicForm.controls.shift.setValue('300');
+    forms.forms.academicForm.controls.shift.setValue('300');
 
     survey.continue();
 
@@ -753,8 +762,8 @@ describe('EnrollmentSurveyFacade', () => {
       ]
     );
 
-    forms.academicForm.controls.proposalType.setValue('1');
-    forms.academicForm.controls.degreeProgram.setValue('100');
+    forms.forms.academicForm.controls.proposalType.setValue('1');
+    forms.forms.academicForm.controls.degreeProgram.setValue('100');
     survey.educationForm.controls.studiesHighSchool.setValue('studying');
     survey.educationForm.controls.highSchoolYear.setValue('4');
 
@@ -800,8 +809,8 @@ describe('EnrollmentSurveyFacade', () => {
       ]
     );
 
-    forms.academicForm.controls.proposalType.setValue('2');
-    forms.academicForm.controls.degreeProgram.setValue('200');
+    forms.forms.academicForm.controls.proposalType.setValue('2');
+    forms.forms.academicForm.controls.degreeProgram.setValue('200');
     survey.educationForm.controls.studiesHighSchool.setValue('studying');
     survey.educationForm.controls.highSchoolYear.setValue('4');
 
@@ -828,7 +837,7 @@ describe('EnrollmentSurveyFacade', () => {
 
   it('reports an error instead of confirming when no shift is selected', () => {
     const { survey, forms } = prepareFinalizableSurvey();
-    forms.academicForm.controls.shift.setValue('');
+    forms.forms.academicForm.controls.shift.setValue('');
 
     survey.continue();
 
@@ -1011,21 +1020,31 @@ describe('EnrollmentSurveyFacade', () => {
     options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
   ): {
     survey: EnrollmentSurveyFacade;
-    process: EnrollmentProcessStore;
-    forms: EnrollmentFormsStore;
+    process: EnrollmentProcessState;
+    forms: EnrollmentFormsState;
   } {
     const getInitialSurvey = options.getInitialSurvey ?? (() => of(initialSurvey));
+    const enrollmentsMock = {
+      getStudentRegulationAcceptance,
+      getIdentityPreload,
+      getInitialSurvey,
+      saveInitialSurvey,
+      uploadIdentityDocument,
+      uploadIdentityPhoto,
+      confirmPreEnrollment,
+      registerProductInterest: vi.fn(),
+    };
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
-        EnrollmentFormsStore,
-        EnrollmentProcessStore,
+        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
+        { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
         EnrollmentProposalFacade,
         EnrollmentSurveyOptionsFacade,
         EnrollmentSurveyIdentityFacade,
         EnrollmentSurveyFacade,
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getDegreePrograms: () => of(degreePrograms),
             getIntakes: () => of([]),
@@ -1058,24 +1077,13 @@ describe('EnrollmentSurveyFacade', () => {
           },
         },
         { provide: EnrollmentPaymentFacade, useValue: payment },
-        {
-          provide: Enrollments,
-          useValue: {
-            getStudentRegulationAcceptance,
-            getIdentityPreload,
-            getInitialSurvey,
-            saveInitialSurvey,
-            uploadIdentityDocument,
-            uploadIdentityPhoto,
-            confirmPreEnrollment,
-            registerProductInterest: vi.fn(),
-          },
-        },
+        { provide: Enrollments, useValue: enrollmentsMock },
+        { provide: EnrollmentsApi, useValue: enrollmentsMock },
       ],
     });
     const survey = TestBed.inject(EnrollmentSurveyFacade);
-    const process = TestBed.inject(EnrollmentProcessStore);
-    const forms = TestBed.inject(EnrollmentFormsStore);
+    const process = TestBed.inject(ENROLLMENT_PROCESS_STATE);
+    const forms = TestBed.inject(ENROLLMENT_FORMS);
 
     // Réplica de lo que hace EnrollmentProcessFacade.applyInitialState para el slice
     // de encuesta: deriva y aplica, posicionando el paso al final.
@@ -1123,7 +1131,7 @@ describe('EnrollmentSurveyFacade', () => {
     result.survey.identity.updateIdentityFile('back', fileEvent(back));
     result.survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     result.survey.regulationForm.controls.acceptsRegulation.setValue(true);
-    result.forms.academicForm.controls.shift.setValue('300');
+    result.forms.forms.academicForm.controls.shift.setValue('300');
 
     return { ...result, front, back, selfie };
   }

@@ -4,6 +4,7 @@ import { type FormGroup, Validators } from '@angular/forms';
 import { of, Subscription } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
+import { CatalogsApi } from '../api/catalogs.api';
 import {
   type AcademicProposalForm,
   type AcademicProposalOption,
@@ -19,10 +20,9 @@ import {
   toAcademicShiftOption,
 } from '../models/academic-proposal';
 import type { DegreeProgram, Intake, Seminar, Shift } from '../models/catalog.interface';
-import { Catalogs } from './catalogs';
 
 export class AcademicProposalSelection {
-  private readonly catalogs = inject(Catalogs);
+  private readonly catalogs = inject(CatalogsApi);
   private readonly destroyRef = inject(DestroyRef);
   private readonly degreeProgramsState = signal<readonly DegreeProgram[]>([]);
   private readonly proposalTypeValue = signal('');

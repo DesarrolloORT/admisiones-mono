@@ -14,13 +14,6 @@ export interface PhoneNumberValue {
   iso2: string | null;
 }
 
-export interface PhoneValidationValue {
-  iso2: string | null;
-  countryPrefix: number | null;
-  number: string;
-  numberE164: string | null;
-}
-
 /**
  * Telefono tal como lo devuelve el backend al leer la persona. Con `isValid` en false el
  * servidor no pudo desarmar el numero guardado (dato previo a la migracion, o una linea
@@ -93,17 +86,6 @@ function fromStoredText(stored: string): OrtPhoneInputValue | null {
     iso2: PHONE_FALLBACK_ISO2,
     number: nationalNumber,
     numberE164: fallbackPrefix ? `+${fallbackPrefix}${nationalNumber}` : '',
-  };
-}
-
-export function toPhoneValidationValue(value: OrtPhoneInputValue): PhoneValidationValue {
-  const iso2 = value.iso2 || null;
-
-  return {
-    iso2,
-    countryPrefix: findPhoneCountryByIso2(iso2)?.prefix ?? null,
-    number: value.number.trim(),
-    numberE164: value.numberE164?.trim() || null,
   };
 }
 

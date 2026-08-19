@@ -1,23 +1,34 @@
 <article
   class="scholarship-card"
-  [attr.aria-labelledby]="'scholarship-card-title'"
+  [attr.aria-labelledby]="titleId()"
   [class.scholarship-card--single]="single()">
   <div class="scholarship-card__header">
     <span class="scholarship-card__title-span">Fondo</span>
-    <h2 class="scholarship-card__title" id="scholarship-card-title">{{ scholarship().title }}</h2>
+    <h2 class="scholarship-card__title" [id]="titleId()">{{ scholarship().title }}</h2>
   </div>
 
   <p class="scholarship-card__description">{{ scholarship().description }}</p>
 
   @if (scholarship().requiresExam) {
   <ort-chip label="Requiere rendir prueba" type="status" variant="primary" />
-  } @if (isEnrolled() || scholarship().title === 'Beca de Reválidas') {
+  } @if (!scholarship().route) {
+  <ort-chip label="Postulación no disponible en línea" type="status" variant="primary" />
+  } @else if (isEnrolled() || !scholarship().requiresEnrollment) {
   <a
     class="scholarship-card__btn"
     ort-primary-button
     [attr.aria-label]="'Postularme a Fondo ' + scholarship().title"
     [routerLink]="scholarship().route">
     Postularme
+  </a>
+  } @else {
+  <ort-chip label="Requiere inscripción previa" type="status" variant="primary" />
+  <a
+    class="scholarship-card__btn"
+    ort-secondary-button
+    routerLink="/inscripciones"
+    [attr.aria-label]="'Ir a inscripciones'">
+    Ir a inscripciones
   </a>
   }
 </article>

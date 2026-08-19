@@ -3,12 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import type {
   InitialSurveyCatalogs,
   LocationCountry,
 } from '../../catalogs/models/catalog.interface';
-import { Catalogs } from '../../catalogs/services/catalogs';
-import { EnrollmentFormsStore } from '../store/enrollment-forms';
+import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
 import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
 
 describe('EnrollmentSurveyOptionsFacade', () => {
@@ -79,7 +79,7 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     getInstitutions.mockReturnValue(of([{ id: 9, label: 'Liceo 1' }]));
 
     const options = createFacade();
-    const educationForm = TestBed.inject(EnrollmentFormsStore).educationForm;
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
 
     expect(options.departmentOptions()).toEqual([{ value: '5', label: 'Montevideo' }]);
 
@@ -125,10 +125,10 @@ describe('EnrollmentSurveyOptionsFacade', () => {
   function createFacade(): EnrollmentSurveyOptionsFacade {
     TestBed.configureTestingModule({
       providers: [
-        EnrollmentFormsStore,
+        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
         EnrollmentSurveyOptionsFacade,
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: { getInitialSurveyCatalogs, getCountryLocations, getInstitutions },
         },
       ],

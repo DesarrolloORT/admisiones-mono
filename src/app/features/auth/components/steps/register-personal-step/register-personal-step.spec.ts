@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { Catalogs } from '../../../../catalogs/services/catalogs';
+import { CatalogsApi } from '../../../../catalogs/api/catalogs.api';
 import { createPersonalForm } from '../../../forms/auth-forms';
 import { RegisterPersonalStep } from './register-personal-step';
 
@@ -13,7 +13,7 @@ describe('RegisterPersonalStep', () => {
       imports: [RegisterPersonalStep],
       providers: [
         {
-          provide: Catalogs,
+          provide: CatalogsApi,
           useValue: {
             getCountryLocations: vi.fn().mockReturnValue(of([])),
           },

@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
-import { AuthEndpoint } from '../endpoints/auth.endpoint';
-import { AccountService } from './account';
+import { AccountApi } from '../api/account.api';
+import { AuthApi } from '../api/auth.api';
 import { AuthSessionService } from './auth-session';
 
 describe('AuthSessionService', () => {
@@ -67,8 +67,8 @@ describe('AuthSessionService', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthSessionService,
-        { provide: AuthEndpoint, useValue: endpointMock },
-        { provide: AccountService, useValue: accountMock },
+        { provide: AuthApi, useValue: endpointMock },
+        { provide: AccountApi, useValue: accountMock },
         { provide: Router, useValue: routerMock },
       ],
     });

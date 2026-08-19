@@ -36,21 +36,24 @@ Cada feature bajo `src/app/features/<feature>/` debe respetar el flujo:
 > Ver [Features transversales](#features-transversales).
 
 ```text
-pages/components -> services -> endpoint adapter -> ApiHttpClient -> generated -> API
+pages/components -> (facade) -> api adapter -> ApiHttpClient -> generated -> API
 ```
 
 Capas esperadas:
 
 - `pages/`: componentes de ruta, formularios, navegacion y estado visual.
 - `components/`: UI reutilizable de la feature.
-- `services/`: casos de uso y orquestacion consumidos por pages/components.
-- `endpoints/`: adaptadores HTTP obligatorios para llamadas a API. Es la unica
-  capa de una feature que importa contratos generados y usa `ApiHttpClient`.
-- `store/`: estado local con `signal` y `computed`.
-- `models/`: contratos, DTOs y errores de dominio.
+- `api/`: adaptadores HTTP obligatorios para llamadas a API. Es la unica capa de
+  una feature que importa contratos generados y usa `ApiHttpClient`.
+- `facades/`: orquestacion y estado del flujo, provistos por la page.
+- `services/`: **solo** comportamiento compartido con estado propio. Si un metodo
+  unicamente reenvia al adapter, el service no existe: el consumidor
+  (page, component, resolver o facade) inyecta el adapter de la feature.
+- `models/`: contratos, tipos, funciones puras y factories de estado/forms.
 
-Las pages, components, stores, facades y services no deben importar contratos
-generados ni usar `HttpClient` directamente. Ver
+Las pages, components, facades y services no deben importar contratos
+generados ni usar `HttpClient` directamente; si necesitan datos, inyectan el
+adapter de su feature. Ver
 [docs/BEST-PRACTICES.md](./BEST-PRACTICES.md).
 
 ## Contratos API generados
@@ -102,7 +105,7 @@ Swagger backend
 Reglas:
 
 - no editar manualmente archivos generados;
-- no importar endpoints generados fuera de `features/*/endpoints/*.endpoint.ts`;
+- no importar endpoints generados fuera de `features/*/api/*.api.ts`;
 - mantener nombres funcionales, mapeos de UI y orquestacion dentro de la feature;
 - usar `npm run check-api-contracts` para validar que los adapters no filtren
   `generated`, `unknown`, `any` ni casts `as unknown as`.
@@ -168,8 +171,8 @@ módulos transversales que exponen datos o utilidades a múltiples features.
 ### `catalogs/`
 
 Agrupa endpoints de datos de referencia (países, bachilleratos, instituciones, etc.).
-Cualquier feature puede inyectar `Catalogs` (service) para obtener listas de
-catálogos. No hay cache: cada consulta va a la red, así que conviene pedir el
+Cualquier feature puede inyectar `CatalogsApi` (el adapter) para obtener listas
+de catálogos. No hay cache: cada consulta va a la red, así que conviene pedir el
 catálogo una sola vez por pantalla y guardarlo en un signal de la facade (patrón
 `catalogsRequested` en `enrollment-survey-options.ts`).
 
@@ -177,15 +180,14 @@ Estructura:
 
 ```text
 features/catalogs/
-  endpoints/catalogs.endpoint.ts   ← generated, ApiHttpClient y mapeos HTTP
-  services/catalogs.ts             ← API pública para otras features
+  api/catalogs.api.ts              ← generated, ApiHttpClient y mapeos HTTP
   models/catalog.interface.ts      ← tipos de cada catálogo
 ```
 
 Uso desde otra feature:
 
 ```ts
-private catalogs = inject(Catalogs);
+private catalogs = inject(CatalogsApi);
 
 this.catalogs.getCountries().subscribe(countries => ...);
 ```

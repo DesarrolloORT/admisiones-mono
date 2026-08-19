@@ -2,19 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { forkJoin, from, Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 
-import { EnrollmentsEndpoint } from '../endpoints/enrollments.endpoint';
-import type { EnrollmentDetail } from '../models/enrollment-detail';
+import { EnrollmentsApi } from '../api/enrollments.api';
 import { toBlobFile, toIdentityFile, toIdentityUploadFile } from '../models/enrollment-files';
-import type {
-  EnrollmentConfirmPreEnrollmentPayload,
-  EnrollmentInitialSurveyPayload,
-  EnrollmentInitialSurveyResponse,
-  EnrollmentPaymentPayload,
-  EnrollmentPaymentResponse,
-  EnrollmentPreEnrollmentResponse,
-  EnrollmentProductInterestPayload,
-  EnrollmentStudentRegulationAcceptance,
-} from '../models/enrollment-flow';
 
 export interface EnrollmentIdentityPreload {
   front: File | null;
@@ -27,15 +16,7 @@ export interface EnrollmentIdentityPreload {
   providedIn: 'root',
 })
 export class Enrollments {
-  private readonly endpoint = inject(EnrollmentsEndpoint);
-
-  public getDetail(
-    productId: number,
-    admissionProcessId: number,
-    status?: string | null
-  ): Observable<EnrollmentDetail> {
-    return this.endpoint.getDetail(productId, admissionProcessId, status);
-  }
+  private readonly endpoint = inject(EnrollmentsApi);
 
   public getIdentityPreload(): Observable<EnrollmentIdentityPreload> {
     return forkJoin({
@@ -69,35 +50,5 @@ export class Enrollments {
     return from(toIdentityUploadFile(file)).pipe(
       switchMap(attachedFile => this.endpoint.uploadIdentityPhoto({ attachedFile }))
     );
-  }
-
-  public getInitialSurvey(): Observable<EnrollmentInitialSurveyResponse> {
-    return this.endpoint.getInitialSurvey();
-  }
-
-  public saveInitialSurvey(payload: EnrollmentInitialSurveyPayload): Observable<boolean> {
-    return this.endpoint.saveInitialSurvey(payload);
-  }
-
-  public getStudentRegulationAcceptance(): Observable<EnrollmentStudentRegulationAcceptance> {
-    return this.endpoint.getStudentRegulationAcceptance();
-  }
-
-  public confirmPreEnrollment(
-    payload: EnrollmentConfirmPreEnrollmentPayload
-  ): Observable<EnrollmentPreEnrollmentResponse> {
-    return this.endpoint.confirmPreEnrollment(payload);
-  }
-
-  public reactivate(enrollmentIds: number[]): Observable<EnrollmentPreEnrollmentResponse> {
-    return this.endpoint.reactivate(enrollmentIds);
-  }
-
-  public pay(payload: EnrollmentPaymentPayload): Observable<EnrollmentPaymentResponse> {
-    return this.endpoint.pay(payload);
-  }
-
-  public registerProductInterest(payload: EnrollmentProductInterestPayload): Observable<boolean> {
-    return this.endpoint.registerProductInterest(payload);
   }
 }

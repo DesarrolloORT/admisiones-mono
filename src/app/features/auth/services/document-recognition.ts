@@ -1,16 +1,11 @@
-import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
 import {
   compressImageIfNeeded,
   MAX_IMAGE_SIZE_BYTES,
   resolveImageMimeType,
 } from 'src/app/shared/files/image-upload';
 
-import { AuthEndpoint } from '../endpoints/auth.endpoint';
-import type {
-  DocumentRecognitionData,
-  DocumentRecognitionRequest,
-} from '../models/document-recognition.interface';
+import type { DocumentRecognitionRequest } from '../models/document-recognition.interface';
 import { DocumentRecognitionFileError } from '../models/document-recognition-error';
 
 @Injectable({
@@ -18,14 +13,6 @@ import { DocumentRecognitionFileError } from '../models/document-recognition-err
 })
 export class DocumentRecognition {
   public readonly maxFileSizeBytes = MAX_IMAGE_SIZE_BYTES;
-
-  private readonly endpoint = inject(AuthEndpoint);
-
-  public recognizeDocument(
-    payload: DocumentRecognitionRequest
-  ): Observable<DocumentRecognitionData> {
-    return this.endpoint.recognizeDocument(payload);
-  }
 
   public async createRequestFromFile(file: File): Promise<DocumentRecognitionRequest> {
     const mimeType = resolveImageMimeType(file);

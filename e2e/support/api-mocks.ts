@@ -8,9 +8,42 @@ export interface MockApiOptions {
   identityPreload?: 'none' | 'complete';
   enrollmentDetail?: 'offers-missing' | 'pending-payment' | 'duplicate-status' | 'in-progress';
   registerFlow?: RegisterFlowKind;
+  scholarshipEnrollments?: 'none' | 'confirmed';
   failPaths?: string[];
   delayMsByPath?: Record<string, number>;
 }
+
+/**
+ * Respuesta de `GET /scholarships/available`. Los textos son del backend: si
+ * cambian acá, la pantalla los refleja sin tocar código de la page.
+ */
+const AVAILABLE_SCHOLARSHIPS = [
+  {
+    scholarshipTypeIds: [],
+    name: 'Becas de Reválidas',
+    description:
+      'Dirigida a estudiantes que solicitan reválida de materias cursadas en otras universidades.',
+    requiresTest: false,
+  },
+  {
+    scholarshipTypeIds: [33, 57],
+    name: 'Becas de Excelencia Académica',
+    description: 'Dirigida a estudiantes con un destacado desempeño académico en secundaria.',
+    requiresTest: true,
+  },
+  {
+    scholarshipTypeIds: [],
+    name: 'Becas Concursables',
+    description: 'Dirigidas a estudiantes que comienzan una carrera universitaria.',
+    requiresTest: true,
+  },
+  {
+    scholarshipTypeIds: [],
+    name: 'Becas de Capacitación Laboral',
+    description: 'Dirigido a estudiantes que desean cursar una tecnicatura.',
+    requiresTest: false,
+  },
+];
 
 const authenticatedPerson = {
   documentNumber: '12345672',
@@ -331,6 +364,31 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
       return fulfillOperation(route, []);
     }
 
+    if (path === '/scholarships/available' && request.method() === 'GET') {
+      return fulfillOperation(route, {
+        // El backend responde con el catalogo completo en las dos ramas: lo que
+        // cambia es si la persona puede postularse ya o solo mirar.
+        requiresPriorEnrollment: options.scholarshipEnrollments !== 'confirmed',
+        scholarships: AVAILABLE_SCHOLARSHIPS,
+      });
+    }
+
+    if (path === '/scholarships/enrollments' && request.method() === 'GET') {
+      return fulfillOperation(
+        route,
+        options.scholarshipEnrollments === 'confirmed'
+          ? [
+              {
+                enrollmentId: 1,
+                enrollmentDate: '2026-03-01',
+                enrollmentStatus: 'CONFIRMADA',
+                productFullName: 'Licenciatura en Diseno Grafico',
+              },
+            ]
+          : []
+      );
+    }
+
     if (path === '/enrollments/product-interest') {
       return fulfillOperation(route, true);
     }
@@ -533,7 +591,8 @@ function isApiPath(path: string): boolean {
     path.startsWith('/catalogs/') ||
     path.startsWith('/enrollments/') ||
     path.startsWith('/person/') ||
-    path.startsWith('/registration/')
+    path.startsWith('/registration/') ||
+    path.startsWith('/scholarships/')
   );
 }
 

@@ -12,7 +12,7 @@ import {
   type EnrollmentInitialSurveyResolved,
   type EnrollmentPaymentInit,
 } from '../models/enrollment-entry';
-import { EnrollmentProcessStore } from '../store/enrollment-process';
+import { ENROLLMENT_PROCESS_STATE } from '../models/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 import { EnrollmentSurveyFacade } from './enrollment-survey';
@@ -21,7 +21,7 @@ export class EnrollmentProcessFacade {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly process = inject(EnrollmentProcessStore);
+  private readonly process = inject(ENROLLMENT_PROCESS_STATE);
 
   public readonly proposal = inject(EnrollmentProposalFacade);
   public readonly survey = inject(EnrollmentSurveyFacade);

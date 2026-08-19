@@ -2,7 +2,7 @@ import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { toBackendPhone } from 'src/app/shared/forms/phone';
 
 import { LocationValue } from '../../catalogs/models/location-value';
-import type { RegisterPayload, VerifyIdentityPayload } from '../endpoints/auth.endpoint';
+import type { RegisterPayload, VerifyIdentityPayload } from '../api/auth.api';
 import {
   AuthIdentityData,
   AuthRegisterPersonalData,

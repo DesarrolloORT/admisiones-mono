@@ -1,4 +1,4 @@
-import { Fbr } from './pages/fbr/fbr';
+import { ScholarshipProcess } from './pages/scholarship-process/scholarship-process';
 import { Scholarships } from './pages/scholarships/scholarships';
 import { routes } from './scholarships.routes';
 
@@ -7,7 +7,10 @@ describe('scholarships routes', () => {
     expect(routes).toContainEqual({ path: '', component: Scholarships });
   });
 
-  it('maps the fbr path to the scholarship process page', () => {
-    expect(routes).toContainEqual({ path: 'fbr', component: Fbr });
+  it('sends the four scholarships to the same process page', () => {
+    const processRoutes = routes.filter(route => route.component === ScholarshipProcess);
+
+    expect(processRoutes.map(route => route.path)).toEqual(['fbr', 'fexa', 'fcl', 'fbc']);
+    expect(processRoutes.map(route => route.data?.['kind'])).toEqual(['fbr', 'fexa', 'fcl', 'fbc']);
   });
 });

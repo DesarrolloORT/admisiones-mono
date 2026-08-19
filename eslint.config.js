@@ -72,7 +72,7 @@ export default tseslint.config(
   },
   {
     files: ['src/app/features/**/*.ts'],
-    ignores: ['src/app/features/**/endpoints/**/*.ts'],
+    ignores: ['src/app/features/**/api/**/*.ts'],
 
     rules: {
       'no-restricted-imports': [
@@ -82,7 +82,7 @@ export default tseslint.config(
             {
               name: 'src/app/shared/api/core/api-http-client',
               message:
-                'Las features deben usar su adapter en endpoints/. ApiHttpClient vive detras de esa capa.',
+                'Las features deben usar su adapter en api/. ApiHttpClient vive detras de esa capa.',
             },
             {
               name: '@angular/common/http',
@@ -107,7 +107,7 @@ export default tseslint.config(
                 '**/api-models/**',
               ],
               message:
-                'Solo los adapters en endpoints/ pueden importar contratos generados. Los services usan el adapter de feature.',
+                'Solo los adapters en api/ pueden importar contratos generados. Los services usan el adapter de feature.',
             },
           ],
         },
@@ -115,11 +115,7 @@ export default tseslint.config(
     },
   },
   {
-    files: [
-      'src/app/features/**/pages/**/*.ts',
-      'src/app/features/**/components/**/*.ts',
-      'src/app/features/**/store/**/*.ts',
-    ],
+    files: ['src/app/features/**/pages/**/*.ts', 'src/app/features/**/components/**/*.ts'],
     ignores: ['**/*.spec.ts'],
 
     rules: {
@@ -129,26 +125,21 @@ export default tseslint.config(
           paths: [
             {
               name: '@angular/common/http',
-              message:
-                'Las pages, components y stores deben usar servicios de feature, no HttpClient.',
+              message: 'Las pages y components deben usar el adapter de la feature, no HttpClient.',
             },
             {
               name: 'src/app/shared/api/core/api-http-client',
               message:
-                'Las pages, components y stores deben depender de services/, no de ApiHttpClient.',
+                'Las pages y components pueden inyectar el adapter de la feature (api/), pero no ApiHttpClient.',
             },
             {
               name: 'src/environments/environment',
-              message: 'Las pages, components y stores no deben resolver endpoints ni API_URL.',
+              message: 'Las pages y components no deben resolver endpoints ni API_URL.',
             },
           ],
           patterns: [
             {
               group: [
-                '**/endpoints/**',
-                '../endpoints/**',
-                '../../endpoints/**',
-                'src/app/features/**/endpoints/**',
                 '**/shared/api/core/api-http-client',
                 'src/app/shared/api/generated/**',
                 '**/shared/api/generated/**',
@@ -156,7 +147,7 @@ export default tseslint.config(
                 '**/environments/environment',
               ],
               message:
-                'Las pages, components y stores deben depender de services/, no de endpoints/.',
+                'Las pages y components pueden inyectar el adapter de su feature (api/), pero solo el adapter puede importar contratos generados, ApiHttpClient o environment.',
             },
           ],
         },

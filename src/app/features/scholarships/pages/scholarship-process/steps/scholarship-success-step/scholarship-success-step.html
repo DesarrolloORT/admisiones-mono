@@ -1,0 +1,41 @@
+<header class="success-header">
+  <div class="success-header__content">
+    <div class="home-brand">
+      <img alt="ORT" class="home-brand__logo" src="assets/auth/ort-logo-white.svg" />
+      <span aria-hidden="true" class="home-brand__divider"></span>
+      <span class="home-brand__name">Admisiones</span>
+    </div>
+  </div>
+</header>
+<section aria-labelledby="scholarship-success-title" class="success-screen">
+  <div class="success-screen__content">
+    <ort-status-icon aria-hidden="true" purpose="success" size="xl" type="gradient" />
+    <h2 id="scholarship-success-title" role="alert">¡Postulación enviada!</h2>
+    <p>
+      Recibimos tu postulación correctamente. Podrás ver la resolución en el sistema a partir del
+      <strong>16 de junio de 2025.</strong>
+    </p>
+  </div>
+  @if (variant() !== 'fcl' && variant() !== 'fbr') {
+  <ort-card aria-label="Inscripción" role="region">
+    <ort-card-content>
+      <p>Recibirás un email de confirmación en las próximas 24 horas.</p>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="today" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Fecha de prueba</span>
+          <span class="card-item__value">Viernes 13 de junio de 2026</span>
+        </p>
+      </div>
+      <div class="card-item">
+        <ort-icon aria-hidden="true" name="event" size="md" />
+        <p class="card-item__text">
+          <span class="card-item__label">Fecha de resultados</span>
+          <span class="card-item__value">Lunes 24 de julio de 2026</span>
+        </p>
+      </div>
+    </ort-card-content>
+  </ort-card>
+  }
+  <button ort-primary-button type="button" (click)="goHome()">Ir al panel principal</button>
+</section>

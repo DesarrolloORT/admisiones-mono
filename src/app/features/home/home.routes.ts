@@ -1,22 +1,24 @@
 import { inject } from '@angular/core';
 import { ResolveFn, Routes } from '@angular/router';
-import { of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
+import { HomeApi } from './api/home.api';
 import { HomeLayout } from './layouts/home-layout/home-layout';
 import { HomeData } from './models/home-data';
 import { ChangePassword } from './pages/change-password/change-password';
 import { Home } from './pages/home/home';
 import { PersonalData } from './pages/personal-data/personal-data';
-import { HomeService } from './services/home';
 
 export const homeResolver: ResolveFn<HomeData | null> = () => {
-  const homeService = inject(HomeService);
+  const homeApi = inject(HomeApi);
 
-  return homeService.getMyEnrollments().pipe(
-    map(enrollments => ({ enrollments, scholarships: [] })),
-    catchError(() => of(null))
-  );
+  return forkJoin({
+    enrollments: homeApi.getMyEnrollments(),
+    // Las becas no bloquean el dashboard: si fallan, la pantalla se dibuja con las
+    // inscripciones y la seccion de becas queda vacia.
+    scholarships: homeApi.getMyScholarships().pipe(catchError(() => of([]))),
+  }).pipe(catchError(() => of(null)));
 };
 
 export const routes: Routes = [

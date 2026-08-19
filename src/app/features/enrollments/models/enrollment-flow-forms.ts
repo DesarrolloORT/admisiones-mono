@@ -1,3 +1,4 @@
+import { InjectionToken } from '@angular/core';
 import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtPreloadedFile } from '@desarrolloort/components';
 import {
@@ -294,3 +295,24 @@ export function createSectionConfig(
 export function buildFormErrors(form: FormGroup, fields: FormErrorField[]) {
   return buildFormErrorSummary(form, fields, ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED);
 }
+
+export interface EnrollmentFormsState {
+  forms: EnrollmentForms;
+  sectionConfig: Record<SurveySectionId, SectionConfig>;
+}
+
+/**
+ * Crea los forms del flujo junto con la configuración de secciones que los
+ * recorre. Es el estado de formularios que comparten las fachadas del paso a
+ * paso: se provee a nivel de la página (ver `ENROLLMENT_FORMS`), así que cada
+ * inscripción tiene el suyo.
+ */
+export function createEnrollmentFormsState(): EnrollmentFormsState {
+  const forms = createEnrollmentForms();
+
+  return { forms, sectionConfig: createSectionConfig(forms) };
+}
+
+export const ENROLLMENT_FORMS = new InjectionToken<EnrollmentFormsState>('ENROLLMENT_FORMS', {
+  factory: createEnrollmentFormsState,
+});

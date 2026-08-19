@@ -13,11 +13,11 @@ import {
   getFirstInvalidFieldId,
 } from '../../../../shared/forms/form-error-summary';
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
+import { AuthApi } from '../../api/auth.api';
 import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { DocumentFields } from '../../components/shared/document-fields/document-fields';
 import { createRecoverAccessForm } from '../../forms/auth-forms';
 import { formatDocumentForBackend } from '../../models/document-number';
-import { PasswordActivationService } from '../../services/password-activation';
 
 @Component({
   selector: 'app-recover-access',
@@ -37,7 +37,7 @@ import { PasswordActivationService } from '../../services/password-activation';
 export class RecoverAccess {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly passwordService = inject(PasswordActivationService);
+  private readonly authEndpoint = inject(AuthApi);
   private readonly router = inject(Router);
   private readonly snackbar = inject(SnackbarHandler);
 
@@ -79,7 +79,7 @@ export class RecoverAccess {
 
     const { documentType, documentNumber, firstSurname } = this.form.getRawValue();
 
-    this.passwordService
+    this.authEndpoint
       .recoverPassword({
         documentType: documentType,
         documentNumber: formatDocumentForBackend(documentType, documentNumber),
