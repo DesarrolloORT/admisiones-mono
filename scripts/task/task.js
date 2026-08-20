@@ -3,7 +3,7 @@
  * Enlaza las tareas del project "Admisiones" con las ramas y deploys de este repo.
  *
  *   node scripts/task/task.js start <issue>
- *     Crea la rama enlazada al issue sobre el head de develop, mueve la tarea a
+ *     Crea la rama sobre el head de develop, la pushea, mueve la tarea a
  *     "In progress Front" y hace checkout. <issue> acepta 137, api-admisiones#137
  *     o la URL completa del issue.
  *
@@ -11,9 +11,11 @@
  *     Resuelve el PR que contiene el commit, saca el numero de issue del nombre
  *     de la rama y mueve la tarea. Lo usa dev-test-deploy.yml despues del deploy.
  *
- * El numero de issue debe abrir el ultimo tramo de la rama (v1.0.0/feat/137-slug).
- * Es el mismo formato que usa GitHub al crear una rama desde un issue, y es la
- * unica forma de recuperar la tarea: la API va de issue a rama, nunca al revés.
+ * El vinculo entre rama y tarea es el numero de issue al inicio del ultimo tramo
+ * de la rama (v1.0.0/feat/137-slug). No se usa el "linked branch" nativo de GitHub:
+ * createLinkedBranch modifica el issue y exige push en api-admisiones, donde el
+ * equipo de front solo tiene triage. El numero en la rama es ademas la unica forma
+ * de recuperar la tarea, porque la API va de issue a rama y nunca al revés.
  *
  * Auth: GITHUB_TOKEN, o `gh auth token` como fallback local.
  */
@@ -217,6 +219,15 @@ function git(...args) {
   return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 
+function branchExists(branch) {
+  try {
+    git('rev-parse', '--verify', `refs/heads/${branch}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function start(argv) {
   const dryRun = argv.includes('--dry-run');
   const { repo, number } = parseIssueRef(argv.find(arg => !arg.startsWith('--')));
@@ -260,27 +271,16 @@ async function start(argv) {
     return;
   }
 
-  try {
-    await graphql(
-      `
-        mutation ($issue: ID!, $repository: ID!, $oid: GitObjectID!, $name: String!) {
-          createLinkedBranch(
-            input: { issueId: $issue, repositoryId: $repository, oid: $oid, name: $name }
-          ) {
-            linkedBranch {
-              ref {
-                name
-              }
-            }
-          }
-        }
-      `,
-      { issue: issue.id, repository: target.repository.id, oid, name: branch }
-    );
-    console.log(`rama   ${branch} (creada y enlazada al issue, desde ${base})`);
-  } catch {
-    // createLinkedBranch falla si la rama ya existe: seguimos con checkout y status.
+  // Con git plano y no con createLinkedBranch: esa mutacion modifica el issue y
+  // exige push en api-admisiones, donde el equipo de front solo tiene triage.
+  git('fetch', 'origin', base);
+  if (branchExists(branch)) {
+    git('checkout', branch);
     console.log(`rama   ${branch} (ya existia, se reutiliza)`);
+  } else {
+    git('checkout', '-b', branch, `origin/${base}`);
+    git('push', '-u', 'origin', branch);
+    console.log(`rama   ${branch} (creada desde ${base} @ ${oid.slice(0, 8)} y pusheada)`);
   }
 
   if (itemId) {
@@ -290,9 +290,8 @@ async function start(argv) {
     console.log(`aviso  el issue no esta en el project "${project.title}"; no se movio el status.`);
   }
 
-  git('fetch', 'origin', branch);
-  git('checkout', branch);
-  console.log(`local  checkout ${branch} listo.`);
+  console.log(`\nPara que el issue quede referenciado, incluir esta linea en el cuerpo del PR:`);
+  console.log(`  ${repo}#${number}`);
 }
 
 // ---------- move ----------

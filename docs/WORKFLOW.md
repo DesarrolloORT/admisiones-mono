@@ -28,8 +28,8 @@ El tablero [Admisiones](https://github.com/orgs/DesarrolloORT/projects/24) es la
 
 El ciclo esta automatizado en los dos extremos:
 
-1. `npm run task:start -- 137` crea la rama enlazada al issue sobre el head de develop, mueve la tarea a `In progress Front` y deja el checkout hecho. Acepta `137`, `api-admisiones#137` o la URL del issue.
-2. Se trabaja, se pushea y se abre el pull request hacia `v*.*.*/develop`. El pull request aparece solo en la seccion Development del issue, porque la rama ya quedo enlazada.
+1. `npm run task:start -- 137` crea la rama sobre el head de develop, la pushea, mueve la tarea a `In progress Front` y deja el checkout hecho. Acepta `137`, `api-admisiones#137` o la URL del issue.
+2. Se trabaja y se abre el pull request hacia `v*.*.*/develop`, incluyendo `DesarrolloORT/api-admisiones#137` en el cuerpo. Esa mencion es lo que hace aparecer el pull request en el timeline del issue; `task:start` imprime la linea exacta para pegar.
 3. Al mergear, [`dev-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/dev-test-deploy.yml) despliega a desarrollo y, recien cuando el deploy termino bien, mueve la tarea a `Testing`.
 
 Script: [`scripts/task/task.js`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/scripts/task/task.js). Usa solo built-ins de Node y toma el token de `GITHUB_TOKEN`, con `gh auth token` como fallback local.
@@ -38,7 +38,9 @@ Script: [`scripts/task/task.js`](https://github.com/DesarrolloORT/admisiones/blo
 
 `task:start` nombra la rama `v<version>/<tipo>/<issue>-<slug>`, por ejemplo `v1.0.0/feat/137-obtener-las-opciones-del-paso-1`. El tipo sale del prefijo convencional del titulo del issue.
 
-Ese numero al inicio del ultimo tramo no es cosmetico: es la unica forma de recuperar la tarea despues del merge. La API de GitHub va de issue a rama (`linkedBranches`), pero no expone el camino inverso, asi que el job de deploy lee el numero del nombre de la rama. Es el mismo formato que usa GitHub cuando se crea una rama desde un issue.
+Ese numero al inicio del ultimo tramo no es cosmetico: es el vinculo entre la rama y la tarea, y la unica forma de recuperarla despues del merge. La API de GitHub va de issue a rama (`linkedBranches`) pero no expone el camino inverso, asi que el job de deploy lee el numero del nombre de la rama.
+
+No se usa el "linked branch" nativo de GitHub, el que aparece en la seccion Development del issue. Crearlo requiere `createLinkedBranch`, que modifica el issue y por lo tanto exige permiso de push en `api-admisiones`, donde el equipo de front solo tiene `triage`. Un PAT no puede exceder los permisos de la cuenta que lo emite, asi que no hay token que lo habilite: haria falta que el equipo de backend otorgue write sobre su repositorio, un permiso desproporcionado para ganar un widget en la UI. El vinculo por nombre de rama mas la mencion en el pull request cubren lo mismo en la practica.
 
 Si una rama no abre su ultimo tramo con el numero de issue, el job emite un warning y no mueve nada. El deploy no se ve afectado.
 
