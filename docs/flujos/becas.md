@@ -19,6 +19,10 @@ import SourceLink from '@site/src/components/SourceLink';
 
 Este documento cubre la pantalla `/becas`: de donde salen las becas que se listan, quien decide si la persona puede postularse y como se une la respuesta del backend con la navegacion del front. El proceso paso a paso de cada beca (onboarding, datos academicos, datos personales, confirmacion) se documenta aparte; aca termina en el momento en que la persona toca **Postularme**.
 
+> Para el patron de integracion (como se llama un endpoint y donde vive cada capa),
+> el diagrama es `docs/arquitectura/endpoints.html` — archivo autocontenido, se abre
+> en el navegador desde el repo.
+
 ## Recorrido completo
 
 ```mermaid

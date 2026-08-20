@@ -75,7 +75,13 @@ if (action === 'build') {
     '--env',
     environment,
   ]);
-  run('node ./scripts/codegen/update-api.js', './scripts/codegen/update-api.js', ['--skip-build']);
+  // Genera desde el snapshot versionado en .api-spec/, igual que `npm run update-api`:
+  // el ambiente que sincroniza el build no debe cambiar los tipos generados.
+  run('node ./scripts/codegen/update-api.js', './scripts/codegen/update-api.js', [
+    '--skip-build',
+    '--spec-dir',
+    '.api-spec',
+  ]);
   run('ng', ANGULAR_CLI, ['build', '--configuration', buildConfiguration(environment), ...args]);
   run('node ./scripts/build/inject-script-nonce.js', './scripts/build/inject-script-nonce.js', []);
 }

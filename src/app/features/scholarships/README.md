@@ -9,6 +9,11 @@ Para el patrón de proceso paso a paso (stepper, `continue()` / `back()`), ver
 Para qué hace la pantalla y por qué, ver la página canónica
 [`docs/flujos/becas.md`](../../../../docs/flujos/becas.md).
 
+Si arrancás en esta feature, empezá por el diagrama:
+[`docs/arquitectura/endpoints.html`](../../../../docs/arquitectura/endpoints.html)
+— mapea el camino completo de un dato y explica por qué existen el adapter y las
+fachadas. Este README es el detalle de cada paso de ese diagrama.
+
 ---
 
 ## 0. Los endpoints no se escriben a mano
