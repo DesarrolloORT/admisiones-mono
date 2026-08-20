@@ -33,11 +33,9 @@
     [autocomplete]="autocomplete() ?? ''"
     [formControl]="form().controls.documentNumber"
     [id]="idPrefix() + '-document-number'" />
-  }
-
+  } @if (isNationalIdInput()) {
   <ort-hint>Sin puntos ni guiones</ort-hint>
-
-  @if ( form().controls.documentNumber.touched &&
+  } @if ( form().controls.documentNumber.touched &&
   form().controls.documentNumber.hasError('required') ) {
   <ort-error>Este campo es obligatorio</ort-error>
   } @if ( isNationalIdInput() && form().controls.documentNumber.touched &&

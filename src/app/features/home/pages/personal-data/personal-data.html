@@ -45,7 +45,7 @@
         ortInput
         type="text"
         [id]="'login-document-number'" />
-      } @if (!isNationalIdInput()) {
+      } @if (isNationalIdInput()) {
       <ort-hint>Sin puntos ni guiones</ort-hint>
       } @if ( form.controls.documentNumber.touched &&
       form.controls.documentNumber.hasError('required') ) {

@@ -35,10 +35,11 @@ export const REGISTER_REQUEST_EMAIL_CONFIRMATION: EmailConfirmationData = {
 export const RECOVER_ACCESS_EMAIL_CONFIRMATION: EmailConfirmationData = {
   actionLabel: 'Volver al inicio de sesión',
   actionRoute: '/iniciar-sesion',
-  description: 'Si los datos coinciden, te enviamos un enlace para actualizar tu contraseña.',
+  description:
+    'Revisá tu casilla de e-mail. Te enviamos un enlace de activación para crear tu nueva contraseña.',
   icon: 'mark_email_read',
   secondaryDescription: EMAIL_CONFIRMATION_SPAM_HINT,
-  title: 'Revisá tu correo',
+  title: '¡Recibimos tu solicitud!',
 };
 
 export const TWO_FACTOR_EMAIL_CONFIRMATION: EmailConfirmationData = {

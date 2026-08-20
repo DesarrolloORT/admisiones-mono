@@ -26,6 +26,7 @@ export type DocumentFieldsGroup = Pick<
   selector: 'app-document-fields',
   imports: [OrtFormFieldModule, OrtInputModule, OrtSelectModule, ReactiveFormsModule],
   templateUrl: './document-fields.html',
+  styleUrl: './document-fields.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentFields {

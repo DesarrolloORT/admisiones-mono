@@ -38,7 +38,7 @@ describe('DocumentFields', () => {
     expect(form.controls.documentNumber.hasError('pattern')).toBe(true);
   });
 
-  it('shows the format hint for every document type', () => {
+  it('shows the format hint only for cédula de identidad', () => {
     const { fixture, form } = createComponent();
     const host: HTMLElement = fixture.nativeElement;
 
@@ -47,6 +47,6 @@ describe('DocumentFields', () => {
     form.controls.documentType.setValue('DE');
     fixture.detectChanges();
 
-    expect(host.querySelector('ort-hint')?.textContent).toContain('Sin puntos ni guiones');
+    expect(host.querySelector('ort-hint')).toBeNull();
   });
 });
