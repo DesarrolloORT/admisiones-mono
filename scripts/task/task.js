@@ -289,9 +289,6 @@ async function start(argv) {
   } else {
     console.log(`aviso  el issue no esta en el project "${project.title}"; no se movio el status.`);
   }
-
-  console.log(`\nPara que el issue quede referenciado, incluir esta linea en el cuerpo del PR:`);
-  console.log(`  ${repo}#${number}`);
 }
 
 // ---------- move ----------

@@ -29,7 +29,7 @@ El tablero [Admisiones](https://github.com/orgs/DesarrolloORT/projects/24) es la
 El ciclo esta automatizado en los dos extremos:
 
 1. `npm run task:start -- 137` crea la rama sobre el head de develop, la pushea, mueve la tarea a `In progress Front` y deja el checkout hecho. Acepta `137`, `api-admisiones#137` o la URL del issue.
-2. Se trabaja y se abre el pull request hacia `v*.*.*/develop`, incluyendo `DesarrolloORT/api-admisiones#137` en el cuerpo. Esa mencion es lo que hace aparecer el pull request en el timeline del issue; `task:start` imprime la linea exacta para pegar.
+2. Se trabaja y se abre el pull request hacia `v*.*.*/develop`. No hace falta referenciar el issue a mano: la automatizacion se apoya solo en el nombre de la rama.
 3. Al mergear, [`dev-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/dev-test-deploy.yml) despliega a desarrollo y, recien cuando el deploy termino bien, mueve la tarea a `Testing`.
 
 Script: [`scripts/task/task.js`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/scripts/task/task.js). Usa solo built-ins de Node y toma el token de `GITHUB_TOKEN`, con `gh auth token` como fallback local.
