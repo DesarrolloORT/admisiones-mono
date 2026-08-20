@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/dist/',
       '**/docs-site/build/',
       '**/docs-site/.docusaurus/',
+      'docs/**/*.html',
       '**/node_modules/',
       '**/.angular/',
       '**/index.html',

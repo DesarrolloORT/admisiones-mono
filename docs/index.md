@@ -46,6 +46,8 @@ errores, estados y efectos que el contrato no expresa.
 
 - [Arquitectura](./ARCHITECTURE.md)
 - [Anatomía de un flujo paso a paso](./arquitectura/flujo-pasos.md)
+- Integración de endpoints — diagrama: `docs/arquitectura/endpoints.html`
+  (archivo autocontenido; abrilo en el navegador desde el repo)
 - [Baseline del knowledge hub](./DOCUMENTATION-GUIDELINES.md)
 - [Setup](./SETUP.md)
 - [Workflow](./WORKFLOW.md)

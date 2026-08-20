@@ -1,0 +1,1767 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Integración backend de Becas</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ── Tokens · @desarrolloort/design-system 2.1.0 (tema claro) ──────── */
+      :root {
+        --color-paper: #fafafa; /* --ort-sys-color-neutral-50   */
+        --color-paper-2: #f5f5f5; /* --ort-sys-color-neutral-100  */
+        --color-card: #ffffff; /* --ort-sys-base-surface-background */
+        --color-ink: #121926; /* --ort-sys-base-text-color-headline */
+        --color-muted: #364152; /* --ort-sys-base-text-color-body */
+        --color-soft: #717680; /* --ort-sys-color-neutral-500  */
+        --color-rule: rgba(18, 25, 38, 0.12);
+        --color-rule-solid: #d5d7da; /* --ort-sys-color-neutral-300  */
+        --color-accent: #661020; /* --ort-sys-color-primary-500  */
+        --color-accent-tint: rgba(102, 16, 32, 0.08); /* primary-500-a08  */
+        --color-link: #3538cd; /* --ort-sys-color-information-700 */
+        --color-danger: #de3730; /* --ort-sys-color-error-500    */
+        --font-display: 'Montserrat', system-ui, sans-serif;
+        --font-sans: 'Open Sans', system-ui, sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-paper);
+        min-height: 100vh;
+        padding: 3rem 2rem;
+        color: var(--color-ink);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        max-width: 1240px;
+        margin: 0 auto;
+      }
+
+      /* ── Header ───────────────────────────────────────────────────────── */
+      .header {
+        margin-bottom: 2.5rem;
+      }
+
+      .header-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        margin-bottom: 0.75rem;
+      }
+
+      h1 {
+        font-family: var(--font-display);
+        font-size: clamp(1.75rem, 3vw + 1rem, 2.375rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+        text-wrap: balance;
+        color: var(--color-ink);
+        margin-bottom: 0.625rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        line-height: 1.55;
+        color: var(--color-muted);
+        max-width: 62ch;
+      }
+
+      /* ── Diagrama ─────────────────────────────────────────────────────── */
+      .diagram-container {
+        overflow-x: auto;
+      }
+      svg.diagram {
+        width: 100%;
+        min-width: 1000px;
+        display: block;
+      }
+
+      /* ── Secciones de texto ───────────────────────────────────────────── */
+      .section {
+        margin-top: 3rem;
+      }
+
+      h2 {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+        color: var(--color-ink);
+        margin-bottom: 0.375rem;
+      }
+
+      .section-lede {
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        color: var(--color-muted);
+        max-width: 74ch;
+        margin-bottom: 1.5rem;
+      }
+
+      /* ── Tarjetas ─────────────────────────────────────────────────────── */
+      .cards {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr 0.95fr;
+        gap: 1rem;
+      }
+      @media (max-width: 900px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--color-card);
+        border: 1px solid var(--color-rule);
+        border-radius: 6px;
+        padding: 1.25rem;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.875rem;
+        padding-bottom: 0.875rem;
+        border-bottom: 1px solid rgba(18, 25, 38, 0.08);
+      }
+
+      .card-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .card-dot.accent {
+        background: var(--color-accent);
+      }
+      .card-dot.ink {
+        background: var(--color-ink);
+      }
+      .card-dot.muted {
+        background: var(--color-muted);
+      }
+      .card-dot.soft {
+        background: var(--color-soft);
+      }
+      .card-dot.link {
+        background: var(--color-link);
+      }
+
+      .card h3 {
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-ink);
+      }
+
+      .card p {
+        font-size: 0.8125rem;
+        line-height: 1.6;
+        color: var(--color-muted);
+        margin-bottom: 0.625rem;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+
+      .card ul {
+        list-style: none;
+        color: var(--color-muted);
+        font-size: 0.8125rem;
+        line-height: 1.6;
+      }
+      .card li {
+        margin-bottom: 0.3rem;
+        padding-left: 0.875rem;
+        position: relative;
+      }
+      .card li::before {
+        content: '—';
+        position: absolute;
+        left: 0;
+        color: rgba(18, 25, 38, 0.25);
+        font-size: 0.75rem;
+      }
+
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        background: var(--color-paper-2);
+        border: 1px solid var(--color-rule);
+        border-radius: 4px;
+        padding: 0.05em 0.3em;
+        color: var(--color-ink);
+      }
+
+      /* ── Antes / ahora ────────────────────────────────────────────────── */
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 900px) {
+        .compare {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .compare-col {
+        background: var(--color-card);
+        border: 1px solid var(--color-rule);
+        border-radius: 6px;
+        padding: 1.25rem;
+      }
+      .compare-col.before {
+        border-left: 3px solid var(--color-danger);
+      }
+      .compare-col.after {
+        border-left: 3px solid var(--color-accent);
+      }
+
+      .compare-label {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-soft);
+        margin-bottom: 0.75rem;
+      }
+
+      pre {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1.65;
+        background: var(--color-paper-2);
+        border: 1px solid var(--color-rule);
+        border-radius: 4px;
+        padding: 0.875rem;
+        overflow-x: auto;
+        color: var(--color-ink);
+        margin-bottom: 0.875rem;
+      }
+      pre .cm {
+        color: var(--color-soft);
+      }
+      pre .bad {
+        color: var(--color-danger);
+      }
+      pre .ok {
+        color: var(--color-accent);
+      }
+
+      .compare-col p {
+        font-size: 0.8125rem;
+        line-height: 1.6;
+        color: var(--color-muted);
+      }
+
+      /* ── Tabla de estado ──────────────────────────────────────────────── */
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 640px;
+        border-collapse: collapse;
+        background: var(--color-card);
+        border: 1px solid var(--color-rule);
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-soft);
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-rule-solid);
+      }
+
+      td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(18, 25, 38, 0.07);
+        color: var(--color-muted);
+        line-height: 1.5;
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td.endpoint {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--color-ink);
+        white-space: nowrap;
+      }
+
+      .pill {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.15em 0.5em;
+        border-radius: 4px;
+        border: 1px solid;
+        white-space: nowrap;
+      }
+      .pill.done {
+        color: var(--color-accent);
+        border-color: rgba(102, 16, 32, 0.35);
+        background: var(--color-accent-tint);
+      }
+      .pill.partial {
+        color: var(--color-muted);
+        border-color: rgba(18, 25, 38, 0.22);
+        background: rgba(18, 25, 38, 0.04);
+      }
+      .pill.todo {
+        color: var(--color-soft);
+        border-color: rgba(18, 25, 38, 0.16);
+        background: transparent;
+      }
+
+      /* ── Receta ───────────────────────────────────────────────────────── */
+      .steps {
+        counter-reset: step;
+        list-style: none;
+      }
+
+      .steps > li {
+        counter-increment: step;
+        position: relative;
+        padding-left: 2.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--color-muted);
+      }
+
+      .steps > li::before {
+        content: counter(step, decimal-leading-zero);
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--color-accent);
+        background: var(--color-accent-tint);
+        border: 1px solid rgba(102, 16, 32, 0.2);
+        border-radius: 4px;
+        width: 1.75rem;
+        text-align: center;
+        padding: 0.1em 0;
+      }
+
+      .steps > li strong {
+        color: var(--color-ink);
+        font-weight: 600;
+      }
+
+      .aside {
+        font-family: var(--font-sans);
+        font-style: italic;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        color: var(--color-muted);
+        border-left: 2px solid var(--color-accent);
+        padding-left: 1rem;
+        margin-top: 1.5rem;
+        max-width: 74ch;
+      }
+
+      /* ── Footer ───────────────────────────────────────────────────────── */
+      .footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(18, 25, 38, 0.1);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        color: var(--color-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- ═══ Header ═══════════════════════════════════════════════════ -->
+      <div class="header">
+        <p class="header-eyebrow">Arquitectura · features/scholarships</p>
+        <h1>Cómo se integra un endpoint de backend</h1>
+        <p class="subtitle">
+          El camino completo de un dato, desde el swagger del backend hasta la pantalla. Hay una
+          sola puerta de entrada al front — el adapter — y todo lo demás depende de tipos nuestros.
+          Este diagrama es el mapa; abajo está el porqué.
+        </p>
+      </div>
+
+      <!-- ═══ Diagrama ════════════════════════════════════════════════ -->
+      <div class="diagram-container">
+        <svg
+          class="diagram"
+          viewBox="0 0 1280 768"
+          xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-labelledby="becas-integracion-title becas-integracion-desc">
+          <title id="becas-integracion-title">Integración backend de la feature becas</title>
+          <desc id="becas-integracion-desc">
+            El backend genera los endpoints y DTO en shared/api/generated; ApiHttpClient desenvuelve
+            el OperationResult y el adapter ScholarshipsApi es el único punto de la feature
+            autorizado a tocar esos tipos generados, mapeándolos a los tipos propios de models/ que
+            consumen la page y la fachada; el catálogo del front aporta las rutas que la API no
+            conoce, y el atajo de llamar al endpoint generado directamente desde una page está
+            bloqueado por ESLint.
+          </desc>
+
+          <defs>
+            <!-- Flecha: muted (import / llamada interna) -->
+            <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#364152" />
+            </marker>
+            <!-- Flecha: bordó ORT (flujo principal de datos) -->
+            <marker
+              id="arrow-accent"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#661020" />
+            </marker>
+            <!-- Flecha: índigo (HTTP / sistema externo) -->
+            <marker
+              id="arrow-link"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#3538CD" />
+            </marker>
+          </defs>
+
+          <!-- Fondo -->
+          <rect width="100%" height="100%" fill="#FAFAFA" />
+
+          <!-- ═══ ZONAS (se pintan primero) ══════════════════════════════ -->
+
+          <!-- Zona: shared/api -->
+          <rect
+            x="216"
+            y="64"
+            width="264"
+            height="360"
+            rx="8"
+            fill="rgba(18,25,38,0.02)"
+            stroke="rgba(18,25,38,0.10)"
+            stroke-width="0.8" />
+          <rect x="228" y="68" width="128" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="292"
+            y="77"
+            fill="rgba(18,25,38,0.40)"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.14em">
+            SRC/APP/SHARED/API
+          </text>
+
+          <!-- Zona: features/scholarships -->
+          <rect
+            x="504"
+            y="144"
+            width="712"
+            height="496"
+            rx="8"
+            fill="rgba(18,25,38,0.02)"
+            stroke="rgba(18,25,38,0.10)"
+            stroke-width="0.8" />
+          <rect x="516" y="148" width="176" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="604"
+            y="157"
+            fill="rgba(18,25,38,0.40)"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.14em">
+            FEATURES/SCHOLARSHIPS
+          </text>
+
+          <!-- ═══ CONECTORES (antes de las cajas: quedan por detrás) ═════ -->
+
+          <!-- A1 · Backend → generated  (build time, punteada) -->
+          <path
+            d="M 108,288 V 152 Q 108,144 116,144 H 240"
+            fill="none"
+            stroke="#364152"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            marker-end="url(#arrow)" />
+          <rect x="144" y="124" width="72" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="180"
+            y="133"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            UPDATE-API
+          </text>
+
+          <!-- A2 · Backend → ApiHttpClient  (HTTP) -->
+          <line
+            x1="184"
+            y1="336"
+            x2="240"
+            y2="336"
+            stroke="#3538CD"
+            stroke-width="1.2"
+            marker-end="url(#arrow-link)" />
+          <rect x="192" y="316" width="40" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="212"
+            y="326"
+            fill="#3538CD"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            HTTP
+          </text>
+
+          <!-- A3 · generated → adapter  (import del endpoint y del DTO) -->
+          <path
+            d="M 344,192 V 200 Q 344,208 352,208 H 636 Q 644,208 644,216 V 280"
+            fill="none"
+            stroke="#364152"
+            stroke-width="1.2"
+            marker-end="url(#arrow)" />
+          <rect x="512" y="188" width="96" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="560"
+            y="198"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            ENDPOINT + DTO
+          </text>
+
+          <!-- A4 · ApiHttpClient → adapter -->
+          <line
+            x1="448"
+            y1="336"
+            x2="528"
+            y2="336"
+            stroke="#364152"
+            stroke-width="1.2"
+            marker-end="url(#arrow)" />
+          <rect x="456" y="316" width="64" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="488"
+            y="326"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            API.DATA()
+          </text>
+
+          <!-- A5 · adapter → page  (flujo principal · bordó) -->
+          <path
+            d="M 768,308 H 816 Q 824,308 824,300 V 236 Q 824,228 832,228 H 880"
+            fill="none"
+            stroke="#661020"
+            stroke-width="1.2"
+            marker-end="url(#arrow-accent)" />
+          <rect x="748" y="260" width="68" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="812"
+            y="270"
+            fill="#661020"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="end"
+            letter-spacing="0.06em">
+            OBSERVABLE
+          </text>
+
+          <!-- A6 · adapter → fachada  (el POST) -->
+          <path
+            d="M 768,364 H 816 Q 824,364 824,372 V 500 Q 824,508 832,508 H 880"
+            fill="none"
+            stroke="#364152"
+            stroke-width="1.2"
+            marker-end="url(#arrow)" />
+          <rect x="776" y="440" width="40" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="812"
+            y="450"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="end"
+            letter-spacing="0.06em">
+            POST
+          </text>
+
+          <!-- A7 · catálogo → page  (lo que la API no sabe) -->
+          <path
+            d="M 1020,328 V 280"
+            fill="none"
+            stroke="#364152"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            marker-end="url(#arrow)" />
+          <rect x="1028" y="296" width="84" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="1032"
+            y="306"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            letter-spacing="0.06em">
+            NAVEGACION
+          </text>
+
+          <!-- A8 · models → adapter  (referencia de tipos) -->
+          <path
+            d="M 588,480 V 392"
+            fill="none"
+            stroke="#364152"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            marker-end="url(#arrow)" />
+
+          <!-- A9 · models → fachada  (referencia de tipos) -->
+          <line
+            x1="768"
+            y1="556"
+            x2="880"
+            y2="556"
+            stroke="#364152"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            marker-end="url(#arrow)" />
+
+          <!-- A10 · CAMINO PROHIBIDO · muere antes de entrar a shared/api -->
+          <path
+            d="M 960,176 V 120 Q 960,112 952,112 H 500"
+            fill="none"
+            stroke="#DE3730"
+            stroke-width="1.2"
+            stroke-dasharray="5,4" />
+          <line x1="496" y1="98" x2="496" y2="126" stroke="#DE3730" stroke-width="2.4" />
+          <rect x="560" y="92" width="128" height="12" rx="2" fill="#FAFAFA" />
+          <text
+            x="624"
+            y="101"
+            fill="#DE3730"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            ESLINT BLOQUEA
+          </text>
+
+          <!-- ═══ CAJAS ══════════════════════════════════════════════════ -->
+
+          <!-- 1 · Backend .NET  (externo) -->
+          <rect x="32" y="288" width="152" height="96" rx="6" fill="#FAFAFA" />
+          <rect
+            x="32"
+            y="288"
+            width="152"
+            height="96"
+            rx="6"
+            fill="rgba(18,25,38,0.03)"
+            stroke="rgba(18,25,38,0.30)"
+            stroke-width="1" />
+          <rect
+            x="40"
+            y="294"
+            width="26"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(18,25,38,0.22)"
+            stroke-width="0.8" />
+          <text
+            x="53"
+            y="303"
+            fill="#717680"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            EXT
+          </text>
+          <text
+            x="108"
+            y="332"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            Backend .NET
+          </text>
+          <text
+            x="108"
+            y="350"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            /scholarships/*
+          </text>
+          <text
+            x="108"
+            y="366"
+            fill="#717680"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            OperationResult
+          </text>
+
+          <!-- 2 · generated/  (no se edita) -->
+          <rect x="240" y="96" width="208" height="96" rx="6" fill="#FAFAFA" />
+          <rect
+            x="240"
+            y="96"
+            width="208"
+            height="96"
+            rx="6"
+            fill="rgba(18,25,38,0.05)"
+            stroke="#364152"
+            stroke-width="1" />
+          <rect
+            x="248"
+            y="102"
+            width="26"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(54,65,82,0.50)"
+            stroke-width="0.8" />
+          <text
+            x="261"
+            y="111"
+            fill="#364152"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            GEN
+          </text>
+          <text
+            x="344"
+            y="136"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            generated/
+          </text>
+          <text
+            x="344"
+            y="154"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            scholarships.endpoints.ts
+          </text>
+          <text
+            x="344"
+            y="168"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            models/* · todo opcional
+          </text>
+          <text
+            x="344"
+            y="184"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            NO SE EDITA A MANO
+          </text>
+
+          <!-- 3 · ApiHttpClient  (infra compartida) -->
+          <rect x="240" y="288" width="208" height="96" rx="6" fill="#FAFAFA" />
+          <rect
+            x="240"
+            y="288"
+            width="208"
+            height="96"
+            rx="6"
+            fill="#FFFFFF"
+            stroke="#121926"
+            stroke-width="1" />
+          <rect
+            x="248"
+            y="294"
+            width="30"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(18,25,38,0.40)"
+            stroke-width="0.8" />
+          <text
+            x="263"
+            y="303"
+            fill="#121926"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            CORE
+          </text>
+          <text
+            x="344"
+            y="328"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            ApiHttpClient
+          </text>
+          <text
+            x="344"
+            y="346"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            desenvuelve OperationResult
+          </text>
+          <text
+            x="344"
+            y="360"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            data() · list() · request()
+          </text>
+          <text
+            x="344"
+            y="376"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            URL · COOKIE · LOADER
+          </text>
+
+          <!-- 4 · ScholarshipsApi  ★ FOCAL · la única puerta -->
+          <rect x="528" y="280" width="240" height="112" rx="6" fill="#FAFAFA" />
+          <rect
+            x="528"
+            y="280"
+            width="240"
+            height="112"
+            rx="6"
+            fill="rgba(102,16,32,0.08)"
+            stroke="#661020"
+            stroke-width="1" />
+          <rect
+            x="536"
+            y="286"
+            width="26"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(102,16,32,0.40)"
+            stroke-width="0.8" />
+          <text
+            x="549"
+            y="295"
+            fill="#661020"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            API
+          </text>
+          <text
+            x="648"
+            y="322"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            ScholarshipsApi
+          </text>
+          <text
+            x="648"
+            y="340"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            api/scholarships.api.ts
+          </text>
+          <text
+            x="648"
+            y="356"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            DTO → tipo de la feature
+          </text>
+          <text
+            x="648"
+            y="378"
+            fill="#661020"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            ÚNICO CRUCE PERMITIDO
+          </text>
+
+          <!-- 5 · models/  (contrato de la feature) -->
+          <rect x="528" y="480" width="240" height="96" rx="6" fill="#FAFAFA" />
+          <rect
+            x="528"
+            y="480"
+            width="240"
+            height="96"
+            rx="6"
+            fill="rgba(18,25,38,0.05)"
+            stroke="#364152"
+            stroke-width="1" />
+          <rect
+            x="536"
+            y="486"
+            width="30"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(54,65,82,0.50)"
+            stroke-width="0.8" />
+          <text
+            x="551"
+            y="495"
+            fill="#364152"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            TYPE
+          </text>
+          <text
+            x="648"
+            y="520"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            models/
+          </text>
+          <text
+            x="648"
+            y="538"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            available-scholarship.interface.ts
+          </text>
+          <text
+            x="648"
+            y="552"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            sin opcionales · fechas string
+          </text>
+          <text
+            x="648"
+            y="568"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            EL CONTRATO DE LA FEATURE
+          </text>
+
+          <!-- 6 · Page Scholarships -->
+          <rect x="880" y="176" width="280" height="104" rx="6" fill="#FAFAFA" />
+          <rect
+            x="880"
+            y="176"
+            width="280"
+            height="104"
+            rx="6"
+            fill="rgba(54,65,82,0.10)"
+            stroke="#717680"
+            stroke-width="1" />
+          <rect
+            x="888"
+            y="182"
+            width="30"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(113,118,128,0.50)"
+            stroke-width="0.8" />
+          <text
+            x="903"
+            y="191"
+            fill="#717680"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            PAGE
+          </text>
+          <text
+            x="1020"
+            y="216"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            Scholarships
+          </text>
+          <text
+            x="1020"
+            y="234"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            pages/scholarships/scholarships.ts
+          </text>
+          <text
+            x="1020"
+            y="248"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            inyecta el adapter · toSignal()
+          </text>
+          <text
+            x="1020"
+            y="266"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            CATCHERROR → EMPTY_CATALOG
+          </text>
+
+          <!-- 7 · scholarship-catalog.ts  (lo que la API no sabe) -->
+          <rect x="880" y="328" width="280" height="96" rx="6" fill="#FAFAFA" />
+          <rect
+            x="880"
+            y="328"
+            width="280"
+            height="96"
+            rx="6"
+            fill="rgba(54,65,82,0.10)"
+            stroke="#717680"
+            stroke-width="1" />
+          <rect
+            x="888"
+            y="334"
+            width="34"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(113,118,128,0.50)"
+            stroke-width="0.8" />
+          <text
+            x="905"
+            y="343"
+            fill="#717680"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            FRONT
+          </text>
+          <text
+            x="1020"
+            y="368"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            scholarship-catalog.ts
+          </text>
+          <text
+            x="1020"
+            y="386"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            ID_TIPO_BECA → ruta de Angular
+          </text>
+          <text
+            x="1020"
+            y="400"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            models/ · vive en el front
+          </text>
+          <text
+            x="1020"
+            y="416"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            LO QUE LA API NO SABE
+          </text>
+
+          <!-- 8 · ScholarshipProposalFacade -->
+          <rect x="880" y="480" width="280" height="104" rx="6" fill="#FAFAFA" />
+          <rect
+            x="880"
+            y="480"
+            width="280"
+            height="104"
+            rx="6"
+            fill="rgba(54,65,82,0.10)"
+            stroke="#717680"
+            stroke-width="1" />
+          <rect
+            x="888"
+            y="486"
+            width="40"
+            height="12"
+            rx="2"
+            fill="transparent"
+            stroke="rgba(113,118,128,0.50)"
+            stroke-width="0.8" />
+          <text
+            x="908"
+            y="495"
+            fill="#717680"
+            font-size="7"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.08em">
+            FACADE
+          </text>
+          <text
+            x="1020"
+            y="520"
+            fill="#121926"
+            font-size="12"
+            font-weight="600"
+            font-family="'Open Sans', sans-serif"
+            text-anchor="middle">
+            ScholarshipProposalFacade
+          </text>
+          <text
+            x="1020"
+            y="538"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            facades/scholarship-proposal.ts
+          </text>
+          <text
+            x="1020"
+            y="552"
+            fill="#364152"
+            font-size="9"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle">
+            valida → POST → process.next()
+          </text>
+          <text
+            x="1020"
+            y="570"
+            fill="#717680"
+            font-size="8"
+            font-family="'IBM Plex Mono', monospace"
+            text-anchor="middle"
+            letter-spacing="0.06em">
+            FINALIZE · TAKEUNTILDESTROYED
+          </text>
+
+          <!-- ═══ LEYENDA · franja horizontal al pie ═════════════════════ -->
+          <line
+            x1="32"
+            y1="664"
+            x2="1248"
+            y2="664"
+            stroke="rgba(18,25,38,0.10)"
+            stroke-width="0.8" />
+          <text
+            x="32"
+            y="684"
+            fill="#364152"
+            font-size="9"
+            font-weight="500"
+            font-family="'IBM Plex Mono', monospace"
+            letter-spacing="0.14em">
+            LEYENDA
+          </text>
+
+          <!-- Fila 1 · tipos de caja -->
+          <rect
+            x="32"
+            y="696"
+            width="14"
+            height="10"
+            rx="2"
+            fill="rgba(102,16,32,0.08)"
+            stroke="#661020"
+            stroke-width="1" />
+          <text x="52" y="705" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Adapter — único cruce permitido
+          </text>
+
+          <rect
+            x="264"
+            y="696"
+            width="14"
+            height="10"
+            rx="2"
+            fill="#FFFFFF"
+            stroke="#121926"
+            stroke-width="1" />
+          <text x="284" y="705" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Infra compartida (shared/api)
+          </text>
+
+          <rect
+            x="496"
+            y="696"
+            width="14"
+            height="10"
+            rx="2"
+            fill="rgba(18,25,38,0.05)"
+            stroke="#364152"
+            stroke-width="1" />
+          <text x="516" y="705" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Generado / tipos (contrato)
+          </text>
+
+          <rect
+            x="728"
+            y="696"
+            width="14"
+            height="10"
+            rx="2"
+            fill="rgba(18,25,38,0.03)"
+            stroke="rgba(18,25,38,0.30)"
+            stroke-width="1" />
+          <text x="748" y="705" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Backend externo
+          </text>
+
+          <rect
+            x="960"
+            y="696"
+            width="14"
+            height="10"
+            rx="2"
+            fill="rgba(54,65,82,0.10)"
+            stroke="#717680"
+            stroke-width="1" />
+          <text x="980" y="705" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Page · fachada · catálogo
+          </text>
+
+          <!-- Fila 2 · tipos de flecha -->
+          <line
+            x1="32"
+            y1="728"
+            x2="46"
+            y2="728"
+            stroke="#3538CD"
+            stroke-width="1.2"
+            marker-end="url(#arrow-link)" />
+          <text x="54" y="732" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            HTTP + cookie de sesión
+          </text>
+
+          <line
+            x1="264"
+            y1="728"
+            x2="278"
+            y2="728"
+            stroke="#661020"
+            stroke-width="1.2"
+            marker-end="url(#arrow-accent)" />
+          <text x="286" y="732" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Flujo principal de datos
+          </text>
+
+          <line
+            x1="496"
+            y1="728"
+            x2="510"
+            y2="728"
+            stroke="#364152"
+            stroke-width="1.2"
+            marker-end="url(#arrow)" />
+          <text x="518" y="732" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Import / llamada
+          </text>
+
+          <line
+            x1="728"
+            y1="728"
+            x2="742"
+            y2="728"
+            stroke="#364152"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            marker-end="url(#arrow)" />
+          <text x="750" y="732" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Build-time · referencia de tipos
+          </text>
+
+          <line
+            x1="960"
+            y1="728"
+            x2="972"
+            y2="728"
+            stroke="#DE3730"
+            stroke-width="1.2"
+            stroke-dasharray="5,4" />
+          <line x1="976" y1="722" x2="976" y2="734" stroke="#DE3730" stroke-width="2.4" />
+          <text x="988" y="732" fill="#364152" font-size="9" font-family="'Open Sans', sans-serif">
+            Prohibido (ESLint + CI)
+          </text>
+        </svg>
+      </div>
+
+      <!-- ═══ Por qué ═════════════════════════════════════════════════ -->
+      <div class="section">
+        <h2>Por qué no llamamos al endpoint directo</h2>
+        <p class="section-lede">
+          Antes esto era una línea: importabas el endpoint generado en el
+          <code>.ts</code>
+          , y el DTO que volvía era el modelo de la pantalla. Funcionaba hasta que algo del otro
+          lado cambiaba. Estas tres capas existen para que ese cambio se pague una vez y en un solo
+          archivo.
+        </p>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-dot accent"></span>
+              <h3>El adapter · la única puerta</h3>
+            </div>
+            <p>
+              En el swagger
+              <strong>todos los campos son opcionales</strong>
+              . Si el DTO llega crudo a la pantalla, ese
+              <code>?</code>
+              se te propaga a cada template, a cada
+              <code>computed</code>
+              y a cada test: cien
+              <code>?? ''</code>
+              repartidos por la feature.
+            </p>
+            <p>
+              El adapter colapsa la nullability
+              <strong>una sola vez</strong>
+              y devuelve tipos donde los campos existen. Y el default no se improvisa:
+              <code>requiresPriorEnrollment</code>
+              cae en
+              <code>true</code>
+              porque es el caso restrictivo — un backend caído nunca debe habilitar una postulación.
+            </p>
+            <ul>
+              <li>
+                Es el único que importa
+                <code>generated/**</code>
+                y
+                <code>ApiHttpClient</code>
+                .
+              </li>
+              <li>Si mañana el backend renombra un campo, se toca este archivo y nada más.</li>
+              <li>Sus tests son los que fijan el mapeo, los defaults y el body exacto del POST.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-dot ink"></span>
+              <h3>La fachada · dónde vive el estado</h3>
+            </div>
+            <p>
+              Un GET de lectura no necesita fachada: la page inyecta el adapter y listo. La fachada
+              aparece cuando hay
+              <strong>orquestación real</strong>
+              .
+            </p>
+            <p>
+              En el proceso de becas los steps se destruyen al navegar. Si los
+              <code>FormGroup</code>
+              fueran del step, volver atrás perdería lo cargado — por eso viven en
+              <code>ScholarshipProcessFacade</code>
+              , que tiene scope de página.
+            </p>
+            <ul>
+              <li>Un POST se dispara de una fachada, nunca del template.</li>
+              <li>
+                Siempre con
+                <code>finalize()</code>
+                para apagar el spinner y
+                <code>takeUntilDestroyed()</code>
+                para cortar si el paso se desmonta.
+              </li>
+              <li>
+                Las fachadas de sección validan lo suyo y recién entonces llaman a
+                <code>process.continue()</code>
+                .
+              </li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-dot soft"></span>
+              <h3>Lo que no existe</h3>
+            </div>
+            <p>
+              No hay capa
+              <code>store/</code>
+              y casi no hay
+              <code>services/</code>
+              . Si un método sólo iba a hacer
+              <code>return this.api.mismoMetodo()</code>
+              ,
+              <strong>no se escribe</strong>
+              : el consumidor inyecta el adapter.
+            </p>
+            <p>
+              Un service existe sólo si aporta comportamiento propio — combina llamadas, guarda
+              estado, prepara archivos.
+            </p>
+            <ul>
+              <li>
+                Los
+                <code>FormGroup</code>
+                salen de factories en
+                <code>models/</code>
+                .
+              </li>
+              <li>
+                Las cards son presentacionales puras: sólo
+                <code>input()</code>
+                , sin
+                <code>inject()</code>
+                .
+              </li>
+              <li>
+                Las fechas quedan
+                <code>string | null</code>
+                ; el
+                <code>Date</code>
+                se arma en la UI.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Antes / ahora ═══════════════════════════════════════════ -->
+      <div class="section">
+        <h2>El atajo y el camino</h2>
+        <p class="section-lede">
+          Los dos hacen lo mismo hoy. El de la izquierda no compila:
+          <code>eslint.config.js</code>
+          y
+          <code>npm run check-api-contracts</code>
+          lo rechazan.
+        </p>
+
+        <div class="compare">
+          <div class="compare-col before">
+            <p class="compare-label">Antes · hoy bloqueado</p>
+            <pre><span class="cm">// pages/scholarships/scholarships.ts</span>
+<span class="bad">import { getScholarshipsAvailableEndpoint }</span>
+<span class="bad">  from 'shared/api/generated/endpoints/…';</span>
+
+data = toSignal(
+  <span class="bad">this.http.get(endpoint)</span>
+);
+
+<span class="cm">// el DTO ES el modelo de pantalla:</span>
+<span class="cm">// scholarship.name?  scholarship.description?</span>
+<span class="cm">// …y un ?? '' en cada template</span></pre>
+            <p>
+              La pantalla queda acoplada al swagger. Un campo que cambia de nombre rompe templates,
+              tests y
+              <code>computed</code>
+              a la vez, y no hay un solo lugar donde arreglarlo.
+            </p>
+          </div>
+
+          <div class="compare-col after">
+            <p class="compare-label">Ahora · el camino</p>
+            <pre><span class="cm">// api/scholarships.api.ts — el adapter</span>
+<span class="ok">getAvailableScholarships()</span>: Observable&lt;AvailableScholarships&gt; {
+  return this.api.data(endpoint).pipe(
+    map(r =&gt; ({
+      requiresPriorEnrollment: r?.… ?? <span class="ok">true</span>,
+      scholarships: (r?.scholarships ?? []).map(…),
+    }))
+  );
+}
+
+<span class="cm">// pages/… — la page inyecta el adapter</span>
+available = toSignal(
+  this.<span class="ok">scholarshipsApi</span>.getAvailableScholarships()
+    .pipe(catchError(() =&gt; of(EMPTY_CATALOG))),
+  { initialValue: EMPTY_CATALOG }
+);</pre>
+            <p>
+              La page no sabe que existe un swagger. Habla con un tipo de la feature donde los
+              campos existen, y el fallback ante error es explícito.
+            </p>
+          </div>
+        </div>
+
+        <p class="aside">
+          Regla práctica: si en un archivo que no está en
+          <code>api/</code>
+          escribís la palabra
+          <code>generated</code>
+          , algo está mal ubicado. Y si no encontrás el endpoint en
+          <code>generated/endpoints/</code>
+          , el paso es
+          <code>npm run api-spec:refresh &amp;&amp; npm run update-api</code>
+          — nunca escribir la URL a mano.
+        </p>
+      </div>
+
+      <!-- ═══ Estado real ═════════════════════════════════════════════ -->
+      <div class="section">
+        <h2>Qué hay hecho y qué falta</h2>
+        <p class="section-lede">
+          Los cuatro endpoints de becas existen en el swagger. Estos son los que ya bajaron al front
+          y hasta dónde llegaron.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Endpoint</th>
+                <th>Estado</th>
+                <th>Hasta dónde llega</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="endpoint">GET /scholarships/available</td>
+                <td><span class="pill done">Completo</span></td>
+                <td>
+                  Adapter →
+                  <code>pages/scholarships</code>
+                  . Es el recorrido de referencia: copialo.
+                </td>
+              </tr>
+              <tr>
+                <td class="endpoint">GET /scholarships/enrollments</td>
+                <td><span class="pill partial">Sin consumidor</span></td>
+                <td>
+                  Mapeado en el adapter con
+                  <code>api.list</code>
+                  . Hoy nadie lo usa:
+                  <code>/available</code>
+                  ya responde la habilitación.
+                </td>
+              </tr>
+              <tr>
+                <td class="endpoint">POST /scholarships/applications</td>
+                <td><span class="pill partial">Sin consumidor</span></td>
+                <td>
+                  Mapeado en el adapter. Falta dispararlo desde
+                  <code>facades/scholarship-proposal.ts</code>
+                  al confirmar el paso 1.
+                </td>
+              </tr>
+              <tr>
+                <td class="endpoint">GET /scholarships/application-options</td>
+                <td><span class="pill todo">El próximo</span></td>
+                <td>
+                  Opciones del paso 1: inscripciones, modalidades y fechas de prueba. Todavía no
+                  está en el adapter.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ Receta ══════════════════════════════════════════════════ -->
+      <div class="section">
+        <h2>Tu primer endpoint, paso por paso</h2>
+        <p class="section-lede">
+          Tomando
+          <code>application-options</code>
+          como ejemplo. Son dos archivos nuevos y tres ediciones.
+        </p>
+
+        <ol class="steps">
+          <li>
+            <strong>Leé el contrato de negocio primero.</strong>
+            <code>.api-spec/contracts/becas.contract.json</code>
+            es la autoridad de estas pantallas. El
+            <code>frontHint</code>
+            de este endpoint dice exactamente cómo se filtran las pruebas y de dónde sale el
+            <code>testId</code>
+            — el front
+            <em>no lo calcula</em>
+            , lo elige de
+            <code>tests[]</code>
+            . El OpenAPI no te cuenta eso.
+          </li>
+          <li>
+            <strong>Bajá el contrato.</strong>
+            <code>npm run api-spec:refresh</code>
+            y después
+            <code>npm run update-api</code>
+            . Si el endpoint no aparece en
+            <code>generated/endpoints/</code>
+            , falta del lado del backend — no inventes la URL.
+          </li>
+          <li>
+            <strong>Escribí el tipo de la feature</strong>
+            en
+            <code>models/…interface.ts</code>
+            . Sin opcionales, fechas como
+            <code>string | null</code>
+            . El sufijo
+            <code>.interface.ts</code>
+            importa: exime del spec obligatorio en
+            <code>test-generator.config.json</code>
+            .
+          </li>
+          <li>
+            <strong>Agregá el método al adapter.</strong>
+            Objeto →
+            <code>api.data</code>
+            ; array →
+            <code>api.list</code>
+            (normaliza
+            <code>null</code>
+            , objeto suelto o array; no escribas ese chequeo a mano); POST/PUT →
+            <code>api.request</code>
+            con
+            <code>body</code>
+            . Elegí el default ante ausencia de dato pensando en cuál es el caso restrictivo.
+          </li>
+          <li>
+            <strong>Cubrilo con un spec.</strong>
+            Mapeo, defaults de nullability, lista vacía y body exacto. Se stubea sólo
+            <code>request</code>
+            sobre el prototipo real de
+            <code>ApiHttpClient</code>
+            , así
+            <code>list()</code>
+            y
+            <code>data()</code>
+            corren de verdad.
+          </li>
+          <li>
+            <strong>Consumilo.</strong>
+            Lectura simple → la page inyecta el adapter. Orquestación o estado entre pasos → una
+            fachada.
+          </li>
+          <li>
+            <strong>Sumá el mock e2e</strong>
+            en
+            <code>e2e/support/api-mocks.ts</code>
+            . Playwright no pega al backend, y cada endpoint nuevo necesita su handler.
+          </li>
+          <li>
+            <strong>
+              Actualizá
+              <code>docs/flujos/becas.md</code>
+            </strong>
+            en el mismo PR, o declará
+            <code>docs-none: &lt;motivo&gt;</code>
+            .
+          </li>
+        </ol>
+
+        <p class="aside">
+          Dos pendientes abiertos que te vas a cruzar: faltan los
+          <code>ID_TIPO_BECA</code>
+          de reválidas, concursables y capacitación laboral (hay un fallback por palabra clave del
+          nombre, marcado para borrar en cuanto backend los pase), y el POST de postulación todavía
+          no tiene quién lo dispare.
+        </p>
+      </div>
+
+      <!-- ═══ Footer ══════════════════════════════════════════════════ -->
+      <div class="footer">
+        <span>admisiones · features/scholarships · ver README de la feature</span>
+        <span>2026-08-20</span>
+      </div>
+    </div>
+  </body>
+</html>
