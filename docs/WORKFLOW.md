@@ -25,7 +25,8 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 ## Convenciones de ramas y PR
 
 - La plantilla incluye soporte para ramas `feature/*`, `fix/*`, `hotfix/*` y `dependabot/*` en PRs hacia `main`.
-- La plantilla incluye automatizacion para ramas con patron `v*.*.*/main`.
+- La plantilla incluye automatizacion para ramas con patron `v*.*.*/main` y `v*.*.*/develop`.
+- Las ramas `v*.*.*/develop` son la integracion diaria: sus PRs corren CI permisivo y cada merge despliega a desarrollo.
 - Si el proyecto conserva ese flujo versionado, los PR a `main` que representen un release deben usar el titulo `release/vX.Y.Z`.
 - Si el proyecto conserva ese flujo versionado, la version declarada en `package.json` y `package-lock.json` debe coincidir con la version del release.
 
@@ -101,6 +102,25 @@ Notas:
 - cualquier otro secreto o variable adicional debe configurarse en el repositorio de la misma manera;
 - se debe crear el proyecto en SonarQube y contar con el runner correspondiente.
 
+### CI para ramas de desarrollo
+
+Archivo: [`.github/workflows/ci-develop.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/ci-develop.yml)
+
+Se dispara al crear un pull request hacia una rama con patron `v*.*.*/develop`.
+
+Es permisivo por diseno: corre `Prepare API contracts` y `CI Checks` con `strict: false`, es decir solo unit tests (`npm run test:ci`) y build. No corre lint, accessibility tests, E2E smoke ni SonarQube.
+
+El gate completo no desaparece: se aplica cuando la rama develop abre su pull request hacia `v*.*.*/main`, que dispara `ci.yml`.
+
+### Modo estricto de `ci-checks.yml`
+
+Archivo: [`.github/workflows/ci-checks.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/ci-checks.yml)
+
+Workflow reutilizable. El input `strict` (booleano, default `true`) controla los checks pesados:
+
+- `strict: true` (default, usado por `ci.yml` y `pr-to-main.yml`): instala Playwright y corre `lint:check`, `test:ci`, build, `test:a11y` y `test:e2e:smoke`.
+- `strict: false` (usado por `ci-develop.yml`): corre solo `test:ci` y build; los demas steps quedan skipped.
+
 ### Despliegue a Produccion
 
 Archivo: [`.github/workflows/cd.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/cd.yml)
@@ -123,17 +143,14 @@ Archivo: [`.github/workflows/dev-test-deploy.yml`](https://github.com/Desarrollo
 
 Disparadores:
 
-- push a ramas `v*.*.*/main`;
-- ejecucion manual.
+- push a ramas `v*.*.*/develop`, es decir cada merge de un pull request a develop;
+- ejecucion manual sobre cualquier rama.
 
-### Despliegue a Preproduccion
+Despliega en el runner `funcionarios-desa` sobre ambiente `desarrollo`. Usa `concurrency: deploy-desa` con `cancel-in-progress`, porque el recurso compartido es el sitio IIS y no la rama: si se mergean dos pull requests seguidos, el deploy viejo se cancela y gana el estado mas nuevo.
 
-Archivo: [`.github/workflows/preprod-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/preprod-test-deploy.yml)
+Variable requerida:
 
-Disparadores:
-
-- pull requests a `main`;
-- ejecucion manual.
+- `DEV_SERVER_SITE_PATH` (en el environment `desarrollo`). El workflow aborta si esta vacia o si el path no existe en el runner, para no borrar la raiz del disco.
 
 ### Release
 
