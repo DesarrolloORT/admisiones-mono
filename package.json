@@ -33,6 +33,7 @@
     "test:api-contracts": "node --test ./scripts/codegen/api-repair.test.js ./scripts/codegen/check-api-contracts.test.js ./scripts/codegen/update-endpoints.test.js ./scripts/codegen/update-models.test.js ./scripts/codegen/update-contracts.test.js ./scripts/codegen/fetch-api-spec.test.js ./scripts/build/inject-script-nonce.test.js",
     "check:knowledge": "node ./scripts/docs/check-knowledge.js",
     "test:knowledge": "node --test ./scripts/docs/check-knowledge.test.js",
+    "task:start": "node ./scripts/task/task.js start",
     "docs:build": "npm run build --prefix docs-site",
     "prepare": "husky"
   },
