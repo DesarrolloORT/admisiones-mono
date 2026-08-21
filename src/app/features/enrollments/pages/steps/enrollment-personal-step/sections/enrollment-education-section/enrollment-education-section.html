@@ -55,16 +55,10 @@
     </p>
     } @if (facade.shouldAskHighSchoolOrientation()) {
     <app-responsive-select
-      errorText="Seleccioná una opción"
       formControlName="orientation"
       label="Orientación"
       [options]="facade.options.orientationOptions()" />
-    @if (facade.educationForm.controls.orientation.touched &&
-    facade.educationForm.controls.orientation.hasError('required')) {
-    <p class="enrollment-field-error" id="baccalaureate-orientation-error" role="alert">
-      Seleccioná una opción
-    </p>
-    } } }
+    } }
 
     <ort-radio-group
       class="enrollment-choice-list"
@@ -127,7 +121,6 @@
     <p class="enrollment-field-error" id="school-place-error" role="alert">Seleccioná una opción</p>
     } @if (facade.isNationalSchoolPlace()) {
     <app-responsive-select
-      errorText="Seleccioná una opción"
       formControlName="state"
       label="Departamento"
       [disabled]="facade.options.departmentOptions().length === 0"
@@ -135,7 +128,6 @@
       [searchable]="true" />
 
     <app-responsive-select
-      errorText="Seleccioná una opción"
       formControlName="educationalInstitution"
       label="Institución educativa"
       [disabled]="facade.options.institutionOptions().length === 0"
@@ -220,7 +212,6 @@
       <h5 id="mother-education-title">Madre o tutor</h5>
       <app-responsive-select
         aria-label="Nivel máximo alcanzado de madre o tutor"
-        errorText="Seleccioná una opción"
         formControlName="motherEducation"
         label="Nivel máximo alcanzado"
         [disabled]="facade.options.loadingInitialSurveyCatalogs()"
@@ -255,7 +246,6 @@
       <h5 id="father-education-title">Padre o tutor</h5>
       <app-responsive-select
         aria-label="Nivel máximo alcanzado de padre o tutor"
-        errorText="Seleccioná una opción"
         formControlName="fatherEducation"
         label="Nivel máximo alcanzado"
         [disabled]="facade.options.loadingInitialSurveyCatalogs()"

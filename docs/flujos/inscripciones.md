@@ -456,8 +456,8 @@ selección es obligatoria y se representa como `isCorporate`: título personal e
 `false` y corporativa es `true`. Los tipos 1/2 no ven la sección y envían
 `isCorporate = false`.
 
-**AP no envía `POST /enrollments/initial-survey`** (ni al cerrar el paso 2 ni
-al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
+**AP no envía `POST /enrollments/initial-survey`** (guard en `savePartial`, que
+solo corre al cerrar el paso 2). `isCorporate` se envía únicamente en
 `POST /enrollments/confirm-pre-enrollment`. Una inscripción personal continúa al paso 3; una
 corporativa termina en la pantalla "Inscripción corporativa pendiente" y espera
 que la empresa acredite el pago.
@@ -755,16 +755,29 @@ avanza al paso de pago. Si Documento o Foto falla por HTTP,
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
 el check de completada.
 
-### "Guardar y salir" no vuelve a postear la encuesta ya confirmada
+### El guard de `savePartial()`
 
-`EnrollmentSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
-al confirmar el modal "¿Querés salir de la inscripción?") solo llama a
+`EnrollmentSurveyFacade.savePartial()` es el **único** punto que persiste la
+encuesta, y corre solo al cerrar el paso 2 (`finishSurveyStep`). Llama a
 `POST /enrollments/initial-survey` si la persona tiene derecho a encuesta, no
 es AP, **y** `EnrollmentProcessStore.preEnrollmentResponse` sigue en `null`.
 Una vez que `confirmPreEnrollment` respondio con éxito (paso 3, pago) ese
 signal deja de ser `null` y `savePartial()` retorna `true` sin llamar al
 backend: la encuesta ya quedo guardada como parte de la confirmacion y
-reintentar el POST no aporta nada, solo puede fallar y bloquear la salida.
+reintentar el POST no aporta nada, solo puede fallar.
+
+### Salir del flujo no confirma ni guarda
+
+La X del header y "Salir del proceso" del rail emiten `closeFlow`, que llama a
+`EnrollmentProcessFacade.exit()`: navega a `/inicio` y nada más. No hay diálogo
+de confirmación intermedio y no se dispara ningún POST, así que la salida nunca
+puede fallar ni dejar a la persona encerrada en el flujo. Mismo comportamiento
+que el flujo de becas, que ya salía directo.
+
+Contrapartida asumida: como el avance solo se persiste al cerrar el paso 2, lo
+que quede a medio completar al salir se pierde. Lo ya confirmado en pasos
+cerrados no se toca. No hay guard `CanDeactivate` ni `beforeunload`: el botón
+atrás del browser y F5 salen igual que el botón.
 
 ## Paso 3: pago
 

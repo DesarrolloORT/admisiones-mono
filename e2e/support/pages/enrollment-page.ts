@@ -301,13 +301,6 @@ export class EnrollmentPage {
     await expect(radio).toBeChecked();
   }
 
-  public async saveAndExit(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Cerrar inscripción' }).click();
-    await expect(this.page.getByText('¿Querés salir de la inscripción?')).toBeVisible();
-    await this.page.getByRole('button', { name: 'Guardar y salir' }).click();
-    await expect(this.page).toHaveURL(/\/inicio/);
-  }
-
   private async continue(): Promise<void> {
     const button = this.page.getByRole('button', { name: 'Continuar', exact: true });
     await button.click();

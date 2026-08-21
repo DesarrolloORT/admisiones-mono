@@ -1,7 +1,6 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
 
 import {
   deriveInitialEnrollmentState,
@@ -39,9 +38,6 @@ export class EnrollmentProcessFacade {
   public readonly backLabel = computed(() =>
     this.survey.readerOpen() ? 'Volver a Reglamento estudiantil' : 'Volver a la sección anterior'
   );
-  public readonly exitConfirmationOpen = signal(false);
-  public readonly surveySaveError = signal<string | null>(null);
-  public readonly savingSurvey = signal(false);
   public readonly catalogError = computed(
     () => this.proposal.catalogError() ?? this.survey.catalogError()
   );
@@ -90,45 +86,8 @@ export class EnrollmentProcessFacade {
     if (this.canGoBack()) this.survey.back();
   }
 
-  public requestExit(): void {
-    this.surveySaveError.set(null);
-    this.exitConfirmationOpen.set(true);
-  }
-
-  public cancelExit(): void {
-    this.surveySaveError.set(null);
-    this.exitConfirmationOpen.set(false);
-  }
-
-  public confirmExit(): void {
-    if (this.savingSurvey()) return;
-
-    if (!this.survey.hasInitialSurveyRight()) {
-      this.exitConfirmationOpen.set(false);
-      this.router.navigateByUrl('/inicio');
-      return;
-    }
-
-    this.surveySaveError.set(null);
-    this.savingSurvey.set(true);
-    this.survey
-      .savePartial()
-      .pipe(
-        finalize(() => this.savingSurvey.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: saved => {
-          if (!saved) {
-            this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.');
-            return;
-          }
-          this.exitConfirmationOpen.set(false);
-          this.router.navigateByUrl('/inicio');
-        },
-        error: () =>
-          this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.'),
-      });
+  public exit(): void {
+    this.router.navigateByUrl('/inicio');
   }
 
   // Reintento manual (botón de la pantalla de error de encuesta): re-consulta el
