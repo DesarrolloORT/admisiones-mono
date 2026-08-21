@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { vi } from 'vitest';
 
 import { ScholarshipsApi } from '../../api/scholarships.api';
@@ -24,13 +25,17 @@ const CATALOGUE = [
 describe('Scholarships', () => {
   let fixture: ComponentFixture<Scholarships>;
   let getAvailableScholarships: ReturnType<typeof vi.fn>;
+  let logout: ReturnType<typeof vi.fn>;
 
   function setup(): void {
+    logout = vi.fn();
+
     TestBed.configureTestingModule({
       imports: [Scholarships],
       providers: [
         provideRouter([]),
         { provide: ScholarshipsApi, useValue: { getAvailableScholarships } },
+        { provide: AuthSessionService, useValue: { logout } },
       ],
     });
 
@@ -143,6 +148,21 @@ describe('Scholarships', () => {
       'Fondo de becas de capacitación laboral',
       'Fondo de becas de reválidas',
     ]);
+  });
+
+  it('logs out through the shared auth session when the header requests it', () => {
+    setup();
+
+    fixture.nativeElement
+      .querySelector('.home-avatar')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('.home-profile-menu__item[type="button"]')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(logout).toHaveBeenCalledOnce();
   });
 
   it('shows an empty state when the catalogue comes back empty', () => {

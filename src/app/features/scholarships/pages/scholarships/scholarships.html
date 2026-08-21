@@ -1,4 +1,4 @@
-<app-home-header [showBack]="showBack()" />
+<app-home-header [showBack]="showBack()" (logoutRequested)="logout()" />
 <main class="scholarships-main">
   <section aria-labelledby="scholarships-title" class="scholarships-screen">
     <div class="scholarships-screen__header">

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { catchError, of } from 'rxjs';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
 import { ScholarshipsApi } from '../../api/scholarships.api';
@@ -41,6 +42,7 @@ function displayRank(kind: ScholarshipKind | undefined): number {
 export class Scholarships {
   private readonly scholarshipsApi = inject(ScholarshipsApi);
   private readonly breakpointService = inject(BreakpointService);
+  private readonly authSession = inject(AuthSessionService);
 
   /**
    * La page inyecta **el adapter de su feature** — no hay service de reenvio ni
@@ -83,4 +85,8 @@ export class Scholarships {
 
     return breakpoint.isXSmall || breakpoint.isSmall;
   });
+
+  protected logout(): void {
+    this.authSession.logout();
+  }
 }
