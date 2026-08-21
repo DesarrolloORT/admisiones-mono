@@ -1,14 +1,9 @@
 ﻿using AppLogic.Catalogs.Dtos;
-using System.Net;
-using System.Text;
-using AppLogic.Integrations.EnrollmentsAndPayments.Interfaces;
-using AppLogic.Integrations.EnrollmentsAndPayments.Services;
 using AppLogic.DevartDTOs;
 using BusinessLogic.Entities;
 using BusinessLogic.IDevartRepositories;
 using ConnectionContext;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Collections.Generic;
 using Xunit;
@@ -27,7 +22,7 @@ namespace UnitTesting.AppLogic.Services
             _uowFactoryMock = new Mock<IUnitOfWorkFactory>();
             _uowMock = new Mock<IUnitOfWork>();
             _uowFactoryMock.Setup(f => f.Create()).Returns(_uowMock.Object);
-            _service = new CatalogService(_uowFactoryMock.Object, Mock.Of<IEnrollmentsAndPaymentsApiClient>());
+            _service = new CatalogService(_uowFactoryMock.Object);
 
             SetupEncuestaInicialCatalogos();
         }
@@ -372,7 +367,7 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ObtenerTurnos_Nivel1o2_UsesInscripcionesYPagosApi()
+        public void ObtenerTurnos_Nivel1o2_UsesVdOfertasDisponibles1y2()
         {
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
@@ -384,20 +379,22 @@ namespace UnitTesting.AppLogic.Services
             });
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
+            var ofertasRepo = new Mock<IVdOfertasDisponibles1y2Repository>();
+            ofertasRepo
+                .Setup(r => r.GetOfertasDisponibles(10, 20, 99))
+                .Returns(
                 [
-                  {
-                    "idOferta": 57319,
-                    "horarioReferencia": "Lunes 19:00",
-                    "idTurno": 1,
-                    "nombreTurno": "Nocturno"
-                  }
-                ]
-                """));
-            var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
+                    new VdOfertasDisponibles1y2
+                    {
+                        IdOferta = 57319,
+                        IdTurno = 1,
+                        NombreTurno = "Nocturno",
+                        HorarioReferenciaOferta = "Lunes 19:00"
+                    }
+                ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles1y2s).Returns(ofertasRepo.Object);
 
-            var result = await service.GetShifts(99, 10, 20);
+            var result = _service.GetShifts(99, 10, 20);
 
             Assert.True(result.Success);
             var offering = Assert.Single(result.Data!);
@@ -405,13 +402,10 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(1, offering.Shift.ShiftId);
             Assert.Equal("Nocturno", offering.Shift.ShiftName);
             Assert.Equal("Lunes 19:00", offering.ReferenceSchedule);
-
-            var request = Assert.Single(handler.Requests);
-            Assert.Contains("OfertasParaInscripcionAdmisionesConProceso?idProducto=10&idProceso=20", request.RequestUri);
         }
 
         [Fact]
-        public async Task ObtenerTurnos_Nivel3o4_UsesVistaAndDoesNotCallApi()
+        public void ObtenerTurnos_Nivel3o4_UsesVista3y4()
         {
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.GetByKey(10)).Returns(new Producto
@@ -444,10 +438,7 @@ namespace UnitTesting.AppLogic.Services
                 ]);
             _uowMock.Setup(u => u.Turnos).Returns(turnoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
-            var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
-
-            var result = await service.GetShifts(99, 10, 20);
+            var result = _service.GetShifts(99, 10, 20);
 
             Assert.True(result.Success);
             Assert.Equal(2, result.Data!.Count);
@@ -458,26 +449,23 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal(101, result.Data[1].OfferingId);
             Assert.Equal(2, result.Data[1].Shift.ShiftId);
             Assert.Equal("Nocturno", result.Data[1].Shift.ShiftName);
-            Assert.Empty(handler.Requests);
+            _uowMock.Verify(u => u.VdOfertasDisponibles1y2s, Times.Never);
             _uowMock.Verify(u => u.ProcesoComienzos, Times.Never);
         }
 
         [Fact]
-        public async Task ObtenerTurnos_WhenProductoDoesNotExist_ReturnsFailureWithoutCallingApi()
+        public void ObtenerTurnos_WhenProductoDoesNotExist_ReturnsFailureWithoutQueryingOfertas()
         {
             var productoRepo = new Mock<IProductoRepository>();
             productoRepo.Setup(r => r.GetByKey(99)).Returns((Producto)null);
             _uowMock.Setup(u => u.Productos).Returns(productoRepo.Object);
 
-            var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("No debe llamar la API"));
-            var service = new CatalogService(_uowFactoryMock.Object, CrearInscripcionesClient(handler));
-
-            var result = await service.GetShifts(99, 99, 20);
+            var result = _service.GetShifts(99, 99, 20);
 
             Assert.False(result.Success);
             Assert.Equal("CAT_TURNOS_02", result.ErrorCode);
             Assert.Equal(404, result.HttpCode);
-            Assert.Empty(handler.Requests);
+            _uowMock.Verify(u => u.VdOfertasDisponibles1y2s, Times.Never);
         }
 
         [Fact]
@@ -509,44 +497,5 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("Instituto Ejemplo", item.Name);
         }
 
-        private static EnrollmentsAndPaymentsApiClient CrearInscripcionesClient(HttpMessageHandler handler)
-        {
-            var httpClient = new HttpClient(handler)
-            {
-                BaseAddress = new Uri("https://internal.test/")
-            };
-
-            return new EnrollmentsAndPaymentsApiClient(
-                httpClient,
-                NullLogger<EnrollmentsAndPaymentsApiClient>.Instance);
-        }
-
-        private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)
-        {
-            return new HttpResponseMessage(statusCode)
-            {
-                Content = new StringContent(body, Encoding.UTF8, "application/json")
-            };
-        }
-
-        private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
-            : HttpMessageHandler
-        {
-            public List<CapturedRequest> Requests { get; } = [];
-
-            protected override async Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request,
-                CancellationToken cancellationToken)
-            {
-                Requests.Add(new CapturedRequest(
-                    request.Method,
-                    request.RequestUri?.ToString() ?? string.Empty,
-                    request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken)));
-
-                return handler(request);
-            }
-        }
-
-        private sealed record CapturedRequest(HttpMethod Method, string RequestUri, string Body);
     }
 }

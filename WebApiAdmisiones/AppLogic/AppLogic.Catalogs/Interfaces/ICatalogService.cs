@@ -34,13 +34,13 @@ public interface ICatalogService
 
     /// <summary>
     /// Obtiene los turnos/ofertas disponibles para una carrera y proceso. Según el nivel del producto, resuelve
-    /// las ofertas contra las vistas Devart (niveles 3 y 4) o contra la API de Inscripciones y Pagos (niveles 1 y 2).
+    /// las ofertas contra la vista Devart de niveles 1 y 2 o la de niveles 3 y 4.
     /// </summary>
-    /// <param name="personId">Persona autenticada: en niveles 3 y 4 se excluyen las ofertas en las que ya está inscripta.</param>
+    /// <param name="personId">Persona autenticada: se excluyen las ofertas en las que ya está inscripta.</param>
     /// <param name="degreeProgramId">Identificador del producto/carrera seleccionado.</param>
     /// <param name="admissionProcessId">Identificador del proceso/comienzo seleccionado.</param>
     /// <returns>Ofertas disponibles para la combinación indicada.</returns>
-    Task<OperationResult<List<OfferingResponse>>> GetShifts(long personId, long degreeProgramId, long admissionProcessId);
+    OperationResult<List<OfferingResponse>> GetShifts(long personId, long degreeProgramId, long admissionProcessId);
 
     /// <summary>
     /// Obtiene los bancos habilitados para pagos.

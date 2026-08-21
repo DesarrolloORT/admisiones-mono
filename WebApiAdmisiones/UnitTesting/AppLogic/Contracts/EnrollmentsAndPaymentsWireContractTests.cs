@@ -103,32 +103,6 @@ namespace UnitTesting.AppLogic.Contracts
         }
 
         [Fact]
-        public async Task Ofertas_LlenanTodasLasPropiedadesYAnidanElTurno()
-        {
-            var handler = Stub("""
-            [
-              {
-                "idOferta": 57319,
-                "idTurno": 1,
-                "nombreTurno": "Matutino",
-                "horarioReferencia": "Lunes y miercoles 08:00"
-              }
-            ]
-            """);
-
-            var result = await CrearClient(handler).GetOfferingsForEnrollmentWithProcessAsync(20, 99);
-
-            Assert.True(result.Success);
-            var oferta = Assert.Single(result.Data!);
-
-            // La API devuelve el turno PLANO; el DTO propio lo anida. Ese mapeo es el que se verifica.
-            Assert.Equal(57319, oferta.IdOferta);
-            Assert.Equal(1, oferta.Turno.IdTurno);
-            Assert.Equal("Matutino", oferta.Turno.NombreTurno);
-            Assert.Equal("Lunes y miercoles 08:00", oferta.HorarioReferencia);
-        }
-
-        [Fact]
         public async Task CuentaCorriente_LlenaTodasLasPropiedadesIncluidosLosMovimientos()
         {
             var handler = Stub("""
@@ -251,20 +225,6 @@ namespace UnitTesting.AppLogic.Contracts
             Assert.Contains("idInscripto=10", url);
             Assert.Contains("idProducto=20", url);
             Assert.DoesNotContain("productId", url);
-        }
-
-        [Fact]
-        public async Task Ofertas_UsanLasClavesDeQueryEnEspanol()
-        {
-            var handler = Stub("[]");
-
-            await CrearClient(handler).GetOfferingsForEnrollmentWithProcessAsync(10, 20);
-
-            var url = Assert.Single(handler.Requests).RequestUri;
-            Assert.Contains("idProducto=10", url);
-            Assert.Contains("idProceso=20", url);
-            Assert.DoesNotContain("productId", url);
-            Assert.DoesNotContain("admissionProcessId", url);
         }
 
         [Fact]
