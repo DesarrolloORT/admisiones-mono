@@ -1,9 +1,5 @@
 import type { EnrollmentConfirmedDetail } from './enrollment-detail';
 
-export type EnrollmentScenario = 'first-time' | 'partial' | 'survey-complete';
-
-export type InitialSurveyStatus = 'not-started' | 'in-progress' | 'complete';
-
 export type SurveySectionId =
   | 'education'
   | 'academic-decision'
@@ -265,10 +261,4 @@ export const PROFESSIONAL_UPDATE_SURVEY_SECTIONS: readonly SurveySectionId[] = [
   'work-situation',
   'identity',
   'regulation',
-];
-
-export const SURVEY_ANSWER_SECTIONS: readonly SurveySectionId[] = [
-  'education',
-  'academic-decision',
-  'ort-experience',
 ];
