@@ -20,7 +20,7 @@ export interface ScholarshipCatalogEntry {
 }
 
 const CATALOG: Readonly<Record<ScholarshipKind, ScholarshipCatalogEntry>> = {
-  fbr: { kind: 'fbr', route: '/becas/fbr', requiresEnrollment: false },
+  fbr: { kind: 'fbr', route: '/becas/fbr', requiresEnrollment: true },
   fexa: { kind: 'fexa', route: '/becas/fexa', requiresEnrollment: true },
   fbc: { kind: 'fbc', route: '/becas/fbc', requiresEnrollment: true },
   fcl: { kind: 'fcl', route: '/becas/fcl', requiresEnrollment: true },
