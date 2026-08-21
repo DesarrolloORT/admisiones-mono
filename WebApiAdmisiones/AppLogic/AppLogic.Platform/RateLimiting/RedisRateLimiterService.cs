@@ -27,7 +27,7 @@ public class RedisRateLimiterService(
     /// 2. Elimina requests fuera de la ventana de tiempo
     /// 3. Agrega el request actual
     /// 4. Cuenta total de requests en la ventana
-    /// 5. Permite si count <= limit
+    /// 5. Permite si count &lt;= limit
     /// 
     /// Ventajas sobre Fixed Window:
     /// - No hay "burst" al inicio de cada ventana
@@ -196,8 +196,8 @@ public class RedisRateLimiterService(
     /// Este método debe llamarse DESPUÉS de validar el rate limit por IP.
     /// </summary>
     /// <param name="ipAddress">Dirección IP del cliente</param>
-    /// <param name="tipoDocumento">Tipo de documento (ej: "CI", "Pasaporte")</param>
-    /// <param name="documento">Número de documento</param>
+    /// <param name="documentType">Tipo de documento (ej: "CI", "Pasaporte")</param>
+    /// <param name="document">Número de documento</param>
     /// <param name="limit">Límite de intentos permitidos</param>
     /// <param name="window">Ventana de tiempo</param>
     /// <returns>Información sobre si está permitido y cuántos intentos quedan</returns>

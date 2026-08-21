@@ -1,7 +1,6 @@
 # AppLogic.Catalogs
 
-**Nivel 6 — el más alto. Depende de `Contracts`, `DevartDtos`, `Enrollments` y
-`Integrations.EnrollmentsAndPayments`.**
+**Nivel 6 — el más alto. Depende de `Contracts`, `DevartDtos` y `Enrollments`.**
 
 ## Qué resuelve
 
@@ -29,7 +28,7 @@ La dirección es Catalogs → Enrollments, nunca al revés.
 | `GetInitialSurveyCatalogsAsync` | `initial-survey` | base + `InitialSurveyOptions` |
 | `GetDegreePrograms` | `degree-programs` | vistas `VdProductosDisponibles1y2` / `VdOfertasDisponibles3y4` |
 | `GetIntakes` | `intakes` | vista `VdProcesosDisponibles1y2` |
-| `GetShifts` | `shifts` | vista **o** API de Inscripciones y Pagos, según el nivel |
+| `GetShifts` | `shifts` | vistas `VdOfertasDisponibles1y2` / `VdOfertasDisponibles3y4`, según el nivel |
 | `GetBanksAsync` | `banks` | base |
 | `GetInstitutions` | `institutions` | base |
 
@@ -43,7 +42,12 @@ La dirección es Catalogs → Enrollments, nunca al revés.
   sobrecarga de un solo parámetro no excluye nada y existe para resolver descripciones de ofertas ya
   elegidas: la usa `ConfirmPreEnrollment`, donde filtrar por inscripciones frescas dejaría afuera
   justo las ofertas que se acaban de confirmar.
-- **Niveles 1 y 2** (grado y tecnicatura) → API de Inscripciones y Pagos.
+- **Niveles 1 y 2** (grado y tecnicatura) → vista Devart `VdOfertasDisponibles1y2`, por
+  `GetOfertasDisponibles(idProducto, idProceso, codigoPersona)`, que **excluye las ofertas donde la
+  persona ya tiene una inscripción vigente** (sin baja). La vista trae una fila por paquete, así que
+  la consulta deduplica por oferta. Antes esto salía de la API de Inscripciones y Pagos; el
+  `OfferingResponse` no cambió, y de las muchas columnas de la vista se mapean solo las que la API
+  llenaba (oferta, turno y horario de referencia).
 
 `personId` sale del token en el controller, no de la query string: la ruta `catalogs/shifts` no cambia
 para el front.

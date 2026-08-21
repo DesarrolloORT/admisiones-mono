@@ -107,6 +107,121 @@ namespace UnitTesting.AppLogic.Services
                 Times.Never);
         }
 
+        /// <summary>
+        /// Una encuesta DEFINITIVO sigue siendo editable: el postulante puede corregir una sección
+        /// mientras no confirme la preinscripción. Antes devolvía 403 INS_EI_56 porque el derecho a
+        /// encuesta consultaba ExisteCompletaPorDocumento.
+        /// </summary>
+        [Fact]
+        public void GuardarEncuestaInicial_DefinitivaSinProcesar_PermiteCorregir()
+        {
+            SetupPersonaValida();
+            var encuestaDefinitiva = new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                FechaProcesadoEncuestaIni = null
+            };
+            var encuestaRepo = SetupReposDerecho(encuestaDefinitiva);
+
+            var result = _service.SaveInitialSurvey(123, new SaveInitialSurveyRequest());
+
+            Assert.True(result.Success);
+            encuestaRepo.Verify(r => r.Update(encuestaDefinitiva), Times.AtLeastOnce);
+            encuestaRepo.Verify(r => r.Add(It.IsAny<EncuestaIniAdmision>()), Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        /// <summary>
+        /// Con FECHA_PROCESADO_ENCUESTA_INI sellada, LogicaORT ya copió la encuesta a T_ENCUESTA_INI
+        /// al confirmar la preinscripción: desde ahí no admite cambios.
+        /// </summary>
+        [Fact]
+        public void GuardarEncuestaInicial_YaProcesada_DevuelveConflicto()
+        {
+            SetupPersonaValida();
+            var encuestaProcesada = new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                FechaProcesadoEncuestaIni = FechaBase
+            };
+            var encuestaRepo = SetupReposDerecho(encuestaProcesada);
+
+            var result = _service.SaveInitialSurvey(123, new SaveInitialSurveyRequest());
+
+            Assert.False(result.Success);
+            Assert.Equal(409, result.HttpCode);
+            Assert.Equal("INS_EI_57", result.ErrorCode);
+            encuestaRepo.Verify(r => r.Update(It.IsAny<EncuestaIniAdmision>()), Times.Never);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
+        }
+
+        /// <summary>
+        /// Una encuesta DEFINITIVO sin procesar se sigue devolviendo: el postulante que salió del flujo
+        /// y vuelve tiene que poder ver y corregir lo que cargó.
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_DefinitivaSinProcesar_DevuelveEncuesta()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                FechaProcesadoEncuestaIni = null
+            });
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.CanAnswerSurvey);
+            Assert.NotNull(result.Data.Survey);
+            Assert.Equal(900, result.Data.Survey.SurveyId);
+        }
+
+        /// <summary>
+        /// Procesada por LogicaORT (migrada a T_ENCUESTA_INI): la encuesta deja de mostrarse.
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_YaProcesada_NoDevuelveEncuesta()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                FechaProcesadoEncuestaIni = FechaBase
+            });
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data!.CanAnswerSurvey);
+            Assert.Null(result.Data.Survey);
+        }
+
+        /// <summary>
+        /// El derecho a encuesta también corta por la tabla final: una vez que LogicaORT insertó en
+        /// T_ENCUESTA_INI al confirmar la preinscripción, el GET no devuelve nada.
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_ConEncuestaHistorica_NoDevuelveEncuesta()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(encuestaExistente: null, existeEncuestaIni: true);
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.False(result.Data!.CanAnswerSurvey);
+            Assert.Null(result.Data.Survey);
+        }
+
         // ---- Helpers de setup (harness compacto, solo lo necesario) ----
 
         private void SetupPersona(Persona? person)
@@ -123,18 +238,19 @@ namespace UnitTesting.AppLogic.Services
         /// Configura los repos que determinan el derecho a encuesta (todos "no existe" =&gt; tiene derecho)
         /// y devuelve el mock de EncuestaIniAdmisions para setups adicionales.
         /// </summary>
-        private Mock<IEncuestaIniAdmisionRepository> SetupReposDerecho(EncuestaIniAdmision? encuestaExistente)
+        private Mock<IEncuestaIniAdmisionRepository> SetupReposDerecho(
+            EncuestaIniAdmision? encuestaExistente,
+            bool existeEncuestaIni = false)
         {
             var frescoRepo = new Mock<IVdEsFrescoAdmisionRepository>();
             frescoRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(false);
             _uowMock.Setup(u => u.VdEsFrescoAdmisions).Returns(frescoRepo.Object);
 
             var encuestaIniRepo = new Mock<IEncuestaIniRepository>();
-            encuestaIniRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(false);
+            encuestaIniRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(existeEncuestaIni);
             _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
 
             var encuestaAdmRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaAdmRepo.Setup(r => r.ExisteCompletaPorDocumento("DE", "123")).Returns(false);
             encuestaAdmRepo.Setup(r => r.GetByPersona(123)).Returns(encuestaExistente);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaAdmRepo.Object);
 

@@ -15,7 +15,7 @@ public interface IIdentityDocumentImageCache
 
     /// <summary>
     /// Arma el DTO de imágenes temporales de documento reconocido y lo guarda en cache si
-    /// <paramref name="tipoDocumento"/>/<paramref name="numeroDocumento"/> son válidos. No lanza:
+    /// <paramref name="documentType"/>/<paramref name="numeroDocumento"/> son válidos. No lanza:
     /// si falla el guardado (Redis/serialización), se loguea como warning y no corta el flujo.
     /// </summary>
     Task SaveTemporaryImagesIfApplicableAsync(

@@ -125,7 +125,7 @@ namespace UnitTesting.Controllers
         }
 
         [Fact]
-        public async Task ObtenerTurnos_ReturnsOk()
+        public void ObtenerTurnos_ReturnsOk()
         {
             var serviceMock = new Mock<ICatalogService>();
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -133,7 +133,7 @@ namespace UnitTesting.Controllers
             var controller = new CatalogsController(serviceMock.Object, loggerMock.Object, currentUserMock.Object);
 
             serviceMock.Setup(s => s.GetShifts(It.IsAny<long>(), 10, 20))
-                .ReturnsAsync(OperationResult<List<OfferingResponse>>.Ok(
+                .Returns(OperationResult<List<OfferingResponse>>.Ok(
                     [
                         new OfferingResponse
                         {
@@ -143,7 +143,7 @@ namespace UnitTesting.Controllers
                     ],
                     nameof(ICatalogService.GetShifts)));
 
-            var response = await controller.GetShifts(10, 20);
+            var response = controller.GetShifts(10, 20);
 
             var okResult = Assert.IsType<ObjectResult>(response);
             Assert.Equal(200, okResult.StatusCode);

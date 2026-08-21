@@ -9,47 +9,6 @@ namespace UnitTesting.AppLogic.ApiClients
     public class EnrollmentsAndPaymentsApiClientTests
     {
         [Fact]
-        public async Task ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync_WithSuccess_MapsOfertaAdmisionesResponse()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.OK, """
-                [
-                  {
-                    "idOferta": 57319,
-                    "horarioReferencia": "Lunes y miercoles 08:00",
-                    "idTurno": 1,
-                    "nombreTurno": "Matutino"
-                  }
-                ]
-                """));
-            var client = CrearClient(handler);
-
-            var result = await client.GetOfferingsForEnrollmentWithProcessAsync(20, 99);
-
-            Assert.True(result.Success);
-            var offering = Assert.Single(result.Data!);
-            Assert.Equal(57319, offering.IdOferta);
-            Assert.Equal(1, offering.Turno.IdTurno);
-            Assert.Equal("Matutino", offering.Turno.NombreTurno);
-            Assert.Equal("Lunes y miercoles 08:00", offering.HorarioReferencia);
-        }
-
-        [Fact]
-        public async Task ObtenerOfertasParaInscripcionAdmisionesConProcesoAsync_WhenApiRejects_ReturnsFailure()
-        {
-            var handler = new StubHttpMessageHandler(_ =>
-                JsonResponse(HttpStatusCode.BadRequest, "combinacion invalida"));
-            var client = CrearClient(handler);
-
-            var result = await client.GetOfferingsForEnrollmentWithProcessAsync(20, 99);
-
-            Assert.False(result.Success);
-            Assert.Equal("OFERTAS_INSCRIPCION_PROCESO_01", result.ErrorCode);
-            Assert.Equal(400, result.HttpCode);
-            Assert.Contains("BadRequest", result.Message);
-        }
-
-        [Fact]
         public async Task PagarCarritosPorInscripcionAsync_WithCustomPaymentType_PostsAllInscripciones()
         {
             var handler = new StubHttpMessageHandler(_ =>

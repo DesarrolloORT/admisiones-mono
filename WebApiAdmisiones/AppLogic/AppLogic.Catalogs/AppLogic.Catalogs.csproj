@@ -15,6 +15,5 @@
 		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
 		<ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
 		<ProjectReference Include="..\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />
-		<ProjectReference Include="..\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />
 	</ItemGroup>
 </Project>

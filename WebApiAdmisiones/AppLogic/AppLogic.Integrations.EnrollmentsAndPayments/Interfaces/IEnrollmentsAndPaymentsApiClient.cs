@@ -25,14 +25,6 @@ public interface IEnrollmentsAndPaymentsApiClient
     Task<OperationResult<SeniaMinimaApiResponse>> GetMinimumDepositAsync(long idInscripto, long productId);
 
     /// <summary>
-    /// Obtiene las ofertas disponibles para inscripción en admisiones con proceso.
-    /// Corresponde a: GET /OfertasParaInscripcionAdmisionesConProceso
-    /// </summary>
-    Task<OperationResult<List<OfertaInscripcionDto>>> GetOfferingsForEnrollmentWithProcessAsync(
-        long productId,
-        long admissionProcessId);
-
-    /// <summary>
     /// Obtiene el estado de cuenta corriente.
     /// Corresponde a: GET /api/Pagos/CtaCte
     /// </summary>

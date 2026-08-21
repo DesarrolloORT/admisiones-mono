@@ -9,13 +9,12 @@ lugar del sistema que le habla a ese servicio.
 
 ## Qué expone
 
-`IEnrollmentsAndPaymentsApiClient`, con 8 operaciones:
+`IEnrollmentsAndPaymentsApiClient`, con 7 operaciones:
 
 | Método | Endpoint remoto |
 |---|---|
 | `ConfirmMultiplePreEnrollmentAsync` | confirma la preinscripción de varias ofertas de una |
 | `GetMinimumDepositAsync` | `Inscripciones/SeniaMinima` — seña mínima de una inscripción |
-| `GetOfferingsForEnrollmentWithProcessAsync` | `Inscripciones/OfertasParaInscripcionAdmisionesConProceso` |
 | `GetCurrentAccountAsync` | `Pagos/CtaCte` — estado de cuenta |
 | `GetCoursePaymentsAsync` | pagos por curso |
 | `GetCartsByEnrollmentAsync` | `Pagos/Carritos` |
@@ -27,7 +26,7 @@ configuración de la URL base y el handler son decisión del composition root.
 
 ## ⚠️ Los DTOs de este proyecto están en español A PROPÓSITO
 
-`OfertaInscripcionDto`, `ResumenInscripcionApiDto`, `CursosPagosResponse`, `CtaCteResponse`,
+`ResumenInscripcionApiDto`, `CursosPagosResponse`, `CtaCteResponse`,
 `SeniaMinimaApiResponse`, `CarritoPagoReservaApiDto`, `DtoTurno`, `ConfirmarPreInscripcionMultipleApi*`…
 todos tienen propiedades como `IdOferta`, `Comienzo`, `SaldoActual`, `ValorSeniaMinima`.
 
@@ -56,7 +55,6 @@ grep -n 'idProducto\|idProceso\|tipoPago\|banco' Services/EnrollmentsAndPayments
 Ese es el límite anticorrupción. Cada módulo consumidor mapea a su propio DTO en inglés:
 
 - `CartPaymentMessage` → `Enrollments.PaymentMessage` (vía `EnrollmentMapper.ToPaymentMessages`)
-- `OfertaInscripcionDto` → `Catalogs.OfferingResponse` (vía `Catalogs.Mapping.OfferingMapper`)
 
 Está cubierto por `RenamedDtoJsonContractTests`, que verifica las dos direcciones: que los DTOs
 propios serializan en inglés y que `CartPaymentMessage` sigue deserializando el formato español.
@@ -64,7 +62,5 @@ propios serializan en inglés y que `CartPaymentMessage` sigue deserializando el
 ## Estructura
 
 - `Dtos/` — el formato del sistema remoto (español).
-- `Mapping/OfferingApiMapper` — la respuesta plana de ofertas de la API a `OfertaInscripcionDto`,
-  que es anidado. Incluye `OfferingApiResponse`, la forma exacta que devuelve el remoto.
 - `Services/EnrollmentsAndPaymentsApiClient` — el cliente. Toda llamada pasa por `SendAsync`, que
   centraliza el manejo de errores y la traducción a `OperationResult`.

@@ -64,6 +64,14 @@ public sealed class InitialSurveyService(
                 "La persona no tiene encuesta inicial.",
                 200);
 
+        // Procesada por LogicaORT: la encuesta ya se migró a T_ENCUESTA_INI y no se muestra más.
+        if (!InitialSurveyState.IsEditable(survey))
+            return OperationResult<GetInitialSurveyResponse>.IsSuccess(
+                new GetInitialSurveyResponse { CanAnswerSurvey = false },
+                nameof(GetInitialSurvey),
+                "La encuesta inicial ya fue procesada con la preinscripcion.",
+                200);
+
         var pendientes = InitialSurveyValidation.ValidateCompletenessFromDb(uow, survey, personId);
         return OperationResult<GetInitialSurveyResponse>.Ok(
             new GetInitialSurveyResponse
@@ -124,6 +132,15 @@ public sealed class InitialSurveyService(
         }
 
         var survey = GetSurveyToSave(uow, personId, request, contexto.Data);
+        if (!InitialSurveyState.IsEditable(survey))
+        {
+            return OperationResult<SaveInitialSurveyResponse>.IsFailed(
+                "INS_EI_57",
+                nameof(SaveInitialSurvey),
+                "La encuesta inicial ya fue procesada con la preinscripcion y no admite cambios.",
+                409);
+        }
+
         var isNew = survey == null;
         survey ??= CreateInitialSurvey(person, personId);
 
@@ -178,16 +195,18 @@ public sealed class InitialSurveyService(
         }
     }
 
+    /// <summary>
+    /// Derecho a encuesta: no ser fresco del proceso legacy y no tener encuesta histórica.
+    /// El estado DEFINITIVO no se consulta acá a propósito: significa "completa", no "cerrada".
+    /// El cierre lo marca FECHA_PROCESADO_ENCUESTA_INI, que sella LogicaORT cuando la confirmación
+    /// de preinscripción copia la encuesta a T_ENCUESTA_INI.
+    /// </summary>
     private static bool CanAnswerInitialSurvey(string documentType, string document, IUnitOfWork uow)
     {
         if (uow.VdEsFrescoAdmisions?.ExistePorDocumento(documentType, document) == true)
             return false;
-        if (uow.EncuestaInis?.ExistePorDocumento(documentType, document) == true)
-            return false;
-        if (uow.EncuestaIniAdmisions?.ExisteCompletaPorDocumento(documentType, document) == true)
-            return false;
 
-        return true;
+        return uow.EncuestaInis?.ExistePorDocumento(documentType, document) != true;
     }
 
     private static OperationResult<AdmissionContext?> ResolveAdmissionContext(

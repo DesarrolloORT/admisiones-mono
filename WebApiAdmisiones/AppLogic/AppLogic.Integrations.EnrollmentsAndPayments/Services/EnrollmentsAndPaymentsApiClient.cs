@@ -1,4 +1,3 @@
-using AppLogic.Integrations.EnrollmentsAndPayments.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -76,38 +75,6 @@ public class EnrollmentsAndPaymentsApiClient(HttpClient httpClient, ILogger<Enro
             "SENIA_MINIMA_01",
             nameof(GetMinimumDepositAsync),
             "Error al obtener la seña mínima");
-    }
-
-    /// <summary>
-    /// Obtiene las ofertas disponibles para inscripción en admisiones con proceso.
-    /// Corresponde a: GET /OfertasParaInscripcionAdmisionesConProceso
-    /// </summary>
-    /// <param name="productId">ID del producto</param>
-    /// <param name="admissionProcessId">ID del proceso</param>
-    /// <returns>Lista de ofertas disponibles</returns>
-    public async Task<OperationResult<List<OfertaInscripcionDto>>> GetOfferingsForEnrollmentWithProcessAsync(
-        long productId,
-        long admissionProcessId)
-    {
-        return await SendAsync<List<OfferingApiMapper.OfferingApiResponse>, List<OfertaInscripcionDto>>(
-            () =>
-            {
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation(
-                    "Obteniendo ofertas para inscripción con proceso - Producto: {IdProducto}, Proceso: {IdProceso}",
-                    productId,
-                    admissionProcessId
-                    );
-                }
-
-                var url = $"ORTSecure/Inscripciones/OfertasParaInscripcionAdmisionesConProceso?idProducto={productId}&idProceso={admissionProcessId}";
-                return _httpClient.GetAsync(url);
-            },
-            "OFERTAS_INSCRIPCION_PROCESO_01",
-            nameof(GetOfferingsForEnrollmentWithProcessAsync),
-            "Error al obtener ofertas con proceso",
-            OfferingApiMapper.ToDtos);
     }
 
     #endregion
@@ -251,8 +218,7 @@ public class EnrollmentsAndPaymentsApiClient(HttpClient httpClient, ILogger<Enro
 
     /// <summary>
     /// Variante de <see cref="SendAsync{T}"/> para métodos que mapean el tipo deserializado
-    /// (<typeparamref name="TResponse"/>) a un tipo de resultado distinto (<typeparamref name="TResult"/>),
-    /// como <see cref="GetOfferingsForEnrollmentWithProcessAsync"/>.
+    /// (<typeparamref name="TResponse"/>) a un tipo de resultado distinto (<typeparamref name="TResult"/>).
     /// </summary>
     private async Task<OperationResult<TResult>> SendAsync<TResponse, TResult>(
         Func<Task<HttpResponseMessage>> requestFactory,

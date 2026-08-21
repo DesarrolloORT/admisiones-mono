@@ -37,6 +37,15 @@ internal static class InitialSurveyState
     internal const string DecisionAcademica = "decisionAcademica";
     internal const string ExperienciaOrt = "experienciaOrt";
 
+    /// <summary>
+    /// La encuesta admite cambios mientras LogicaORT no la haya procesado: al confirmar la
+    /// preinscripción copia la encuesta a T_ENCUESTA_INI y sella FECHA_PROCESADO_ENCUESTA_INI.
+    /// El estado DEFINITIVO no cierra nada, sólo indica que no faltan datos.
+    /// Una encuesta que todavía no existe es editable.
+    /// </summary>
+    internal static bool IsEditable(EncuestaIniAdmision? survey)
+        => survey?.FechaProcesadoEncuestaIni == null;
+
     internal static string BoolToYesNo(bool value)
         => value ? Si : No;
 

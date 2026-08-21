@@ -83,7 +83,7 @@ namespace WebApiAdmisiones.Security.Cache
         public OperationResult<IEnumerable<IntakeResponse>> GetIntakes(long degreeProgramId)
             => inner.GetIntakes(degreeProgramId);
 
-        public Task<OperationResult<List<OfferingResponse>>> GetShifts(long personId, long degreeProgramId, long admissionProcessId)
+        public OperationResult<List<OfferingResponse>> GetShifts(long personId, long degreeProgramId, long admissionProcessId)
             => inner.GetShifts(personId, degreeProgramId, admissionProcessId);
 
         public async Task<OperationResult<IEnumerable<BankResponse>>> GetBanksAsync()

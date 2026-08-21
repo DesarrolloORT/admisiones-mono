@@ -1,18 +1,14 @@
 using AppLogic.Catalogs.Dtos;
 using AppLogic.Catalogs.Interfaces;
 using AppLogic.Catalogs.Mapping;
-using AppLogic.Integrations.EnrollmentsAndPayments.Interfaces;
 using BusinessLogic.IDevartRepositories;
 using Utilities;
 
 namespace AppLogic.Catalogs.Services;
 
-public class CatalogService(
-    IUnitOfWorkFactory uowFactory,
-    IEnrollmentsAndPaymentsApiClient enrollmentsAndPaymentsApiClient) : ICatalogService
+public class CatalogService(IUnitOfWorkFactory uowFactory) : ICatalogService
 {
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
-    private readonly IEnrollmentsAndPaymentsApiClient _enrollmentsAndPaymentsApiClient = enrollmentsAndPaymentsApiClient;
 
     public Task<OperationResult<IEnumerable<CountryStateCityResponse>>> GetCountriesStatesCitiesAsync()
     {
@@ -87,7 +83,7 @@ public class CatalogService(
             nameof(GetIntakes));
     }
 
-    public async Task<OperationResult<List<OfferingResponse>>> GetShifts(long personId, long degreeProgramId, long admissionProcessId)
+    public OperationResult<List<OfferingResponse>> GetShifts(long personId, long degreeProgramId, long admissionProcessId)
     {
         using var uow = _uowFactory.Create();
         var product = uow.Productos.GetByKey(degreeProgramId);
@@ -137,21 +133,11 @@ public class CatalogService(
                 default);
         }
 
-        var offeringsResult = await _enrollmentsAndPaymentsApiClient
-            .GetOfferingsForEnrollmentWithProcessAsync(degreeProgramId, admissionProcessId);
-
-        if (!offeringsResult.Success)
-        {
-            return OperationResult<List<OfferingResponse>>.IsFailed(
-                offeringsResult.ErrorCode,
-                nameof(GetShifts),
-                offeringsResult.Message,
-                offeringsResult.HttpCode,
-                offeringsResult.Data?.Select(OfferingMapper.ToResponse).ToList());
-        }
-
         return OperationResult<List<OfferingResponse>>.Ok(
-            offeringsResult.Data!.Select(OfferingMapper.ToResponse).ToList(),
+            uow.VdOfertasDisponibles1y2s
+                .GetOfertasDisponibles(degreeProgramId, admissionProcessId, personId)
+                .Select(OfferingMapper.ToResponse)
+                .ToList(),
             nameof(GetShifts));
     }
 
