@@ -3,12 +3,19 @@
   <section aria-labelledby="scholarships-title" class="scholarships-screen">
     <div class="scholarships-screen__header">
       <h1 class="scholarships-title" id="scholarships-title">Postulación a becas</h1>
-      <p class="scholarships-description">Conocé las becas disponibles y sus requisitos.</p>
+      @if (isEnrolled()) {
+      <p class="scholarships-description">Seleccioná la beca más adecuada a tu perfil.</p>
+      } @else {
+      <p class="scholarships-description">
+        Conocé las becas disponibles y sus requisitos. Para postularte a una beca, necesitás haber
+        completado el proceso de inscripción.
+      </p>
+      }
     </div>
 
     @if (!hasScholarships()) {
     <p class="scholarships-description">No hay becas disponibles en este momento.</p>
-    } @else if (isEnrolled()) {
+    } @else {
     <ul class="scholarship-list">
       @for (scholarship of cards(); track scholarship.title) {
       <li>
@@ -16,35 +23,6 @@
       </li>
       }
     </ul>
-    } @else {
-    <!-- Sin inscripción habilitante: primero las becas que igual se pueden pedir. -->
-    @for (scholarship of withoutEnrollment(); track scholarship.title) {
-    <app-scholarship-card
-      [isEnrolled]="isEnrolled()"
-      [scholarship]="scholarship"
-      [single]="withoutEnrollment().length === 1" />
-    } @if (withEnrollment().length) {
-    <div class="with-enrollment__container">
-      <div class="enrollment-separation__container">
-        <div class="enrollment-separation">
-          <span>Con inscripción previa</span>
-        </div>
-        <p class="enrollment-separation__text">
-          La postulación a estas becas requiere que hayas completado el proceso de inscripción y
-          abonado la seña.
-        </p>
-      </div>
-      <ul class="scholarship-list scholarship-list__grid">
-        @for (scholarship of withEnrollment(); track scholarship.title) {
-        <li>
-          <app-scholarship-card
-            [isEnrolled]="isEnrolled()"
-            [scholarship]="scholarship"
-            [style.opacity]="0.75" />
-        </li>
-        }
-      </ul>
-    </div>
-    } }
+    }
   </section>
 </main>
