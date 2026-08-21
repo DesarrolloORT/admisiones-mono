@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
 import { catchError, of } from 'rxjs';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { HomeHeader } from 'src/app/shared/ui/home-header/home-header';
 
 import { ScholarshipsApi } from '../../api/scholarships.api';
 import type { ScholarshipCardModel } from '../../components/scholarship-card/scholarship-card';
 import { ScholarshipCard } from '../../components/scholarship-card/scholarship-card';
 import type { AvailableScholarships } from '../../models/available-scholarship.interface';
+import type { ScholarshipKind } from '../../models/scholarship-catalog';
 import { resolveScholarshipCatalogEntry } from '../../models/scholarship-catalog';
 
 /**
@@ -18,6 +20,16 @@ const EMPTY_CATALOG: AvailableScholarships = {
   requiresPriorEnrollment: true,
   scholarships: [],
 };
+
+/** Orden fijo de exhibición, pedido por negocio; no depende del orden del backend. */
+const DISPLAY_ORDER: readonly ScholarshipKind[] = ['fexa', 'fbc', 'fcl', 'fbr'];
+
+/** Las becas que el front todavía no reconoce quedan al final. */
+function displayRank(kind: ScholarshipKind | undefined): number {
+  const index = kind ? DISPLAY_ORDER.indexOf(kind) : -1;
+
+  return index === -1 ? DISPLAY_ORDER.length : index;
+}
 
 @Component({
   selector: 'app-scholarships',
@@ -30,6 +42,7 @@ const EMPTY_CATALOG: AvailableScholarships = {
 export class Scholarships {
   private readonly scholarshipsApi = inject(ScholarshipsApi);
   private readonly breakpointService = inject(BreakpointService);
+  private readonly authSession = inject(AuthSessionService);
 
   /**
    * La page inyecta **el adapter de su feature** — no hay service de reenvio ni
@@ -50,28 +63,19 @@ export class Scholarships {
    * front (a donde lleva la card y si exige inscripcion previa).
    */
   protected readonly cards = computed<ScholarshipCardModel[]>(() =>
-    this.available().scholarships.map(scholarship => {
-      const entry = resolveScholarshipCatalogEntry(
-        scholarship.scholarshipTypeIds,
-        scholarship.name
-      );
-
-      return {
+    this.available()
+      .scholarships.map(scholarship => ({
+        scholarship,
+        entry: resolveScholarshipCatalogEntry(scholarship.scholarshipTypeIds, scholarship.name),
+      }))
+      .sort((a, b) => displayRank(a.entry?.kind) - displayRank(b.entry?.kind))
+      .map(({ scholarship, entry }) => ({
         title: scholarship.name,
         description: scholarship.description,
         requiresExam: scholarship.requiresTest,
         requiresEnrollment: entry?.requiresEnrollment ?? true,
         route: entry?.route ?? null,
-      };
-    })
-  );
-
-  protected readonly withoutEnrollment = computed(() =>
-    this.cards().filter(card => !card.requiresEnrollment)
-  );
-
-  protected readonly withEnrollment = computed(() =>
-    this.cards().filter(card => card.requiresEnrollment)
+      }))
   );
 
   protected readonly hasScholarships = computed(() => this.cards().length > 0);
@@ -81,4 +85,8 @@ export class Scholarships {
 
     return breakpoint.isXSmall || breakpoint.isSmall;
   });
+
+  protected logout(): void {
+    this.authSession.logout();
+  }
 }

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthSessionService } from 'src/app/features/auth/services/auth-session';
 import { vi } from 'vitest';
 
 import { ScholarshipsApi } from '../../api/scholarships.api';
@@ -24,13 +25,17 @@ const CATALOGUE = [
 describe('Scholarships', () => {
   let fixture: ComponentFixture<Scholarships>;
   let getAvailableScholarships: ReturnType<typeof vi.fn>;
+  let logout: ReturnType<typeof vi.fn>;
 
   function setup(): void {
+    logout = vi.fn();
+
     TestBed.configureTestingModule({
       imports: [Scholarships],
       providers: [
         provideRouter([]),
         { provide: ScholarshipsApi, useValue: { getAvailableScholarships } },
+        { provide: AuthSessionService, useValue: { logout } },
       ],
     });
 
@@ -61,13 +66,12 @@ describe('Scholarships', () => {
     expect(textContent()).toContain('Para quienes se destacaron en secundaria.');
   });
 
-  it('gates the scholarships that need a prior enrollment', () => {
+  it('gates every scholarship when the person has no enabling enrollment', () => {
     setup();
 
-    expect(textContent()).toContain('Con inscripción previa');
-    // Reválidas no exige inscripción: sigue siendo postulable.
-    const links = fixture.nativeElement.querySelectorAll('a[href="/becas/fbr"]');
-    expect(links.length).toBe(1);
+    // Ninguna beca del catálogo se puede postular sin inscripción previa.
+    expect(fixture.nativeElement.querySelectorAll('a[href^="/becas/"]')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('a[href="/inscripciones"]')).toHaveLength(2);
   });
 
   it('opens every scholarship when the person already has an enabling enrollment', () => {
@@ -76,7 +80,6 @@ describe('Scholarships', () => {
       .mockReturnValue(of({ requiresPriorEnrollment: false, scholarships: CATALOGUE }));
     setup();
 
-    expect(textContent()).not.toContain('Con inscripción previa');
     expect(fixture.nativeElement.querySelectorAll('a[href^="/becas/"]').length).toBe(2);
   });
 
@@ -99,6 +102,67 @@ describe('Scholarships', () => {
     expect(textContent()).toContain('Fondo nuevo sin pantalla');
     expect(textContent()).toContain('Postulación no disponible en línea');
     expect(fixture.nativeElement.querySelectorAll('a[href^="/becas/"]').length).toBe(0);
+  });
+
+  it('orders the cards as fexa, fbc, fcl, fbr regardless of the api order', () => {
+    getAvailableScholarships = vi.fn().mockReturnValue(
+      of({
+        requiresPriorEnrollment: false,
+        scholarships: [
+          {
+            scholarshipTypeIds: [],
+            name: 'Fondo de becas de reválidas',
+            description: '',
+            requiresTest: false,
+          },
+          {
+            scholarshipTypeIds: [],
+            name: 'Fondo de becas de capacitación laboral',
+            description: '',
+            requiresTest: false,
+          },
+          {
+            scholarshipTypeIds: [33],
+            name: 'Fondo de Excelencia Académica',
+            description: '',
+            requiresTest: true,
+          },
+          {
+            scholarshipTypeIds: [],
+            name: 'Fondo de becas concursables',
+            description: '',
+            requiresTest: true,
+          },
+        ],
+      })
+    );
+    setup();
+
+    const titles = Array.from(
+      fixture.nativeElement.querySelectorAll('.scholarship-card__title')
+    ).map(el => (el as HTMLElement).textContent);
+
+    expect(titles).toEqual([
+      'Fondo de Excelencia Académica',
+      'Fondo de becas concursables',
+      'Fondo de becas de capacitación laboral',
+      'Fondo de becas de reválidas',
+    ]);
+  });
+
+  it('logs out through the shared auth session when the header requests it', () => {
+    setup();
+
+    fixture.nativeElement
+      .querySelector('.home-avatar')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('.home-profile-menu__item[type="button"]')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(logout).toHaveBeenCalledOnce();
   });
 
   it('shows an empty state when the catalogue comes back empty', () => {

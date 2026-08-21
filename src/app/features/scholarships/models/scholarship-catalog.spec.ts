@@ -37,10 +37,8 @@ describe('resolveScholarshipCatalogEntry', () => {
     expect(resolveScholarshipCatalogEntry([], 'BECAS DE REVALIDAS')?.kind).toBe('fbr');
   });
 
-  it('marks only reválidas as available without a prior enrollment', () => {
-    expect(resolveScholarshipCatalogEntry([], 'Becas de Reválidas')?.requiresEnrollment).toBe(
-      false
-    );
+  it('marks every scholarship as requiring a prior enrollment', () => {
+    expect(resolveScholarshipCatalogEntry([], 'Becas de Reválidas')?.requiresEnrollment).toBe(true);
     expect(resolveScholarshipCatalogEntry([], 'Becas Concursables')?.requiresEnrollment).toBe(true);
   });
 

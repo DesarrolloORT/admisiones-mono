@@ -53,14 +53,3 @@
 .scholarship-card__btn {
   width: 100%;
 }
-
-@media (width >= 1024px) {
-  .scholarship-card--single .scholarship-card__btn {
-    align-self: flex-start;
-    width: 20%;
-  }
-
-  .scholarship-card--single .scholarship-card__description {
-    width: 50%;
-  }
-}
