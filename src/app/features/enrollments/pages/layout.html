@@ -10,7 +10,7 @@
   [stepperSubtitle]="process.stepLabel()"
   [steps]="process.stepItems()"
   (back)="process.back()"
-  (closeFlow)="process.requestExit()"
+  (closeFlow)="process.exit()"
   (logoutRequested)="logout()">
   @if (survey.loadingSurveyState()) {
   <section
@@ -109,22 +109,3 @@
   <app-enrollment-confirmation-step />
   } } }
 </app-process-layout>
-
-<ort-dialog
-  caption="Las secciones que completaste ya quedaron guardadas."
-  closeButtonAriaLabel="Continuar con la inscripción"
-  title="¿Querés salir de la inscripción?"
-  [open]="process.exitConfirmationOpen()"
-  (closed)="process.cancelExit()">
-  <p>
-    Lo que dejaste a medio completar y los archivos de identidad deberán cargarse otra vez cuando
-    retomes el proceso.
-  </p>
-  <ng-container ortDialogFooter>
-    <!-- eslint-disable-next-line @angular-eslint/template/no-autofocus -- El diálogo exige un destino de foco inicial explícito. -->
-    <button autofocus ort-secondary-button type="button" (click)="process.cancelExit()">
-      Continuar aquí
-    </button>
-    <button ort-primary-button type="button" (click)="process.confirmExit()">Salir</button>
-  </ng-container>
-</ort-dialog>

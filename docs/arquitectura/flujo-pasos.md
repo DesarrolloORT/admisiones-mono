@@ -139,9 +139,7 @@ backend manda sobre los datos; la intención manda sobre presentación/navegaci�
   quién renderiza a quién: `enrollment-personal-step/sections/` contiene las
   6 secciones que **solo** ese paso usa (para ver quién le pasa `orientation`
   a una sección, el padre está en la carpeta de arriba, no disperso entre 15
-  hermanos). El diálogo de confirmación de salida (en `layout`) usa el
-  `ort-dialog` compartido del design system en lugar de un componente propio de
-  la feature.
+  hermanos).
 
 ---
 

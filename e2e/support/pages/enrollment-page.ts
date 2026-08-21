@@ -320,27 +320,6 @@ export class EnrollmentPage {
     await expect(radio).toBeChecked();
   }
 
-  // Una sola respuesta de la encuesta, para verificar el guardado por delta.
-  public async answerSurveyRadio(controlName: string, label: string): Promise<void> {
-    await this.chooseRadio(controlName, label);
-  }
-
-  public surveyRadio(controlName: string, label: string): Locator {
-    return this.radioGroup(controlName).getByRole('radio', {
-      name: new RegExp(`^${escapeRegExp(label)}(?:\\s|$)`),
-    });
-  }
-
-  public async exitFlow(): Promise<void> {
-    // La X del header es de la vista compacta; en desktop el proceso se cierra desde el aside.
-    const headerClose = this.page.getByRole('button', { name: 'Cerrar inscripción' });
-    const asideExit = this.page.getByRole('button', { name: 'Salir del proceso' });
-    await ((await headerClose.isVisible()) ? headerClose : asideExit).click();
-    await expect(this.page.getByText('¿Querés salir de la inscripción?')).toBeVisible();
-    await this.page.getByRole('button', { name: 'Salir', exact: true }).click();
-    await expect(this.page).toHaveURL(/\/inicio/);
-  }
-
   private async continue(): Promise<void> {
     const button = this.page.getByRole('button', { name: 'Continuar', exact: true });
     await button.click();

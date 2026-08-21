@@ -217,7 +217,7 @@ export class CatalogsApi {
     return {
       id: item.value ?? 0,
       label: item.label ?? '',
-      orientation: item.track ?? item.newTrack ?? null,
+      orientation: item.label ?? item.newTrack ?? null,
     };
   }
 

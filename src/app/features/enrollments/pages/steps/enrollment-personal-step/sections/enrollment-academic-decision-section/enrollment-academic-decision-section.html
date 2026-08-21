@@ -28,10 +28,8 @@
 
   <app-responsive-select
     aria-label="Apoyo en la decisión"
-    errorText="Seleccioná una opción"
     formControlName="decisionSupport"
     label="¿Quiénes te apoyaron en la decisión?"
-    placeholder="Seleccioná..."
     [disabled]="facade.options.loadingInitialSurveyCatalogs()"
     [options]="facade.options.supportOptions()" />
 

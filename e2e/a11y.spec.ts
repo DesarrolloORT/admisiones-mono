@@ -100,33 +100,6 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expect(menuButton).toBeFocused();
   });
 
-  test('traps focus in the enrollment exit dialog and restores it on Escape @a11y', async ({
-    page,
-  }, testInfo) => {
-    await addAuthenticatedSession(page);
-
-    const enrollment = new EnrollmentPage(page);
-    await enrollment.goto();
-
-    // En desktop el header oculta el botón de cierre; el disparador visible es el del rail.
-    const closeButton =
-      testInfo.project.name === 'chromium-mobile'
-        ? page.getByRole('button', { name: 'Cerrar inscripción' })
-        : page.getByRole('button', { name: 'Salir del proceso' });
-    await closeButton.focus();
-    await closeButton.press('Enter');
-
-    const dialog = page.getByRole('dialog', { name: '¿Querés salir de la inscripción?' });
-    await expect(dialog).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Continuar aquí' })).toBeFocused();
-    await expectNoAxeViolations(page);
-
-    await page.keyboard.press('Escape');
-
-    await expect(dialog).toBeHidden();
-    await expect(closeButton).toBeFocused();
-  });
-
   test('does not advance enrollment when Enter is pressed on a focused radio @a11y', async ({
     page,
   }) => {

@@ -161,4 +161,21 @@ describe('EnrollmentEducationSection', () => {
       'Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año.'
     );
   });
+
+  it('renders the orientation required error only once', () => {
+    createFixture();
+
+    educationForm.controls.orientation.setValidators(Validators.required);
+    educationForm.controls.orientation.updateValueAndValidity();
+    educationForm.controls.studiesHighSchool.setValue('studying');
+    educationForm.controls.highSchoolYear.setValue('5');
+    educationForm.controls.orientation.markAsTouched();
+    fixture.detectChanges();
+
+    const alerts = Array.from(
+      fixture.nativeElement.querySelectorAll('[role="alert"]') as NodeListOf<HTMLElement>
+    ).filter(element => element.textContent?.includes('Seleccioná una opción'));
+
+    expect(alerts.length).toBe(1);
+  });
 });

@@ -1,8 +1,6 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
 import {
   deriveInitialEnrollmentState,
@@ -40,7 +38,6 @@ export class EnrollmentProcessFacade {
   public readonly backLabel = computed(() =>
     this.survey.readerOpen() ? 'Volver a Reglamento estudiantil' : 'Volver a la sección anterior'
   );
-  public readonly exitConfirmationOpen = signal(false);
   public readonly catalogError = computed(
     () => this.proposal.catalogError() ?? this.survey.catalogError()
   );
@@ -89,25 +86,7 @@ export class EnrollmentProcessFacade {
     if (this.canGoBack()) this.survey.back();
   }
 
-  public requestExit(): void {
-    this.exitConfirmationOpen.set(true);
-  }
-
-  public cancelExit(): void {
-    this.exitConfirmationOpen.set(false);
-  }
-
-  public confirmExit(): void {
-    this.exitConfirmationOpen.set(false);
-    // Guardar al salir, solo desde el paso 2: fuera de él los formularios de encuesta no se
-    // editan. Salir NUNCA se bloquea ni espera la respuesta, y el POST va sin
-    // `takeUntilDestroyed` a propósito: navegar destruye el componente y lo cancelaría.
-    if (this.currentStep() === 'survey') {
-      this.survey
-        .savePartial()
-        .pipe(catchError(() => EMPTY))
-        .subscribe();
-    }
+  public exit(): void {
     this.router.navigateByUrl('/inicio');
   }
 
