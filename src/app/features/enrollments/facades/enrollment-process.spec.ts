@@ -2,7 +2,7 @@ import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import type { EnrollmentDetail } from '../models/enrollment-detail';
@@ -285,12 +285,12 @@ describe('EnrollmentProcessFacade', () => {
 
     facade.cancelExit();
     expect(facade.exitConfirmationOpen()).toBe(false);
-    expect(facade.surveySaveError()).toBeNull();
   });
 
-  it('exits without saving when the user has no initial survey right', () => {
+  // La salida no puede depender de un POST: guardar la encuesta acá dejaba al usuario
+  // encerrado en el flujo cuando el backend ya la había marcado `definitivo` (403).
+  it('navigates home on exit without saving the survey', () => {
     const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.hasInitialSurveyRight.set(false);
 
     facade.requestExit();
     facade.confirmExit();
@@ -298,58 +298,6 @@ describe('EnrollmentProcessFacade', () => {
     expect(survey.savePartial).not.toHaveBeenCalled();
     expect(facade.exitConfirmationOpen()).toBe(false);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
-  });
-
-  it('saves the partial survey and navigates home on exit', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-
-    facade.requestExit();
-    facade.confirmExit();
-
-    expect(survey.savePartial).toHaveBeenCalledOnce();
-    expect(facade.exitConfirmationOpen()).toBe(false);
-    expect(facade.surveySaveError()).toBeNull();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
-  });
-
-  it('shows an error and stays when the partial save reports failure', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.savePartial.mockReturnValue(of(false));
-
-    facade.requestExit();
-    facade.confirmExit();
-
-    expect(facade.surveySaveError()).toBe('No se pudo guardar la encuesta. Intentá nuevamente.');
-    expect(facade.exitConfirmationOpen()).toBe(true);
-    expect(router.navigateByUrl).not.toHaveBeenCalled();
-  });
-
-  it('shows an error and stays when the partial save fails', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.savePartial.mockReturnValue(throwError(() => new Error('offline')));
-
-    facade.requestExit();
-    facade.confirmExit();
-
-    expect(facade.surveySaveError()).toBe('No se pudo guardar la encuesta. Intentá nuevamente.');
-    expect(facade.exitConfirmationOpen()).toBe(true);
-    expect(router.navigateByUrl).not.toHaveBeenCalled();
-  });
-
-  it('ignores a second exit confirmation while the survey is saving', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    const saving = new Subject<boolean>();
-    survey.savePartial.mockReturnValue(saving.asObservable());
-
-    facade.requestExit();
-    facade.confirmExit();
-    facade.confirmExit();
-
-    expect(survey.savePartial).toHaveBeenCalledTimes(1);
-    saving.next(true);
-    saving.complete();
-    expect(router.navigateByUrl).toHaveBeenCalledTimes(1);
-    expect(facade.exitConfirmationOpen()).toBe(false);
   });
 
   it('dispatches continue to the facade owning the current step', () => {

@@ -43,6 +43,7 @@ import type {
   EnrollmentPreEnrollmentResponse,
   EnrollmentProductInterestPayload,
   EnrollmentStudentRegulationAcceptance,
+  InitialSurveyStatus,
   SurveySectionId,
 } from '../models/enrollment-flow';
 import { buildPaymentPayload } from '../models/enrollment-flow-mappers';
@@ -169,7 +170,9 @@ export class EnrollmentsApi {
     );
   }
 
-  public saveInitialSurvey(payload: EnrollmentInitialSurveyPayload): Observable<boolean> {
+  public saveInitialSurvey(
+    payload: EnrollmentInitialSurveyPayload
+  ): Observable<InitialSurveyStatus> {
     const body = {
       degreeProgramId: payload.degreeProgramId,
       admissionProcessId: payload.intakeId,
@@ -209,11 +212,8 @@ export class EnrollmentsApi {
     };
 
     return this.api
-      .request(postEnrollmentsInitialSurveyEndpoint, {
-        body,
-        showLoader: true,
-      })
-      .pipe(map(() => true));
+      .request(postEnrollmentsInitialSurveyEndpoint, { body })
+      .pipe(map(response => (response?.status === 'definitivo' ? 'complete' : 'in-progress')));
   }
 
   public getStudentRegulationAcceptance(): Observable<EnrollmentStudentRegulationAcceptance> {

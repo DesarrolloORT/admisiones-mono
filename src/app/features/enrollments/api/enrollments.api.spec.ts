@@ -427,8 +427,9 @@ describe('EnrollmentsApi', () => {
       ortChoiceReasonIds: null,
     };
 
-    await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe(true);
+    await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe('in-progress');
 
+    // Sin `showLoader`: el guardado incremental corre en segundo plano.
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
       body: expect.objectContaining({
         degreeProgramId: 20,
@@ -437,8 +438,16 @@ describe('EnrollmentsApi', () => {
         consideredUniversityOthers: null,
         higherEducationUniversityOthers: null,
       }),
-      showLoader: true,
     });
+  });
+
+  // `definitivo` = el backend no encontró pendientes: el derecho a encuesta quedó consumido.
+  it('maps a definitivo survey status to a complete survey', async () => {
+    apiMock.request.mockReturnValueOnce(of({ surveyId: 1, status: 'definitivo' }));
+
+    await expect(firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))).resolves.toBe(
+      'complete'
+    );
   });
 
   it('maps pre-enrollment response', async () => {
@@ -759,7 +768,7 @@ describe('EnrollmentsApi', () => {
 
   it('maps the complete survey payload to the generated request', async () => {
     await expect(firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))).resolves.toBe(
-      true
+      'in-progress'
     );
 
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
@@ -800,7 +809,6 @@ describe('EnrollmentsApi', () => {
         ortAdvertisingIds: [7],
         ortChoiceReasonIds: [5],
       },
-      showLoader: true,
     });
   });
 

@@ -266,3 +266,9 @@ export const PROFESSIONAL_UPDATE_SURVEY_SECTIONS: readonly SurveySectionId[] = [
   'identity',
   'regulation',
 ];
+
+export const SURVEY_ANSWER_SECTIONS: readonly SurveySectionId[] = [
+  'education',
+  'academic-decision',
+  'ort-experience',
+];
