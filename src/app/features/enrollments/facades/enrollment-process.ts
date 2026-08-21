@@ -1,6 +1,8 @@
 import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { EMPTY } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import {
   deriveInitialEnrollmentState,
@@ -97,6 +99,15 @@ export class EnrollmentProcessFacade {
 
   public confirmExit(): void {
     this.exitConfirmationOpen.set(false);
+    // Guardar al salir, solo desde el paso 2: fuera de él los formularios de encuesta no se
+    // editan. Salir NUNCA se bloquea ni espera la respuesta, y el POST va sin
+    // `takeUntilDestroyed` a propósito: navegar destruye el componente y lo cancelaría.
+    if (this.currentStep() === 'survey') {
+      this.survey
+        .savePartial()
+        .pipe(catchError(() => EMPTY))
+        .subscribe();
+    }
     this.router.navigateByUrl('/inicio');
   }
 

@@ -3,17 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtErrorItem } from '@desarrolloort/components';
 import { EMPTY, merge, Observable, of } from 'rxjs';
-import {
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  exhaustMap,
-  filter,
-  finalize,
-  map,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { catchError, exhaustMap, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -23,13 +13,12 @@ import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentSurveyInit } from '../models/enrollment-entry';
 import type {
   EnrollmentInitialSurvey,
+  EnrollmentInitialSurveyPayload,
   EnrollmentInitialSurveyResponse,
   EnrollmentStudentRegulationAcceptance,
-  InitialSurveyStatus,
   SurveySectionId,
   SurveySectionStatus,
 } from '../models/enrollment-flow';
-import { SURVEY_ANSWER_SECTIONS } from '../models/enrollment-flow';
 import {
   buildFormErrors,
   disallowedHighSchoolYearForUniversity,
@@ -40,6 +29,7 @@ import {
 import {
   buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
+  diffInitialSurveyPayload,
   hasCompleteUniversityEducation,
   parseDate,
   patchBackendSurveyForms,
@@ -56,7 +46,13 @@ import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
 import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
 
 const IDENTITY_SAVE_ERROR = 'identity-save';
-const SURVEY_AUTOSAVE_DEBOUNCE_MS = 1000;
+// Las únicas secciones que aportan campos de encuesta: identidad y reglamento no tienen
+// respuestas, y `work-situation` es solo de AP (que no postea encuesta).
+const SURVEY_ANSWER_SECTIONS = [
+  'education',
+  'academic-decision',
+  'ort-experience',
+] as const satisfies readonly SurveySectionId[];
 
 interface SectionProgress {
   completed: boolean;
@@ -104,11 +100,17 @@ export class EnrollmentSurveyFacade {
   // sigue válido y los archivos presentes, pero el paso debe reabrirse SIN check
   // hasta que el usuario modifique datos de identidad o arranque un nuevo intento.
   private readonly identityUploadFailed = signal(false);
-  private readonly surveyRightSpent = signal(false);
+  // Snapshot de lo último que el backend tiene: es la base del delta que manda
+  // `savePartial`. Se toma SOLO al aplicar el estado inicial, antes de que el usuario pueda
+  // tocar algo, y nunca al re-parchear por catálogos: ahí el Paso 1 ya puede tener la
+  // selección del usuario y re-snapshotearla la dejaría fuera del delta para siempre.
+  private persistedPayload: EnrollmentInitialSurveyPayload = buildInitialSurveyPayload(
+    this.formsStore.forms
+  );
   public readonly activeSection = signal<SurveySectionId>('education');
   public readonly readerOpen = signal(false);
-  public readonly surveyState = signal<InitialSurveyStatus>('not-started');
-  public readonly hasInitialSurveyRight = signal(true);
+  // Único dato que decide si la encuesta se muestra editable y si se postea.
+  public readonly canAnswerSurvey = signal(true);
   public readonly hasAcceptedStudentRegulation = signal(false);
   public readonly submittedAcceptanceDate = signal<Date | null>(null);
 
@@ -121,16 +123,9 @@ export class EnrollmentSurveyFacade {
   public readonly finalizingPreEnrollment = signal(false);
   public readonly confirmOutcomeUncertain = signal(false);
 
-  public readonly scenario = computed(() =>
-    !this.hasInitialSurveyRight() || this.surveyState() === 'complete'
-      ? 'survey-complete'
-      : this.surveyState() === 'in-progress'
-        ? 'partial'
-        : 'first-time'
-  );
   public readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
   public readonly visibleSections = computed(() =>
-    getVisibleSections(this.scenario(), this.isProfessionalUpdate())
+    getVisibleSections(this.canAnswerSurvey(), this.isProfessionalUpdate())
   );
   // Único predicado de "hay algo hacia atrás" del paso 2: lo consumen el botón del
   // footer y el `canGoBack` del ProcessFacade (chevron del header).
@@ -187,7 +182,7 @@ export class EnrollmentSurveyFacade {
     this.configureConditionalValidators();
     this.observeIdentityRecovery();
     this.observeForms();
-    this.observeSurveyAutoSave();
+    this.observeCompletedSectionSave();
     this.observeIdentityConfirmation();
     this.deferStudentRegulationAcceptance();
     let previousFirstVisibleSection = this.visibleSections()[0];
@@ -211,24 +206,25 @@ export class EnrollmentSurveyFacade {
     switch (state.kind) {
       case 'load-failed':
         this.appliedSurveyState = null;
-        // Sin estado de encuesta no sabemos si hay derecho a responderla: nunca se postea a
-        // ciegas. Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
-        this.hasInitialSurveyRight.set(false);
+        // Sin respuesta no sabemos el valor de `canAnswerSurvey`: nunca se postea a ciegas.
+        // Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
         this.surveyLoadError.set(
           'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
         );
         return;
       case 'identity-only':
         this.appliedSurveyState = null;
-        this.hasInitialSurveyRight.set(false);
-        this.surveyState.set('complete');
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
         this.sectionProgress.set({});
         this.activeSection.set('identity');
         return;
       case 'fresh':
         this.appliedSurveyState = null;
-        this.hasInitialSurveyRight.set(true);
-        this.surveyState.set('not-started');
+        this.canAnswerSurvey.set(true);
+        this.snapshotPersistedPayload();
         this.sectionProgress.set({});
         this.activeSection.set('education');
         return;
@@ -236,9 +232,10 @@ export class EnrollmentSurveyFacade {
         const survey = state.response.survey;
         if (!survey) return;
         this.appliedSurveyState = state;
-        this.hasInitialSurveyRight.set(true);
-        this.surveyState.set(state.surveyState);
+        this.canAnswerSurvey.set(true);
         this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
+        // Después del parcheo: lo que trajo el backend no es un cambio del usuario.
+        this.snapshotPersistedPayload();
         this.sectionProgress.set(
           Object.fromEntries(
             state.completedSections.map(section => [section, { completed: true, submitted: false }])
@@ -276,6 +273,15 @@ export class EnrollmentSurveyFacade {
     this.patchProgress(section, { completed: true });
     const nextSection = this.findNextInvalidSection(section);
     if (nextSection) {
+      // Reintento: con la sección completa el delta ya se guardó al aparecer el check, así que
+      // acá normalmente no hay nada que mandar. Solo cubre el caso en que ese guardado falló y
+      // el delta sigue pendiente. Sin loader y sin bloquear el avance.
+      this.savePartial()
+        .pipe(
+          catchError(() => EMPTY),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe();
       this.activeSection.set(nextSection);
       return;
     }
@@ -390,28 +396,31 @@ export class EnrollmentSurveyFacade {
     this.readerOpen.set(false);
   }
 
+  /**
+   * Guarda la encuesta. `canAnswerSurvey` es el único gate (Actualización profesional no
+   * tiene encuesta inicial), y se manda SOLO el delta contra lo último persistido. El
+   * snapshot avanza únicamente con la confirmación del backend: un fallo deja el cambio
+   * pendiente para el intento siguiente (próximo Continuar, cierre del paso o salida).
+   */
   public savePartial(): Observable<void> {
-    if (
-      !this.hasInitialSurveyRight() ||
-      this.surveyRightSpent() ||
-      this.isProfessionalUpdate() ||
-      this.process.preEnrollmentResponse() !== null
-    )
-      return of(undefined);
+    if (!this.canAnswerSurvey() || this.isProfessionalUpdate()) return of(undefined);
 
-    return this.enrollments
-      .saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms))
-      .pipe(
-        tap({
-          next: status => {
-            if (status === 'complete') this.surveyRightSpent.set(true);
-          },
-          error: (error: unknown) => {
-            if (isSurveyRightRevoked(error)) this.surveyRightSpent.set(true);
-          },
-        }),
-        map(() => undefined)
-      );
+    const delta = diffInitialSurveyPayload(
+      buildInitialSurveyPayload(this.formsStore.forms),
+      this.persistedPayload
+    );
+    // Nada cambió: no hay nada que guardar.
+    if (Object.keys(delta).length === 0) return of(undefined);
+
+    return this.enrollments.saveInitialSurvey(delta).pipe(
+      tap(() => {
+        this.persistedPayload = { ...this.persistedPayload, ...delta };
+      })
+    );
+  }
+
+  private snapshotPersistedPayload(): void {
+    this.persistedPayload = buildInitialSurveyPayload(this.formsStore.forms);
   }
 
   private progressOf(section: SurveySectionId): SectionProgress {
@@ -456,7 +465,6 @@ export class EnrollmentSurveyFacade {
       .subscribe({
         next: response => {
           this.process.preEnrollmentResponse.set(response);
-          this.surveyState.set('complete');
           // Corporativa: el pago lo acredita la empresa y la respuesta no trae datos de
           // pago (seña 0), así que se evalúa antes que la rama de seña 0.
           if (confirmPayload.isCorporateEnrollment) {
@@ -534,6 +542,29 @@ export class EnrollmentSurveyFacade {
     return this.identity.isComplete();
   }
 
+  // Guardado en el momento en que la sección muestra el check (su form quedó válido) y en cada
+  // cambio posterior mientras lo siga mostrando. Una sección incompleta no postea: su delta
+  // espera a completarse, al cierre del paso o a la salida. Los campos de escritura libre
+  // actualizan al blur (ver `enrollment-flow-forms.ts`), así que tipear no dispara guardados.
+  // exhaustMap y no switchMap: cancelar un POST en vuelo deja el servidor en estado
+  // desconocido. El trigger que llegue durante el guardado se descarta y su cambio entra en el
+  // delta siguiente.
+  // ponytail: guardado oportunista, sin reintentos ni cola offline. Un fallo es silencioso y el
+  // cambio vuelve solo en el delta siguiente (próximo cambio, Continuar o salida).
+  private observeCompletedSectionSave(): void {
+    merge(
+      ...SURVEY_ANSWER_SECTIONS.map(section =>
+        this.sectionConfig[section].form.valueChanges.pipe(map(() => section))
+      )
+    )
+      .pipe(
+        filter(section => !this.finalizingPreEnrollment() && this.isSectionValid(section)),
+        exhaustMap(() => this.savePartial().pipe(catchError(() => EMPTY))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+  }
+
   private observeForms(): void {
     merge(
       this.educationForm.valueChanges,
@@ -548,40 +579,6 @@ export class EnrollmentSurveyFacade {
         this.preEnrollmentError.set(null);
         for (const section of this.visibleSections()) this.syncSectionCompletion(section);
       });
-  }
-
-  // Guardado incremental: cada vez que cambia el conjunto de secciones de respuestas con
-  // check se persiste lo respondido hasta ahora. El endpoint es un upsert parcial de la
-  // encuesta entera, así que se manda el payload acumulado; no hace falta un subset por
-  // sección. La clave del stream ES el tick: se arma con el mismo predicado que pinta el
-  // `check_circle` del acordeón.
-  // ponytail: guardado oportunista, sin reintentos ni cola offline. Un fallo es silencioso
-  // (el cierre del paso vuelve a guardar todo) y un 403 corta para el resto de la sesión.
-  // Techo: si hiciera falta no perder datos con la red caída, hay que persistir en
-  // sessionStorage y reintentar.
-  private observeSurveyAutoSave(): void {
-    merge(
-      this.educationForm.valueChanges,
-      this.academicDecisionForm.valueChanges,
-      this.ortExperienceForm.valueChanges
-    )
-      .pipe(
-        // Una respuesta puede completar la sección con la primera tecla: se espera a que se
-        // asiente antes de postear.
-        debounceTime(SURVEY_AUTOSAVE_DEBOUNCE_MS),
-        map(() =>
-          SURVEY_ANSWER_SECTIONS.filter(
-            section => this.getSectionState(section) === 'complete'
-          ).join('|')
-        ),
-        distinctUntilChanged(),
-        filter(completed => completed !== '' && !this.finalizingPreEnrollment()),
-        // exhaustMap y no switchMap: cancelar un POST en vuelo deja el servidor en estado
-        // desconocido. El trigger que llegue durante el guardado se descarta.
-        exhaustMap(() => this.savePartial().pipe(catchError(() => EMPTY))),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe();
   }
 
   // Debe suscribirse ANTES que `observeForms`: los subscribers de un mismo
@@ -761,13 +758,6 @@ export class EnrollmentSurveyFacade {
     this.options.refreshOrientationOptions();
     this.updateConditionalValidators();
   }
-}
-
-// 403 en `initial-survey` es INS_EI_56: la persona ya no tiene derecho a responderla.
-// ponytail: se mira solo el status HTTP. Techo: si el backend empezara a devolver 403 en este
-// endpoint por otro motivo, hay que leer `errorCode` del envelope.
-function isSurveyRightRevoked(error: unknown): boolean {
-  return httpStatusOf(error) === 403;
 }
 
 // Solo lo indeterminado: 0 (red/timeout), 409 y 5xx. Un 400/403/404 es determinístico y

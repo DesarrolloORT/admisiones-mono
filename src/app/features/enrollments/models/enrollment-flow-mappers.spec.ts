@@ -6,6 +6,7 @@ import {
   buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
   buildPaymentPayload,
+  diffInitialSurveyPayload,
   fromApiPaymentMethod,
   hasCompleteUniversityEducation,
   parseDate,
@@ -476,6 +477,66 @@ describe('enrollment flow mappers', () => {
         }
       )
     ).toBe('');
+  });
+
+  describe('diffInitialSurveyPayload', () => {
+    const base = buildInitialSurveyPayload(createEnrollmentForms());
+
+    it('returns nothing when nothing changed', () => {
+      expect(diffInitialSurveyPayload(base, { ...base })).toEqual({});
+    });
+
+    it('returns only the keys whose value changed', () => {
+      const current = { ...base, motherOrGuardianEducationLevelId: 5, highSchoolYear: 11 };
+
+      expect(diffInitialSurveyPayload(current, base)).toEqual({
+        motherOrGuardianEducationLevelId: 5,
+        highSchoolYear: 11,
+      });
+    });
+
+    // Una clave ausente es "sin cambios" para el backend, así que el vaciado tiene que
+    // viajar explícito en null.
+    it('includes a cleared value so the backend can delete it', () => {
+      const persisted = { ...base, highSchoolYear: 11 };
+
+      expect(diffInitialSurveyPayload(base, persisted)).toEqual({ highSchoolYear: null });
+    });
+
+    it('ignores arrays with the same content and reports any difference', () => {
+      const persisted = { ...base, ortChoiceReasonIds: [1, 2] };
+
+      expect(diffInitialSurveyPayload({ ...base, ortChoiceReasonIds: [1, 2] }, persisted)).toEqual(
+        {}
+      );
+      expect(diffInitialSurveyPayload({ ...base, ortChoiceReasonIds: [1, 3] }, persisted)).toEqual({
+        ortChoiceReasonIds: [1, 3],
+      });
+      expect(diffInitialSurveyPayload({ ...base, ortChoiceReasonIds: [1] }, persisted)).toEqual({
+        ortChoiceReasonIds: [1],
+      });
+    });
+
+    it('tells an empty selection apart from no answer at all', () => {
+      const persisted = { ...base, consideredUniversityIds: null };
+
+      expect(diffInitialSurveyPayload({ ...base, consideredUniversityIds: [] }, persisted)).toEqual(
+        {
+          consideredUniversityIds: [],
+        }
+      );
+    });
+
+    it('does not confuse 0 or false with a missing answer', () => {
+      const persisted = { ...base, highSchoolYearRepeatCount: null, repeatsHighSchoolYear: null };
+
+      expect(
+        diffInitialSurveyPayload(
+          { ...base, highSchoolYearRepeatCount: 0, repeatsHighSchoolYear: false },
+          persisted
+        )
+      ).toEqual({ highSchoolYearRepeatCount: 0, repeatsHighSchoolYear: false });
+    });
   });
 
   function patchedSchoolPlace(overrides: Partial<EnrollmentInitialSurvey>): string {

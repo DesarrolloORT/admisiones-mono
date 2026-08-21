@@ -2,7 +2,7 @@ import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import type { EnrollmentDetail } from '../models/enrollment-detail';
@@ -287,16 +287,42 @@ describe('EnrollmentProcessFacade', () => {
     expect(facade.exitConfirmationOpen()).toBe(false);
   });
 
-  // La salida no puede depender de un POST: guardar la encuesta acá dejaba al usuario
-  // encerrado en el flujo cuando el backend ya la había marcado `definitivo` (403).
-  it('navigates home on exit without saving the survey', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
+  // Se guarda al salir, pero la salida NUNCA depende del POST: el guardado que bloqueaba
+  // dejaba al usuario encerrado en el flujo cuando el backend respondía un error.
+  it('saves the survey and navigates home when exiting from step 2', () => {
+    const { facade, process, survey, router } = createFacade(NEW_ENTRY, FRESH);
+    // POST que nunca responde: la navegación no lo espera.
+    survey.savePartial.mockReturnValue(new Subject<void>());
+    process.flow.goTo('survey');
 
     facade.requestExit();
     facade.confirmExit();
 
-    expect(survey.savePartial).not.toHaveBeenCalled();
+    expect(survey.savePartial).toHaveBeenCalledOnce();
     expect(facade.exitConfirmationOpen()).toBe(false);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
+  });
+
+  // Fuera del paso 2 los formularios de encuesta no se editan, y el POST es un upsert de la
+  // encuesta entera: postear desde el paso 1 con los forms vírgenes la borraría.
+  it('does not save the survey when exiting outside step 2', () => {
+    const { facade, process, survey, router } = createFacade(NEW_ENTRY, FRESH);
+
+    facade.confirmExit();
+    process.flow.goTo('payment');
+    facade.confirmExit();
+
+    expect(survey.savePartial).not.toHaveBeenCalled();
+    expect(router.navigateByUrl).toHaveBeenCalledTimes(2);
+  });
+
+  it('navigates home even when the exit save fails', () => {
+    const { facade, process, survey, router } = createFacade(NEW_ENTRY, FRESH);
+    survey.savePartial.mockReturnValue(throwError(() => ({ status: 500 })));
+    process.flow.goTo('survey');
+
+    facade.confirmExit();
+
     expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
   });
 
@@ -473,16 +499,15 @@ function createFacade(
     initialized: signal(initialized),
     activeSection,
     readerOpen,
-    scenario: signal('first-time'),
     visibleSections,
     canGoBack: computed(() => readerOpen() || visibleSections().indexOf(activeSection()) > 0),
     catalogError: signal<string | null>(null),
     loadingSurveyState: signal(false),
     surveyLoadError: signal<string | null>(null),
-    hasInitialSurveyRight: signal(true),
+    canAnswerSurvey: signal(true),
     back: vi.fn(),
     continue: vi.fn(),
-    savePartial: vi.fn().mockReturnValue(of(true)),
+    savePartial: vi.fn().mockReturnValue(of(undefined)),
     applyInitialState: vi.fn(),
     fetchResolvedInitialSurvey: vi.fn(),
   };

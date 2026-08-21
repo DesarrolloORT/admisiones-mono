@@ -91,7 +91,6 @@ export type EnrollmentSurveyInit =
   | {
       kind: 'prefilled';
       response: EnrollmentInitialSurveyResponse;
-      surveyState: 'in-progress' | 'complete';
       activeSection: SurveySectionId;
       completedSections: readonly SurveySectionId[];
       /** En una inscripción nueva, la encuesta previa nunca pisa el Paso 1. */
@@ -277,17 +276,16 @@ function deriveSurvey(
   const survey = response.survey;
   if (!survey) return { kind: 'fresh' };
 
-  const isComplete = survey.complete;
-  const activeSection: SurveySectionId = isComplete
-    ? 'identity'
-    : (survey.activeSection ?? 'education');
-  const visible = getVisibleSections(isComplete ? 'survey-complete' : 'first-time');
+  // `canAnswerSurvey` manda sobre el estado de la encuesta: con derecho a responderla, los
+  // campos se muestran editables con lo ya respondido precargado, aunque el backend la
+  // marque completa. Cuando no hay derecho, la rama `identity-only` ya cortó más arriba.
+  const activeSection: SurveySectionId = survey.activeSection ?? 'education';
+  const visible = getVisibleSections(true);
   const activeIndex = visible.indexOf(activeSection);
 
   return {
     kind: 'prefilled',
     response,
-    surveyState: isComplete ? 'complete' : 'in-progress',
     activeSection,
     completedSections: activeIndex > 0 ? visible.slice(0, activeIndex) : [],
     includeAcademicSelection,

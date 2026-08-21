@@ -3,6 +3,7 @@ import type { DegreeProgram } from '../../catalogs/models/catalog.interface';
 import type {
   ApiPaymentMethod,
   EnrollmentInitialSurvey,
+  EnrollmentInitialSurveyPayload,
   EnrollmentInitialSurveyResponse,
   EnrollmentPaymentPayload,
   PaymentMethod,
@@ -189,6 +190,40 @@ export function buildInitialSurveyPayload(forms: EnrollmentForms) {
       : null,
     ortChoiceReasonIds: toNumberArray(decision.ortReasons.value),
   };
+}
+
+/**
+ * Delta contra lo último persistido: solo las claves cuyo valor cambió. El endpoint es un
+ * upsert parcial, así que mandar la encuesta entera en cada cambio es trabajo de más.
+ *
+ * Una clave AUSENTE significa "sin cambios" y una clave presente en `null` significa
+ * "borrar", así que los `null` SÍ entran al delta: es como viaja el desmarcado de una
+ * opción o el vaciado de un campo por validadores condicionales.
+ *
+ * Los dos lados se construyen con `buildInitialSurveyPayload`, y de ahí sale gratis que
+ * las claves que el builder fija duras nunca se reporten como cambio.
+ */
+export function diffInitialSurveyPayload(
+  current: EnrollmentInitialSurveyPayload,
+  persisted: EnrollmentInitialSurveyPayload
+): Partial<EnrollmentInitialSurveyPayload> {
+  const delta: Partial<EnrollmentInitialSurveyPayload> = {};
+  for (const key of Object.keys(current) as (keyof EnrollmentInitialSurveyPayload)[]) {
+    if (!isSameSurveyValue(current[key], persisted[key])) {
+      Object.assign(delta, { [key]: current[key] });
+    }
+  }
+  return delta;
+}
+
+// Comparación por valor. Nunca por truthiness: `0` y `false` son respuestas válidas y
+// distintas de `null`. Los arrays se comparan por contenido y orden; reordenar una
+// multiselección manda la clave de nuevo, que es inofensivo y no vale un set.
+function isSameSurveyValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((item, index) => item === b[index]);
+  }
+  return a === b;
 }
 
 export function buildConfirmPreEnrollmentPayload(

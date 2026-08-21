@@ -6,8 +6,8 @@ type PaymentMethod =
   'bank-account' | 'geopay' | 'personal-account' | 'banred' | 'abitab' | 'paganza';
 
 const paymentLabels: Record<PaymentMethod, string> = {
-  'bank-account': 'Cuenta bancaria',
-  geopay: 'Geopay',
+  'bank-account': 'Pago con banco',
+  geopay: 'Tarjeta de crédito/débito',
   'personal-account': 'Cuenta personal',
   banred: 'Banred',
   abitab: 'Abitab',
@@ -101,6 +101,25 @@ export class EnrollmentPage {
     await this.continue();
 
     await expect(this.radioGroup('degreeProgramDecisionYear')).toBeVisible();
+  }
+
+  // Educación con secundaria en el exterior: ahí la institución es un input de texto, así que
+  // queda sin responder (es el campo que completa la sección).
+  public async fillEducationAbroadWithoutInstitution(): Promise<void> {
+    await this.chooseRadio('studiesHighSchool', 'Sí, estoy cursando');
+    await this.chooseRadio('highSchoolYear', 'Durante secundaria');
+    await this.select('orientation', 'Matemática');
+    await this.chooseRadio('repeatsHighSchoolYear', 'No');
+    await this.chooseRadio('highSchoolLocation', 'En el exterior');
+    await this.chooseRadio('higherEducationStatus', 'No cursé estudios superiores');
+    await this.select('motherEducation', 'Universitaria completa');
+    await this.chooseRadio('motherOrtDegree', 'No');
+    await this.select('fatherEducation', 'Universitaria completa');
+    await this.chooseRadio('fatherOrtDegree', 'No');
+  }
+
+  public institutionNameInput(): Locator {
+    return this.page.locator('input[formcontrolname="educationalInstitution"]');
   }
 
   public async fillAcademicDecision(): Promise<void> {
@@ -301,8 +320,22 @@ export class EnrollmentPage {
     await expect(radio).toBeChecked();
   }
 
+  // Una sola respuesta de la encuesta, para verificar el guardado por delta.
+  public async answerSurveyRadio(controlName: string, label: string): Promise<void> {
+    await this.chooseRadio(controlName, label);
+  }
+
+  public surveyRadio(controlName: string, label: string): Locator {
+    return this.radioGroup(controlName).getByRole('radio', {
+      name: new RegExp(`^${escapeRegExp(label)}(?:\\s|$)`),
+    });
+  }
+
   public async exitFlow(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Cerrar inscripción' }).click();
+    // La X del header es de la vista compacta; en desktop el proceso se cierra desde el aside.
+    const headerClose = this.page.getByRole('button', { name: 'Cerrar inscripción' });
+    const asideExit = this.page.getByRole('button', { name: 'Salir del proceso' });
+    await ((await headerClose.isVisible()) ? headerClose : asideExit).click();
     await expect(this.page.getByText('¿Querés salir de la inscripción?')).toBeVisible();
     await this.page.getByRole('button', { name: 'Salir', exact: true }).click();
     await expect(this.page).toHaveURL(/\/inicio/);

@@ -148,6 +148,7 @@ test.describe('Inscripción inicial', () => {
   }) => {
     await setup(page, 'empty');
     const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
 
     await enrollment.goto();
     await enrollment.fillAcademicProposal();
@@ -156,11 +157,16 @@ test.describe('Inscripción inicial', () => {
     await enrollment.fillOrtExperience();
     await enrollment.fillIdentity();
 
-    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
     const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await enrollment.acceptRegulation();
 
-    expect((await surveyRequest).postDataJSON()).toMatchObject({
+    // La encuesta se guarda por delta a lo largo del paso: la suma de los guardados es la
+    // encuesta completa. Al cerrar el paso puede no quedar nada pendiente que postear.
+    const savedSurvey: Record<string, unknown> = Object.assign(
+      {},
+      ...surveySaveRequests.map(request => request.postDataJSON())
+    );
+    expect(savedSurvey).toMatchObject({
       degreeProgramId: 20,
       admissionProcessId: 200,
       lastSecondaryYearLocationId: 1,
@@ -279,11 +285,114 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
   });
 
+  // Ida y vuelta real: lo respondido en el paso 2 se guarda al salir y aparece precargado al
+  // volver a entrar desde el panel principal.
+  test('guarda solo lo respondido y lo precarga al volver a entrar @regression', async ({
+    page,
+  }) => {
+    await mockApi(page, { initialSurvey: 'empty', enrollmentDetail: 'in-progress' });
+    await addAuthenticatedSession(page);
+    const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
+
+    await page.goto('/inicio');
+    await continueEnrollment(page);
+
+    await enrollment.answerSurveyRadio('studiesHighSchool', 'Sí, estoy cursando');
+
+    // Una sola respuesta no completa la sección, así que todavía no hay nada posteado: el
+    // guardado sale al aparecer el check, al cerrar el paso o al salir, nunca por un timer.
+    expect(surveySaveRequests).toHaveLength(0);
+
+    const saveOnExit = waitForPost(page, '/enrollments/initial-survey');
+    await enrollment.exitFlow();
+
+    // Solo la respuesta tocada (más la carrera que la encuesta todavía no tenía), nunca la
+    // encuesta entera.
+    expect((await saveOnExit).postDataJSON()).toEqual({
+      degreeProgramId: 20,
+      admissionProcessId: 200,
+      currentlyInSecondary: true,
+    });
+
+    await continueEnrollment(page);
+
+    await expect(enrollment.surveyRadio('studiesHighSchool', 'Sí, estoy cursando')).toBeChecked();
+  });
+
+  // Un guardado fallido no pierde el cambio: el snapshot no avanza, así que el delta vuelve
+  // completo en el guardado siguiente.
+  test('reintenta el delta que falló al completar la sección @regression', async ({ page }) => {
+    await mockApi(page, { initialSurvey: 'empty', enrollmentDetail: 'in-progress' });
+    await addAuthenticatedSession(page);
+    const enrollment = new EnrollmentPage(page);
+    let failNextSave = true;
+    // Se registra después del mock general: Playwright resuelve el último handler primero y
+    // `fallback()` delega en el anterior.
+    await page.route('**/enrollments/initial-survey', async route => {
+      if (route.request().method() === 'POST' && failNextSave) {
+        failNextSave = false;
+        return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+      }
+      return route.fallback();
+    });
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
+
+    await page.goto('/inicio');
+    await continueEnrollment(page);
+
+    // Completar Educación dispara el guardado, que falla; responder sigue habilitado.
+    await enrollment.fillEducation();
+    await expect.poll(() => surveySaveRequests.length).toBeGreaterThan(1);
+
+    const failedDelta = surveySaveRequests[0].postDataJSON() as Record<string, unknown>;
+    const retried: Record<string, unknown> = Object.assign(
+      {},
+      ...surveySaveRequests.slice(1).map(request => request.postDataJSON())
+    );
+
+    // El delta del POST fallido no se perdió: viaja completo en los guardados siguientes.
+    expect(retried).toMatchObject(failedDelta);
+  });
+
+  // Los campos de escritura libre actualizan al salir del campo, así que tipear no dispara
+  // guardados: sale uno solo al abandonar el campo, cuando la sección queda completa.
+  test('no guarda mientras se escribe la institución del exterior @regression', async ({
+    page,
+  }) => {
+    await setup(page, 'empty');
+    const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
+
+    await enrollment.goto();
+    await enrollment.fillAcademicProposal();
+    await enrollment.fillEducationAbroadWithoutInstitution();
+
+    // Falta la institución: la sección no tiene el check todavía.
+    expect(surveySaveRequests).toHaveLength(0);
+
+    const institution = enrollment.institutionNameInput();
+    await institution.click();
+    await institution.pressSequentially('Colegio del exterior');
+
+    // Ni un POST por letra.
+    expect(surveySaveRequests).toHaveLength(0);
+
+    const saveOnBlur = waitForPost(page, '/enrollments/initial-survey');
+    await institution.blur();
+
+    expect((await saveOnBlur).postDataJSON()).toMatchObject({
+      secondaryInstitutionName: 'Colegio del exterior',
+    });
+    await expect.poll(() => surveySaveRequests.length).toBe(1);
+  });
+
   test('encuesta parcial precargada continúa desde la sección indicada y confirma preinscripción @regression', async ({
     page,
   }) => {
     await setup(page, 'partial');
     const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
 
     await enrollment.goto('partial');
     await expect(
@@ -298,16 +407,20 @@ test.describe('Inscripción inicial', () => {
     await enrollment.fillOrtExperience();
     await enrollment.fillIdentity();
 
-    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
     const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await enrollment.acceptRegulation();
 
-    expect((await surveyRequest).postDataJSON()).toMatchObject({
-      degreeProgramId: 20,
-      admissionProcessId: 200,
-      motherEducationLevelId: 5,
-      fatherEducationLevelId: 5,
-    });
+    // Guardado por delta: viajan las respuestas nuevas y la carrera que la encuesta parcial
+    // todavía no tenía, pero NUNCA lo que vino precargado y no se tocó (los niveles
+    // educativos de la madre y el padre ya eran 5 en el backend).
+    const savedKeys = surveySaveRequests.flatMap(request =>
+      Object.keys((request.postDataJSON() ?? {}) as Record<string, unknown>)
+    );
+    expect(savedKeys).toContain('degreeProgramId');
+    expect(savedKeys).toContain('careerDecisionYearId');
+    expect(savedKeys).toContain('hadOrtAdvisory');
+    expect(savedKeys).not.toContain('motherEducationLevelId');
+    expect(savedKeys).not.toContain('fatherEducationLevelId');
     expect((await preEnrollmentRequest).postDataJSON()).toEqual({
       acceptedRegulations: true,
       isCorporateEnrollment: false,
@@ -324,6 +437,7 @@ test.describe('Inscripción inicial', () => {
   }) => {
     await setup(page, 'complete');
     const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
 
     await enrollment.goto('survey-complete');
 
@@ -332,11 +446,11 @@ test.describe('Inscripción inicial', () => {
     await expect(page.getByRole('heading', { name: 'Documento de identidad' })).toBeVisible();
 
     await enrollment.fillIdentity();
-    const surveyRequest = waitForPost(page, '/enrollments/initial-survey');
     const preEnrollmentRequest = waitForPost(page, '/enrollments/confirm-pre-enrollment');
     await enrollment.acceptRegulation();
-    await surveyRequest;
     await preEnrollmentRequest;
+    // Encuesta ya completada: no se vuelve a postear ni al cerrar el paso.
+    expect(surveySaveRequests).toHaveLength(0);
     await enrollment.selectPayment('paganza');
 
     await expect(page.getByRole('heading', { name: '¡Inscripción reservada!' })).toBeVisible();
@@ -411,6 +525,16 @@ async function setup(
       : {}),
   });
   await addAuthenticatedSession(page);
+}
+
+async function continueEnrollment(page: Page): Promise<void> {
+  await page
+    .getByRole('link', { name: /Continuar inscripción/ })
+    .first()
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Información personal', exact: true })
+  ).toBeVisible();
 }
 
 function waitForPost(page: Page, path: string): Promise<Request> {

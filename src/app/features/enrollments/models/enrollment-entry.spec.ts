@@ -312,7 +312,9 @@ describe('deriveInitialEnrollmentState', () => {
       {
         step: 'proposal',
         survey: 'prefilled',
-        activeSection: 'identity',
+        // Con `canAnswerSurvey` en true la encuesta sigue editable aunque el backend la
+        // marque completa: arranca en la primera sección, no en identidad.
+        activeSection: 'education',
         includeAcademic: false,
         resumeInProgress: false,
         payment: 'none',
@@ -436,7 +438,7 @@ describe('deriveInitialEnrollmentState', () => {
       {
         step: 'survey',
         survey: 'prefilled',
-        activeSection: 'identity',
+        activeSection: 'education',
         includeAcademic: false,
         resumeInProgress: true,
         payment: 'none',
@@ -656,7 +658,7 @@ describe('deriveInitialEnrollmentState', () => {
       {
         step: 'payment',
         survey: 'prefilled',
-        activeSection: 'identity',
+        activeSection: 'education',
         includeAcademic: false,
         resumeInProgress: true,
         payment: 'confirmed',

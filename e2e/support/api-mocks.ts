@@ -53,6 +53,14 @@ const authenticatedPerson = {
 export async function mockApi(page: Page, options: MockApiOptions = {}): Promise<void> {
   const registerScenario = REGISTER_SCENARIOS[options.registerFlow ?? 'new-person'];
   const failPaths = new Set(options.failPaths ?? []);
+  // La encuesta guardada vive en el closure del mock: el POST mergea el delta recibido y el
+  // GET siguiente lo devuelve. Así un test puede salir del flujo y volver a entrar para
+  // comprobar que lo respondido quedó guardado. Las claves del GET y del POST son las
+  // mismas del wire, así que el merge es un spread.
+  const savedSurvey = initialSurvey(options.initialSurvey ?? 'empty') as {
+    canAnswerSurvey: boolean;
+    survey: Record<string, unknown> | null;
+  };
 
   await page.route('**/*', async route => {
     const request = route.request();
@@ -247,6 +255,34 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (path === '/person/enrollments' && request.method() === 'GET') {
+      // Tarjeta de nivel 1 "En proceso": la única con "Continuar inscripción" que cae en el
+      // paso 2 con encuesta (la de nivel 3 es Actualización profesional, sin encuesta).
+      if (options.enrollmentDetail === 'in-progress') {
+        return fulfillOperation(route, [
+          {
+            productId: 20,
+            productFullName: 'Licenciatura en Diseño Gráfico',
+            admissionProcessId: 200,
+            productLevelId: 1,
+            enrollmentStatus: 'En proceso',
+            hasSeminars: 'N',
+            enrollments: [
+              {
+                enrollmentId: 7001,
+                offeringId: 300,
+                offeringDescription: 'Licenciatura en Diseño Gráfico',
+                shiftId: 3,
+                intakeId: 2,
+                intakeStartDate: '2027-03-01',
+                intakeName: 'Marzo 2027',
+                shiftName: 'Matutino',
+                referenceDate: '2027-03-01',
+              },
+            ],
+          },
+        ]);
+      }
+
       // Misma tarjeta producto+proceso, dos tarjetas: sin `status` en el Detalle,
       // ambas resolverían a la misma inscripción.
       if (options.enrollmentDetail === 'duplicate-status') {
@@ -497,10 +533,12 @@ export async function mockApi(page: Page, options: MockApiOptions = {}): Promise
     }
 
     if (path === '/enrollments/initial-survey' && request.method() === 'GET') {
-      return fulfillOperation(route, initialSurvey(options.initialSurvey ?? 'empty'));
+      return fulfillOperation(route, savedSurvey);
     }
 
     if (path === '/enrollments/initial-survey' && request.method() === 'POST') {
+      const delta = (request.postDataJSON() ?? {}) as Record<string, unknown>;
+      savedSurvey.survey = { ...(savedSurvey.survey ?? {}), ...delta };
       return fulfillOperation(route, true);
     }
 
@@ -809,7 +847,9 @@ function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unkn
   };
 
   return {
-    canAnswerSurvey: true,
+    // Encuesta ya completada = la persona no la vuelve a responder. El caso raro
+    // (`completa` con derecho a responderla) está cubierto en los unitarios de la facade.
+    canAnswerSurvey: kind !== 'complete',
     survey,
   };
 }
