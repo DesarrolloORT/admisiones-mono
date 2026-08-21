@@ -85,14 +85,16 @@ flowchart TD
   C --> F[Identidad + reglamento]
   D --> F
   E --> F
+  C -->|Cada sección de respuestas completada| N[Guardar encuesta parcial]
   F --> G[Subir cambios de documento y foto en paralelo]
   G -->|Ambos OK y encuesta aplicable| H[Guardar encuesta]
-  G -->|Ambos OK y encuesta no aplicable / AP| I
+  G -->|Ambos OK, encuesta no aplicable / AP / ya definitivo| I
   G -->|Error| M[Reabrir identidad sin check]
   H -->|OK| I[Confirmar preinscripcion]
   H -->|Error| K[Mostrar error y permanecer]
   I -->|Confirmada| J[Seleccion de pago]
-  I -->|Error| K[Mostrar error y permanecer]
+  I -->|Error determinístico 400/403/404| K[Mostrar error y permanecer]
+  I -->|Error ambiguo 0/409/5xx| O[Pantalla de espera y salida]
   J --> L[Pago / estado terminal]
 ```
 
@@ -100,6 +102,14 @@ Las cargas de identidad son condicionales: un archivo precargado y no modificado
 vuelve a enviar. AP nunca guarda encuesta. Para niveles 1/2, el `POST initial-survey`
 es un upsert parcial que queda `temporal` mientras falten respuestas y pasa a
 `definitivo` cuando la validación sobre lo persistido no encuentra pendientes.
+
+El `POST initial-survey` no ocurre solo al cerrar el paso 2: también se dispara
+**durante** el paso, cada vez que una de las tres secciones de respuestas
+(Educación, Decisión académica, Experiencia ORT) queda completa y aparece su check.
+Identidad y reglamento no lo disparan porque no aportan campos de encuesta, y
+`work-situation` es solo de AP. El guardado es oportunista: corre en segundo plano
+sin loader, un fallo no muestra error (el cierre del paso vuelve a guardar todo) y un
+403 lo corta para el resto de la sesión.
 
 ## Intención de entrada × estado × encuesta
 
@@ -644,10 +654,21 @@ solo si el usuario lo marca.
 
 ## Payload de encuesta inicial
 
-Se envia con `POST /enrollments/initial-survey` al cerrar el paso 2, despues de
-guardar correctamente los cambios de identidad y antes de confirmar la
-preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
-envian `null` cuando no aplican.
+Se envia con `POST /enrollments/initial-survey` cada vez que una seccion de
+respuestas queda completa (con un debounce de 1 s) y otra vez al cerrar el paso 2,
+despues de guardar correctamente los cambios de identidad y antes de confirmar la
+preinscripcion. Siempre se envia el payload acumulado completo, porque el endpoint es
+un upsert parcial de la encuesta entera. El envio se omite si el usuario no tiene
+derecho a encuesta, si ya quedo `definitivo` en esta sesion, si es AP o si la
+preinscripcion ya esta confirmada. Todos los campos envian `null` cuando no aplican.
+
+> **Drift detectado:** la lista de abajo usa los nombres del payload **de feature**
+> (`EnrollmentInitialSurveyPayload`), no los del wire que envía el adapter. El adapter los
+> traduce en `enrollments.api.ts` (`intakeId` → `admissionProcessId`,
+> `highSchoolOrientationId` → `highSchoolTrackId`, `currentlyStudiesHighSchool` →
+> `currentlyInSecondary`, `finalHighSchoolYearLocationId` → `lastSecondaryYearLocationId`,
+> `visitedOrtCampus` → `visitedOrtFacilities`, entre otros). Alinear esta sección con
+> `SaveInitialSurveyRequest` queda pendiente.
 
 - `degreeProgramId`: `Number(degreeProgram)`.
 - `intakeId`: `Number(intake)`.
@@ -690,6 +711,20 @@ devuelve `canAnswerSurvey = false` si la persona ya figura como Fresco, tiene la
 encuesta histórica o tiene una encuesta de admisión completa. En ese caso el POST
 queda además protegido por `INS_EI_56`/403.
 
+El adapter expone el `status` de la respuesta traducido a `complete` (`definitivo`) o
+`in-progress` (`temporal`). Al recibir `complete` — o un 403/`INS_EI_56` — el front
+marca el derecho como consumido y **no vuelve a postear la encuesta en esa sesión**:
+ni en los guardados incrementales, ni al cerrar el paso 2. Con los guardados
+incrementales la encuesta suele llegar a `definitivo` **antes** de apretar "Continuar",
+porque las tres secciones de respuestas cubren todos los campos; desde ahí editar una
+respuesta ya no se persiste. Ese flag es independiente de `surveyState` y
+`hasInitialSurveyRight` a propósito: escribir en ellos cambiaría `visibleSections()` y
+colapsaría el acordeón a identidad + reglamento en medio del paso.
+
+Si `GET initial-survey` falla (`load-failed`), el estado de encuesta es desconocido y se
+trata como "sin derecho": no se postea a ciegas. El reintento manual de la pantalla de
+error vuelve a derivar el derecho desde el backend.
+
 Cada guardado valida opciones fijas y catálogos dinámicos, resuelve producto/proceso
 contra el interés activo y actualiza la encuesta y sus listas hijas en una sola
 transacción. La completitud se calcula sobre lo ya persistido:
@@ -713,7 +748,8 @@ Orden de cierre:
 1. En paralelo, `POST /person/identity-document` si se toco frente/dorso o cambio
    el vencimiento, y `POST /person/photo` si se toco la selfie.
 2. `POST /enrollments/initial-survey`, solo si las cargas de identidad
-   requeridas terminaron correctamente y la persona tiene derecho a encuesta.
+   requeridas terminaron correctamente y la persona tiene derecho a encuesta. Se
+   **omite** si los guardados incrementales ya la dejaron `definitivo`.
 3. `POST /enrollments/confirm-pre-enrollment` con:
 
 ```json
@@ -755,16 +791,33 @@ avanza al paso de pago. Si Documento o Foto falla por HTTP,
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
 el check de completada.
 
-### "Guardar y salir" no vuelve a postear la encuesta ya confirmada
+### Fallo ambiguo de la confirmación
 
-`EnrollmentSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
-al confirmar el modal "¿Querés salir de la inscripción?") solo llama a
-`POST /enrollments/initial-survey` si la persona tiene derecho a encuesta, no
-es AP, **y** `EnrollmentProcessStore.preEnrollmentResponse` sigue en `null`.
-Una vez que `confirmPreEnrollment` respondio con éxito (paso 3, pago) ese
-signal deja de ser `null` y `savePartial()` retorna `true` sin llamar al
-backend: la encuesta ya quedo guardada como parte de la confirmacion y
-reintentar el POST no aporta nada, solo puede fallar y bloquear la salida.
+`confirm-pre-enrollment` no lleva clave de idempotencia y llama APIs externas, así que
+un `0` (red/timeout), `409` o `5xx` deja el resultado **indeterminado**: la inscripción
+pudo haber quedado creada. En ese caso el front no ofrece reintentar: cierra el flujo en
+la pantalla terminal "Inscripción en proceso", con un único enlace a `/inicio`. Ahí se
+muestra el copy genérico incluso en AP corporativa, porque el copy corporativo
+("tu empresa deberá enviar la solicitud…") daría por hecha una inscripción que quizá no
+existe.
+
+Un error determinístico (`400`, `403`, `404`) mantiene el error inline en el paso 2 con
+la opción de reintentar.
+
+### Salir del flujo nunca se bloquea
+
+El modal "¿Querés salir de la inscripción?" **solo navega** a `/inicio`: no hace ningún
+POST y no puede mostrar error. El avance ya se fue guardando sección por sección, así
+que no hay nada que perder salvo lo que quedó a medio completar (el copy del modal lo
+dice). Antes intentaba guardar la encuesta al salir, y el fallo típico —403 porque el
+backend ya la había marcado `definitivo` en el intento de cierre anterior— dejaba al
+usuario **encerrado en el flujo** con el mensaje "No se pudo guardar la encuesta.
+Intentá nuevamente.".
+
+`EnrollmentSurveyFacade.savePartial()` (ahora usado al cerrar el paso 2 y por el
+guardado incremental) llama a `POST /enrollments/initial-survey` solo si la persona
+tiene derecho a encuesta, el derecho no fue consumido en esta sesión, no es AP **y**
+`EnrollmentProcessStore.preEnrollmentResponse` sigue en `null`.
 
 ## Paso 3: pago
 
@@ -965,7 +1018,9 @@ paso editable y usa un mensaje recuperable. Los códigos estables para diagnóst
 
 Resumen operativo de reintentos:
 
-- encuesta e identidad son upserts y admiten repetir el mismo contenido;
+- identidad es un upsert y admite repetir el mismo contenido; la encuesta también,
+  pero **solo mientras siga `temporal`**: una vez `definitivo` devuelve `INS_EI_56`/403
+  y el front deja de intentarlo en esa sesión;
 - interés y reserva Abitab/Paganza rechazan el duplicado con 409;
 - confirmación, reactivación, cuenta personal y generación de URL no envían una clave
   de idempotencia: ante resultado incierto, releer estado antes de reintentar;

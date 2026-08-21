@@ -56,7 +56,8 @@
         size="xl"
         type="gradient" />
 
-      @if (survey.isProfessionalUpdate() && survey.workForm.controls.isCorporate.value === true) {
+      @if ( !survey.confirmOutcomeUncertain() && survey.isProfessionalUpdate() &&
+      survey.workForm.controls.isCorporate.value === true ) {
       <h1 id="in-process-title">Inscripción corporativa pendiente</h1>
       <p>Tu empresa deberá enviar la solicitud con los datos de la inscripción a sae@ort.edu.uy</p>
       } @else {
@@ -110,26 +111,20 @@
 </app-process-layout>
 
 <ort-dialog
-  caption="Guardaremos tus avances para que puedas continuar más tarde."
+  caption="Las secciones que completaste ya quedaron guardadas."
   closeButtonAriaLabel="Continuar con la inscripción"
   title="¿Querés salir de la inscripción?"
   [open]="process.exitConfirmationOpen()"
   (closed)="process.cancelExit()">
-  <p>Los archivos de identidad deberán adjuntarse nuevamente cuando retomes el proceso.</p>
-  @if (process.surveySaveError()) {
-  <p class="enrollment-dialog-error" role="alert">{{ process.surveySaveError() }}</p>
-  }
+  <p>
+    Lo que dejaste a medio completar y los archivos de identidad deberán cargarse otra vez cuando
+    retomes el proceso.
+  </p>
   <ng-container ortDialogFooter>
     <!-- eslint-disable-next-line @angular-eslint/template/no-autofocus -- El diálogo exige un destino de foco inicial explícito. -->
     <button autofocus ort-secondary-button type="button" (click)="process.cancelExit()">
       Continuar aquí
     </button>
-    <button
-      ort-primary-button
-      type="button"
-      [disabled]="process.savingSurvey()"
-      (click)="process.confirmExit()">
-      {{ process.savingSurvey() ? 'Guardando…' : 'Guardar y salir' }}
-    </button>
+    <button ort-primary-button type="button" (click)="process.confirmExit()">Salir</button>
   </ng-container>
 </ort-dialog>

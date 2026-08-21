@@ -49,7 +49,7 @@ describe('EnrollmentSurveyFacade', () => {
 
   beforeEach(() => {
     payment.outcome.set(null);
-    saveInitialSurvey.mockReset().mockReturnValue(of(true));
+    saveInitialSurvey.mockReset().mockReturnValue(of('in-progress'));
     confirmPreEnrollment.mockReset().mockReturnValue(
       of({
         confirmed: true,
@@ -99,7 +99,7 @@ describe('EnrollmentSurveyFacade', () => {
     });
 
     expect(survey.visibleSections()).toEqual(['identity', 'regulation']);
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
@@ -142,7 +142,7 @@ describe('EnrollmentSurveyFacade', () => {
     const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
     forms.forms.academicForm.controls.proposalType.setValue('3');
 
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
@@ -459,7 +459,26 @@ describe('EnrollmentSurveyFacade', () => {
     expect(saveInitialSurvey).toHaveBeenCalledOnce();
     saveInitialSurvey.mockClear();
 
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  // Regresión de la trampa reportada: la encuesta se guardaba bien y quedaba `definitivo`,
+  // el confirm fallaba, y cualquier reintento posterior re-posteaba la encuesta contra un
+  // 403 (INS_EI_56) que dejaba al usuario encerrado en el flujo.
+  it.each([
+    { spent: 'definitivo', result: of('complete') },
+    { spent: 'HTTP 403', result: throwError(() => ({ status: 403 })) },
+  ])('stops posting the survey once the right is spent by $spent', async ({ result }) => {
+    saveInitialSurvey.mockReturnValue(result);
+    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 400 })));
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+    expect(saveInitialSurvey).toHaveBeenCalledOnce();
+    saveInitialSurvey.mockClear();
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
@@ -527,11 +546,8 @@ describe('EnrollmentSurveyFacade', () => {
     }
   );
 
-  it.each([
-    { failure: 'data false', result: of(false) },
-    { failure: 'HTTP 400', result: throwError(() => ({ status: 400 })) },
-  ])('does not confirm when the final survey save returns $failure', ({ result }) => {
-    saveInitialSurvey.mockReturnValue(result);
+  it('does not confirm when the final survey save fails', () => {
+    saveInitialSurvey.mockReturnValue(throwError(() => ({ status: 400 })));
     const { survey, process } = prepareFinalizableSurvey();
 
     survey.continue();
@@ -820,8 +836,26 @@ describe('EnrollmentSurveyFacade', () => {
     ).toBe(false);
   });
 
-  it('sets the pre-enrollment error and stops the spinner when confirmation fails', () => {
-    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 500 })));
+  // Un 500/409/0 en confirm es indeterminado: el backend llama APIs externas y pudo haber
+  // creado la inscripción. Se cierra el flujo en la pantalla de espera en vez de dejar al
+  // usuario reintentando un confirm que quizá ya funcionó.
+  it.each([{ status: 0 }, { status: 409 }, { status: 500 }])(
+    'closes the flow on the waiting screen when the confirmation fails with $status',
+    ({ status }) => {
+      confirmPreEnrollment.mockReturnValue(throwError(() => ({ status })));
+      const { survey } = prepareFinalizableSurvey();
+
+      survey.continue();
+
+      expect(payment.outcome()).toBe('enrollment-in-progress');
+      expect(survey.confirmOutcomeUncertain()).toBe(true);
+      expect(survey.preEnrollmentError()).toBeNull();
+      expect(survey.finalizingPreEnrollment()).toBe(false);
+    }
+  );
+
+  it('sets the pre-enrollment error and stops the spinner when confirmation fails for good', () => {
+    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 400 })));
     const { survey, process } = prepareFinalizableSurvey();
 
     survey.continue();
@@ -985,6 +1019,81 @@ describe('EnrollmentSurveyFacade', () => {
     });
     expect(survey.loadingSurveyState()).toBe(false);
   });
+
+  // Guardado incremental: el check de cada sección de respuestas dispara un POST con lo
+  // respondido hasta ahí, y un 403 lo corta para el resto de la sesión.
+  describe('incremental survey save', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('saves once per answer section that gets its check and stops after a 403', () => {
+      const { survey } = createFacade(createSurveyResponse());
+
+      completeEducation(survey);
+      vi.advanceTimersByTime(1000);
+      expect(survey.getSectionState('education')).toBe('complete');
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+
+      // Editar dentro de una sección que ya tiene check no vuelve a postear.
+      survey.educationForm.controls.motherEducation.setValue('2');
+      vi.advanceTimersByTime(1000);
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+
+      saveInitialSurvey.mockReturnValue(throwError(() => ({ status: 403 })));
+      completeAcademicDecision(survey);
+      vi.advanceTimersByTime(1000);
+      expect(saveInitialSurvey).toHaveBeenCalledTimes(2);
+      // Fallo silencioso: es un guardado oportunista, no molesta al usuario.
+      expect(survey.preEnrollmentError()).toBeNull();
+
+      completeOrtExperience(survey);
+      vi.advanceTimersByTime(1000);
+      expect(saveInitialSurvey).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not save while the survey right is unknown after a load failure', () => {
+      const { survey } = createFacade(null, {}, [], { loadFailed: true });
+
+      completeEducation(survey);
+      vi.advanceTimersByTime(1000);
+
+      expect(survey.hasInitialSurveyRight()).toBe(false);
+      expect(saveInitialSurvey).not.toHaveBeenCalled();
+    });
+  });
+
+  // Valores elegidos para que ninguna pregunta condicional quede requerida con los
+  // catálogos vacíos del test.
+  function completeEducation(survey: EnrollmentSurveyFacade): void {
+    survey.educationForm.patchValue({
+      studiesHighSchool: 'not-studying',
+      repeatsHighSchoolYear: 'no',
+      highSchoolLocation: '1',
+      higherEducationStatus: '2',
+      motherEducation: '1',
+      fatherEducation: '1',
+    });
+  }
+
+  function completeAcademicDecision(survey: EnrollmentSurveyFacade): void {
+    survey.academicDecisionForm.patchValue({
+      degreeProgramDecisionYear: '1',
+      decisionSupport: '1',
+      ortDecisionYear: '1',
+      otherUniversities: 'no',
+      decisionCertainty: '1',
+      ortReasons: ['1'],
+    });
+  }
+
+  function completeOrtExperience(survey: EnrollmentSurveyFacade): void {
+    survey.ortExperienceForm.patchValue({
+      advisingMeeting: 'no',
+      visitedWebsite: 'no',
+      visitedCampus: 'no',
+      recallsAdvertising: 'no',
+    });
+  }
 
   function createSurveyResponse(overrides: Record<string, unknown> = {}) {
     return {
