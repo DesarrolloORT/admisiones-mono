@@ -1847,7 +1847,6 @@ namespace UnitTesting.AppLogic.Services
             });
 
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.ExisteCompletaPorDocumento("DE", "123")).Returns(false);
             encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(new EncuestaIniAdmision
             {
                 IdEncuestaIni = 900,
@@ -2858,8 +2857,7 @@ namespace UnitTesting.AppLogic.Services
 
         private void SetupReposDerechoEncuesta(
             bool existeFresco = false,
-            bool existeEncuestaIni = false,
-            bool existeEncuestaCompleta = false)
+            bool existeEncuestaIni = false)
         {
             var frescoRepo = new Mock<IVdEsFrescoAdmisionRepository>();
             frescoRepo.Setup(r => r.ExistePorDocumento("DE", "123")).Returns(existeFresco);
@@ -2870,7 +2868,6 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.EncuestaInis).Returns(encuestaIniRepo.Object);
 
             var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
-            encuestaRepo.Setup(r => r.ExisteCompletaPorDocumento("DE", "123")).Returns(existeEncuestaCompleta);
             _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
         }
 

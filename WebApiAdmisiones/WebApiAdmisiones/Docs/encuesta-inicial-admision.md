@@ -54,6 +54,45 @@ ESTADO_ENCUESTA_INI_ADMISION
 3. Si todos los campos obligatorios están completos, pasa a `DEFINITIVO`.
 4. Si falta algún dato obligatorio, permanece en `TEMPORAL`.
 
+### `DEFINITIVO` significa "completa", no "cerrada"
+
+El estado describe completitud, no un cierre. El postulante completa la encuesta por secciones y
+puede volver a corregir cualquiera de ellas, incluso después de que la encuesta llegó a
+`DEFINITIVO` — de cara al usuario la encuesta convive con otros pasos del flujo de admisión
+(verificación de identidad, reglamento estudiantil), así que no hay un único momento de cierre.
+
+El ciclo `DEFINITIVO` → `TEMPORAL` → `DEFINITIVO` es válido: si una corrección deja un campo
+obligatorio vacío, la encuesta vuelve a `TEMPORAL` y la confirmación de preinscripción queda
+bloqueada hasta completarla otra vez.
+
+### Momento de cierre: `FECHA_PROCESADO_ENCUESTA_INI`
+
+Hay dos tablas:
+
+```text
+T_ENCUESTA_INI_ADMISION -> staging que llena esta API; es la que tiene TEMPORAL/DEFINITIVO.
+T_ENCUESTA_INI          -> destino final; la carga LogicaORT al confirmar la preinscripción.
+```
+
+Al confirmar la preinscripción, LogicaORT copia la fila de staging a `T_ENCUESTA_INI` y sella
+`FECHA_PROCESADO_ENCUESTA_INI` con la fecha del día. Desde ese momento la encuesta queda cerrada:
+el guardado responde **409 `INS_EI_57`** y la lectura deja de devolverla
+(`canAnswerSurvey: false`, sin `survey`).
+
+`ESTADO_ENCUESTA_INI_ADMISION` no existe para LogicaORT: su única condición para migrar es
+`FECHA_PROCESADO_ENCUESTA_INI IS NULL`. Quien garantiza que sólo se migren encuestas completas es
+esta API, al exigir `DEFINITIVO` antes de confirmar la preinscripción.
+
+| Situación | Señal | Se muestra y edita |
+|---|---|---|
+| Parcial | `TEMPORAL` + `FECHA_PROCESADO_ENCUESTA_INI` en `NULL` | Sí |
+| Completa, sin confirmar | `DEFINITIVO` + `FECHA_PROCESADO_ENCUESTA_INI` en `NULL` | Sí |
+| Confirmada y migrada | `FECHA_PROCESADO_ENCUESTA_INI` con fecha | No |
+| Encuesta histórica | existe fila en `T_ENCUESTA_INI` | No |
+
+Lo que manda es `FECHA_PROCESADO_ENCUESTA_INI`, no el estado: un `DEFINITIVO` sin procesar se
+muestra y se edita igual que un `TEMPORAL`.
+
 ---
 
 ## 4. Datos completados por backend
