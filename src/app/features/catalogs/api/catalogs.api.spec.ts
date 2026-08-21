@@ -126,7 +126,7 @@ describe('CatalogsApi', () => {
             {
               id: 11,
               label: '6º año',
-              baccalaureates: [{ id: 12, label: 'Científico', orientation: 'Matemática' }],
+              baccalaureates: [{ id: 12, label: 'Científico', orientation: 'Científico' }],
             },
           ],
         },
