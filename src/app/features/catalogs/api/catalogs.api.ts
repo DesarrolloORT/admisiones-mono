@@ -115,7 +115,7 @@ export class CatalogsApi {
 
   public getInstitutions(
     countryCode: number,
-    stateCode: number
+    stateCode?: number
   ): Observable<EducationalInstitution[]> {
     return this.api.list(
       getCatalogsInstitutionsEndpoint,
@@ -123,9 +123,14 @@ export class CatalogsApi {
         id: item.id ?? 0,
         label: item.name ?? '',
         countryCode,
-        stateCode,
+        stateCode: stateCode ?? null,
       }),
-      { queryParams: { countryId: countryCode, stateId: stateCode } }
+      {
+        queryParams:
+          stateCode === undefined
+            ? { countryId: countryCode }
+            : { countryId: countryCode, stateId: stateCode },
+      }
     );
   }
 
