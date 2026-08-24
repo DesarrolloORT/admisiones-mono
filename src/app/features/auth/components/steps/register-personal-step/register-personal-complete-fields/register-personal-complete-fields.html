@@ -53,7 +53,10 @@
     }
   </ort-form-field>
 
-  <app-location-select class="auth-field--wide" formControlName="location" />
+  <app-location-select
+    class="auth-field--wide"
+    formControlName="location"
+    [submitted]="submitted()" />
   @if (submitted() && form().controls.location.hasError('locationRequired')) {
   <p class="sr-only" id="location-country-error" role="alert">Seleccioná el país de residencia</p>
   } @if (submitted() && form().controls.location.hasError('locationStateRequired')) {
