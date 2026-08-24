@@ -16,6 +16,15 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - Seguridad: .github/instructions/toolkit/secure-code.instructions.md
 - UI/SCSS: antes de entregar, respeta `.stylelintrc.json`; no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`. Usa tokens `--ort-sys-*` o `rem` permitido.
 
+## Comentarios en codigo
+
+- Un comentario explica **por que**, nunca **que**. El que va en el nombre.
+- Prohibido: JSDoc que repite la firma, `/** Input for X. */` sobre una interfaz que ya se llama X, narrar la linea siguiente (`Behind the scenes: POST /auth/login`), banners de seccion (`// -------`).
+- No dupliques en comentarios reglas que ya viven en este archivo o en `docs/`: se desincronizan y terminan mintiendo. Enlaza si hace falta.
+- Si el codigo necesita un comentario para entenderse, primero renombra o extrae. El comentario es el ultimo recurso, no el primero.
+- Si comentas: decisiones no obvias, workarounds con su causa, restricciones del contrato backend, y los `ponytail:` con su techo conocido.
+- `npm run check-comment-noise` valida esto en `lint:check`. Referencia limpia: `features/auth/api/auth.api.ts`.
+
 ## Arquitectura Angular/API
 
 - Solo los adapters en `api/` (`features/*/api/*.api.ts`) pueden importar contratos generados desde `src/app/shared/api/generated/**`.
