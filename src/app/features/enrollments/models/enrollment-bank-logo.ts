@@ -32,16 +32,11 @@ const FALLBACK_BANKS: readonly Bank[] = [
 
 export const FALLBACK_BANK_OPTIONS: readonly EnrollmentOption[] = FALLBACK_BANKS.map(toBankOption);
 
-/**
- * Resuelve la ruta del logo de un banco a partir de su código o nombre,
- * cayendo a `default.svg` cuando no hay coincidencia.
- */
 export function resolveBankLogo(bank: Pick<Bank, 'label' | 'code'>): string {
   const slug = matchBankLogo(bank.code) ?? matchBankLogo(bank.label) ?? DEFAULT_BANK_LOGO;
   return `${BANK_LOGO_BASE_PATH}/${slug}.svg`;
 }
 
-/** Convierte un banco de catálogo en opción de combo con su logo. */
 export function toBankOption(bank: Bank): EnrollmentOption {
   return {
     value: bank.code ?? bank.id.toString(),
