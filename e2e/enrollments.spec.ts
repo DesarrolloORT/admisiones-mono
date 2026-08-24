@@ -497,6 +497,71 @@ test.describe('Inscripción inicial', () => {
       page.locator('ort-radio-group[formcontrolname="degreeProgramDecisionYear"]')
     ).toBeVisible();
   });
+  // Salir guarda lo respondido aunque la seccion siga incompleta, y responder "No" tiene que
+  // viajar igual que responder "Si": con `currentlyInSecondary` no anulable, el "No" coincidia
+  // con el snapshot inicial y nunca entraba al delta.
+  test('guarda las respuestas "No" al salir y las precarga al volver @regression', async ({
+    page,
+  }) => {
+    await mockApi(page, { initialSurvey: 'empty', enrollmentDetail: 'in-progress' });
+    await addAuthenticatedSession(page);
+    const enrollment = new EnrollmentPage(page);
+    const surveySaveRequests = collectPostRequests(page, '/enrollments/initial-survey');
+
+    await page.goto('/inicio');
+    await continueEnrollment(page);
+
+    await enrollment.chooseSurveyRadio('studiesHighSchool', 'No');
+    await enrollment.chooseSurveyRadio('repeatsHighSchoolYear', 'No');
+
+    const saveOnExit = waitForPost(page, '/enrollments/initial-survey');
+    await enrollment.exitFlow();
+
+    expect((await saveOnExit).postDataJSON()).toEqual({
+      degreeProgramId: 20,
+      admissionProcessId: 200,
+      currentlyInSecondary: false,
+      repeatsHighSchoolYear: false,
+    });
+    expect(surveySaveRequests.length).toBeGreaterThan(0);
+
+    await continueEnrollment(page);
+
+    await expect(enrollment.surveyRadio('studiesHighSchool', 'No')).toBeChecked();
+    await expect(enrollment.surveyRadio('repeatsHighSchoolYear', 'No')).toBeChecked();
+  });
+
+  // La encuesta guarda el id de la institucion pero NO su departamento: al retomar hay que
+  // mostrarla igual y dar la seccion por completa, sin obligar a rehacer los dos campos.
+  test('precarga la institucion respondida sin departamento al retomar @regression', async ({
+    page,
+  }) => {
+    await mockApi(page, { initialSurvey: 'partial', enrollmentDetail: 'in-progress' });
+    await addAuthenticatedSession(page);
+    const enrollment = new EnrollmentPage(page);
+
+    await page.goto('/inicio');
+    await continueEnrollment(page);
+
+    // Los selects alimentados por catalogo tambien: el valor se escribe antes de que lleguen
+    // las opciones, asi que su etiqueta tiene que aparecer al llegar el catalogo.
+    await expect(enrollment.educationSelectText('orientation')).toContainText('Científico');
+    await expect(enrollment.educationSelectText('motherEducation')).toContainText(
+      'Universitaria completa'
+    );
+    await expect(enrollment.educationSelectText('educationalInstitution')).toContainText(
+      'Liceo Nº 1'
+    );
+    await expect(enrollment.educationSelectText('state')).toContainText('Seleccioná');
+
+    // La seccion es valida sin tocar el departamento: Continuar avanza a Decision academica.
+    await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+
+    await expect(
+      page.locator('ort-radio-group[formcontrolname="degreeProgramDecisionYear"]')
+    ).toBeVisible();
+  });
+
   test('retoma la reserva desde el detalle serializable @regression', async ({ page }) => {
     await mockApi(page, { initialSurvey: 'complete', enrollmentDetail: 'pending-payment' });
     await addAuthenticatedSession(page);

@@ -118,6 +118,39 @@ export class EnrollmentPage {
     await this.chooseRadio('fatherOrtDegree', 'No');
   }
 
+  /**
+   * Sale del flujo. El control cambia por breakpoint: en desktop es el boton de texto
+   * "Salir del proceso" y en mobile el icono de cierre del header.
+   */
+  public async exitFlow(): Promise<void> {
+    const textButton = this.page.getByRole('button', { name: 'Salir del proceso' });
+    const iconButton = this.page.getByRole('button', { name: 'Cerrar inscripción' });
+    const exitButton = (await textButton.isVisible()) ? textButton : iconButton;
+    await exitButton.click();
+    await expect(this.page).toHaveURL(/\/inicio/);
+  }
+
+  /** Un radio de la encuesta por control + etiqueta, para afirmar sobre su estado. */
+  public surveyRadio(controlName: string, label: string): Locator {
+    return this.radioGroup(controlName).getByRole('radio', { name: label, exact: true });
+  }
+
+  public async chooseSurveyRadio(controlName: string, label: string): Promise<void> {
+    await this.surveyRadio(controlName, label).click();
+  }
+
+  /**
+   * Texto visible del select de la seccion Educacion. Al retomar, la institucion ya
+   * respondida tiene que verse seleccionada aunque el departamento este vacio: la encuesta
+   * guarda el id de la institucion pero no su departamento.
+   */
+  public educationSelectText(controlName: string): Locator {
+    const responsiveSelect = this.responsiveSelect(controlName);
+    return responsiveSelect
+      .locator('.responsive-select__mobile-trigger, ort-select .ort-select-trigger')
+      .first();
+  }
+
   public institutionNameInput(): Locator {
     return this.page.locator('input[formcontrolname="educationalInstitution"]');
   }
