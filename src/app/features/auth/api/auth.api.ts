@@ -35,23 +35,13 @@ const LOGIN_ERROR_MESSAGES: Record<number, string> = {
   429: 'Demasiados intentos. Intentá nuevamente más tarde.',
 };
 
-// ---------------------------------------------------------------------------
-// Stable public types — these are the contract that the rest of the feature
-// depends on. They do NOT change when `npm run update-api` regenerates
-// endpoints or models. Only this file knows about generated constants and DTOs.
-// ---------------------------------------------------------------------------
-
-/** Input for login. Maps internally to generated `LoginPayload`. */
 export interface LoginPayload {
   documentType: string;
   documentNumber: string;
   password: string;
 }
 
-/**
- * Stable output of login. Discriminated union: 200 → authenticated, 202 → 2FA required.
- * Hides backend contract shapes (`AuthenticationResponse` / `TwoFactorRequiredResponse`).
- */
+/** El backend responde 200 con la persona, o 202 cuando ya mando el codigo 2FA por mail. */
 export type LoginResult =
   | {
       kind: 'authenticated';
@@ -65,7 +55,6 @@ export type LoginResult =
       message: string;
     };
 
-/** Input for user registration. */
 export interface RegisterPayload {
   documentType: string;
   documentNumber: string;
@@ -84,10 +73,8 @@ export interface RegisterPayload {
   emailConfirmation: string;
 }
 
-/** Input for confirming an application request. */
 export type ConfirmApplicationRequestPayload = RegisterPayload;
 
-/** Input for identity verification. */
 export interface VerifyIdentityPayload {
   documentType: string;
   documentNumber: string;
@@ -96,8 +83,6 @@ export interface VerifyIdentityPayload {
 }
 
 /**
- * Stable output of identity verification.
- *
  * No expone `success`: el interceptor de `OperationResult` convierte cualquier
  * `success: false` en error HTTP, asi que un valor emitido siempre es un exito.
  * `mailSent: false` es exito parcial: el usuario quedo creado pero el correo de
@@ -108,8 +93,6 @@ export interface VerifyIdentityResult {
 }
 
 /**
- * Stable output of registration. Hides `RegistrationFlowResult` from backend.
- *
  * `pendingReview` es la unica fuente de verdad de la pantalla final: `true`
  * significa solicitud de alta esperando revision manual, sin usuario ni correo.
  */
@@ -118,13 +101,11 @@ export interface RegisterResult {
   mailSent: boolean;
 }
 
-/** Input for document evaluation before registration. */
 export interface EvaluateDocumentPayload {
   documentType: string;
   documentNumber: string;
 }
 
-/** Stable output of document evaluation. */
 export interface EvaluateDocumentResult {
   flowId: string | null;
   requiresPersonCreation: boolean;
@@ -135,78 +116,46 @@ export interface EvaluateDocumentResult {
   message: string | null;
 }
 
-/** Input for validating a password activation link. */
 export interface ActivatePasswordLinkPayload {
   token: string;
 }
 
-/** Input for completing the password activation flow. */
 export interface CompletePasswordPayload {
   newPassword: string;
 }
 
-/** Input for initiating password recovery. */
 export interface RecoverPasswordPayload {
   documentType: string;
   documentNumber: string;
   firstSurname: string;
 }
 
-/** Input for verifying the two-factor authentication code. */
 export interface VerifyTwoFactorCodePayload {
   sessionId: string;
   code: string;
 }
 
-/** Input for resending the two-factor authentication code. */
 export interface ResendTwoFactorCodePayload {
   sessionId: string;
 }
 
-/** Stable output of resending the two-factor authentication code. */
 export interface ResendTwoFactorCodeResult {
   sessionId: string;
   maskedEmail: string;
   message: string;
 }
 
-/** Stable output of 2FA verification. Same shape as authenticated login. */
 export interface VerifyTwoFactorCodeResult {
   documentNumber: string;
   firstName: string;
 }
 
-/**
- * Auth endpoint adapter.
- *
- * This adapter is one of the auth feature files allowed to import generated
- * endpoints and backend DTOs. It translates between the unstable generated
- * layer and the stable frontend types consumed by services, pages and
- * components.
- *
- * When the backend changes (URL, DTO shape, field names), only this file needs
- * adjustment — the rest of the feature keeps compiling unchanged.
- *
- * @stable Public methods and their input/output types.
- * @unstable Internal usage of `postAuthLoginEndpoint`,
- *           `postRegistrationConfirmNewPersonEndpoint`,
- *           `postRegistrationAnalyzeAttachmentEndpoint` and generated payload types.
- */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthApi {
   private readonly api = inject(ApiHttpClient);
 
-  /**
-   * Authenticate user credentials.
-   *
-   * Behind the scenes: POST /auth/login using generated `postAuthLoginEndpoint`.
-   * The backend returns either:
-   *   - 200 with `data.person` → fully authenticated, cookies set.
-   *   - 202 with `data.sessionId` + `data.maskedEmail` → 2FA code emailed; caller must verify.
-   * Discriminates by presence of `sessionId` in the unwrapped data.
-   */
   public login(payload: LoginPayload): Observable<LoginResult> {
     // `LoginPayload` ya coincide en forma con el request generado: el tipado
     // explicito es la red de seguridad, no hace falta reescribir los campos.
@@ -239,11 +188,7 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Validate an activation/recovery token and create the temporary password cookie.
-   *
-   * Behind the scenes: POST /auth/activate-password-link using generated endpoint.
-   */
+  /** Deja la cookie temporal de contrasena que despues consume `completePassword`. */
   public activatePasswordLink(payload: ActivatePasswordLinkPayload): Observable<void> {
     return this.api
       .request(postAuthActivatePasswordLinkEndpoint, {
@@ -254,11 +199,7 @@ export class AuthApi {
       .pipe(map(() => undefined));
   }
 
-  /**
-   * Complete password activation using the temporary cookie created by the link.
-   *
-   * Behind the scenes: POST /auth/complete-initial-password using generated endpoint.
-   */
+  /** Requiere la cookie temporal creada por `activatePasswordLink`; no manda el token. */
   public completePassword(payload: CompletePasswordPayload): Observable<void> {
     return this.api
       .request(postAuthCompleteInitialPasswordEndpoint, {
@@ -268,14 +209,6 @@ export class AuthApi {
       .pipe(map(() => undefined));
   }
 
-  /**
-   * Register a new person.
-   *
-   * Behind the scenes: POST /registration/confirm-new-person using generated endpoint.
-   * `RegisterPayload` is a direct alias of `ConfirmarNuevaPersonaPayload` so
-   * no field mapping is needed — the body is passed through as-is.
-   * Response mapped from `RegistrationFlowResult` → `RegisterResult`.
-   */
   public register(payload: RegisterPayload, flowId: string): Observable<RegisterResult> {
     const body = this.toRegisterPersonRequest(payload);
 
@@ -294,13 +227,6 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Confirm a pending application request.
-   *
-   * Behind the scenes: POST /registration/confirm-registration-request using generated endpoint.
-   * Response mapped from `RegistrationFlowResult` → `RegisterResult`; aca
-   * `pendingReview` llega en `true` y es lo que corta el flujo en la UI.
-   */
   public confirmApplicationRequest(
     payload: ConfirmApplicationRequestPayload,
     flowId: string
@@ -322,12 +248,6 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Evaluate whether a document can start registration.
-   *
-   * Behind the scenes: POST /registration/evaluate-document using generated endpoint.
-   * Response mapped from `RegistroEvaluacionResponseOperationResult` → `EvaluateDocumentResult`.
-   */
   public evaluateDocument(payload: EvaluateDocumentPayload): Observable<EvaluateDocumentResult> {
     return this.api
       .requestWithMessage(postRegistrationEvaluateDocumentEndpoint, {
@@ -348,12 +268,6 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Analyze an uploaded document image via OCR.
-   *
-   * Behind the scenes: POST /registration/analyze-attachment using generated endpoint.
-   * Response mapped from `ReconocimientoDocumentoResponseOperationResult` → `DocumentRecognitionData`.
-   */
   public recognizeDocument(
     payload: DocumentRecognitionRequest
   ): Observable<DocumentRecognitionData> {
@@ -388,12 +302,6 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Verify the identity of a person before completing registration.
-   *
-   * Behind the scenes: POST /registration/verify-identity using generated endpoint.
-   * Response mapped from `RegistrationConfirmationResponse` → `VerifyIdentityResult`.
-   */
   public verifyIdentity(
     payload: VerifyIdentityPayload,
     flowId: string
@@ -408,12 +316,7 @@ export class AuthApi {
       .pipe(map(data => ({ mailSent: data.mailSent ?? false })));
   }
 
-  /**
-   * Initiate password recovery. Sends an email with a secure link if data matches.
-   *
-   * Behind the scenes: POST /auth/recover-password using generated endpoint.
-   * Response is intentionally generic to avoid revealing whether the person exists.
-   */
+  /** La respuesta es generica a proposito: no debe revelar si la persona existe. */
   public recoverPassword(payload: RecoverPasswordPayload): Observable<void> {
     return this.api
       .request(postAuthRecoverPasswordEndpoint, {
@@ -424,24 +327,13 @@ export class AuthApi {
       .pipe(map(() => undefined));
   }
 
-  /**
-   * Close the current session on the backend, clearing HttpOnly cookies.
-   *
-   * Behind the scenes: POST /auth/logout using generated endpoint.
-   */
   public logout(): Observable<void> {
     return this.api
       .request(postAuthLogoutEndpoint, { withCredentials: true })
       .pipe(map(() => undefined));
   }
 
-  /**
-   * Refresh the access token using the HttpOnly refresh-token cookie.
-   *
-   * Behind the scenes: POST /auth/refresh-token using generated endpoint.
-   * The frontend intentionally sends no body; the API validates the refresh
-   * cookie and updates authentication cookies on success.
-   */
+  /** Sin body a proposito: el refresh token viaja en la cookie HttpOnly. */
   public refreshToken(): Observable<void> {
     return this.api
       .request(postAuthRefreshTokenEndpoint, {
@@ -451,13 +343,6 @@ export class AuthApi {
       .pipe(map(() => undefined));
   }
 
-  /**
-   * Verify the 6-digit two-factor code emailed to the user and complete authentication.
-   *
-   * Behind the scenes: POST /auth/verify-two-factor-code using generated endpoint.
-   * Sets the secure HttpOnly cookies on success and returns person data so the
-   * caller can hydrate the local session.
-   */
   public verifyTwoFactorCode(
     payload: VerifyTwoFactorCodePayload
   ): Observable<VerifyTwoFactorCodeResult> {
@@ -474,11 +359,6 @@ export class AuthApi {
       );
   }
 
-  /**
-   * Resend the two-factor code for an active 2FA session.
-   *
-   * Behind the scenes: POST /auth/resend-two-factor-code using generated endpoint.
-   */
   public resendTwoFactorCode(
     payload: ResendTwoFactorCodePayload
   ): Observable<ResendTwoFactorCodeResult> {
