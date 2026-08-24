@@ -366,7 +366,8 @@ export class EnrollmentPaymentFacade {
 
     const amount = this.process.preEnrollmentResponse()?.enrollmentDeposit;
     const availableAmount = this.process.preEnrollmentResponse()?.accountBalance;
-    if (!isPositiveAmount(amount)) return [];
+    // Sin saldo en cuenta corriente el medio no aplica, aunque haya seña a pagar.
+    if (!isPositiveAmount(amount) || availableAmount === 0) return [];
 
     return [
       {
