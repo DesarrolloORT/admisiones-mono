@@ -98,7 +98,7 @@ Si necesitas el flujo completo con autenticacion de packages y detalle de ambien
 
 ## Ejecutar la aplicacion en un servidor local
 
-Ejecutar `npm start` para elegir ambiente e iniciar la aplicacion en el puerto 4200. Para abrir el navegador, usar `npm start -- desa -o`.
+Ejecutar `npm start` para elegir ambiente e iniciar la aplicacion en el puerto 4200. Para abrir el navegador, usar `npm start -- desa -o`. Si el puerto 4200 esta ocupado, usar `npm run start:clean` para liberarlo e iniciar nuevamente.
 
 ## Entorno de desarrollo
 
