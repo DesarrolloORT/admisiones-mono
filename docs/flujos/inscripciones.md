@@ -111,10 +111,38 @@ vuelve a enviar. AP nunca guarda encuesta.
 El estado de carga fallida (`GET` caído) se trata como "no sabemos": pantalla de error con
 reintento y nunca un POST a ciegas.
 
+### Hidratación de la encuesta
+
+`details` y `initial-survey` son resolvers de la misma ruta: corren en paralelo y los dos
+están resueltos antes de que exista la página, así que entre ellos no hay orden. `details` no
+aporta nada a la encuesta (solo Paso 1 y pago).
+
+El orden que sí importa es encuesta vs. **catálogos**: la encuesta trae ids y los catálogos que
+les dan sentido se piden recién al activarse el paso 2. Reglas:
+
+- **La encuesta se parchea UNA sola vez**, al derivar el estado inicial, con los catálogos
+  todavía vacíos. No hay un segundo parcheo: nada puede pisar lo que el usuario respondió
+  mientras los catálogos cargaban.
+- **Ninguna limpieza dependiente de catálogo corre sin ese catálogo cargado.** "No hay
+  opciones" no significa "la opción dejó de existir": con el catálogo vacío la orientación (y
+  cualquier valor equivalente) se conserva tal cual llegó del backend. La limpieza vuelve a
+  aplicar en cuanto el catálogo está, y también cuando el catálogo falla el valor se conserva.
+- El snapshot de "lo último que el backend confirmó" se toma justo después de ese parcheo
+  único, así que el primer delta no reenvía nada que el backend ya tenga.
+- Los selects reciben su valor antes que sus opciones. `ResponsiveSelect` proyecta su propio
+  `ort-select-trigger` derivado de `selectedOptions()` porque el trigger interno de
+  `ort-select` recorre las `ort-option` proyectadas y esa lista no es reactiva: sin trigger
+  propio, un valor escrito antes que las opciones deja el campo visualmente vacío en desktop.
+
 Para niveles 1/2 el `POST initial-survey` es un **upsert parcial de las claves que manda el
 front**: una clave ausente significa "sin cambios" y una clave presente en `null` significa
 "borrar". El front nunca manda la encuesta entera: manda el delta contra lo último que el
 backend confirmó (ver `## Payload de encuesta inicial`).
+
+Los valores "sin responder" viajan como `null`, nunca como el valor por defecto del control.
+Un campo cuyo payload no pueda expresar "sin responder" queda atrapado: si su valor vacío
+coincide con una respuesta válida (el caso de `currentlyInSecondary` con `false`), responder
+esa opción no produce delta, el backend nunca se entera y al volver el campo aparece vacío.
 
 Momentos de guardado, todos con `canAnswerSurvey` en `true` y ninguno bloqueante:
 
@@ -127,7 +155,10 @@ Momentos de guardado, todos con `canAnswerSurvey` en `true` y ninguno bloqueante
    fallido. Con todo guardado el delta está vacío y no hay request.
 3. **Al cerrar el paso 2** (Continuar de la última sección), antes de confirmar la
    preinscripción.
-4. **Al confirmar "Salir"** desde el paso 2.
+4. **Al salir** del paso 2. Salir no pide confirmación: el guardado sale al vuelo, no bloquea
+   la navegación y un fallo no muestra error. Es el único momento que rescata lo respondido en
+   una sección que todavía no quedó completa, porque el guardado por sección solo dispara con
+   la sección válida.
 
 En los cuatro casos, si no hay cambios pendientes no hay request. **No hay ningún guardado
 disparado por un timer.** El guardado es oportunista: corre en segundo plano sin loader y un
@@ -165,7 +196,8 @@ matriz es su lectura de negocio.
   llegar con producto y proceso válidos **ya prueba que la inscripción existe**, así
   que el interés está registrado y el **Paso 1 nunca se muestra**. Al hacer clic en
   "Continuar inscripción", la tarjeta guarda sus `offeringIds` y `enrollmentIds` en
-  `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel`. El Paso 1 queda precargado y
+  `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel` (el `estado`, solo
+  hasta el primer avance). El Paso 1 queda precargado y
   deshabilitado (no se vuelve a enviar `POST /enrollments/product-interest`) y el flujo arranca en el Paso
   2 o en la pantalla que corresponda al estado.
 
@@ -217,6 +249,19 @@ matriz es su lectura de negocio.
   Los pasos no están en la URL, así que la flecha del navegador no vuelve un paso: sale
   del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
+  **La URL identifica la inscripción, no su estado.** Como el paso no viaja en la URL,
+  recargar re-deriva todo, y los params de entrada son una foto del panel: `estado` y
+  `modo` describen la inscripción tal como estaba al entrar. En cuanto el flujo avanza esa
+  foto queda vieja, así que el primer avance reescribe la URL (`replaceUrl`) con
+  `idProducto`, `idProceso`, `idOferta` y `nivel`, y **sin** `estado` ni `modo`. Sin esa
+  reescritura, recargar en el Paso 3 volvía al Paso 2 —con `estado=En proceso` el Detalle
+  ya no encuentra ese estado (404) y el flujo cae en su fallback— y ahí "Continuar"
+  reintentaba `POST /enrollments/confirm-pre-enrollment` sobre una preinscripción ya
+  confirmada: `400` sin salida. En una inscripción nueva pasaba lo mismo por el otro lado:
+  sin params, la recarga volvía al Paso 1 con el interés ya registrado. Se reescribe una
+  sola vez por entrada y solo si algo cambia, porque el router usa
+  `onSameUrlNavigation: 'reload'` y navegar a la misma URL recargaría la ruta.
+
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`): el botón
   del dashboard hace `POST /enrollments/reactivate` con **todas** las anotaciones de
   la tarjeta en `enrollmentIds` (una en niveles 1/2; una por seminario en los paquetes
@@ -248,7 +293,10 @@ front lo manda siempre que lo conoce, pero el param sigue siendo opcional: un li
 viejo sin `estado` se llama sin `status` y el backend resuelve como antes. El frontend
 lo propaga por el query param `estado` en la URL de `/inscripciones` (mismo mecanismo
 que `idProducto`/`idProceso`/`modo`), leído por `enrollmentDetailResolver` y por
-`EnrollmentPaymentFacade` al retomar el pago desde el panel.
+`EnrollmentPaymentFacade` al retomar el pago desde el panel. Es un disambiguador de **un
+solo uso**: describe el estado con el que se entró, así que el primer avance del flujo lo
+saca de la URL (ver "El flujo solo avanza") y desde ahí el Detalle se consulta sin
+`status`.
 
 `nivel` viaja por el mismo mecanismo y con la misma regla de opcionalidad: es el
 `productLevelId` que ya devuelve `GET /person/enrollments`, y existe para que el
@@ -290,20 +338,20 @@ Excepciones que si limpian valores:
 
 ## Matriz de campos condicionales
 
-| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                             |
-| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------------ |
-| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido               | Conserva valor crudo                | `highSchoolYear = null`                          |
-| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `highSchoolOrientationId = null`                 |
-| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0      | Conserva valor crudo                | `highSchoolYearRepeatCount = null`               |
-| `highSchoolLocation = 1`                | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `highSchoolInstitutionName` |
-| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `highSchoolInstitutionId = null`                 |
-| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida     | Conserva valor crudo                | `higherEducationUniversityIds = null`            |
-| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                            |
-| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                              |
-| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                               |
-| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                       |
-| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                      |
-| `paymentMethod = bank-account`          | `bank`                                  | Requerido               | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`                 |
+| Condicion                               | Campo afectado                          | Validacion visible         | Limpieza al cambiar                 | Payload si no aplica                             |
+| --------------------------------------- | --------------------------------------- | -------------------------- | ----------------------------------- | ------------------------------------------------ |
+| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido                  | Conserva valor crudo                | `highSchoolYear = null`                          |
+| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes    | Limpia si la opcion deja de existir | `highSchoolOrientationId = null`                 |
+| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0         | Conserva valor crudo                | `highSchoolYearRepeatCount = null`               |
+| `highSchoolLocation = 1`                | Departamento e institucion como selects | Solo institucion requerida | Limpia solo una opcion inexistente  | Institucion libre en `highSchoolInstitutionName` |
+| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido            | Puede conservar el id anterior      | `highSchoolInstitutionId = null`                 |
+| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida        | Conserva valor crudo                | `higherEducationUniversityIds = null`            |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido            | Conserva valor crudo                | Lista de otros `null`                            |
+| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido            | Conserva valor crudo                | Egresado ORT `null`                              |
+| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida        | Conserva valor crudo                | Ids y otros `null`                               |
+| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido                  | Conserva valor crudo                | Valoracion o medios `null`                       |
+| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido         | No se envia                         | Solo controla validez de UI                      |
+| `paymentMethod = bank-account`          | `bank`                                  | Requerido                  | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`                 |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -603,7 +651,13 @@ anterior no existe, se envia `highSchoolOrientationId = null`.
 cantidad puede quedar cruda en el form pero el backend recibe
 `highSchoolYearRepeatCount = null`.
 `highSchoolLocation` decide el control de institucion educativa. Con valor `1`
-(Uruguay) se muestran `state` e `educationalInstitution` como select; el
+(Uruguay) se muestran `state` e `educationalInstitution` como select. **`state` es un
+filtro de UI, no un dato de la encuesta**: el backend no lo persiste (el contrato solo
+tiene `secondaryInstitutionId` / `secondaryInstitutionName`), asi que no es requerido y al
+retomar queda vacio. La institucion ya respondida se muestra igual: se siembra su opcion
+con el nombre que mande el backend o, si no viene, resolviendolo con una consulta al
+listado de instituciones del pais (`GET /catalogs/institutions?countryId=1`). Elegir un
+departamento reemplaza esa opcion por el catalogo de ese departamento. El
 backend recibe `finalHighSchoolYearLocationId = 1`,
 `highSchoolInstitutionId = Number(educationalInstitution)` y
 `highSchoolInstitutionName = null`. Con valor `2` (exterior)
@@ -943,6 +997,11 @@ Mapping adapter:
 
 `tarjeta-credito` no queda como método activo hasta que el backend confirme un
 `tipoPago` propio o su mapeo dentro de Sistarbanc.
+
+`personal-account` solo se ofrece si la seña es positiva y el saldo de cuenta
+corriente (`currentAccount.currentBalance` de `/enrollments/details` o de la
+preinscripción) es distinto de `0`. Con saldo `0` la opción se oculta; con saldo
+informado pero menor a la seña se muestra deshabilitada.
 
 Comportamiento servidor:
 
