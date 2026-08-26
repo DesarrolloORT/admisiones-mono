@@ -826,6 +826,7 @@ function initialSurvey(kind: NonNullable<MockApiOptions['initialSurvey']>): unkn
     repeatsHighSchoolYear: false,
     lastSecondaryYearLocationId: 1,
     secondaryInstitutionId: 500,
+    secondaryInstitutionStateId: 10,
     previousHigherEducationId: 3,
     motherEducationLevelId: 5,
     fatherEducationLevelId: 5,

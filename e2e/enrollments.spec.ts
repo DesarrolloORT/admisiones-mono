@@ -533,9 +533,7 @@ test.describe('Inscripción inicial', () => {
 
   // La encuesta guarda el id de la institucion pero NO su departamento: al retomar hay que
   // mostrarla igual y dar la seccion por completa, sin obligar a rehacer los dos campos.
-  test('precarga la institucion respondida sin departamento al retomar @regression', async ({
-    page,
-  }) => {
+  test('precarga departamento e institucion al retomar @regression', async ({ page }) => {
     await mockApi(page, { initialSurvey: 'partial', enrollmentDetail: 'in-progress' });
     await addAuthenticatedSession(page);
     const enrollment = new EnrollmentPage(page);
@@ -545,16 +543,14 @@ test.describe('Inscripción inicial', () => {
 
     // Los selects alimentados por catalogo tambien: el valor se escribe antes de que lleguen
     // las opciones, asi que su etiqueta tiene que aparecer al llegar el catalogo.
-    await expect(enrollment.educationSelectText('orientation')).toContainText('Científico');
-    await expect(enrollment.educationSelectText('motherEducation')).toContainText(
-      'Universitaria completa'
-    );
-    await expect(enrollment.educationSelectText('educationalInstitution')).toContainText(
-      'Liceo Nº 1'
-    );
-    await expect(enrollment.educationSelectText('state')).toContainText('Seleccioná');
+    await enrollment.expectSelectToShow('orientation', 'Científico');
+    await enrollment.expectSelectToShow('motherEducation', 'Universitaria completa');
+    // El departamento no se guarda: el backend lo deriva de la institucion y con el se pide su
+    // catalogo, asi que los dos combos tienen que quedar resueltos sin tocar nada.
+    await enrollment.expectSelectToShow('state', 'Montevideo');
+    await enrollment.expectSelectToShow('educationalInstitution', 'Liceo Nº 1');
 
-    // La seccion es valida sin tocar el departamento: Continuar avanza a Decision academica.
+    // La seccion queda completa sola: Continuar avanza a Decision academica.
     await page.getByRole('button', { name: 'Continuar', exact: true }).click();
 
     await expect(

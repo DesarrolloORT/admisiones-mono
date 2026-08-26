@@ -140,15 +140,24 @@ export class EnrollmentPage {
   }
 
   /**
-   * Texto visible del select de la seccion Educacion. Al retomar, la institucion ya
-   * respondida tiene que verse seleccionada aunque el departamento este vacio: la encuesta
-   * guarda el id de la institucion pero no su departamento.
+   * Afirma lo que el select muestra, sea cual sea la variante que le toco renderizar:
+   * `ort-searchable-select` expone el valor en su `input`, `ort-select` en su trigger, y en
+   * mobile es el boton del drawer.
    */
-  public educationSelectText(controlName: string): Locator {
-    const responsiveSelect = this.responsiveSelect(controlName);
-    return responsiveSelect
+  public async expectSelectToShow(controlName: string, expected: string): Promise<void> {
+    const root = this.responsiveSelect(controlName);
+    const searchInput = root.locator('ort-searchable-select input');
+    const trigger = root
       .locator('.responsive-select__mobile-trigger, ort-select .ort-select-trigger')
       .first();
+
+    await expect
+      .poll(async () =>
+        (await searchInput.count()) > 0
+          ? await searchInput.inputValue()
+          : ((await trigger.textContent()) ?? '')
+      )
+      .toContain(expected);
   }
 
   public institutionNameInput(): Locator {

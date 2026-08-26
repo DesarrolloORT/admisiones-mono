@@ -338,20 +338,20 @@ Excepciones que si limpian valores:
 
 ## Matriz de campos condicionales
 
-| Condicion                               | Campo afectado                          | Validacion visible         | Limpieza al cambiar                 | Payload si no aplica                             |
-| --------------------------------------- | --------------------------------------- | -------------------------- | ----------------------------------- | ------------------------------------------------ |
-| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido                  | Conserva valor crudo                | `highSchoolYear = null`                          |
-| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes    | Limpia si la opcion deja de existir | `highSchoolOrientationId = null`                 |
-| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0         | Conserva valor crudo                | `highSchoolYearRepeatCount = null`               |
-| `highSchoolLocation = 1`                | Departamento e institucion como selects | Solo institucion requerida | Limpia solo una opcion inexistente  | Institucion libre en `highSchoolInstitutionName` |
-| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido            | Puede conservar el id anterior      | `highSchoolInstitutionId = null`                 |
-| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida        | Conserva valor crudo                | `higherEducationUniversityIds = null`            |
-| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido            | Conserva valor crudo                | Lista de otros `null`                            |
-| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido            | Conserva valor crudo                | Egresado ORT `null`                              |
-| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida        | Conserva valor crudo                | Ids y otros `null`                               |
-| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido                  | Conserva valor crudo                | Valoracion o medios `null`                       |
-| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido         | No se envia                         | Solo controla validez de UI                      |
-| `paymentMethod = bank-account`          | `bank`                                  | Requerido                  | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`                 |
+| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                                                     | Payload si no aplica                             |
+| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido               | Conserva valor crudo                                                    | `highSchoolYear = null`                          |
+| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes | Limpia si la opcion deja de existir                                     | `highSchoolOrientationId = null`                 |
+| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0      | Conserva valor crudo                                                    | `highSchoolYearRepeatCount = null`               |
+| `highSchoolLocation = 1`                | Departamento e institucion como selects | Ambos requeridos        | Limpia una opcion inexistente solo si el usuario cambio el departamento | Institucion libre en `highSchoolInstitutionName` |
+| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior                                          | `highSchoolInstitutionId = null`                 |
+| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida     | Conserva valor crudo                                                    | `higherEducationUniversityIds = null`            |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                                                    | Lista de otros `null`                            |
+| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido         | Conserva valor crudo                                                    | Egresado ORT `null`                              |
+| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida     | Conserva valor crudo                                                    | Ids y otros `null`                               |
+| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                                                    | Valoracion o medios `null`                       |
+| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido      | No se envia                                                             | Solo controla validez de UI                      |
+| `paymentMethod = bank-account`          | `bank`                                  | Requerido               | Se limpia al elegir otro metodo                                         | Se envía como `sistarbancBankId`                 |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -651,13 +651,15 @@ anterior no existe, se envia `highSchoolOrientationId = null`.
 cantidad puede quedar cruda en el form pero el backend recibe
 `highSchoolYearRepeatCount = null`.
 `highSchoolLocation` decide el control de institucion educativa. Con valor `1`
-(Uruguay) se muestran `state` e `educationalInstitution` como select. **`state` es un
-filtro de UI, no un dato de la encuesta**: el backend no lo persiste (el contrato solo
-tiene `secondaryInstitutionId` / `secondaryInstitutionName`), asi que no es requerido y al
-retomar queda vacio. La institucion ya respondida se muestra igual: se siembra su opcion
-con el nombre que mande el backend o, si no viene, resolviendolo con una consulta al
-listado de instituciones del pais (`GET /catalogs/institutions?countryId=1`). Elegir un
-departamento reemplaza esa opcion por el catalogo de ese departamento. El
+(Uruguay) se muestran `state` e `educationalInstitution` como select, ambos requeridos.
+**El departamento no se guarda en la encuesta**: el backend lo deriva de la institucion
+elegida y lo devuelve de solo lectura en `secondaryInstitutionStateId` (contrato v11), que
+es lo que permite precargar el combo al retomar y con ese valor pedir
+`GET /catalogs/institutions?countryId=1&stateId=<state>`. Viene `null` si la secundaria fue
+en el exterior, si todavia no hay institucion elegida, o si la institucion no tiene
+departamento cargado; en ese ultimo caso el usuario tiene que volver a elegirlo.
+Al hidratar, una institucion que no aparezca en el catalogo de su departamento **se
+conserva**: solo se limpia cuando el departamento lo cambia el usuario. El
 backend recibe `finalHighSchoolYearLocationId = 1`,
 `highSchoolInstitutionId = Number(educationalInstitution)` y
 `highSchoolInstitutionName = null`. Con valor `2` (exterior)
