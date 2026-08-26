@@ -40,6 +40,13 @@ public class VerifyIdentity(
     private readonly ILogger<VerifyIdentity> _logger = logger;
     private readonly IServiceScopeFactory? _serviceScopeFactory = serviceScopeFactory;
 
+    private static OperationResult<RegistrationConfirmationResponse?> InconsistentData() =>
+        OperationResult<RegistrationConfirmationResponse?>.IsFailed(
+            "REG_PERSONA_VERIF_01",
+            MethodName,
+            "No podemos completar el registro ya que hemos encontrado inconsistencias en los datos ingresados.",
+            400);
+
     public async Task<OperationResult<RegistrationConfirmationResponse?>> ExecuteAsync(VerifyIdentityRequest request)
     {
         if (request == null)
@@ -76,11 +83,10 @@ public class VerifyIdentity(
         var person = uow.Personas.GetByDocumento(document);
         if (person == null)
         {
-            return OperationResult<RegistrationConfirmationResponse?>.IsFailed(
-                "REG_PERSONA_01",
-                MethodName,
-                "No se pudo traer la persona.",
-                404);
+            _logger.LogWarning(
+                "Verificación de identidad rechazada en {Metodo}: no existe persona para el documento.",
+                MethodName);
+            return InconsistentData();
         }
 
         var userExists = await _ldapDirectory.UserExistsAsync(
@@ -96,17 +102,24 @@ public class VerifyIdentity(
 
         if (!RegistrationValidation.MatchesExistingPerson(person, request))
         {
-            return OperationResult<RegistrationConfirmationResponse?>.IsFailed(
-                "REG_PERSONA_VERIF_01",
-                MethodName,
-                "No podemos completar el registro ya que hemos encontrado inconsistencias en los datos ingresados.",
-                400);
+            return InconsistentData();
         }
 
         var createUser = await _ldapDirectory.CreateUserAsync(RegistrationMapper.BuildLdapUserRequest(person));
         if (!createUser.Success)
         {
-            return createUser.Failure().As<RegistrationConfirmationResponse?>(MethodName);
+            _logger.LogError(
+                "LDAP no pudo crear el usuario de la persona {CodigoPersona} en {Metodo}: {ErrorCode} - {Mensaje}",
+                person.CodigoPersona,
+                MethodName,
+                createUser.ErrorCode,
+                createUser.Message);
+
+            return OperationResult<RegistrationConfirmationResponse?>.IsFailed(
+                "REG_USUARIO_99",
+                MethodName,
+                "No pudimos completar el registro. Intentá nuevamente más tarde.",
+                500);
         }
 
         try

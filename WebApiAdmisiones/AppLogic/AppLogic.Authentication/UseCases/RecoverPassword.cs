@@ -23,7 +23,7 @@ public class RecoverPassword(
     private const string MethodName = nameof(RecoverPassword);
 
     private const string GenericMessage =
-        "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña.";
+        "Si los datos ingresados son correctos, recibirás un mail con instrucciones para recuperar tu contraseña.";
 
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
     private readonly IPasswordActivationService _passwordActivationService = passwordActivationService;
@@ -62,14 +62,9 @@ public class RecoverPassword(
                 return OperationResult<object>.IsSuccess(null, MethodName, GenericMessage);
             }
 
-            var mail = await _passwordActivationService.SendPasswordRecoveryMailAsync(person, MethodName);
+            await _passwordActivationService.SendPasswordRecoveryMailAsync(person, MethodName);
 
-            return OperationResult<object>.IsSuccess(
-                null,
-                MethodName,
-                mail.Success && !string.IsNullOrWhiteSpace(mail.Message)
-                    ? mail.Message
-                    : GenericMessage);
+            return OperationResult<object>.IsSuccess(null, MethodName, GenericMessage);
         }
         catch (Exception ex)
         {

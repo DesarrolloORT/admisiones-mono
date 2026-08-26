@@ -18,10 +18,19 @@ public class AuthenticateWithLdap(
     ILogger<AuthenticateWithLdap> logger) : IAuthenticateWithLdap
 {
     private const string MethodName = nameof(AuthenticateWithLdap);
+    private const string LoginRejectedLog = "Login rechazado ({Motivo}) para la persona {CodigoPersona}";
 
     private readonly ILdap _ldap = ldap;
     private readonly IUnitOfWorkFactory _uowFactory = uowFactory;
     private readonly ILogger<AuthenticateWithLdap> _logger = logger;
+
+    private static OperationResult<AuthenticatedPerson> InvalidCredentials() =>
+        OperationResult<AuthenticatedPerson>.IsFailed(
+            "AUTH_LDAP_03",
+            MethodName,
+            "Credenciales inválidas.",
+            401,
+            default!);
 
     public async Task<OperationResult<AuthenticatedPerson>> ExecuteAsync(string documentType, string document, string pass)
     {
@@ -46,32 +55,27 @@ public class AuthenticateWithLdap(
 
             if (person == null)
             {
-                return OperationResult<AuthenticatedPerson>.IsFailed(
-                    "LOGIN_LDAP_04",
-                    MethodName,
-                    "No se encontró la persona en la base de datos.",
-                    404,
-                    default!);
+                _logger.LogWarning(LoginRejectedLog, "persona-inexistente", "n/d");
+                return InvalidCredentials();
             }
 
             if (TextNormalization.IsYes(person.AlumnoExtranjeroPersona))
             {
-                return OperationResult<AuthenticatedPerson>.IsFailed(
-                    "LOGIN_LDAP_05",
-                    MethodName,
-                    "No se pudo iniciar sesión.",
-                    403,
-                    default!);
+                _logger.LogWarning(LoginRejectedLog, "alumno-extranjero", person.CodigoPersona);
+                return InvalidCredentials();
             }
 
             var authResult = await _ldap.AutenticarUsuarioLDAPAsync(person.CodigoPersona, pass);
 
             if (!authResult.Success)
             {
-                return authResult.Failure().As<AuthenticatedPerson>(MethodName);
+                _logger.LogWarning(
+                    "Login rechazado (ldap-rechazo:{ErrorCode}) para la persona {CodigoPersona}",
+                    authResult.ErrorCode,
+                    person.CodigoPersona);
+                return InvalidCredentials();
             }
 
-            // No se emiten tokens acá: el llamador decide cuándo, según el gate de 2FA.
             return OperationResult<AuthenticatedPerson>.Ok(
                 AuthenticationResponseBuilder.BuildAuthenticatedPerson(person),
                 MethodName);

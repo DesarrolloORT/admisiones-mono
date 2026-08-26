@@ -24,6 +24,7 @@ namespace WebApiAdmisiones.Extensions
         private const string ReconocimientoDocumentoRateLimitPolicy = "ReconocimientoDocumento";
         private const string LoginRateLimitPolicy = "LoginAttempts";
         private const string PhoneValidationRateLimitPolicy = "PhoneValidation";
+        public const string PublicAuthRateLimitPolicy = "PublicAuthAttempts";
 
         private static readonly Counter ReconocimientoDocumentoRateLimitRejections = Metrics.CreateCounter(
             "reconocimiento_documento_rate_limit_rejections_total",
@@ -36,6 +37,10 @@ namespace WebApiAdmisiones.Extensions
         private static readonly Counter LoginRateLimitRejections = Metrics.CreateCounter(
             "login_rate_limit_rejections_total",
             "Cantidad de intentos de login rechazados por rate limit por IP (protección contra credential stuffing).");
+
+        private static readonly Counter PublicAuthRateLimitRejections = Metrics.CreateCounter(
+            "public_auth_rate_limit_rejections_total",
+            "Cantidad de requests a endpoints públicos de auth/registro rechazados por rate limit (protección contra enumeración de cuentas).");
 
         // Métrica para rate limiting por cuenta (IP + Documento)
         // Se incrementa en AuthController.Login() cuando se excede el límite de una cuenta específica
@@ -298,6 +303,108 @@ namespace WebApiAdmisiones.Extensions
             await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
         }
 
+        /// <summary>Límite y ventana de la política de endpoints públicos de auth/registro.</summary>
+        /// <remarks>
+        /// Lo leen tanto el registro de la política como el handler de rechazo, así que vive acá
+        /// para que no puedan desincronizarse y reportar headers que no corresponden al límite real.
+        /// </remarks>
+        private static (int Limit, TimeSpan Window) GetPublicAuthRateLimit(IConfiguration configuration)
+        {
+            var limit = configuration.GetValue<int?>("Authentication:PublicAuth:RateLimitPerWindow") ?? 30;
+            var windowMinutes = configuration.GetValue<int?>("Authentication:PublicAuth:RateLimitWindowMinutes") ?? 15;
+
+            return (limit, TimeSpan.FromMinutes(windowMinutes));
+        }
+
+        private static string BuildPublicAuthPartitionKey(HttpContext httpContext) =>
+            $"public-auth-ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? UnknownIpPartition}";
+
+        /// <summary>
+        /// Configura rate limiting para los endpoints públicos de auth y registro que revelan si
+        /// una cuenta existe: recover-password, activate-password-link, complete-initial-password
+        /// y evaluate-document.
+        /// </summary>
+        /// <remarks>
+        /// Bucket ÚNICO compartido por los cuatro endpoints, a propósito: son variantes del mismo
+        /// oráculo de enumeración, así que un atacante no debe poder esquivar el límite rotando
+        /// entre ellos.
+        ///
+        /// Backend Redis (igual que el login, no como las políticas in-memory): el estado se
+        /// comparte entre instancias de la API y sobrevive a los deploys. Un límite in-memory se
+        /// resetearía en cada deploy y se multiplicaría por la cantidad de réplicas, o sea que no
+        /// frenaría la enumeración.
+        ///
+        /// Partición por IP: una red NAT'eada comparte bucket. El default de 30 cada 15 minutos es
+        /// holgado para uso real (el wizard hace 1-2 llamadas por persona) y es el mismo tradeoff
+        /// que ya acepta el login, que es 10 cada 15 minutos por IP.
+        ///
+        /// Configurable vía "Authentication:PublicAuth:RateLimitPerWindow" y
+        /// "Authentication:PublicAuth:RateLimitWindowMinutes".
+        ///
+        /// ⚠️ Hereda el fail-open de RedisRateLimiterService: con Redis caído, estos endpoints
+        /// quedan sin freno (mismo riesgo que ya corre el login hoy).
+        /// </remarks>
+        public static IServiceCollection AddPublicAuthRateLimiting(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var (limit, window) = GetPublicAuthRateLimit(configuration);
+
+            services.AddRateLimiter(options =>
+            {
+                options.AddPolicy(PublicAuthRateLimitPolicy, httpContext =>
+                {
+                    // Endpoints siempre anónimos: no hay usuario, particionamos por IP.
+                    var redisService = httpContext.RequestServices.GetRequiredService<IRateLimiterService>();
+
+                    return RateLimitPartition.Get(
+                        BuildPublicAuthPartitionKey(httpContext),
+                        key => new RedisRateLimiter(redisService, key, limit, window));
+                });
+
+                // OnRejected NO se asigna acá: el dispatch único vive en AddLoginRateLimiting.
+            });
+
+            return services;
+        }
+
+        private static async Task HandlePublicAuthRejected(
+            OnRejectedContext context, CancellationToken cancellationToken)
+        {
+            PublicAuthRateLimitRejections.Inc();
+
+            var configuration = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var (limit, window) = GetPublicAuthRateLimit(configuration);
+
+            var redisService = context.HttpContext.RequestServices.GetRequiredService<IRateLimiterService>();
+            var partitionKey = BuildPublicAuthPartitionKey(context.HttpContext);
+
+            var remaining = await redisService.GetRemainingAsync(partitionKey, limit, window);
+            var resetTime = await redisService.GetResetTimeAsync(partitionKey, window);
+
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
+            context.HttpContext.Response.Headers["X-RateLimit-Remaining"] = remaining.ToString();
+
+            if (resetTime.HasValue)
+            {
+                context.HttpContext.Response.Headers["X-RateLimit-Reset"] =
+                    resetTime.Value.ToUnixTimeSeconds().ToString();
+                context.HttpContext.Response.Headers.RetryAfter =
+                    Math.Max(0, (int)(resetTime.Value - DateTimeOffset.UtcNow).TotalSeconds).ToString();
+            }
+
+            // Mensaje genérico: no dice qué endpoint ni por qué, para no dar pistas al que enumera.
+            var result = OperationResult<object>.IsFailed(
+                "AUTH_RL_05",
+                PublicAuthRateLimitPolicy,
+                $"Se superó el límite de solicitudes desde esta red. Intentá nuevamente en {(int)window.TotalMinutes} minutos.",
+                429,
+                default!);
+
+            await context.HttpContext.Response.WriteAsJsonAsync(result, cancellationToken);
+        }
+
         /// <summary>
         /// Configura rate limiting para el endpoint de Login siguiendo estándares OWASP.
         /// Implementa protección DUAL contra ataques de fuerza bruta.
@@ -398,6 +505,12 @@ namespace WebApiAdmisiones.Extensions
                     if (policyName == PhoneValidationRateLimitPolicy)
                     {
                         await HandlePhoneValidationRejected(context, cancellationToken);
+                        return;
+                    }
+
+                    if (policyName == PublicAuthRateLimitPolicy)
+                    {
+                        await HandlePublicAuthRejected(context, cancellationToken);
                         return;
                     }
 

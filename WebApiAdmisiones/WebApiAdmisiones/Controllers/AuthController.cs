@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Utilities;
 using WebApiAdmisiones.Security.Captcha;
 using WebApiAdmisiones.Security.Authentication;
+using ApiExtensions = WebApiAdmisiones.Extensions.ServiceCollectionExtensions;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -73,7 +74,6 @@ namespace WebApiAdmisiones.Controllers
         [ProducesResponseType(typeof(OperationResult<TwoFactorRequiredResponse>), 202)]
         [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 400)]
         [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 401)]
-        [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 404)]
         [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 429)]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
@@ -215,6 +215,7 @@ namespace WebApiAdmisiones.Controllers
         ///     }
         /// </remarks>
         [AllowAnonymous]
+        [EnableRateLimiting(ApiExtensions.PublicAuthRateLimitPolicy)]
         [HttpPost("activate-password-link")]
         [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 200)]
         [ProducesResponseType(typeof(OperationResult<PasswordActivationSession>), 400)]
@@ -264,6 +265,7 @@ namespace WebApiAdmisiones.Controllers
         ///     }
         /// </remarks>
         [AllowAnonymous]
+        [EnableRateLimiting(ApiExtensions.PublicAuthRateLimitPolicy)]
         [HttpPost("complete-initial-password")]
         [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<AuthenticationResponse>), 400)]
@@ -376,9 +378,11 @@ namespace WebApiAdmisiones.Controllers
         /// </remarks>
         [HttpPost("recover-password")]
         [AllowAnonymous]
+        [EnableRateLimiting(ApiExtensions.PublicAuthRateLimitPolicy)]
         [RequireCaptcha(CaptchaActions.RecoverPassword, CaptchaValidationMode.ScoreOnly)]
         [ProducesResponseType(typeof(OperationResult<object>), 200)]
         [ProducesResponseType(typeof(OperationResult<object>), 400)]
+        [ProducesResponseType(typeof(OperationResult<object>), 429)]
         public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordRequest request)
         {
             var result = await recoverPassword.ExecuteAsync(request);

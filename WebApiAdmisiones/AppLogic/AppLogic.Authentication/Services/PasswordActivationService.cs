@@ -93,7 +93,7 @@ public class PasswordActivationService : IPasswordActivationService
                 "recovery",
                 "Recuperá tu contraseña de Admisiones",
                 PasswordMailTemplate.BuildRecoveryMail,
-                "Si los datos ingresados son correctos, recibirás un mail con instrucciones para recuperar tu contraseña.",
+                "Mail de recuperación enviado.",
                 "REC_LINK_01",
                 "REC_LINK_02",
                 "REC_LINK_03",

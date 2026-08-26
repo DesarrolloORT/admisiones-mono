@@ -131,10 +131,10 @@
     "REG_TEL_01": { "httpCode": 400, "endpoints": ["confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "El telefono principal no es un celular valido. Ver telefono.contract.json." },
     "REG_TEL_02": { "httpCode": 400, "endpoints": ["confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "Falta el telefono principal. Ver telefono.contract.json." },
     "REG_TEL_03": { "httpCode": 400, "endpoints": ["confirmarNuevaPersona"], "desc": "El pais del telefono no esta cargado en T_CARACTERISTICA_PAIS. No es error del usuario. No aplica a la solicitud de alta." },
-    "REG_PERSONA_01": { "httpCode": 404, "endpoints": ["verificarIdentidad"], "desc": "La persona ya no esta en el padron. Entre el evaluate-document y este paso cambio algo: reiniciar el flujo." },
     "REG_PERSONA_02": { "httpCode": 409, "endpoints": ["confirmarNuevaPersona"], "desc": "La persona ya existe. El flujo tendria que haber sido 'verificarIdentidad': reiniciar desde evaluate-document." },
-    "REG_PERSONA_VERIF_01": { "httpCode": 400, "endpoints": ["verificarIdentidad"], "desc": "El apellido o el mail no coinciden con el padron. Mensaje generico a proposito: no revela cual de los dos fallo." },
+    "REG_PERSONA_VERIF_01": { "httpCode": 400, "endpoints": ["verificarIdentidad"], "desc": "El apellido o el mail no coinciden con el padron, O la persona ya no esta en el padron. Mensaje generico a proposito: no revela cual de los tres caso fallo, para no permitir enumerar el padron. Antes el caso 'no esta en el padron' devolvia REG_PERSONA_01 con 404; se unifico acá." },
     "REG_USUARIO_01": { "httpCode": 409, "endpoints": ["verificarIdentidad"], "desc": "La persona ya tiene usuario LDAP. Mandar a login o recover-password." },
+    "REG_USUARIO_99": { "httpCode": 500, "endpoints": ["verificarIdentidad"], "desc": "LDAP no pudo crear el usuario. Mensaje genérico: el detalle del servicio LDAP queda en el log del backend, no viaja al cliente. Se puede reintentar." },
     "REG_CIUDAD_01": { "httpCode": 400, "endpoints": ["confirmarNuevaPersona"], "desc": "La combinacion pais / departamento / ciudad no existe. No aplica a la solicitud de alta." },
     "REG_SOLICITUD_99": { "httpCode": 500, "endpoints": ["confirmarSolicitudAlta"], "desc": "Fallo el alta en T_SOLICITUD_ALTA y se hizo rollback. Se puede reintentar." },
     "REG_ADMISIONES_99": { "httpCode": 500, "endpoints": ["verificarIdentidad"], "desc": "El usuario LDAP quedo creado pero fallo el registro de admision. NO se puede reintentar el registro: el usuario ya existe, hay que ir por recover-password y avisar a backend." },
@@ -142,7 +142,8 @@
     "FLOW_02": { "httpCode": 400, "endpoints": ["verificarIdentidad", "confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "La sesion de registro vencio o no existe. Reiniciar desde evaluate-document." },
     "FLOW_03": { "httpCode": 400, "endpoints": ["verificarIdentidad", "confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "Sesion de registro invalida (no deserializa). Reiniciar desde evaluate-document." },
     "FLOW_04": { "httpCode": 400, "endpoints": ["verificarIdentidad", "confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "El flujo no esta en el step esperado ('evaluado'). Tipico de reenviar el formulario dos veces: la primera ya lo dejo en 'confirmado'." },
-    "FLOW_05": { "httpCode": 400, "endpoints": ["verificarIdentidad", "confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "El documento del body no es el de la sesion. No se puede cambiar de documento en el medio del flujo." }
+    "FLOW_05": { "httpCode": 400, "endpoints": ["verificarIdentidad", "confirmarNuevaPersona", "confirmarSolicitudAlta"], "desc": "El documento del body no es el de la sesion. No se puede cambiar de documento en el medio del flujo." },
+    "AUTH_RL_05": { "httpCode": 429, "endpoints": ["evaluarDocumento"], "desc": "Rate limit por IP de los endpoints publicos de auth/registro (default 30 cada 15 minutos, bucket compartido con recover-password, activate-password-link y complete-initial-password). Trae headers X-RateLimit-Limit / Remaining / Reset y Retry-After: esperar lo que diga Retry-After." }
   },
   "endpoints": {
     "evaluarDocumento": {
@@ -157,7 +158,7 @@
         "message": "No existe solicitud de alta para el documento indicado. Se puede continuar con la solicitud de alta.",
         "data": { "requiresRegistrationRequest": true, "flowId": "9f2c1b7e4a..." }
       },
-      "mainErrors": ["REG_REQUEST_01", "REG_DOC_01", "REG_DOC_02"]
+      "mainErrors": ["REG_REQUEST_01", "REG_DOC_01", "REG_DOC_02", "AUTH_RL_05"]
     },
     "verificarIdentidad": {
       "method": "POST",
@@ -167,7 +168,7 @@
       "headers": { "X-Flow-Id": "requerido" },
       "captcha": "verifyIdentity (ScoreOnly)",
       "appliesTo": ["verificarIdentidad"],
-      "mainErrors": ["REG_REQUEST_01", "REG_DOC_03", "REG_PERSONA_01", "REG_PERSONA_VERIF_01", "REG_USUARIO_01", "REG_ADMISIONES_99", "FLOW_01", "FLOW_02", "FLOW_04", "FLOW_05"]
+      "mainErrors": ["REG_REQUEST_01", "REG_DOC_03", "REG_PERSONA_VERIF_01", "REG_USUARIO_01", "REG_USUARIO_99", "REG_ADMISIONES_99", "FLOW_01", "FLOW_02", "FLOW_04", "FLOW_05"]
     },
     "confirmarNuevaPersona": {
       "method": "POST",

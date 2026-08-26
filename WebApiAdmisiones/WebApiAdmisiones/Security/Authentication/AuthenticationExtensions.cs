@@ -151,8 +151,25 @@ namespace WebApiAdmisiones.Security.Authentication
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Registra los tokens rechazados para que quede rastro de los intentos de acceso con
+        /// credenciales inválidas o expiradas.
+        /// </summary>
+        /// <remarks>
+        /// Solo el tipo de excepción y el path: el token NUNCA se loguea, ni siquiera parcialmente.
+        /// </remarks>
         private static Task HandleOnAuthenticationFailed(AuthenticationFailedContext context)
         {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("WebApiAdmisiones.Security.Authentication");
+
+            logger.LogWarning(
+                "Token rechazado ({Motivo}) en {Metodo} {Path}",
+                context.Exception.GetType().Name,
+                context.Request.Method,
+                context.Request.Path.Value);
+
             return Task.CompletedTask;
         }
     }
