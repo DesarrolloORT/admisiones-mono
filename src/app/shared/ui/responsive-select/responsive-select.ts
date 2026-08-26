@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   ElementRef,
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl, Validators } from '@angular/forms';
@@ -17,6 +19,8 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtSearchableSelect,
+  OrtSearchableSelectModule,
   OrtSelectModule,
 } from '@desarrolloort/components';
 import { BreakpointService } from '@desarrolloort/ngx-utils';
@@ -45,11 +49,18 @@ let nextResponsiveSelectId = 0;
     OrtFormFieldModule,
     OrtIconModule,
     OrtInputModule,
+    OrtSearchableSelectModule,
     OrtSelectModule,
   ],
   templateUrl: './responsive-select.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './responsive-select.scss',
+  host: {
+    // El id identifica al control interno, que es el destino de foco del resumen de errores.
+    // Los consumidores lo pasan como atributo estatico (`id="..."`), y Angular lo deja tambien
+    // en el host: quedaban dos elementos con el mismo id y `getElementById` devolvia el wrapper.
+    '[attr.id]': 'null',
+  },
 })
 export class ResponsiveSelect implements ControlValueAccessor {
   protected readonly getBankSvg = getBankSvg;
@@ -74,6 +85,7 @@ export class ResponsiveSelect implements ControlValueAccessor {
   private readonly ngControl = inject(NgControl, { optional: true, self: true });
   private readonly disabledFromForms = signal(false);
   private readonly mobileTrigger = viewChild<ElementRef<HTMLButtonElement>>('mobileTrigger');
+  private readonly desktopSearchableSelect = viewChild(OrtSearchableSelect);
 
   protected readonly isMobile = computed(() => {
     const breakpoint = this.breakpointService.breakpoint();
@@ -90,6 +102,21 @@ export class ResponsiveSelect implements ControlValueAccessor {
 
   constructor() {
     if (this.ngControl) this.ngControl.valueAccessor = this;
+
+    // Mismo problema que resuelve el trigger propio de `ort-select`: el valor puede escribirse
+    // antes de que lleguen las opciones. `ort-searchable-select` fija el texto de su input al
+    // recibir el valor y no lo recalcula cuando aparecen las opciones, asi que lo reaplicamos.
+    effect(() => {
+      const select = this.desktopSearchableSelect();
+      const hasOptions = this.allOptions().length > 0;
+      if (!select || !hasOptions) return;
+
+      // Sin `untracked` cada tecleo (que confirma null) volveria a escribir el valor y borraria
+      // el texto que el usuario esta escribiendo.
+      untracked(() => {
+        if (this.hasValue()) select.writeValue(this.value());
+      });
+    });
   }
 
   writeValue(value: unknown): void {
@@ -184,6 +211,18 @@ export class ResponsiveSelect implements ControlValueAccessor {
 
   protected onDesktopValueChange(value: unknown): void {
     this.commitValue(value);
+  }
+
+  // Etiqueta para valores sin opcion asociada todavia (el catalogo puede llegar despues).
+  protected readonly optionLabel = (value: string): string =>
+    this.allOptions().find(option => option.value === value)?.label ?? '';
+
+  // El searchable select confirma null en cuanto el texto se aparta de la seleccion, asi que
+  // marcar touched aca mostraria el error mientras se escribe: eso queda para el cierre del panel.
+  protected onSearchableValueChange(value: unknown): void {
+    const normalizedValue = this.normalizeValue(value);
+    this.value.set(normalizedValue);
+    this.onChange(normalizedValue);
   }
 
   protected onDesktopKeydown(event: KeyboardEvent): void {

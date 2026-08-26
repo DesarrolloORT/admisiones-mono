@@ -2,6 +2,15 @@
   display: block;
 }
 
+// `ort-searchable-select` se marca invalido mientras el texto escrito todavia no coincide con
+// ninguna opcion. Mostramos el rojo recien cuando el campo pierde el foco.
+.responsive-select__desktop.ort-form-field-focused {
+  --ort-sys-textfield-label-color-on-invalid: var(--ort-sys-textfield-label-color-on-focus);
+  --ort-sys-textfield-input-border-color-on-invalid: var(
+    --ort-sys-textfield-input-border-color-on-focus
+  );
+}
+
 .responsive-select__mobile {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
