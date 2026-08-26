@@ -5,6 +5,9 @@ namespace AppLogic.Catalogs.Mapping;
 
 public static class DegreeProgramMapper
 {
+    // El listado entero se ordena por nombre
+    private static readonly StringComparer NombreComparer = StringComparer.InvariantCultureIgnoreCase;
+
     /// <summary>
     /// Fila plana de carrera, común a las dos vistas de origen (niveles 1-2 y 3-4), sobre la que se
     /// arma el agrupado por nivel y escuela.
@@ -16,8 +19,6 @@ public static class DegreeProgramMapper
         string? ProductLevelName,
         long SchoolId,
         string? SchoolName,
-        long? SchoolOrder,
-        long? ProductOrder,
         long? AdmissionProcessId,
         bool? HasSeminar);
 
@@ -28,8 +29,6 @@ public static class DegreeProgramMapper
         product.NombreNivelProducto,
         product.IdEscuela,
         product.NombreExtensoEscuela,
-        product.OrdenListadoEscuela,
-        product.OrdenListadoNivelProducto,
         null,
         null);
 
@@ -40,8 +39,6 @@ public static class DegreeProgramMapper
         offering.NombreNivelProducto,
         offering.IdEscuela,
         offering.NombreExtensoEscuela,
-        null,
-        null,
         (long)offering.IdProceso,
         offering.ConSeminarios == "SI");
 
@@ -53,15 +50,14 @@ public static class DegreeProgramMapper
         IEnumerable<DegreeProgramRow> rows,
         bool groupBySeminar) => rows
             .GroupBy(x => new { x.ProductLevelId, x.ProductLevelName })
-            .OrderBy(g => g.Key.ProductLevelId)
+            .OrderBy(g => g.Key.ProductLevelName, NombreComparer)
             .Select(nivel => new DegreeProgramsByLevelResponse
             {
                 ProductLevelId = nivel.Key.ProductLevelId,
                 ProductLevelName = nivel.Key.ProductLevelName,
                 Schools = nivel
                     .GroupBy(x => new { x.SchoolId, x.SchoolName })
-                    .OrderBy(g => g.Min(x => x.SchoolOrder ?? long.MaxValue))
-                    .ThenBy(g => g.Key.SchoolName)
+                    .OrderBy(g => g.Key.SchoolName, NombreComparer)
                     .Select(escuela => groupBySeminar
                         ? new DegreeProgramsBySchoolResponse
                         {
@@ -91,8 +87,7 @@ public static class DegreeProgramMapper
     private static List<DegreeProgramResponse> ToProducts(IEnumerable<DegreeProgramRow> rows) => rows
         .GroupBy(x => x.ProductId)
         .Select(g => g.First())
-        .OrderBy(x => x.ProductOrder ?? long.MaxValue)
-        .ThenBy(x => x.ProductName)
+        .OrderBy(x => x.ProductName, NombreComparer)
         .Select(x => new DegreeProgramResponse
         {
             ProductId = x.ProductId,

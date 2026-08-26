@@ -320,8 +320,18 @@ namespace UnitTesting.AppLogic.Services
 
             Assert.True(result.Success);
             var niveles = result.Data!.ToList();
+            // Los niveles salen por nombre: "Actualizacion" (nivel 4) antes de "Postgrado" (nivel 3).
             Assert.Collection(
                 niveles,
+                nivel =>
+                {
+                    Assert.Equal(4, nivel.ProductLevelId);
+                    var escuela = Assert.Single(nivel.Schools);
+                    var sinSeminario = Assert.Single(escuela.Seminars!);
+                    Assert.False(sinSeminario.HasSeminar);
+                    var product = Assert.Single(sinSeminario.Products);
+                    Assert.Equal(60, product.ProductId);
+                },
                 nivel =>
                 {
                     Assert.Equal(3, nivel.ProductLevelId);
@@ -343,19 +353,93 @@ namespace UnitTesting.AppLogic.Services
                             var product = Assert.Single(conSeminario.Products);
                             Assert.Equal(51, product.ProductId);
                         });
-                },
-                nivel =>
-                {
-                    Assert.Equal(4, nivel.ProductLevelId);
-                    var escuela = Assert.Single(nivel.Schools);
-                    var sinSeminario = Assert.Single(escuela.Seminars!);
-                    Assert.False(sinSeminario.HasSeminar);
-                    var product = Assert.Single(sinSeminario.Products);
-                    Assert.Equal(60, product.ProductId);
                 });
 
             repo.Verify(r => r.GetProductosDisponibles(It.IsAny<long>(), It.IsAny<long>()), Times.Never);
         }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel1o2_OrdenaEscuelasYProductosPorNombre()
+        {
+            var repo = new Mock<IVdProductosDisponibles1y2Repository>();
+            repo.Setup(r => r.GetProductosDisponibles(99, 1)).Returns(
+            [
+                // OrdenListadoEscuela contradice el alfabetico a proposito: el nombre tiene que ganar.
+                Producto1y2(11, "Ingenieria Electrica", escuelaId: 7, "Facultad de Ingenieria", ordenEscuela: 1),
+                Producto1y2(12, "Arquitectura", escuelaId: 8, "Facultad de Arquitectura", ordenEscuela: 3),
+                Producto1y2(13, "Biologia", escuelaId: 9, "Área de Ciencias", ordenEscuela: 2),
+                Producto1y2(14, "Ingenieria en Biotecnologia", escuelaId: 7, "Facultad de Ingenieria", ordenEscuela: 1)
+            ]);
+            _uowMock.Setup(u => u.VdProductosDisponibles1y2s).Returns(repo.Object);
+
+            var result = _service.GetDegreePrograms(99, AcademicOffer.UniversityDegree);
+
+            Assert.True(result.Success);
+            var nivel = Assert.Single(result.Data!);
+            Assert.Equal(
+                ["Área de Ciencias", "Facultad de Arquitectura", "Facultad de Ingenieria"],
+                nivel.Schools.Select(e => e.SchoolName));
+            var ingenieria = nivel.Schools[2];
+            Assert.Equal(
+                ["Ingenieria Electrica", "Ingenieria en Biotecnologia"],
+                ingenieria.Products!.Select(p => p.ProductName));
+        }
+
+        [Fact]
+        public void ObtenerCarreras_Nivel3o4_OrdenaEscuelasYProductosPorNombre()
+        {
+            var vistaRepo = new Mock<IVdOfertasDisponibles3y4Repository>();
+            vistaRepo.Setup(r => r.GetProductosDisponibles()).Returns(
+            [
+                Oferta3y4(50, "Postgrado en Marketing", escuelaId: 9, "Facultad de Negocios"),
+                Oferta3y4(51, "Especializacion en Datos", escuelaId: 7, "Facultad de Administracion"),
+                Oferta3y4(52, "Diplomatura en Finanzas", escuelaId: 7, "Facultad de Administracion")
+            ]);
+            _uowMock.Setup(u => u.VdOfertasDisponibles3y4s).Returns(vistaRepo.Object);
+
+            var result = _service.GetDegreePrograms(99, AcademicOffer.ProfessionalUpdate);
+
+            Assert.True(result.Success);
+            var nivel = Assert.Single(result.Data!);
+            Assert.Equal(
+                ["Facultad de Administracion", "Facultad de Negocios"],
+                nivel.Schools.Select(e => e.SchoolName));
+            var administracion = Assert.Single(nivel.Schools[0].Seminars!);
+            Assert.Equal(
+                ["Diplomatura en Finanzas", "Especializacion en Datos"],
+                administracion.Products.Select(p => p.ProductName));
+        }
+
+        private static VdProductosDisponibles1y2 Producto1y2(
+            long productId,
+            string productName,
+            long escuelaId,
+            string escuelaName,
+            long ordenEscuela) => new()
+            {
+                IdProducto = productId,
+                NombreWebProducto = productName,
+                IdNivelProducto = 1,
+                NombreNivelProducto = "Carrera universitaria",
+                IdEscuela = escuelaId,
+                NombreExtensoEscuela = escuelaName,
+                OrdenListadoEscuela = ordenEscuela,
+                OrdenListadoNivelProducto = 1
+            };
+
+        private static VdOfertasDisponibles3y4 Oferta3y4(
+            long productId,
+            string productName,
+            long escuelaId,
+            string escuelaName) => new()
+            {
+                IdProducto = productId,
+                NombreWebProducto = productName,
+                IdNivelProducto = 3,
+                NombreNivelProducto = "Postgrado",
+                IdEscuela = escuelaId,
+                NombreExtensoEscuela = escuelaName
+            };
 
         [Fact]
         public void ObtenerCarreras_PropuestaAcademicaInvalida_DevuelveBadRequest()
