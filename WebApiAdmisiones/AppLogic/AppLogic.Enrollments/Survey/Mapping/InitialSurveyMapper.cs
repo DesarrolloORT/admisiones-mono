@@ -123,7 +123,7 @@ internal static class InitialSurveyMapper
         {
             survey.VecesSextoEncuestaIni = request.RepeatsHighSchoolYear.Value
                 ? request.HighSchoolYearRepeatCount?.ToString()
-                : null;
+                : "0";
         }
     }
 
@@ -233,8 +233,8 @@ internal static class InitialSurveyMapper
             HighSchoolTrackId = survey.CodigoTitulo,
             HighSchoolYear = InitialSurveyState.LeerLong(survey.UltimoAnioSextoEncuestaIni)
                 ?? InitialSurveyState.LeerLong(survey.AniosInstruccionEncuestaIni),
-            HighSchoolYearRepeatCount = vecesRecursa,
-            RepeatsHighSchoolYear = vecesRecursa.HasValue ? true : null,
+            HighSchoolYearRepeatCount = vecesRecursa > 0 ? vecesRecursa : null,
+            RepeatsHighSchoolYear = vecesRecursa.HasValue ? vecesRecursa > 0 : null,
             FatherEducationLevelId = InitialSurveyState.LeerInt(survey.InstruccionPadreEncuestaIni),
             MotherEducationLevelId = InitialSurveyState.LeerInt(survey.InstruccionMadreEncuestaIni),
             CareerDecisionYearId = InitialSurveyState.LeerInt(survey.DecisionCarreraEncuestaIni),
