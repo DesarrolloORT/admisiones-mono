@@ -8,4 +8,9 @@ public sealed class InitialSurveyDetails : SaveInitialSurveyRequest
 
     /// <summary>Estado de la encuesta: TEMPORAL o DEFINITIVO.</summary>
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Departamento (CODIGO_ESTADO) de la institución de secundaria.
+    /// </summary>
+    public long? SecondaryInstitutionStateId { get; set; }
 }

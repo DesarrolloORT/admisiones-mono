@@ -14,10 +14,36 @@ namespace UnitTesting.AppLogic.Contracts
         [Fact]
         public void EncuestaInicialContract_IsValidJson()
         {
-            Assert.Equal(10, Contract["version"]!.GetValue<int>());
+            Assert.Equal(11, Contract["version"]!.GetValue<int>());
             Assert.Equal("SaveInitialSurveyRequest", Contract["request"]!.GetValue<string>());
+            Assert.Equal("InitialSurveyDetails", Contract["response"]!.GetValue<string>());
             Assert.NotNull(Contract["fields"]);
             Assert.NotNull(Contract["sections"]);
+        }
+
+        /// <summary>
+        /// Lo que la encuesta devuelve pero no recibe (identidad, estado y el departamento derivado de
+        /// la institución) vive en readOnlyFields, no en fields: fields refleja el request.
+        /// </summary>
+        [Fact]
+        public void EncuestaInicialContract_CoversReadOnlyProperties()
+        {
+            var requestProperties = typeof(SaveInitialSurveyRequest)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(JsonName)
+                .ToHashSet();
+
+            var readOnlyProperties = typeof(InitialSurveyDetails)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+                .Select(JsonName)
+                .Where(name => !requestProperties.Contains(name))
+                .Order()
+                .ToList();
+
+            var contractReadOnly = Contract["readOnlyFields"]!.AsObject().Select(f => f.Key).Order().ToList();
+
+            Assert.Equal(readOnlyProperties, contractReadOnly);
         }
 
         [Fact]
