@@ -162,6 +162,24 @@ Esta sección releva la trayectoria educativa previa del postulante y el nivel d
 | `padreTutorEgresadoOrt` | `boolean` | Condicional | Si nivel padre/tutor está en `[5, 6]` | `INSTRUCCION_PADRE_ORT_ENCUESTA_INI` |
 | `nivelFormacionMadreTutorId` | `number` | Sí | Siempre | `INSTRUCCION_MADRE_ENCUESTA_INI` |
 | `madreTutorEgresadoOrt` | `boolean` | Condicional | Si nivel madre/tutor está en `[5, 6]` | `INSTRUCCION_MADRE_ORT_ENCUESTA_INI` |
+| `secondaryInstitutionStateId` | `number` | Solo lectura | Si cursó en Uruguay | No se guarda: derivado de `T_EMPRESA.CODIGO_ESTADO` |
+
+#### Departamento de la institución de secundaria
+
+El combo **Departamento** es solo un filtro de UI: no se postea ni se guarda, porque la institución
+ya lo determina. Para que el front pueda precargarlo al reabrir una encuesta, el GET devuelve
+`secondaryInstitutionStateId` con el `CODIGO_ESTADO` de la institución guardada. El flujo es:
+
+```text
+GET enrollments/initial-survey -> survey.secondaryInstitutionStateId
+  -> setea el combo Departamento
+  -> GET catalogs/institutions?countryId=1&stateId={secondaryInstitutionStateId}
+  -> setea el combo Institución con survey.secondaryInstitutionId
+```
+
+Es `null` cuando cursó en el exterior (ahí `CODIGO_INSTITUCION_BAC` queda en la institución legacy
+ORT Uruguay y su departamento no significa nada), cuando todavía no hay institución elegida, o
+cuando la institución no tiene `CODIGO_ESTADO` cargado. El campo se ignora si viene en el POST.
 
 ### 6.2 Valores posibles
 

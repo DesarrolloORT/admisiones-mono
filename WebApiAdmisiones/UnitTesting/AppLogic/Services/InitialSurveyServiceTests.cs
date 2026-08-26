@@ -222,7 +222,58 @@ namespace UnitTesting.AppLogic.Services
             Assert.Null(result.Data.Survey);
         }
 
+        /// <summary>
+        /// El departamento no se guarda en T_ENCUESTA_INI_ADMISION: se deriva del CODIGO_ESTADO de la
+        /// institución elegida para que el front pueda precargar el combo al reabrir la encuesta.
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_InstitucionUruguaya_DevuelveDepartamentoDeLaInstitucion()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(SurveyConInstitucion(ubicacionUltimoAnio: 1));
+            SetupInstitucion(codigoEmpresa: 4821, codigoEstado: 10);
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.Equal(10, result.Data!.Survey!.SecondaryInstitutionStateId);
+        }
+
+        /// <summary>
+        /// Cursó en el exterior: CODIGO_INSTITUCION_BAC queda en la institución legacy (ORT Uruguay),
+        /// así que devolver su departamento sería un dato falso.
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_UltimoAnioEnElExterior_NoDevuelveDepartamento()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(SurveyConInstitucion(ubicacionUltimoAnio: 2));
+            SetupInstitucion(codigoEmpresa: 4821, codigoEstado: 10);
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.Null(result.Data!.Survey!.SecondaryInstitutionStateId);
+        }
+
         // ---- Helpers de setup (harness compacto, solo lo necesario) ----
+
+        private static EncuestaIniAdmision SurveyConInstitucion(short ubicacionUltimoAnio) => new()
+        {
+            IdEncuestaIni = 900,
+            CodigoPersona = 123,
+            EstadoEncuestaIniAdmision = "TEMPORAL",
+            CodigoInstitucionBac = 4821,
+            UltimoanioSecundariaEncuestaIni = ubicacionUltimoAnio
+        };
+
+        private void SetupInstitucion(long codigoEmpresa, long codigoEstado)
+        {
+            var empresaRepo = new Mock<IEmpresaRepository>();
+            empresaRepo.Setup(r => r.GetByKey(codigoEmpresa))
+                .Returns(new Empresa { CodigoEmpresa = codigoEmpresa, CodigoEstado = codigoEstado });
+            _uowMock.Setup(u => u.Empresas).Returns(empresaRepo.Object);
+        }
 
         private void SetupPersona(Persona? person)
         {

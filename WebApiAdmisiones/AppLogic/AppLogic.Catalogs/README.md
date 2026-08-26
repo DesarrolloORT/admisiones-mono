@@ -100,6 +100,11 @@ la interfaz completa.
   (~38 columnas internas: facturación, RUC, voucher, PSIG). Ahora devuelve `{id, name}`, que es lo
   que el front usa (los manda de vuelta en `SaveInitialSurveyRequest.SecondaryInstitutionId` /
   `SecondaryInstitutionName`).
+- **`degree-programs` se ordena por nombre a propósito.** Niveles, escuelas y productos salen
+  alfabéticos (culture-aware, `StringComparer.InvariantCultureIgnoreCase`), ignorando
+  `ORDEN_LISTADO_ESCUELA` y `ORDEN_LISTADO_NIVEL_PRODUCTO`. Esas columnas siguen existiendo en la
+  vista y el repositorio de `DataAccess` todavía ordena por ellas en la consulta: el mapper reordena
+  después. No es un olvido, es lo pedido.
 - **El servicio no tiene mappers privados.** Todo el mapeo está en `Mapping/`. Si te aparece un
   `Map*` o un `To*` privado dentro de `CatalogService`, va al mapper del módulo.
 

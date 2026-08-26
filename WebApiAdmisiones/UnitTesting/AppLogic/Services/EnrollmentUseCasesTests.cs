@@ -1915,6 +1915,37 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
+        public void EncuestaInicial_RecursoBachilleratoNo_SobreviveElRoundTrip()
+        {
+            SetupPersonaValida();
+            SetupReposDerechoEncuesta();
+
+            EncuestaIniAdmision? guardada = null;
+            var encuestaRepo = new Mock<IEncuestaIniAdmisionRepository>();
+            encuestaRepo.Setup(r => r.GetByPersona(123)).Returns(() => guardada);
+            encuestaRepo.Setup(r => r.Add(It.IsAny<EncuestaIniAdmision>()))
+                .Callback<EncuestaIniAdmision>(e => guardada = e);
+            _uowMock.Setup(u => u.EncuestaIniAdmisions).Returns(encuestaRepo.Object);
+            _dbConnectionContextMock
+                .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ENCUESTA_INI_ADMISION))
+                .Returns(900);
+
+            var guardado = _encuesta.SaveInitialSurvey(123, new SaveInitialSurveyRequest
+            {
+                RepeatsHighSchoolYear = false
+            });
+
+            Assert.True(guardado.Success);
+            Assert.Equal("0", guardada!.VecesSextoEncuestaIni);
+
+            var leido = _encuesta.GetInitialSurvey(123);
+
+            Assert.True(leido.Success);
+            Assert.False(leido.Data!.Survey!.RepeatsHighSchoolYear);
+            Assert.Null(leido.Data.Survey.HighSchoolYearRepeatCount);
+        }
+
+        [Fact]
         public void GuardarEncuestaInicial_SinDerecho_CortaAntesDeValidarRequest()
         {
             SetupPersonaValida();

@@ -123,7 +123,7 @@ internal static class InitialSurveyMapper
         {
             survey.VecesSextoEncuestaIni = request.RepeatsHighSchoolYear.Value
                 ? request.HighSchoolYearRepeatCount?.ToString()
-                : null;
+                : "0";
         }
     }
 
@@ -233,8 +233,8 @@ internal static class InitialSurveyMapper
             HighSchoolTrackId = survey.CodigoTitulo,
             HighSchoolYear = InitialSurveyState.LeerLong(survey.UltimoAnioSextoEncuestaIni)
                 ?? InitialSurveyState.LeerLong(survey.AniosInstruccionEncuestaIni),
-            HighSchoolYearRepeatCount = vecesRecursa,
-            RepeatsHighSchoolYear = vecesRecursa.HasValue ? true : null,
+            HighSchoolYearRepeatCount = vecesRecursa > 0 ? vecesRecursa : null,
+            RepeatsHighSchoolYear = vecesRecursa.HasValue ? vecesRecursa > 0 : null,
             FatherEducationLevelId = InitialSurveyState.LeerInt(survey.InstruccionPadreEncuestaIni),
             MotherEducationLevelId = InitialSurveyState.LeerInt(survey.InstruccionMadreEncuestaIni),
             CareerDecisionYearId = InitialSurveyState.LeerInt(survey.DecisionCarreraEncuestaIni),
@@ -244,6 +244,7 @@ internal static class InitialSurveyMapper
             OtherUniversitiesInfoLine2 = survey.InforOtrasLinea2Ini,
             DecisionSupportId = InitialSurveyState.LeerApoyoDecision(survey),
             SecondaryInstitutionId = survey.CodigoInstitucionBac,
+            SecondaryInstitutionStateId = ResolveInstitutionState(uow, survey),
             SecondaryInstitutionName = survey.NombreInstSecEncuestaIni,
             LastSecondaryYearLocationId = survey.UltimoanioSecundariaEncuestaIni,
             PreviousHigherEducationId = higherEducationStatus,
@@ -264,6 +265,20 @@ internal static class InitialSurveyMapper
             OrtAdvertisingIds = uow.PublicidadEleccionAdmisions?.GetByPersona(personId)?.Select(p => p.IdPublicidad).ToList(),
             OrtChoiceReasonIds = uow.MotivoEleccionAdmisions?.GetByPersona(personId)?.Select(m => m.IdMotivo).ToList()
         };
+    }
+
+    /// <summary>
+    /// El departamento no se guarda en la encuesta: lo determina la institución elegida.
+    /// Para el exterior no aplica — <see cref="EncuestaIniAdmision.CodigoInstitucionBac"/> queda en
+    /// la institución legacy (ORT Uruguay) y devolver su departamento sería un dato falso.
+    /// </summary>
+    private static long? ResolveInstitutionState(IUnitOfWork uow, EncuestaIniAdmision survey)
+    {
+        if (survey.UltimoanioSecundariaEncuestaIni != PersonConstants.Parametros.UruguayCodigoPais
+            || !survey.CodigoInstitucionBac.HasValue)
+            return null;
+
+        return uow.Empresas?.GetByKey(survey.CodigoInstitucionBac.Value)?.CodigoEstado;
     }
 
     private static long? LeerEstadoEducacionSuperior(string? value, bool tieneUniversidades)
