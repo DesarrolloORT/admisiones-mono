@@ -136,6 +136,6 @@ describe('EnrollmentPersonalStep', () => {
     expect(education).toContain('ortInput');
     expect(decision).toContain('formControlName="otherResearchedUniversity"');
     expect(decision).toContain('formControlName="decisionSupport"');
-    expect(decision).toContain('placeholder="Seleccioná..."');
+    expect(decision).toContain('<app-responsive-select');
   });
 });
