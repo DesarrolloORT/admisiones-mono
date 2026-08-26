@@ -1,6 +1,7 @@
 {
-  "version": 10,
+  "version": 11,
   "request": "SaveInitialSurveyRequest",
+  "response": "InitialSurveyDetails",
   "catalogSource": "catalogs/initial-survey",
   "sections": [
     {
@@ -70,6 +71,32 @@
   "constants": {
     "tipoInscripcion": "SOLO_ENCUESTA_INI"
   },
+  "readOnlyFields": {
+    "surveyId": {
+      "type": "number",
+      "description": "Código de la encuesta (ID_ENCUESTA_INI)."
+    },
+    "status": {
+      "type": "string",
+      "description": "Estado de la encuesta.",
+      "allowedOptions": [
+        {
+          "value": "TEMPORAL",
+          "label": "Temporal"
+        },
+        {
+          "value": "DEFINITIVO",
+          "label": "Definitivo"
+        }
+      ]
+    },
+    "secondaryInstitutionStateId": {
+      "section": "education",
+      "type": "number",
+      "description": "Departamento de la institución de secundaria, derivado de T_EMPRESA.CODIGO_ESTADO. No se guarda en T_ENCUESTA_INI_ADMISION: el front lo usa para precargar el combo Departamento y con ese valor pedir catalogs/institutions. Es null si cursó en el exterior, si todavía no hay institución elegida, o si la institución no tiene departamento cargado.",
+      "populates": "secondaryInstitutionId"
+    }
+  },
   "fields": {
     "degreeProgramId": {
       "type": "number",
@@ -106,8 +133,12 @@
       "section": "education",
       "type": "number",
       "catalogEndpoint": "catalogs/institutions",
-      "valueField": "codigoEmpresa",
-      "labelField": "nombre",
+      "catalogQueryParams": {
+        "countryId": 1,
+        "stateId": "secondaryInstitutionStateId"
+      },
+      "valueField": "id",
+      "labelField": "name",
       "requiredWhen": "ubicacionUltimoAnioSecundariaId == 1",
       "clearWhen": "ubicacionUltimoAnioSecundariaId == 2"
     },
