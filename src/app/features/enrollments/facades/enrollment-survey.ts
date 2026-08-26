@@ -78,11 +78,6 @@ export class EnrollmentSurveyFacade {
   public readonly options = inject(EnrollmentSurveyOptionsFacade);
   public readonly identity = inject(EnrollmentSurveyIdentityFacade);
 
-  // Slice de encuesta prellenada ya aplicado:
-  // se conserva para re-aplicarlo cuando llegan los catálogos, respetando su flag
-  // `includeAcademicSelection` original.
-  private appliedSurveyState: Extract<EnrollmentSurveyInit, { kind: 'prefilled' }> | null = null;
-
   public readonly educationForm = this.formsStore.forms.educationForm;
   public readonly academicDecisionForm = this.formsStore.forms.academicDecisionForm;
   public readonly ortExperienceForm = this.formsStore.forms.ortExperienceForm;
@@ -96,20 +91,12 @@ export class EnrollmentSurveyFacade {
   private readonly sectionProgress = signal<
     Readonly<Partial<Record<SurveySectionId, SectionProgress>>>
   >({});
-  // Suprime la completitud reactiva de identidad tras un fallo de subida: el form
-  // sigue válido y los archivos presentes, pero el paso debe reabrirse SIN check
-  // hasta que el usuario modifique datos de identidad o arranque un nuevo intento.
   private readonly identityUploadFailed = signal(false);
-  // Snapshot de lo último que el backend tiene: es la base del delta que manda
-  // `savePartial`. Se toma SOLO al aplicar el estado inicial, antes de que el usuario pueda
-  // tocar algo, y nunca al re-parchear por catálogos: ahí el Paso 1 ya puede tener la
-  // selección del usuario y re-snapshotearla la dejaría fuera del delta para siempre.
   private persistedPayload: EnrollmentInitialSurveyPayload = buildInitialSurveyPayload(
     this.formsStore.forms
   );
   public readonly activeSection = signal<SurveySectionId>('education');
   public readonly readerOpen = signal(false);
-  // Único dato que decide si la encuesta se muestra editable y si se postea.
   public readonly canAnswerSurvey = signal(true);
   public readonly hasAcceptedStudentRegulation = signal(false);
   public readonly submittedAcceptanceDate = signal<Date | null>(null);
@@ -167,7 +154,6 @@ export class EnrollmentSurveyFacade {
     this.options.initialize({
       isSurveyStepActive: computed(() => this.process.flow.currentStep() === 'survey'),
       onOptionsChanged: () => this.updateConditionalValidators(),
-      onInitialCatalogsApplied: () => this.reapplyBackendSurvey(),
     });
     this.identity.initialize({
       isIdentitySectionActive: computed(
@@ -205,7 +191,6 @@ export class EnrollmentSurveyFacade {
     this.identityUploadFailed.set(false);
     switch (state.kind) {
       case 'load-failed':
-        this.appliedSurveyState = null;
         // Sin respuesta no sabemos el valor de `canAnswerSurvey`: nunca se postea a ciegas.
         // Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
         this.canAnswerSurvey.set(false);
@@ -215,14 +200,12 @@ export class EnrollmentSurveyFacade {
         );
         return;
       case 'identity-only':
-        this.appliedSurveyState = null;
         this.canAnswerSurvey.set(false);
         this.snapshotPersistedPayload();
         this.sectionProgress.set({});
         this.activeSection.set('identity');
         return;
       case 'fresh':
-        this.appliedSurveyState = null;
         this.canAnswerSurvey.set(true);
         this.snapshotPersistedPayload();
         this.sectionProgress.set({});
@@ -231,7 +214,6 @@ export class EnrollmentSurveyFacade {
       case 'prefilled': {
         const survey = state.response.survey;
         if (!survey) return;
-        this.appliedSurveyState = state;
         this.canAnswerSurvey.set(true);
         this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
         // Después del parcheo: lo que trajo el backend no es un cambio del usuario.
@@ -732,14 +714,6 @@ export class EnrollmentSurveyFacade {
       });
   }
 
-  private reapplyBackendSurvey(): void {
-    const state = this.appliedSurveyState;
-    const survey = state?.response.survey;
-    if (state && survey) {
-      this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
-    }
-  }
-
   private applyBackendSurvey(
     survey: EnrollmentInitialSurvey,
     response: EnrollmentInitialSurveyResponse,
@@ -755,6 +729,7 @@ export class EnrollmentSurveyFacade {
       this.proposal.setProposalType(proposalType);
       this.proposal.loadAcademicOptionsForSurvey(survey);
     }
+    if (this.isNationalSchoolPlace()) this.options.loadInstitutionsForSelectedDepartment();
     this.options.refreshOrientationOptions();
     this.updateConditionalValidators();
   }

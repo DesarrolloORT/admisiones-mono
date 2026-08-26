@@ -631,6 +631,154 @@ describe('EnrollmentSurveyFacade', () => {
     expect(payment.outcome()).toBe('enrollment-in-progress');
   });
 
+  // La encuesta se hidrata UNA sola vez, con los catálogos todavía vacíos: ningún catálogo
+  // que llegue después puede borrar lo que trajo el backend ni pisar al usuario.
+  it('keeps the answered orientation when the survey catalogs arrive late', () => {
+    const catalogs$ = new Subject<unknown>();
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: true,
+          highSchoolYearId: 11,
+          highSchoolOrientationId: 20,
+        }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => catalogs$ }
+    );
+    TestBed.tick();
+
+    // Sin catálogo todavía: el valor prellenado sobrevive.
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+
+    catalogs$.next({
+      education: {
+        lastSecondaryYearLocations: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
+        highSchoolYears: [
+          {
+            id: 11,
+            label: '2 EMS',
+            baccalaureates: [{ id: 20, label: 'Bachillerato A', orientation: 'Cientifico' }],
+          },
+        ],
+      },
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
+      },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
+    });
+    catalogs$.complete();
+
+    expect(survey.options.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+  });
+
+  it('keeps the answered orientation when the survey catalogs fail', () => {
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: true,
+          highSchoolYearId: 11,
+          highSchoolOrientationId: 20,
+        }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => throwError(() => new Error('network error')) }
+    );
+    TestBed.tick();
+
+    expect(survey.catalogError()).toBe('No se pudieron cargar los catálogos de encuesta inicial.');
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+  });
+
+  it('does not overwrite an answer the user changed while the catalogs were loading', () => {
+    const catalogs$ = new Subject<unknown>();
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({ activeSection: 'education', repeatsHighSchoolYear: false }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => catalogs$ }
+    );
+    TestBed.tick();
+
+    expect(survey.educationForm.controls.repeatsHighSchoolYear.value).toBe('no');
+    survey.educationForm.controls.repeatsHighSchoolYear.setValue('yes');
+
+    catalogs$.next({
+      education: {
+        lastSecondaryYearLocations: [],
+        highSchoolYears: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
+      },
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
+      },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
+    });
+    catalogs$.complete();
+
+    expect(survey.educationForm.controls.repeatsHighSchoolYear.value).toBe('yes');
+  });
+
+  // El departamento no viaja en la encuesta: sin sembrar la institución respondida, Educación
+  // quedaría inválida al retomar y el usuario tendría que rehacer los dos campos.
+  // El departamento no se guarda: el backend lo deriva de la institución y lo devuelve de solo
+  // lectura, y con él se arma la cascada departamento → instituciones al retomar.
+  it('hydrates the department derived by the backend and loads its institutions', () => {
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: false,
+          repeatsHighSchoolYear: false,
+          highSchoolLocationId: 1,
+          highSchoolInstitutionId: 500,
+          highSchoolInstitutionStateId: 5,
+          priorHigherEducationStatusId: 3,
+          motherEducationLevelId: 1,
+          fatherEducationLevelId: 1,
+        }),
+      }),
+      {},
+      [],
+      {
+        countryLocations: [
+          {
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
+          },
+        ],
+        institutions: [{ id: 500, label: 'Liceo Nº 1' }],
+      }
+    );
+    TestBed.tick();
+
+    expect(survey.educationForm.controls.state.value).toBe('5');
+    expect(survey.options.institutionOptions()).toEqual([{ value: '500', label: 'Liceo Nº 1' }]);
+    expect(survey.educationForm.controls.educationalInstitution.value).toBe('500');
+    expect(survey.getSectionState('education')).toBe('complete');
+  });
+
   it('uses school year orientations directly from the selected year catalog', () => {
     const { survey } = createFacade(
       {
@@ -1044,6 +1192,9 @@ describe('EnrollmentSurveyFacade', () => {
       // Sin pulsar Continuar: alcanza con que la sección quede válida.
       expect(saveInitialSurvey).toHaveBeenCalledOnce();
       expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
         repeatsHighSchoolYear: false,
         finalHighSchoolYearLocationId: 1,
         priorHigherEducationStatusId: 2,
@@ -1088,6 +1239,9 @@ describe('EnrollmentSurveyFacade', () => {
 
       // Lo respondido antes del check no se pierde: viaja en el delta del primer guardado.
       expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
         repeatsHighSchoolYear: false,
         finalHighSchoolYearLocationId: 1,
         priorHigherEducationStatusId: 2,
@@ -1161,6 +1315,9 @@ describe('EnrollmentSurveyFacade', () => {
       survey.educationForm.controls.motherEducation.setValue('2');
 
       expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
         repeatsHighSchoolYear: false,
         finalHighSchoolYearLocationId: 1,
         priorHigherEducationStatusId: 2,
@@ -1178,6 +1335,9 @@ describe('EnrollmentSurveyFacade', () => {
       survey.continue();
 
       expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
         repeatsHighSchoolYear: false,
         finalHighSchoolYearLocationId: 1,
         priorHigherEducationStatusId: 2,
@@ -1296,7 +1456,14 @@ describe('EnrollmentSurveyFacade', () => {
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
     degreePrograms: unknown[] = [],
-    options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
+    options: {
+      loadFailed?: boolean;
+      getInitialSurvey?: () => unknown;
+      skipApply?: boolean;
+      getInitialSurveyCatalogs?: () => unknown;
+      countryLocations?: unknown[];
+      institutions?: unknown[];
+    } = {}
   ): {
     survey: EnrollmentSurveyFacade;
     process: EnrollmentProcessState;
@@ -1332,27 +1499,29 @@ describe('EnrollmentSurveyFacade', () => {
               of([
                 { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null },
               ]),
-            getCountryLocations: () => of([]),
-            getInstitutions: () => of([]),
-            getInitialSurveyCatalogs: () =>
-              of({
-                education: {
-                  lastSecondaryYearLocations: [],
-                  highSchoolYears: [],
-                  previousHigherEducationOptions: [],
-                  universities: [],
-                  guardianEducationLevels: [],
-                },
-                academicDecision: {
-                  upperSecondaryYears: [],
-                  decisionSupports: [],
-                  decisionLevels: [],
-                  universities: [],
-                  ortChoiceReasons: [],
-                },
-                ortExperience: { ratings: [], ortAdvertisements: [] },
-                ...catalogOverrides,
-              }),
+            getCountryLocations: () => of(options.countryLocations ?? []),
+            getInstitutions: () => of(options.institutions ?? []),
+            getInitialSurveyCatalogs:
+              options.getInitialSurveyCatalogs ??
+              (() =>
+                of({
+                  education: {
+                    lastSecondaryYearLocations: [],
+                    highSchoolYears: [],
+                    previousHigherEducationOptions: [],
+                    universities: [],
+                    guardianEducationLevels: [],
+                  },
+                  academicDecision: {
+                    upperSecondaryYears: [],
+                    decisionSupports: [],
+                    decisionLevels: [],
+                    universities: [],
+                    ortChoiceReasons: [],
+                  },
+                  ortExperience: { ratings: [], ortAdvertisements: [] },
+                  ...catalogOverrides,
+                })),
           },
         },
         { provide: EnrollmentPaymentFacade, useValue: payment },
@@ -1472,6 +1641,7 @@ describe('EnrollmentSurveyFacade', () => {
       repeatsHighSchoolYear: null,
       highSchoolYearRepeatCount: null,
       highSchoolInstitutionId: null,
+      highSchoolInstitutionStateId: null,
       highSchoolLocationId: null,
       highSchoolInstitutionName: null,
       priorHigherEducationStatusId: null,
