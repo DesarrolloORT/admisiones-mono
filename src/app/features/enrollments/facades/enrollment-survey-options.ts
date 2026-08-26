@@ -102,28 +102,6 @@ export class EnrollmentSurveyOptionsFacade {
     }
   }
 
-  public seedEducationalInstitution(institutionId: number, name: string | null): void {
-    const value = institutionId.toString();
-    if (name) {
-      this.institutionOptions.set([{ value, label: name }]);
-      this.callbacks.onOptionsChanged();
-      return;
-    }
-
-    this.catalogs
-      .getInstitutions(URUGUAY_COUNTRY_CODE)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: institutions => {
-          const institution = institutions.find(item => item.id === institutionId);
-          if (!institution) return;
-          this.institutionOptions.set([{ value, label: institution.label }]);
-          this.callbacks.onOptionsChanged();
-        },
-        error: () => undefined,
-      });
-  }
-
   private observeDependentControls(): void {
     this.educationForm.controls.highSchoolYear.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -133,7 +111,7 @@ export class EnrollmentSurveyOptionsFacade {
       });
     this.educationForm.controls.state.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadInstitutionsForSelectedDepartment());
+      .subscribe(() => this.loadInstitutionsForSelectedDepartment(true));
   }
 
   private loadInitialSurveyCatalogs(): void {
@@ -224,9 +202,11 @@ export class EnrollmentSurveyOptionsFacade {
       }))
     );
     this.callbacks.onOptionsChanged();
+
+    if (this.educationForm.controls.state.value) this.loadInstitutionsForSelectedDepartment();
   }
 
-  private loadInstitutionsForSelectedDepartment(): void {
+  public loadInstitutionsForSelectedDepartment(clearMissingSelection = false): void {
     const departmentValue = this.educationForm.controls.state.value;
     const statusCode = departmentValue ? Number(departmentValue) : null;
     if (this.uruguayCountryCode === null || statusCode === null) {
@@ -246,7 +226,11 @@ export class EnrollmentSurveyOptionsFacade {
             }))
           );
           const selected = this.educationForm.controls.educationalInstitution.value;
-          if (selected && !this.institutionOptions().some(option => option.value === selected)) {
+          if (
+            clearMissingSelection &&
+            selected &&
+            !this.institutionOptions().some(option => option.value === selected)
+          ) {
             this.educationForm.controls.educationalInstitution.setValue('', { emitEvent: false });
           }
           this.callbacks.onOptionsChanged();
