@@ -29,6 +29,7 @@ function survey(values: Partial<EnrollmentInitialSurvey> = {}): EnrollmentInitia
     repeatsHighSchoolYear: null,
     highSchoolYearRepeatCount: null,
     highSchoolInstitutionId: null,
+    highSchoolInstitutionStateId: null,
     highSchoolLocationId: null,
     highSchoolInstitutionName: null,
     priorHigherEducationStatusId: null,

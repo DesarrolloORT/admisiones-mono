@@ -312,6 +312,7 @@ export class EnrollmentsApi {
       repeatsHighSchoolYear: survey.repeatsHighSchoolYear ?? null,
       highSchoolYearRepeatCount: survey.highSchoolYearRepeatCount ?? null,
       highSchoolInstitutionId: survey.secondaryInstitutionId ?? null,
+      highSchoolInstitutionStateId: survey.secondaryInstitutionStateId ?? null,
       highSchoolLocationId: survey.lastSecondaryYearLocationId ?? null,
       highSchoolInstitutionName: survey.secondaryInstitutionName ?? null,
       priorHigherEducationStatusId: survey.previousHigherEducationId ?? null,

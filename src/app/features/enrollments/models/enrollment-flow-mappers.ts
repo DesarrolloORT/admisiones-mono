@@ -40,8 +40,15 @@ export function patchBackendSurveyForms(
     levelId === undefined
       ? forms.academicForm.controls.proposalType.value
       : (getAcademicProposalTypeByLevel(levelId)?.value ?? '');
+  const schoolPlace = getSchoolPlaceValue(survey);
   const schoolInstitution =
-    survey.highSchoolInstitutionId ?? survey.highSchoolInstitutionName ?? '';
+    schoolPlace === SCHOOL_PLACE_INTERNATIONAL
+      ? (survey.highSchoolInstitutionName ?? '')
+      : (survey.highSchoolInstitutionId?.toString() ?? '');
+  const schoolDepartment =
+    schoolPlace === SCHOOL_PLACE_NATIONAL
+      ? (survey.highSchoolInstitutionStateId?.toString() ?? '')
+      : '';
 
   if (context.includeAcademicSelection !== false) {
     forms.academicForm.patchValue(
@@ -65,8 +72,9 @@ export function patchBackendSurveyForms(
       orientation: toFormValue(survey.highSchoolOrientationId),
       repeatsHighSchoolYear: toYesNoValue(survey.repeatsHighSchoolYear),
       highSchoolYearRepeatCount: survey.highSchoolYearRepeatCount,
-      highSchoolLocation: getSchoolPlaceValue(survey),
-      educationalInstitution: schoolInstitution.toString(),
+      highSchoolLocation: schoolPlace,
+      state: schoolDepartment,
+      educationalInstitution: schoolInstitution,
       higherEducationStatus: toFormValue(survey.priorHigherEducationStatusId),
       higherEducationUniversities: toSelectedOptionValues(response.higherEducationUniversities),
       otherHigherEducationUniversity: toFirstText(response.otherHigherEducationUniversities),
@@ -131,7 +139,7 @@ export function buildInitialSurveyPayload(forms: EnrollmentForms) {
       ? toNullableNumber(education.orientation.value)
       : null,
     highSchoolYear: currentlyInSchool ? toNullableNumber(education.highSchoolYear.value) : null,
-    currentlyStudiesHighSchool: currentlyInSchool,
+    currentlyStudiesHighSchool: toStudiesHighSchoolBoolean(education.studiesHighSchool.value),
     highSchoolYearRepeatCount: recursedBaccalaureate
       ? education.highSchoolYearRepeatCount.value
       : null,
@@ -318,6 +326,10 @@ export function parseDate(value: string | null | undefined): Date | null {
 
 export function toYesNoValue(value: boolean | null): string {
   return value === null ? '' : value ? 'yes' : 'no';
+}
+
+function toStudiesHighSchoolBoolean(value: string): boolean | null {
+  return value === '' ? null : value === 'studying';
 }
 
 export function toNullableBoolean(value: string): boolean | null {

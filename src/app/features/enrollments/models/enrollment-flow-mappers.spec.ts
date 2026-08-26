@@ -39,6 +39,7 @@ const emptySurvey: EnrollmentInitialSurvey = {
   repeatsHighSchoolYear: null,
   highSchoolYearRepeatCount: null,
   highSchoolInstitutionId: null,
+  highSchoolInstitutionStateId: null,
   highSchoolLocationId: null,
   highSchoolInstitutionName: null,
   priorHigherEducationStatusId: null,
@@ -477,6 +478,83 @@ describe('enrollment flow mappers', () => {
         }
       )
     ).toBe('');
+  });
+
+  // Encuesta real de desa (surveyId 48776): secundaria en el exterior, con el id nacional
+  // viejo todavia guardado junto al nombre nuevo.
+  describe('institucion educativa al retomar desde el exterior', () => {
+    it('precarga el nombre, no el id nacional que quedo en el backend', () => {
+      const forms = createEnrollmentForms();
+
+      patchBackendSurveyForms(
+        {
+          ...emptySurvey,
+          highSchoolLocationId: 2,
+          highSchoolInstitutionId: 2898,
+          highSchoolInstitutionName: 'z',
+        },
+        emptySurveyResponse,
+        { forms, degreePrograms: [] }
+      );
+
+      expect(forms.educationForm.controls.highSchoolLocation.value).toBe('2');
+      expect(forms.educationForm.controls.educationalInstitution.value).toBe('z');
+      // En el exterior el backend no deriva departamento y el combo ni se muestra.
+      expect(forms.educationForm.controls.state.value).toBe('');
+    });
+
+    it('precarga el departamento derivado que devuelve el backend', () => {
+      const forms = createEnrollmentForms();
+
+      patchBackendSurveyForms(
+        {
+          ...emptySurvey,
+          highSchoolLocationId: 1,
+          highSchoolInstitutionId: 500,
+          highSchoolInstitutionStateId: 5,
+        },
+        emptySurveyResponse,
+        { forms, degreePrograms: [] }
+      );
+
+      expect(forms.educationForm.controls.state.value).toBe('5');
+      expect(forms.educationForm.controls.educationalInstitution.value).toBe('500');
+    });
+
+    // El departamento es de solo lectura: se usa para precargar, nunca se manda.
+    it('no envia el departamento en el payload', () => {
+      const forms = createEnrollmentForms();
+      forms.educationForm.patchValue({ highSchoolLocation: '1', state: '5' });
+
+      expect(Object.keys(buildInitialSurveyPayload(forms))).not.toContain('state');
+    });
+  });
+
+  describe('currentlyStudiesHighSchool', () => {
+    // Con `false` duro, responder "No" coincidia con el snapshot inicial, nunca entraba al
+    // delta y el backend nunca lo recibia: al volver, el campo aparecia vacio.
+    it('is null while the question has not been answered', () => {
+      const forms = createEnrollmentForms();
+
+      expect(buildInitialSurveyPayload(forms).currentlyStudiesHighSchool).toBeNull();
+    });
+
+    it('is false once the person answers "No"', () => {
+      const forms = createEnrollmentForms();
+      forms.educationForm.patchValue({ studiesHighSchool: 'not-studying' });
+
+      expect(buildInitialSurveyPayload(forms).currentlyStudiesHighSchool).toBe(false);
+    });
+
+    it('sends the "No" answer in the delta against an unanswered snapshot', () => {
+      const forms = createEnrollmentForms();
+      const persisted = buildInitialSurveyPayload(forms);
+      forms.educationForm.patchValue({ studiesHighSchool: 'not-studying' });
+
+      const delta = diffInitialSurveyPayload(buildInitialSurveyPayload(forms), persisted);
+
+      expect(delta).toMatchObject({ currentlyStudiesHighSchool: false });
+    });
   });
 
   describe('diffInitialSurveyPayload', () => {

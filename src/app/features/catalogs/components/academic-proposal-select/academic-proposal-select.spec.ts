@@ -166,6 +166,47 @@ describe('AcademicProposalSelect', () => {
     expect(form.controls.degreeProgram.touched).toBe(true);
   });
 
+  it('selects a degreeProgram by typing in the desktop searchable select', () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 900,
+    });
+    form.controls.proposalType.setValue('1');
+    fixture.detectChanges();
+
+    // El id apunta al control interno, no al wrapper.
+    const input = fixture.nativeElement.querySelector(
+      '#academic-proposal-degree-program'
+    ) as HTMLInputElement;
+    input.dispatchEvent(new Event('focus'));
+    fixture.detectChanges();
+
+    // Las opciones viven en el overlay del panel, no en el host del select.
+    const groupLabels = Array.from(document.querySelectorAll('ort-optgroup')).map(group =>
+      group.querySelector('.ort-optgroup-label')?.textContent?.trim()
+    );
+    expect(groupLabels).toEqual(['Facultad de Diseño', 'Facultad de Ingeniería']);
+
+    input.value = 'Analista';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const visible = Array.from(document.querySelectorAll('ort-option'))
+      .filter(option => !option.classList.contains('ort-option-hidden'))
+      .map(option => option.querySelector('.ort-option-label-text')?.textContent?.trim());
+    expect(visible).toEqual(['Analista Programador']);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(form.controls.degreeProgram.value).toBe('30');
+    expect(input.value).toBe('Analista Programador');
+  });
+
   it('keeps the current field labels for non-AP proposals (regression guard)', () => {
     form.controls.proposalType.setValue('1');
     fixture.detectChanges();

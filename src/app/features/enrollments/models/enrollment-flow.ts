@@ -31,6 +31,7 @@ export interface EnrollmentInitialSurvey {
   repeatsHighSchoolYear: boolean | null;
   highSchoolYearRepeatCount: number | null;
   highSchoolInstitutionId: number | null;
+  highSchoolInstitutionStateId: number | null;
   highSchoolLocationId: number | null;
   highSchoolInstitutionName: string | null;
   priorHigherEducationStatusId: number | null;
