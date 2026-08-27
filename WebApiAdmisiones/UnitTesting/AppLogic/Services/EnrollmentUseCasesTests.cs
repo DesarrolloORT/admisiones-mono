@@ -280,6 +280,10 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Data!.Waiting);
             Assert.Equal("DEFINITIVO", encuesta.EstadoEncuestaIniAdmision);
             Assert.Null(encuesta.FechaProcesadoEncuestaIni);
+            // El sellado tiene que ir en su propia transaccion: un Save() suelto sobre un uow que ya
+            // commiteo en este request tira NullReferenceException (EF conserva la tx vieja enlistada).
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Once);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
         }
 
         /// <summary>
