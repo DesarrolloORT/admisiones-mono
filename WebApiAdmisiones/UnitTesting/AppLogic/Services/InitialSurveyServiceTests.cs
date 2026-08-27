@@ -108,34 +108,60 @@ namespace UnitTesting.AppLogic.Services
         }
 
         /// <summary>
-        /// Una encuesta DEFINITIVO sigue siendo editable: el postulante puede corregir una sección
-        /// mientras no confirme la preinscripción. Antes devolvía 403 INS_EI_56 porque el derecho a
-        /// encuesta consultaba ExisteCompletaPorDocumento.
+        /// Una encuesta CONFIRMADO (completa) sigue siendo editable: el postulante puede corregir una
+        /// sección mientras no confirme la preinscripción. Antes devolvía 403 INS_EI_56 porque el
+        /// derecho a encuesta consultaba ExisteCompletaPorDocumento.
         /// </summary>
         [Fact]
-        public void GuardarEncuestaInicial_DefinitivaSinProcesar_PermiteCorregir()
+        public void GuardarEncuestaInicial_CompletaSinConfirmar_PermiteCorregir()
         {
             SetupPersonaValida();
-            var encuestaDefinitiva = new EncuestaIniAdmision
+            var encuestaCompleta = new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "CONFIRMADO",
+                FechaProcesadoEncuestaIni = null
+            };
+            var encuestaRepo = SetupReposDerecho(encuestaCompleta);
+
+            var result = _service.SaveInitialSurvey(123, new SaveInitialSurveyRequest());
+
+            Assert.True(result.Success);
+            encuestaRepo.Verify(r => r.Update(encuestaCompleta), Times.AtLeastOnce);
+            encuestaRepo.Verify(r => r.Add(It.IsAny<EncuestaIniAdmision>()), Times.Never);
+            _uowMock.Verify(u => u.Commit(), Times.Once);
+        }
+
+        /// <summary>
+        /// El estado DEFINITIVO cierra la encuesta apenas se confirma la preinscripción, incluso si
+        /// LogicaORT todavía no la migró porque la inscripción quedó "a la espera" en bandeja.
+        /// </summary>
+        [Fact]
+        public void GuardarEncuestaInicial_ConfirmadaSinProcesar_DevuelveConflicto()
+        {
+            SetupPersonaValida();
+            var encuestaSellada = new EncuestaIniAdmision
             {
                 IdEncuestaIni = 900,
                 CodigoPersona = 123,
                 EstadoEncuestaIniAdmision = "DEFINITIVO",
                 FechaProcesadoEncuestaIni = null
             };
-            var encuestaRepo = SetupReposDerecho(encuestaDefinitiva);
+            var encuestaRepo = SetupReposDerecho(encuestaSellada);
 
             var result = _service.SaveInitialSurvey(123, new SaveInitialSurveyRequest());
 
-            Assert.True(result.Success);
-            encuestaRepo.Verify(r => r.Update(encuestaDefinitiva), Times.AtLeastOnce);
-            encuestaRepo.Verify(r => r.Add(It.IsAny<EncuestaIniAdmision>()), Times.Never);
-            _uowMock.Verify(u => u.Commit(), Times.Once);
+            Assert.False(result.Success);
+            Assert.Equal(409, result.HttpCode);
+            Assert.Equal("INS_EI_57", result.ErrorCode);
+            encuestaRepo.Verify(r => r.Update(It.IsAny<EncuestaIniAdmision>()), Times.Never);
+            _uowMock.Verify(u => u.BeginTransaction(), Times.Never);
         }
 
         /// <summary>
-        /// Con FECHA_PROCESADO_ENCUESTA_INI sellada, LogicaORT ya copió la encuesta a T_ENCUESTA_INI
-        /// al confirmar la preinscripción: desde ahí no admite cambios.
+        /// Con FECHA_PROCESADO_ENCUESTA_INI sellada, LogicaORT ya copió la encuesta a T_ENCUESTA_INI:
+        /// desde ahí no admite cambios.
         /// </summary>
         [Fact]
         public void GuardarEncuestaInicial_YaProcesada_DevuelveConflicto()
@@ -160,11 +186,36 @@ namespace UnitTesting.AppLogic.Services
         }
 
         /// <summary>
-        /// Una encuesta DEFINITIVO sin procesar se sigue devolviendo: el postulante que salió del flujo
-        /// y vuelve tiene que poder ver y corregir lo que cargó.
+        /// Una encuesta CONFIRMADO (completa, sin confirmar la preinscripción) se sigue devolviendo: el
+        /// postulante que salió del flujo y vuelve tiene que poder ver y corregir lo que cargó.
         /// </summary>
         [Fact]
-        public void ObtenerEncuestaInicial_DefinitivaSinProcesar_DevuelveEncuesta()
+        public void ObtenerEncuestaInicial_CompletaSinConfirmar_DevuelveEncuesta()
+        {
+            SetupPersonaValida();
+            SetupReposDerecho(new EncuestaIniAdmision
+            {
+                IdEncuestaIni = 900,
+                CodigoPersona = 123,
+                EstadoEncuestaIniAdmision = "CONFIRMADO",
+                FechaProcesadoEncuestaIni = null
+            });
+
+            var result = _service.GetInitialSurvey(123);
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.CanAnswerSurvey);
+            Assert.NotNull(result.Data.Survey);
+            Assert.Equal(900, result.Data.Survey.SurveyId);
+        }
+
+        /// <summary>
+        /// Preinscripción confirmada que quedó "a la espera": FECHA_PROCESADO_ENCUESTA_INI sigue en NULL
+        /// porque LogicaORT no llegó a migrar, pero la encuesta ya está completa y no se vuelve a pedir.
+        /// Es el caso que reportaba "todavía no completó la encuesta".
+        /// </summary>
+        [Fact]
+        public void ObtenerEncuestaInicial_ConfirmadaSinProcesar_NoDevuelveEncuesta()
         {
             SetupPersonaValida();
             SetupReposDerecho(new EncuestaIniAdmision
@@ -178,9 +229,8 @@ namespace UnitTesting.AppLogic.Services
             var result = _service.GetInitialSurvey(123);
 
             Assert.True(result.Success);
-            Assert.True(result.Data!.CanAnswerSurvey);
-            Assert.NotNull(result.Data.Survey);
-            Assert.Equal(900, result.Data.Survey.SurveyId);
+            Assert.False(result.Data!.CanAnswerSurvey);
+            Assert.Null(result.Data.Survey);
         }
 
         /// <summary>

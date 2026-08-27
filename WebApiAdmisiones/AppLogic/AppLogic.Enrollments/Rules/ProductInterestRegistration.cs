@@ -1,5 +1,6 @@
 using AppLogic.Enrollments.Mapping;
 using AppLogic.Enrollments.Dtos;
+using AppLogic.Enrollments.Survey.Rules;
 using AppLogic.Contracts.Constants;
 using AppLogic.Integrations.Tivenos.Dtos;
 using BusinessLogic.Entities;
@@ -154,7 +155,7 @@ internal static class ProductInterestRegistration
         string methodName)
     {
         var survey = uow.EncuestaIniAdmisions.GetByPersona(personId);
-        if (survey == null)
+        if (survey == null || !InitialSurveyState.IsEditable(survey))
         {
             return OperationResult<bool>.Ok(true, methodName);
         }

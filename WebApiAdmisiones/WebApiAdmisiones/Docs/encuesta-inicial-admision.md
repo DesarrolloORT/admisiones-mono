@@ -8,7 +8,7 @@ La encuesta inicial de admisión permite recolectar información complementaria 
 - Decisión académica
 - Experiencia con ORT
 
-La encuesta se crea inicialmente con estado `TEMPORAL` y pasa a estado `DEFINITIVO` cuando el backend valida que todos los datos obligatorios, incluyendo los condicionales, están completos.
+La encuesta se crea inicialmente con estado `TEMPORAL` y pasa a estado `CONFIRMADO` cuando el backend valida que todos los datos obligatorios, incluyendo los condicionales, están completos.
 
 ---
 
@@ -45,53 +45,61 @@ ESTADO_ENCUESTA_INI_ADMISION
 | Estado | Descripción |
 |---|---|
 | `TEMPORAL` | La encuesta fue creada o guardada parcialmente. Todavía faltan datos obligatorios. |
-| `DEFINITIVO` | La encuesta tiene todos los datos requeridos completos. |
+| `CONFIRMADO` | La encuesta tiene todos los datos requeridos completos. Sigue editable. |
+| `DEFINITIVO` | La encuesta se cerró: el postulante confirmó la preinscripción. No admite cambios. |
 
 ### Regla general
 
 1. La encuesta se crea en estado `TEMPORAL`.
 2. Luego de cada guardado, el backend valida la completitud de la encuesta.
-3. Si todos los campos obligatorios están completos, pasa a `DEFINITIVO`.
+3. Si todos los campos obligatorios están completos, pasa a `CONFIRMADO`.
 4. Si falta algún dato obligatorio, permanece en `TEMPORAL`.
+5. Al confirmar la preinscripción, la API sella la encuesta en `DEFINITIVO`.
 
-### `DEFINITIVO` significa "completa", no "cerrada"
-
-El estado describe completitud, no un cierre. El postulante completa la encuesta por secciones y
-puede volver a corregir cualquiera de ellas, incluso después de que la encuesta llegó a
-`DEFINITIVO` — de cara al usuario la encuesta convive con otros pasos del flujo de admisión
-(verificación de identidad, reglamento estudiantil), así que no hay un único momento de cierre.
-
-El ciclo `DEFINITIVO` → `TEMPORAL` → `DEFINITIVO` es válido: si una corrección deja un campo
+El ciclo `CONFIRMADO` → `TEMPORAL` → `CONFIRMADO` es válido: si una corrección deja un campo
 obligatorio vacío, la encuesta vuelve a `TEMPORAL` y la confirmación de preinscripción queda
-bloqueada hasta completarla otra vez.
+bloqueada hasta completarla otra vez. `DEFINITIVO` no vuelve atrás.
 
-### Momento de cierre: `FECHA_PROCESADO_ENCUESTA_INI`
+### Momento de cierre: el estado `DEFINITIVO`
 
 Hay dos tablas:
 
 ```text
-T_ENCUESTA_INI_ADMISION -> staging que llena esta API; es la que tiene TEMPORAL/DEFINITIVO.
-T_ENCUESTA_INI          -> destino final; la carga LogicaORT al confirmar la preinscripción.
+T_ENCUESTA_INI_ADMISION -> staging que llena esta API; es la que tiene los tres estados.
+T_ENCUESTA_INI          -> destino final; la carga LogicaORT cuando la inscripción se concreta.
 ```
 
-Al confirmar la preinscripción, LogicaORT copia la fila de staging a `T_ENCUESTA_INI` y sella
-`FECHA_PROCESADO_ENCUESTA_INI` con la fecha del día. Desde ese momento la encuesta queda cerrada:
-el guardado responde **409 `INS_EI_57`** y la lectura deja de devolverla
-(`canAnswerSurvey: false`, sin `survey`).
+La encuesta se cierra cuando el postulante confirma la preinscripción: la API pasa el estado a
+`DEFINITIVO` **antes** de llamar a LogicaORT. Desde ese momento el guardado responde
+**409 `INS_EI_57`** y la lectura deja de devolverla (`canAnswerSurvey: false`, sin `survey`).
+
+El cierre no puede depender de `FECHA_PROCESADO_ENCUESTA_INI`: LogicaORT sólo sella esa columna
+cuando la inscripción **se concreta**. Si la confirmación deriva a bandeja ("a la espera" — por
+ejemplo cuando alguna oferta del lote es de semestre 2), el `INSERT` en `T_ENCUESTA_INI` y el sellado
+quedan pendientes hasta que Admisiones resuelva el trámite y la inscripción se haga efectiva. La
+migración está diferida, no perdida. Antes de este cierre propio, un postulante en espera veía la
+encuesta como si no la hubiera completado.
+
+Por qué el sellado va antes de la llamada y no dentro de una transacción abierta: LogicaORT lee y
+actualiza la misma fila de `T_ENCUESTA_INI_ADMISION` durante la confirmación, así que sostener el
+lock esperando su respuesta sería una traba mutua.
+
+El sellado **no se revierte** si la confirmación falla: los rechazos de LogicaORT (oferta cerrada,
+plan de pago, inscripción previa) no se arreglan editando la encuesta, que ya estaba completa. Lo que
+sí sigue funcionando es el reintento: la confirmación acepta `DEFINITIVO` además de `CONFIRMADO` como
+encuesta completa.
 
 `ESTADO_ENCUESTA_INI_ADMISION` no existe para LogicaORT: su única condición para migrar es
-`FECHA_PROCESADO_ENCUESTA_INI IS NULL`. Quien garantiza que sólo se migren encuestas completas es
-esta API, al exigir `DEFINITIVO` antes de confirmar la preinscripción.
+`FECHA_PROCESADO_ENCUESTA_INI IS NULL`, que esta API nunca escribe. Quien garantiza que sólo se
+migren encuestas completas es esta API, al exigir la encuesta completa antes de confirmar.
 
 | Situación | Señal | Se muestra y edita |
 |---|---|---|
-| Parcial | `TEMPORAL` + `FECHA_PROCESADO_ENCUESTA_INI` en `NULL` | Sí |
-| Completa, sin confirmar | `DEFINITIVO` + `FECHA_PROCESADO_ENCUESTA_INI` en `NULL` | Sí |
+| Parcial | `TEMPORAL` | Sí |
+| Completa, sin confirmar | `CONFIRMADO` | Sí |
+| Confirmada, migración diferida a bandeja | `DEFINITIVO` + `FECHA_PROCESADO_ENCUESTA_INI` en `NULL` | No |
 | Confirmada y migrada | `FECHA_PROCESADO_ENCUESTA_INI` con fecha | No |
 | Encuesta histórica | existe fila en `T_ENCUESTA_INI` | No |
-
-Lo que manda es `FECHA_PROCESADO_ENCUESTA_INI`, no el estado: un `DEFINITIVO` sin procesar se
-muestra y se edita igual que un `TEMPORAL`.
 
 ---
 
@@ -109,7 +117,7 @@ Los siguientes datos no deben ser enviados por el frontend. El backend los compl
 | Clave de encuesta | `CLAVE_ENCUESTA_INI` | Generada por backend. |
 | ID comienzo | `ID_COMIENZO` | El backend lo resuelve según producto/proceso. |
 | Fecha encuesta | `FECHA_ENCUESTA_INI` | Se setea al crear la encuesta. |
-| Estado encuesta | `ESTADO_ENCUESTA_INI_ADMISION` | `TEMPORAL` o `DEFINITIVO`. |
+| Estado encuesta | `ESTADO_ENCUESTA_INI_ADMISION` | `TEMPORAL`, `CONFIRMADO` o `DEFINITIVO`. |
 | Usuario ingreso | `USUARIO_INGRESO` | Lo carga un trigger. |
 | Fecha ingreso | `FECHA_INGRESO` | Lo carga un trigger. |
 
@@ -417,7 +425,7 @@ Si seInformoEnOtrasUniversidades = false:
 
 ```text
 informacionOtrasUniversidadesLinea1 e informacionOtrasUniversidadesLinea2 son campos libres opcionales.
-No bloquean el pasaje a DEFINITIVO.
+No bloquean el pasaje a CONFIRMADO.
 ```
 
 #### Motivos de elección ORT
@@ -630,7 +638,7 @@ Regla:
 
 ```text
 Siempre que venga informado, se reemplazan los registros existentes.
-Para pasar a DEFINITIVO debe existir al menos un motivo.
+Para pasar a CONFIRMADO debe existir al menos un motivo.
 ```
 
 ---
@@ -692,9 +700,9 @@ Si nivelFormacionMadreTutorId no está en [5, 6]:
 
 ---
 
-## 11. Regla de completitud para pasar a DEFINITIVO
+## 11. Regla de completitud para pasar a CONFIRMADO
 
-La encuesta pasa a `DEFINITIVO` cuando se cumplen todas las condiciones siguientes.
+La encuesta pasa a `CONFIRMADO` cuando se cumplen todas las condiciones siguientes.
 
 ### 11.1 Datos técnicos
 

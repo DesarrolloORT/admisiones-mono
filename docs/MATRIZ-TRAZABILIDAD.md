@@ -541,6 +541,32 @@ mensajes actuales se preservan literalmente.
 
 ---
 
+## Breaking changes con el front
+
+### Encuesta inicial: `status` "completa" pasa de `DEFINITIVO` a `CONFIRMADO`
+
+`GET`/`POST` `enrollments/initial-survey` devuelven `status: "CONFIRMADO"` donde antes devolvían
+`"DEFINITIVO"`. El front que lee `status === "DEFINITIVO"` como "encuesta completa" debe leer
+`"CONFIRMADO"`. Contrato: `WebApiAdmisiones/Docs/contracts/encuesta-inicial.contract.json`.
+
+Por qué: `DEFINITIVO` significaba "completa, no cerrada" y el cierre real se derivaba de
+`FECHA_PROCESADO_ENCUESTA_INI`, que LogicaORT sólo sella cuando la **inscripción se concreta**. Si la
+confirmación de preinscripción deriva a bandeja ("a la espera", p.ej. alguna oferta del lote es de
+semestre 2), LogicaORT hace un `return` temprano antes del `INSERT` en `T_ENCUESTA_INI`
+(`AdmAdmisiones.cs:3881` en la variante múltiple, `:3133` en la de una oferta) y esa columna queda en
+`NULL` indefinidamente. Resultado: el postulante ya había completado la encuesta y la API se la
+volvía a pedir.
+
+Ahora los tres estados son `TEMPORAL` (parcial) → `CONFIRMADO` (completa) → `DEFINITIVO` (cerrada), y
+`DEFINITIVO` lo sella esta API al confirmar la preinscripción. `FECHA_PROCESADO_ENCUESTA_INI` no la
+escribe la API: sigue siendo la puerta de la migración diferida de LogicaORT.
+
+**Requiere migración de datos**: las filas `DEFINITIVO` con `FECHA_PROCESADO_ENCUESTA_INI IS NULL` y
+`TIPO_INSCRIPCION = 'SOLO_ENCUESTA_INI'` (completas sin confirmar) pasan a `CONFIRMADO`. Las demás
+`DEFINITIVO` ya pasaron por una confirmación y quedan como están. Detalle en el plan de este cambio.
+
+---
+
 ## Cierre
 
 `OperationResultExtensions` se mide al final: si sobreviven menos de 5 usos se inlinean y el helper

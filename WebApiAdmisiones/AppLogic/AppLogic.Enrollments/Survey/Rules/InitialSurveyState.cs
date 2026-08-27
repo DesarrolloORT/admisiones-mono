@@ -7,6 +7,7 @@ namespace AppLogic.Enrollments.Survey.Rules;
 internal static class InitialSurveyState
 {
     internal const string EstadoTemporal = "TEMPORAL";
+    internal const string EstadoConfirmado = "CONFIRMADO";
     internal const string EstadoDefinitivo = "DEFINITIVO";
     internal const string TipoInscripcionSoloEncuesta = "SOLO_ENCUESTA_INI";
     internal const string Si = "SI";
@@ -38,13 +39,19 @@ internal static class InitialSurveyState
     internal const string ExperienciaOrt = "experienciaOrt";
 
     /// <summary>
-    /// La encuesta admite cambios mientras LogicaORT no la haya procesado: al confirmar la
-    /// preinscripción copia la encuesta a T_ENCUESTA_INI y sella FECHA_PROCESADO_ENCUESTA_INI.
-    /// El estado DEFINITIVO no cierra nada, sólo indica que no faltan datos.
+    /// La encuesta se cierra cuando el postulante confirma la preinscripción: ahí pasa a DEFINITIVO.
     /// Una encuesta que todavía no existe es editable.
     /// </summary>
     internal static bool IsEditable(EncuestaIniAdmision? survey)
-        => survey?.FechaProcesadoEncuestaIni == null;
+        => survey?.FechaProcesadoEncuestaIni == null
+           && !string.Equals(survey?.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// No le faltan datos obligatorios, sin importar si además ya se cerró.
+    /// </summary>
+    internal static bool IsComplete(EncuestaIniAdmision? survey)
+        => string.Equals(survey?.EstadoEncuestaIniAdmision, EstadoConfirmado, StringComparison.OrdinalIgnoreCase)
+           || string.Equals(survey?.EstadoEncuestaIniAdmision, EstadoDefinitivo, StringComparison.OrdinalIgnoreCase);
 
     internal static string BoolToYesNo(bool value)
         => value ? Si : No;

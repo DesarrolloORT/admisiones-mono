@@ -4,6 +4,7 @@ using AppLogic.Enrollments.Contracts;
 using AppLogic.Enrollments.Dtos;
 using AppLogic.Enrollments.Mapping;
 using AppLogic.Enrollments.Rules;
+using AppLogic.Enrollments.Survey.Rules;
 using AppLogic.Identity.Services;
 using AppLogic.Integrations.EnrollmentsAndPayments.Interfaces;
 using AppLogic.People.Constants;
@@ -70,10 +71,26 @@ public class ConfirmPreEnrollment(
             return acceptance.Failure().As<ConfirmPreEnrollmentResponse>(methodName);
         }
 
+        SealSurvey(uow, personId);
+
         if (request.IsCorporateEnrollment)
             return _confirmCorporate.Execute(uow, personId, person, selectedOfferings, methodName);
 
         return await ConfirmOnlineAsync(uow, contexto, selectedOfferings, request, methodName);
+    }
+
+    private static void SealSurvey(IUnitOfWork uow, long personId)
+    {
+        var survey = uow.EncuestaIniAdmisions.GetByPersona(personId);
+        if (survey == null
+            || !string.Equals(survey.EstadoEncuestaIniAdmision, InitialSurveyState.EstadoConfirmado, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        survey.EstadoEncuestaIniAdmision = InitialSurveyState.EstadoDefinitivo;
+        uow.EncuestaIniAdmisions.Update(survey);
+        uow.Save();
     }
 
     private async Task<OperationResult<ConfirmPreEnrollmentResponse>> ConfirmOnlineAsync(
