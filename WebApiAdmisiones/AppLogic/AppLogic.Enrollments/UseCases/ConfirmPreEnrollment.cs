@@ -89,8 +89,18 @@ public class ConfirmPreEnrollment(
         }
 
         survey.EstadoEncuestaIniAdmision = InitialSurveyState.EstadoDefinitivo;
-        uow.EncuestaIniAdmisions.Update(survey);
-        uow.Save();
+
+        uow.BeginTransaction();
+        try
+        {
+            uow.EncuestaIniAdmisions.Update(survey);
+            uow.Commit();
+        }
+        catch
+        {
+            uow.Rollback();
+            throw;
+        }
     }
 
     private async Task<OperationResult<ConfirmPreEnrollmentResponse>> ConfirmOnlineAsync(
