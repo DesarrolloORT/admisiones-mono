@@ -64,12 +64,11 @@ public sealed class InitialSurveyService(
                 "La persona no tiene encuesta inicial.",
                 200);
 
-        // Procesada por LogicaORT: la encuesta ya se migró a T_ENCUESTA_INI y no se muestra más.
         if (!InitialSurveyState.IsEditable(survey))
             return OperationResult<GetInitialSurveyResponse>.IsSuccess(
                 new GetInitialSurveyResponse { CanAnswerSurvey = false },
                 nameof(GetInitialSurvey),
-                "La encuesta inicial ya fue procesada con la preinscripcion.",
+                "La encuesta inicial ya fue confirmada con la preinscripcion.",
                 200);
 
         var pendientes = InitialSurveyValidation.ValidateCompletenessFromDb(uow, survey, personId);
@@ -137,7 +136,7 @@ public sealed class InitialSurveyService(
             return OperationResult<SaveInitialSurveyResponse>.IsFailed(
                 "INS_EI_57",
                 nameof(SaveInitialSurvey),
-                "La encuesta inicial ya fue procesada con la preinscripcion y no admite cambios.",
+                "La encuesta inicial ya fue confirmada con la preinscripcion y no admite cambios.",
                 409);
         }
 
@@ -172,9 +171,9 @@ public sealed class InitialSurveyService(
             var response = InitialSurveyValidation.ValidateCompletenessFromDb(uow, persistedSurvey, personId);
 
             survey.EstadoEncuestaIniAdmision = response.Status;
-            if (response.Status == InitialSurveyState.EstadoDefinitivo)
+            if (response.Status == InitialSurveyState.EstadoConfirmado)
             {
-                var finalization = FinalizeDefinitiveSurvey(uow, survey, personId);
+                var finalization = FinalizeCompletedSurvey(uow, survey, personId);
                 if (!finalization.Success)
                 {
                     uow.Rollback();
@@ -197,9 +196,6 @@ public sealed class InitialSurveyService(
 
     /// <summary>
     /// Derecho a encuesta: no ser fresco del proceso legacy y no tener encuesta histórica.
-    /// El estado DEFINITIVO no se consulta acá a propósito: significa "completa", no "cerrada".
-    /// El cierre lo marca FECHA_PROCESADO_ENCUESTA_INI, que sella LogicaORT cuando la confirmación
-    /// de preinscripción copia la encuesta a T_ENCUESTA_INI.
     /// </summary>
     private static bool CanAnswerInitialSurvey(string documentType, string document, IUnitOfWork uow)
     {
@@ -285,7 +281,7 @@ public sealed class InitialSurveyService(
         };
     }
 
-    private OperationResult<bool> FinalizeDefinitiveSurvey(
+    private OperationResult<bool> FinalizeCompletedSurvey(
         IUnitOfWork uow,
         EncuestaIniAdmision survey,
         long personId)

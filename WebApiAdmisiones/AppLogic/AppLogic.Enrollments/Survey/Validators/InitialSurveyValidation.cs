@@ -136,7 +136,7 @@ internal static class InitialSurveyValidation
             return new SaveInitialSurveyResponse
             {
                 SurveyId = idEncuestaIni,
-                Status = hasPending ? InitialSurveyState.EstadoTemporal : InitialSurveyState.EstadoDefinitivo,
+                Status = hasPending ? InitialSurveyState.EstadoTemporal : InitialSurveyState.EstadoConfirmado,
                 PendingSections = _sections.Order().ToList(),
                 PendingFields = _fields.Order().ToList()
             };

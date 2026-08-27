@@ -78,15 +78,15 @@
     },
     "status": {
       "type": "string",
-      "description": "Estado de la encuesta.",
+      "description": "Estado de la encuesta. CONFIRMADO significa que no faltan datos obligatorios; la encuesta sigue editable hasta que el postulante confirma la preinscripción. El estado DEFINITIVO (encuesta cerrada) no aparece acá porque una encuesta cerrada no se devuelve: la lectura responde canAnswerSurvey: false sin survey.",
       "allowedOptions": [
         {
           "value": "TEMPORAL",
           "label": "Temporal"
         },
         {
-          "value": "DEFINITIVO",
-          "label": "Definitivo"
+          "value": "CONFIRMADO",
+          "label": "Confirmado"
         }
       ]
     },

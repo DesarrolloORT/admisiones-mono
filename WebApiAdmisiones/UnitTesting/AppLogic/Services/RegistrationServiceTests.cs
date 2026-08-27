@@ -678,7 +678,11 @@ namespace UnitTesting.AppLogic.Services
             });
 
             Assert.False(result.Success);
-            Assert.Equal("LDAP_01", result.ErrorCode);
+            // El código y el mensaje de LDAP no viajan al cliente anónimo: pueden traer detalle
+            // interno del servicio SOAP. Quedan en el log del backend.
+            Assert.Equal("REG_USUARIO_99", result.ErrorCode);
+            Assert.Equal(500, result.HttpCode);
+            Assert.DoesNotContain("LDAP", result.Message, StringComparison.OrdinalIgnoreCase);
             _uowMock.Verify(u => u.RegistroAdmisiones, Times.Never);
             _passwordActivationServiceMock.Verify(
                 s => s.SendPasswordLinkMailAsync(It.IsAny<Persona>(), It.IsAny<string>()),

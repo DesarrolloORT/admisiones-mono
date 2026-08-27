@@ -13,6 +13,5 @@ namespace BusinessLogic.IDevartRepositories
     {
         EncuestaIniAdmision GetByPersona(long codigoPersona);
         EncuestaIniAdmision GetByPersonaProductoComienzo(long codigoPersona, long idProducto, long idComienzo);
-        bool ExisteCompletaPorDocumento(string tipoDocumento, string documento);
     }
 }

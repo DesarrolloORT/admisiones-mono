@@ -15,6 +15,7 @@ using AppLogic.Contracts;
 using AppLogic.Registration.Mapping;
 using AppLogic.Registration.Contracts;
 using AppLogic.Registration.Interfaces;
+using ApiExtensions = WebApiAdmisiones.Extensions.ServiceCollectionExtensions;
 
 namespace WebApiAdmisiones.Controllers
 {
@@ -69,10 +70,12 @@ namespace WebApiAdmisiones.Controllers
         /// <response code="200">Documento evaluado correctamente.</response>
         /// <response code="400">Datos invalidos o regla funcional no cumplida.</response>
         [AllowAnonymous]
+        [EnableRateLimiting(ApiExtensions.PublicAuthRateLimitPolicy)]
         [RequireCaptcha(CaptchaActions.EvaluateDocument, CaptchaValidationMode.ScoreOnly)]
         [HttpPost("evaluate-document")]
         [ProducesResponseType(typeof(OperationResult<DocumentEvaluationResponse>), 200)]
         [ProducesResponseType(typeof(OperationResult<DocumentEvaluationResponse>), 400)]
+        [ProducesResponseType(typeof(OperationResult<DocumentEvaluationResponse>), 429)]
         public async Task<IActionResult> EvaluateDocument([FromBody] EvaluateDocumentRequest request)
         {
             var result = await evaluateDocument.ExecuteAsync(request);

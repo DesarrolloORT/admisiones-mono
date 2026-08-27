@@ -120,13 +120,15 @@ namespace UnitTesting.AppLogic.Services
                 .ReturnsAsync(OperationResult<object?>.IsSuccess(
                     null,
                     nameof(RecoverPassword),
-                    "Si los datos ingresados son correctos, recibiras un mail con instrucciones para recuperar tu contraseña."));
+                    "Mail de recuperación enviado."));
 
             var result = await _service.Recover.ExecuteAsync(request);
 
             Assert.True(result.Success);
             Assert.Null(result.Data);
             Assert.Contains("Si los datos ingresados son correctos", result.Message);
+            // El mensaje del servicio de mail se descarta: reenviarlo delataría que la cuenta existe.
+            Assert.DoesNotContain("Mail de recuperación enviado.", result.Message, StringComparison.Ordinal);
             _passwordActivationServiceMock.Verify(
                 x => x.SendPasswordRecoveryMailAsync(person, nameof(RecoverPassword)),
                 Times.Once);
@@ -203,6 +205,58 @@ namespace UnitTesting.AppLogic.Services
                 Times.Never);
         }
 
+        /// <summary>
+        /// Comparación byte a byte entre "la cuenta existe y el mail salió" y "la cuenta no existe".
+        /// Los tests de arriba usan Assert.Contains sobre el prefijo común, que es exactamente por
+        /// qué pasó inadvertido que un literal decía "recibiras" y el otro "recibirás": un solo
+        /// carácter de diferencia alcanzaba para enumerar cuentas.
+        /// </summary>
+        [Fact]
+        public async Task RecuperarPassword_PersonaExisteONo_DevuelveElMismoMensajeExacto()
+        {
+            var request = new RecoverPasswordRequest
+            {
+                DocumentType = "CI",
+                DocumentNumber = "1234567-2",
+                FirstSurname = "Perez"
+            };
+
+            var person = new Persona
+            {
+                CodigoPersona = 12345,
+                TipoDocumento = "CI",
+                Documento = "1234567-2",
+                PrimerApellido = "Perez",
+                PrimerApellidoMay = "PEREZ",
+                Email = "ana@example.com"
+            };
+
+            async Task<string> MessageForPersonAsync(Persona? found)
+            {
+                var uowMock = new Mock<IUnitOfWork>();
+                var personasRepoMock = new Mock<IPersonaRepository>();
+                personasRepoMock.Setup(x => x.GetByDocumento("1234567-2")).Returns(found!);
+                uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+                _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+
+                var result = await _service.Recover.ExecuteAsync(request);
+                return result.Message;
+            }
+
+            // La cuenta existe y el mail se envía correctamente.
+            _passwordActivationServiceMock
+                .Setup(x => x.SendPasswordRecoveryMailAsync(person, nameof(RecoverPassword)))
+                .ReturnsAsync(OperationResult<object?>.IsSuccess(
+                    null,
+                    nameof(RecoverPassword),
+                    "Mail de recuperación enviado."));
+
+            var mensajeCuentaExiste = await MessageForPersonAsync(person);
+            var mensajeCuentaNoExiste = await MessageForPersonAsync(null);
+
+            Assert.Equal(mensajeCuentaNoExiste, mensajeCuentaExiste, StringComparer.Ordinal);
+        }
+
         [Fact]
         public async Task AutenticarUsuarioLDAPAsync_LdapAuthenticationFails_ReturnsFailed()
         {
@@ -240,11 +294,12 @@ namespace UnitTesting.AppLogic.Services
             // Act
             var result = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "validpass");
 
-            // Assert
+            // Assert: respuesta genérica de credenciales inválidas, no un 404 que delate que el
+            // documento no existe.
             Assert.False(result.Success);
-            Assert.Equal("LOGIN_LDAP_04", result.ErrorCode);
-            Assert.Equal("No se encontró la persona en la base de datos.", result.Message);
-            Assert.Equal(404, result.HttpCode);
+            Assert.Equal("AUTH_LDAP_03", result.ErrorCode);
+            Assert.Equal("Credenciales inválidas.", result.Message);
+            Assert.Equal(401, result.HttpCode);
             _ldapMock.Verify(x => x.AutenticarUsuarioLDAPAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
         }
 
@@ -268,11 +323,12 @@ namespace UnitTesting.AppLogic.Services
             // Act
             var result = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "validpass");
 
-            // Assert
+            // Assert: mismo 401 genérico que cualquier otro fallo, no un 403 que delate que la
+            // persona existe y está marcada como extranjera.
             Assert.False(result.Success);
-            Assert.Equal("LOGIN_LDAP_05", result.ErrorCode);
-            Assert.Equal("No se pudo iniciar sesión.", result.Message);
-            Assert.Equal(403, result.HttpCode);
+            Assert.Equal("AUTH_LDAP_03", result.ErrorCode);
+            Assert.Equal("Credenciales inválidas.", result.Message);
+            Assert.Equal(401, result.HttpCode);
             _ldapMock.Verify(x => x.AutenticarUsuarioLDAPAsync(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
         }
 
@@ -301,10 +357,72 @@ namespace UnitTesting.AppLogic.Services
 
             var result = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "wrongpass");
 
+            // El código y el mensaje de LDAP no se propagan: se normalizan a la respuesta única.
             Assert.False(result.Success);
-            Assert.Equal("LDAP_401", result.ErrorCode);
+            Assert.Equal("AUTH_LDAP_03", result.ErrorCode);
+            Assert.Equal("Credenciales inválidas.", result.Message);
             Assert.Equal(401, result.HttpCode);
             _tokenServiceMock.Verify(t => t.GenerateAccessToken(It.IsAny<Persona>()), Times.Never);
+        }
+
+        /// <summary>
+        /// El test que cierra el oráculo de enumeración: compara las tres ramas de fallo ENTRE SÍ,
+        /// no contra literales, así que falla si alguien vuelve a diferenciar cualquiera de ellas.
+        /// </summary>
+        [Fact]
+        public async Task AutenticarUsuarioLDAPAsync_AllFailureModes_ReturnIdenticalResponse()
+        {
+            // Arrange: helper para armar el uow con la persona que devuelva el repo.
+            void SetupPerson(Persona? person)
+            {
+                var uowMock = new Mock<IUnitOfWork>();
+                var personasRepoMock = new Mock<IPersonaRepository>();
+                personasRepoMock.Setup(x => x.GetByTipoDocumentoYDocumento("CI", "1234567-2")).Returns(person!);
+                uowMock.Setup(x => x.Personas).Returns(personasRepoMock.Object);
+                _uowFactoryMock.Setup(x => x.Create()).Returns(uowMock.Object);
+            }
+
+            // 1. Persona inexistente.
+            SetupPerson(null);
+            var personaInexistente = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "algunapass");
+
+            // 2. Persona existente marcada como alumno extranjero.
+            SetupPerson(new Persona
+            {
+                CodigoPersona = 12345,
+                Documento = "1234567-2",
+                TipoDocumento = "CI",
+                AlumnoExtranjeroPersona = "SI"
+            });
+            var alumnoExtranjero = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "algunapass");
+
+            // 3. Persona existente, LDAP rechaza la password.
+            SetupPerson(new Persona
+            {
+                CodigoPersona = 12345,
+                Documento = "1234567-2",
+                TipoDocumento = "CI"
+            });
+            _ldapMock
+                .Setup(x => x.AutenticarUsuarioLDAPAsync(12345, "algunapass"))
+                .ReturnsAsync(OperationResult<bool>.IsFailed(
+                    "LDAP_401",
+                    nameof(ILdap.AutenticarUsuarioLDAPAsync),
+                    "Error al autenticar usuario: detalle interno del servicio SOAP.",
+                    401,
+                    false));
+            var passwordIncorrecta = await _service.Authenticate.ExecuteAsync("CI", "1234567-2", "algunapass");
+
+            // Assert: las tres son indistinguibles desde afuera.
+            var respuestas = new[] { personaInexistente, alumnoExtranjero, passwordIncorrecta };
+
+            Assert.All(respuestas, r => Assert.False(r.Success));
+            Assert.Single(respuestas.Select(r => r.ErrorCode).Distinct());
+            Assert.Single(respuestas.Select(r => r.HttpCode).Distinct());
+            Assert.Single(respuestas.Select(r => r.Message).Distinct(StringComparer.Ordinal));
+
+            // Y el detalle interno de LDAP no se filtró en ninguna.
+            Assert.All(respuestas, r => Assert.DoesNotContain("SOAP", r.Message, StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]

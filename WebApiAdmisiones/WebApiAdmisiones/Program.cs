@@ -98,6 +98,7 @@ builder.Services.AddRedisRateLimiting();
 // --------------------------------------------------------------------------
 builder.Services.AddDocumentRecognitionRateLimiting(builder.Configuration);
 builder.Services.AddPhoneValidationRateLimiting(builder.Configuration);
+builder.Services.AddPublicAuthRateLimiting(builder.Configuration);
 builder.Services.AddLoginRateLimiting(builder.Configuration);
 
 // --------------------------------------------------------------------------

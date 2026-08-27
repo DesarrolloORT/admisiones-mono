@@ -108,7 +108,7 @@ public class TwoFactorAuthService : ITwoFactorAuthService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al enviar email 2FA a {Email}", email);
+                _logger.LogError(ex, "Error al enviar email 2FA a {Email}", EmailMasking.Mask(email));
                 await _sessionStore.DeleteAsync(sessionId);
 
                 return OperationResult<TwoFactorRequiredResponse>.IsFailed(
@@ -327,7 +327,7 @@ public class TwoFactorAuthService : ITwoFactorAuthService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al reenviar email 2FA a {Email}", session.Email);
+                _logger.LogError(ex, "Error al reenviar email 2FA a {Email}", EmailMasking.Mask(session.Email));
 
                 return OperationResult<TwoFactorRequiredResponse>.IsFailed(
                     "AUTH_2FA_RESEND_MAIL_01",

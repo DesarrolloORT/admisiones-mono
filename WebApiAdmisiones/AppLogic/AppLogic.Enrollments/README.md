@@ -70,8 +70,13 @@ Survey/Services/      InitialSurveyService, InitialSurveyChildRecords
 
 Cosas a saber:
 
-- La encuesta tiene **guardado parcial** y **finalización definitiva**. `FinalizeDefinitiveSurvey`
-  aplica validaciones que el guardado parcial no aplica.
+- La encuesta tiene **guardado parcial** y **completitud**. `FinalizeCompletedSurvey` aplica
+  validaciones que el guardado parcial no aplica.
+- Tres estados: `TEMPORAL` (parcial) → `CONFIRMADO` (completa, todavía editable) → `DEFINITIVO`
+  (cerrada). El cierre lo sella `ConfirmPreEnrollment` **antes** de llamar a LogicaORT. No puede
+  depender de `FECHA_PROCESADO_ENCUESTA_INI`: LogicaORT sólo la sella cuando la inscripción se
+  concreta, así que una inscripción "a la espera" la deja en `NULL`. Ver
+  `WebApiAdmisiones/Docs/encuesta-inicial-admision.md`, sección 3.
 - `InitialSurveyOptions` son los combos que **no** salen de la base (opciones fijas). Los dinámicos
   (universidades, motivos, publicidades, años de bachillerato) los publica `AppLogic.Catalogs`. Por
   eso Catalogs referencia a Enrollments y no al revés.

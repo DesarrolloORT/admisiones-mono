@@ -178,7 +178,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -202,12 +202,12 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_EncuestaDefinitivaVencidaSinConfirmacionHistorica_DevuelveEncuestaVencida()
+        public async Task ConfirmarPreInscripcion_EncuestaCompletaVencidaSinConfirmacionHistorica_DevuelveEncuestaVencida()
         {
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitivaVencida(123));
+            SetupEncuesta(123, EncuestaCompletaVencida(123));
 
             var result = await _service.Confirm.ExecuteAsync(123, new ConfirmPreEnrollmentRequest
             {
@@ -221,12 +221,12 @@ namespace UnitTesting.AppLogic.Services
         }
 
         [Fact]
-        public async Task ConfirmarPreInscripcion_EncuestaDefinitivaVencidaPeroYaConfirmadaEnEncuestaIni_NoDevuelveEncuestaVencida()
+        public async Task ConfirmarPreInscripcion_EncuestaCompletaVencidaPeroYaConfirmadaEnEncuestaIni_NoDevuelveEncuestaVencida()
         {
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitivaVencida(123));
+            SetupEncuesta(123, EncuestaCompletaVencida(123));
             SetupEncuestaIni(123, new EncuestaIni { CodigoPersona = 123 });
             SetupDocumentosValidos(123);
 
@@ -250,6 +250,113 @@ namespace UnitTesting.AppLogic.Services
             Assert.Equal("INS_CPI_02", result.ErrorCode);
         }
 
+        /// <summary>
+        /// La inscripcion quedo "a la espera" (LogicaORT la derivo a bandeja, p.ej. por semestre 2). Es un
+        /// resultado exitoso: la encuesta queda sellada en DEFINITIVO aunque LogicaORT no llegue a migrarla
+        /// ni a sellar FECHA_PROCESADO_ENCUESTA_INI, que es la puerta de esa migracion diferida.
+        /// </summary>
+        [Fact]
+        public async Task ConfirmarPreInscripcion_QuedaALaEspera_SellaEncuestaComoDefinitivo()
+        {
+            var service = CrearServiceConApi(new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "respuesta": true,
+                  "confirmada": true,
+                  "inscripcionPendiente": true,
+                  "ofertas": []
+                }
+                """)));
+
+            var encuesta = EncuestaCompleta(123);
+            SetupConfirmacionSimple(encuesta);
+
+            var result = await service.Confirm.ExecuteAsync(123, new ConfirmPreEnrollmentRequest
+            {
+                AcceptedRegulations = true,
+                SelectedOfferingIds = [10]
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Waiting);
+            Assert.Equal("DEFINITIVO", encuesta.EstadoEncuestaIniAdmision);
+            Assert.Null(encuesta.FechaProcesadoEncuestaIni);
+        }
+
+        /// <summary>
+        /// El sellado no se revierte cuando la confirmacion falla: un rechazo de LogicaORT (oferta cerrada,
+        /// plan de pago) no se arregla editando la encuesta. Lo que si tiene que seguir funcionando es el
+        /// reintento, y por eso las reglas de confirmacion aceptan DEFINITIVO como encuesta completa.
+        /// </summary>
+        [Fact]
+        public async Task ConfirmarPreInscripcion_EncuestaYaSellada_PermiteReintentar()
+        {
+            var service = CrearServiceConApi(new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "respuesta": true,
+                  "confirmada": true,
+                  "inscripcionPendiente": true,
+                  "ofertas": []
+                }
+                """)));
+
+            var encuesta = EncuestaCompleta(123);
+            encuesta.EstadoEncuestaIniAdmision = "DEFINITIVO";
+            SetupConfirmacionSimple(encuesta);
+
+            var result = await service.Confirm.ExecuteAsync(123, new ConfirmPreEnrollmentRequest
+            {
+                AcceptedRegulations = true,
+                SelectedOfferingIds = [10]
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Waiting);
+            Assert.Equal("DEFINITIVO", encuesta.EstadoEncuestaIniAdmision);
+        }
+
+        /// <summary>
+        /// Nivel 3 y 4 no requieren encuesta: sin fila, el sellado es no-op y la confirmacion sigue igual.
+        /// </summary>
+        [Fact]
+        public async Task ConfirmarPreInscripcion_SinEncuesta_NoRompeElSellado()
+        {
+            var service = CrearServiceConApi(new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "respuesta": true,
+                  "confirmada": true,
+                  "inscripcionPendiente": true,
+                  "ofertas": []
+                }
+                """)));
+
+            SetupConfirmacionSimple(null, productLevelId: 3);
+
+            var result = await service.Confirm.ExecuteAsync(123, new ConfirmPreEnrollmentRequest
+            {
+                AcceptedRegulations = true,
+                SelectedOfferingIds = [10]
+            });
+
+            Assert.True(result.Success);
+            Assert.True(result.Data!.Waiting);
+        }
+
+        /// <summary>Escenario minimo de confirmacion online de una sola oferta.</summary>
+        private void SetupConfirmacionSimple(EncuestaIniAdmision? encuesta, long productLevelId = 1)
+        {
+            SetupPersona(123);
+            SetupOfertaConfirmacion(10, 20, 40, 1, productLevelId: productLevelId);
+            SetupInteresActivoOferta(123, 20, 10, 30);
+            SetupEncuesta(123, encuesta!);
+            SetupDocumentosValidos(123);
+
+            var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
+            aceptacionRepo
+                .Setup(r => r.GetByPersonaProductoComienzo(123, 20, 40))
+                .Returns(new AceptacionReglamentoEst { IdAceptacionReglamentoEst = 999, CodigoPersona = 123 });
+            _uowMock.Setup(u => u.AceptacionReglamentoEsts).Returns(aceptacionRepo.Object);
+        }
+
         [Fact]
         public async Task ConfirmarPreInscripcion_WhenReglamentoNotAcceptedButHasPriorAcceptance_Confirms()
         {
@@ -266,7 +373,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
             _dbConnectionContextMock
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
@@ -306,7 +413,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1, productLevelId: 3);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -397,7 +504,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(new Proceso { IdProceso = 30, HabilitadoInteresSitio = "SI" });
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesRepo.Object);
 
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -458,7 +565,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1, productLevelId: 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -563,7 +670,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
 
             var imagenRepo = new Mock<IImagenTemporalRepository>();
             imagenRepo
@@ -616,7 +723,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
             _dbConnectionContextMock
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
@@ -678,7 +785,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosDefinitivosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -727,7 +834,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosDefinitivosValidos(123);
 
             var aceptacionRepo = new Mock<IAceptacionReglamentoEstRepository>();
@@ -834,7 +941,7 @@ namespace UnitTesting.AppLogic.Services
         {
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
 
             var interesProductoOfertaRepo = new Mock<IInteresProductoOfertaRepository>();
             interesProductoOfertaRepo
@@ -871,7 +978,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_WhenOfertasBelongToDifferentProductos_ReturnsBadRequest()
         {
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
 
             var ofertaRepo = new Mock<IOfertaRepository>();
             ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1));
@@ -919,7 +1026,7 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var ofertaRepo = new Mock<IOfertaRepository>();
@@ -989,7 +1096,7 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var ofertaRepo = new Mock<IOfertaRepository>();
@@ -1030,7 +1137,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_ConProductoNivel1y2YComienzosDistintos_DevuelveBadRequest()
         {
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
 
             var ofertaRepo = new Mock<IOfertaRepository>();
             ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, productLevelId: 1));
@@ -1078,7 +1185,7 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             var ofertaRepo = new Mock<IOfertaRepository>();
@@ -1119,7 +1226,7 @@ namespace UnitTesting.AppLogic.Services
         public async Task ConfirmarPreInscripcion_ConProductoNivel1y2YTurnosDistintos_DevuelveBadRequest()
         {
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
 
             var ofertaRepo = new Mock<IOfertaRepository>();
             ofertaRepo.Setup(r => r.GetByKeyWithRelated(10)).Returns(OfertaValida(10, 20, 40, 1, productLevelId: 1));
@@ -1217,7 +1324,7 @@ namespace UnitTesting.AppLogic.Services
             SetupPersona(123);
             SetupOfertaConfirmacion(10, 20, 40, 1);
             SetupInteresActivoOferta(123, 20, 10, 30);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
             _dbConnectionContextMock
                 .Setup(d => d.NextId(DbConnectionContext.DbConnectionContextType.TO_ACEPTACION_REGLAMENTO_EST))
@@ -1269,7 +1376,7 @@ namespace UnitTesting.AppLogic.Services
             var service = CrearServiceConApi(handler);
 
             SetupPersona(123);
-            SetupEncuesta(123, EncuestaDefinitiva(123));
+            SetupEncuesta(123, EncuestaCompleta(123));
             SetupDocumentosValidos(123);
 
             // Dos seminarios del mismo producto: en nivel 3 y 4 pueden diferir en turno y comienzo.
@@ -1853,7 +1960,7 @@ namespace UnitTesting.AppLogic.Services
                 CodigoPersona = 123,
                 IdProducto = 1981,
                 IdProceso = 110,
-                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                EstadoEncuestaIniAdmision = "CONFIRMADO",
                 CursaSecundariaActualmenteEncuestaIni = "SI",
                 VecesSextoEncuestaIni = "2",
                 TieneEducacionSuperiorEncuestaIni = "SI", // Exterior: "SI" sin universidades -> id 2
@@ -1898,7 +2005,7 @@ namespace UnitTesting.AppLogic.Services
             Assert.True(result.Success);
             var survey = result.Data!.Survey!;
             Assert.Equal(900, survey.SurveyId);
-            Assert.Equal("DEFINITIVO", survey.Status);
+            Assert.Equal("CONFIRMADO", survey.Status);
             Assert.Equal(1981, survey.DegreeProgramId);
             Assert.Equal(110, survey.AdmissionProcessId);
             Assert.True(survey.CurrentlyInSecondary);
@@ -2287,9 +2394,9 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void GuardarEncuestaInicial_DefinitivaSinBachillerato_InsertaYEncolaAlta()
         {
-            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+            SetupEncuestaCompletaParaGuardar(null, out var bachilleratoRepo);
 
-            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaDefinitiva(ultimoAnioSexto: 11, codigoTitulo: null));
+            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaCompleta(ultimoAnioSexto: 11, codigoTitulo: null));
 
             Assert.True(result.Success);
             bachilleratoRepo.Verify(r => r.Add(It.Is<BachilleratoPersona>(b =>
@@ -2311,9 +2418,9 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void GuardarEncuestaInicial_DefinitivaSinCursaSecundaria_QuedaTemporal()
         {
-            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+            SetupEncuestaCompletaParaGuardar(null, out var bachilleratoRepo);
 
-            var request = RequestEncuestaDefinitiva();
+            var request = RequestEncuestaCompleta();
             request.CurrentlyInSecondary = null;
 
             var result = _encuesta.SaveInitialSurvey(123, request);
@@ -2327,9 +2434,9 @@ namespace UnitTesting.AppLogic.Services
         [Fact]
         public void GuardarEncuestaInicial_DefinitivaNoCursaSecundaria_NoExigeBachillerato()
         {
-            SetupEncuestaDefinitivaParaGuardar(null, out var bachilleratoRepo);
+            SetupEncuestaCompletaParaGuardar(null, out var bachilleratoRepo);
 
-            var request = RequestEncuestaDefinitiva();
+            var request = RequestEncuestaCompleta();
             request.CurrentlyInSecondary = false;
             request.HighSchoolYear = null;
             request.HighSchoolTrackId = null;
@@ -2337,7 +2444,7 @@ namespace UnitTesting.AppLogic.Services
             var result = _encuesta.SaveInitialSurvey(123, request);
 
             Assert.True(result.Success);
-            Assert.Equal("DEFINITIVO", result.Data!.Status);
+            Assert.Equal("CONFIRMADO", result.Data!.Status);
             Assert.DoesNotContain("anioBachillerato", result.Data.PendingFields);
             Assert.DoesNotContain("orientacionBachilleratoId", result.Data.PendingFields);
             bachilleratoRepo.Verify(r => r.GetByKey(123), Times.Never);
@@ -2355,9 +2462,9 @@ namespace UnitTesting.AppLogic.Services
                 UsuarioIngreso = string.Empty,
                 FechaIngreso = FechaBase.AddDays(-1)
             };
-            SetupEncuestaDefinitivaParaGuardar(existing, out var bachilleratoRepo);
+            SetupEncuestaCompletaParaGuardar(existing, out var bachilleratoRepo);
 
-            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaDefinitiva());
+            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaCompleta());
 
             Assert.True(result.Success);
             bachilleratoRepo.Verify(r => r.Update(It.Is<BachilleratoPersona>(b =>
@@ -2388,9 +2495,9 @@ namespace UnitTesting.AppLogic.Services
                 UsuarioIngreso = string.Empty,
                 FechaIngreso = FechaBase.AddDays(-1)
             };
-            SetupEncuestaDefinitivaParaGuardar(existing, out var bachilleratoRepo);
+            SetupEncuestaCompletaParaGuardar(existing, out var bachilleratoRepo);
 
-            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaDefinitiva());
+            var result = _encuesta.SaveInitialSurvey(123, RequestEncuestaCompleta());
 
             Assert.True(result.Success);
             bachilleratoRepo.Verify(r => r.Update(It.IsAny<BachilleratoPersona>()), Times.Never);
@@ -2455,7 +2562,7 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.InteresProductoOfertas).Returns(interesProductoOfertaRepo.Object);
         }
 
-        private void SetupEncuestaDefinitivaParaGuardar(
+        private void SetupEncuestaCompletaParaGuardar(
             BachilleratoPersona? bachilleratoExistente,
             out Mock<BusinessLogic.IDevartRepositories.IBachilleratoPersonaRepository> bachilleratoRepo)
         {
@@ -2568,7 +2675,7 @@ namespace UnitTesting.AppLogic.Services
                 .Returns(777);
         }
 
-        private static SaveInitialSurveyRequest RequestEncuestaDefinitiva(
+        private static SaveInitialSurveyRequest RequestEncuestaCompleta(
             long ultimoAnioSexto = 12,
             long? codigoTitulo = 1300)
         {
@@ -2741,12 +2848,12 @@ namespace UnitTesting.AppLogic.Services
             _uowMock.Setup(u => u.Imagens).Returns(imagenRepo.Object);
         }
 
-        private static EncuestaIniAdmision EncuestaDefinitiva(long personId)
+        private static EncuestaIniAdmision EncuestaCompleta(long personId)
         {
             return new EncuestaIniAdmision
             {
                 CodigoPersona = personId,
-                EstadoEncuestaIniAdmision = "DEFINITIVO",
+                EstadoEncuestaIniAdmision = "CONFIRMADO",
                 IdProducto = 20,
                 IdProceso = 30,
                 IdComienzo = 40,
@@ -2754,9 +2861,9 @@ namespace UnitTesting.AppLogic.Services
             };
         }
 
-        private static EncuestaIniAdmision EncuestaDefinitivaVencida(long personId)
+        private static EncuestaIniAdmision EncuestaCompletaVencida(long personId)
         {
-            var survey = EncuestaDefinitiva(personId);
+            var survey = EncuestaCompleta(personId);
             survey.FechaVtoAdmision = DateTime.Today.AddDays(-1);
             return survey;
         }

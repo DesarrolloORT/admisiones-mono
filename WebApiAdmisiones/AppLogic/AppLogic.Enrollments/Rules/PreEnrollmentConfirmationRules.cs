@@ -84,8 +84,7 @@ internal static class PreEnrollmentConfirmationRules
         }
 
         var admissionSurvey = uow.EncuestaIniAdmisions.GetByPersona(personId);
-        if (admissionSurvey != null
-            && string.Equals(admissionSurvey.EstadoEncuestaIniAdmision, InitialSurveyState.EstadoDefinitivo, StringComparison.OrdinalIgnoreCase))
+        if (admissionSurvey is not null && InitialSurveyState.IsComplete(admissionSurvey))
         {
             return BuildConfirmationDataFromFinalSurvey(
                 uow,
@@ -103,7 +102,7 @@ internal static class PreEnrollmentConfirmationRules
             var errorCode = admissionSurvey == null ? "INS_CPI_06" : "INS_CPI_07";
             var message = admissionSurvey == null
                 ? "No se encontro una encuesta inicial de admision vigente para la persona."
-                : "La encuesta inicial debe estar en estado DEFINITIVO para confirmar la preinscripcion.";
+                : "La encuesta inicial debe estar completa para confirmar la preinscripcion.";
             var httpCode = admissionSurvey == null ? 404 : 409;
 
             return OperationResult<OfferingConfirmationData>.IsFailed(
@@ -336,8 +335,16 @@ internal static class PreEnrollmentConfirmationRules
         long offeringIntakeId,
         string methodName)
     {
+        // Una encuesta ya cerrada (DEFINITIVO) no vence: la confirmacion que la sello puede estar
+        // esperando en bandeja, y ahi el vencimiento no es del postulante.
+        var alreadySealed = string.Equals(
+            admissionSurvey.EstadoEncuestaIniAdmision,
+            InitialSurveyState.EstadoDefinitivo,
+            StringComparison.OrdinalIgnoreCase);
+
         if (admissionSurvey.FechaVtoAdmision.HasValue
             && admissionSurvey.FechaVtoAdmision.Value.Date < DateTime.Today
+            && !alreadySealed
             && uow.EncuestaInis.GetByPersona(personId) == null)
         {
             return OperationResult<OfferingConfirmationData>.IsFailed(

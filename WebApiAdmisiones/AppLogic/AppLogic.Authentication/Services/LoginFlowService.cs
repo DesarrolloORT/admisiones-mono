@@ -138,8 +138,8 @@ public class LoginFlowService : ILoginFlowService
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation(
-                    "Usuario {Doc} autenticado exitosamente (score: {Score})",
-                    request.DocumentNumber,
+                    "Persona {PersonId} autenticada exitosamente (score: {Score})",
+                    person.PersonId,
                     recaptchaScore);
             }
 
@@ -149,9 +149,9 @@ public class LoginFlowService : ILoginFlowService
         if (string.IsNullOrWhiteSpace(person.Email))
         {
             _logger.LogWarning(
-                "Score reCAPTCHA bajo ({Score}) para {Doc} pero no tiene email registrado. Acceso denegado.",
+                "Score reCAPTCHA bajo ({Score}) para la persona {PersonId} pero no tiene email registrado. Acceso denegado.",
                 recaptchaScore,
-                request.DocumentNumber);
+                person.PersonId);
 
             return LoginFlowResult.Failed(OperationResult<AuthenticationResponse>.IsFailed(
                 "AUTH_2FA_NO_EMAIL",
@@ -164,9 +164,9 @@ public class LoginFlowService : ILoginFlowService
         if (_logger.IsEnabled(LogLevel.Information))
         {
             _logger.LogInformation(
-                "Score reCAPTCHA bajo ({Score}) para {Doc}. Iniciando 2FA.",
+                "Score reCAPTCHA bajo ({Score}) para la persona {PersonId}. Iniciando 2FA.",
                 recaptchaScore,
-                request.DocumentNumber);
+                person.PersonId);
         }
 
         // Todavía no hay tokens: la sesión 2FA solo guarda identidad verificada.
