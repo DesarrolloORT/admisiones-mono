@@ -1,11 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import {
-  getScholarshipsAvailableEndpoint,
-  getScholarshipsEnrollmentsEndpoint,
-  postScholarshipsApplicationsEndpoint,
-} from 'src/app/shared/api/generated/endpoints/scholarships.endpoints';
+import { getScholarshipsEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/scholarships.endpoints';
 
 import type {
   AvailableScholarships,
@@ -32,22 +28,15 @@ export class ScholarshipsApi {
   private readonly api = inject(ApiHttpClient);
 
   /**
-   * Becas que la persona autenticada puede ver. `api.data` porque `/available`
-   * devuelve un **objeto** (`{ requiresPriorEnrollment, scholarships }`); si
-   * devolviera un array plano correspondería `api.list`.
+   * ponytail: stub temporal. El backend removió `GET /scholarships/available` (hoy
+   * `ScholarshipsController` solo expone `enrollments`), así que la feature quedó sin
+   * endpoint. Devuelve la lista vacía para no romper la compilación ni la pantalla
+   * mientras se define si el endpoint vuelve o la feature se rediseña.
+   *
+   * Techo conocido: la pantalla de becas no muestra ninguna beca disponible.
    */
   public getAvailableScholarships(): Observable<AvailableScholarships> {
-    return this.api.data(getScholarshipsAvailableEndpoint).pipe(
-      map(response => ({
-        requiresPriorEnrollment: response?.requiresPriorEnrollment ?? true,
-        scholarships: (response?.scholarships ?? []).map(item => ({
-          scholarshipTypeIds: item.scholarshipTypeIds ?? [],
-          name: item.name ?? '',
-          description: item.description ?? '',
-          requiresTest: item.requiresTest ?? false,
-        })),
-      }))
-    );
+    return of({ requiresPriorEnrollment: true, scholarships: [] });
   }
 
   /**
@@ -75,30 +64,14 @@ export class ScholarshipsApi {
   }
 
   /**
-   * Alta de la postulación. Un POST se hace con `api.request` + `body`; el
-   * `showLoader` prende el loader global mientras viaja.
-   *
-   * Todavía no tiene consumidor: el paso pendiente es dispararlo desde
-   * `facades/scholarship-proposal.ts` cuando se confirme la postulación. Ver el
-   * README de la feature.
+   * ponytail: stub temporal. El backend removió `POST /scholarships/applications`. Falla
+   * en vez de simular un alta: hoy no tiene consumidor, y devolver un id inventado haría
+   * pasar por exitosa una postulación que nunca existió.
    */
   public createApplication(
     payload: ScholarshipApplicationPayload
   ): Observable<ScholarshipApplication> {
-    return this.api
-      .request(postScholarshipsApplicationsEndpoint, {
-        body: {
-          enrollmentId: payload.enrollmentId,
-          testId: payload.testId,
-        },
-        showLoader: true,
-      })
-      .pipe(
-        map(response => ({
-          applicationId: response?.applicationId ?? 0,
-          affidavitId: response?.affidavitId ?? null,
-          affidavitStatus: response?.affidavitStatus ?? '',
-        }))
-      );
+    void payload;
+    return throwError(() => new Error('POST /scholarships/applications no está disponible.'));
   }
 }
