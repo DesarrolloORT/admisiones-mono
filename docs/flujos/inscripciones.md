@@ -1055,6 +1055,11 @@ en `EnrollmentConfirmedDetail.enrollments`;
 `EnrollmentPaymentFacade.subjects()` lista las materias de **todos** los seminarios
 sin repetir las compartidas.
 
+El listado de la pantalla de éxito arranca recortado a 4 materias (`visibleSubjects()`)
+con el botón "Ver todas las materias", pero el contador del título usa siempre el total
+de `subjects()`: al desplegar el listado el número no cambia, solo aparecen las materias
+que faltaban.
+
 ## Estados frontend
 
 - `processing`: solo mientras responde `/enrollments/start-payment`.
