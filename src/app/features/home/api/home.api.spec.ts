@@ -248,9 +248,8 @@ describe('HomeApi', () => {
     await expect(firstValueFrom(endpoint.getMyEnrollments())).resolves.toEqual([]);
   });
 
-  // ponytail: `GET /person/scholarships` fue removido del backend y `getMyScholarships` es un
-  // stub que devuelve la lista vacia. Los tests del mapeo se borraron con el mapeo; vuelven
-  // cuando vuelva el endpoint.
+  // ponytail: `GET /person/scholarships` fue removido; el stub devuelve una lista vacia.
+  // Los tests del mapeo vuelven cuando vuelva el endpoint.
   it('should return no scholarships while the endpoint is gone', async () => {
     await expect(firstValueFrom(endpoint.getMyScholarships())).resolves.toEqual([]);
     expect(api.request).not.toHaveBeenCalled();
