@@ -88,7 +88,7 @@ export class EnrollmentPage {
   public async fillEducation(): Promise<void> {
     await this.chooseRadio('studiesHighSchool', 'Sí, estoy cursando');
     await this.chooseRadio('highSchoolYear', 'Durante secundaria');
-    await this.select('orientation', 'Matemática');
+    await this.select('orientation', 'Científico');
     await this.chooseRadio('repeatsHighSchoolYear', 'No');
     await this.chooseRadio('highSchoolLocation', 'Uruguay');
     await this.select('state', 'Montevideo');
@@ -108,7 +108,7 @@ export class EnrollmentPage {
   public async fillEducationAbroadWithoutInstitution(): Promise<void> {
     await this.chooseRadio('studiesHighSchool', 'Sí, estoy cursando');
     await this.chooseRadio('highSchoolYear', 'Durante secundaria');
-    await this.select('orientation', 'Matemática');
+    await this.select('orientation', 'Científico');
     await this.chooseRadio('repeatsHighSchoolYear', 'No');
     await this.chooseRadio('highSchoolLocation', 'En el exterior');
     await this.chooseRadio('higherEducationStatus', 'No cursé estudios superiores');
@@ -269,7 +269,7 @@ export class EnrollmentPage {
     await this.expectMainFocus();
     await this.chooseRadioWithKeyboard('studiesHighSchool', 'Sí, estoy cursando');
     await this.chooseRadioWithKeyboard('highSchoolYear', 'Durante secundaria');
-    await this.selectWithKeyboard('orientation', 'Matemática');
+    await this.selectWithKeyboard('orientation', 'Científico');
     await this.chooseRadioWithKeyboard('repeatsHighSchoolYear', 'No');
     await this.chooseRadioWithKeyboard('highSchoolLocation', 'Uruguay');
     await this.selectWithKeyboard('state', 'Montevideo');
@@ -408,7 +408,7 @@ export class EnrollmentPage {
         return;
       }
 
-      const combobox = responsiveSelect.locator('ort-select');
+      const combobox = responsiveSelect.locator('ort-select, ort-searchable-select input').first();
       await this.expectOrtSelectEnabled(combobox);
       await selectOrtOption(this.page, combobox, option);
       return;
@@ -421,7 +421,9 @@ export class EnrollmentPage {
   // toBeEnabled no contempla aria-disabled en elementos custom como ort-select.
   private async expectOrtSelectEnabled(combobox: Locator): Promise<void> {
     await expect(combobox).toBeEnabled();
-    await expect(combobox).toHaveAttribute('aria-disabled', 'false');
+    if ((await combobox.evaluate(element => element.tagName)) === 'ORT-SELECT') {
+      await expect(combobox).toHaveAttribute('aria-disabled', 'false');
+    }
   }
 
   private async selectWithKeyboard(controlName: string, option: string): Promise<void> {
@@ -436,7 +438,10 @@ export class EnrollmentPage {
         return;
       }
 
-      await this.selectOrtWithKeyboard(responsiveSelect.locator('ort-select'), option);
+      await this.selectOrtWithKeyboard(
+        responsiveSelect.locator('ort-select, ort-searchable-select input').first(),
+        option
+      );
       return;
     }
 
@@ -446,7 +451,9 @@ export class EnrollmentPage {
   private async selectOrtWithKeyboard(combobox: Locator, option: string): Promise<void> {
     await this.expectOrtSelectEnabled(combobox);
     await this.tabTo(combobox);
-    await this.page.keyboard.press('Enter');
+    if ((await combobox.evaluate(element => element.tagName)) !== 'INPUT') {
+      await this.page.keyboard.press('Enter');
+    }
 
     await expect(combobox).toHaveAttribute('aria-controls', /.+/);
     const listboxId = await combobox.getAttribute('aria-controls');
@@ -465,7 +472,15 @@ export class EnrollmentPage {
       const activeOption = listbox.locator('ort-option.ort-option-active');
       if ((await activeOption.textContent())?.includes(option)) {
         await this.page.keyboard.press('Enter');
-        await expect(combobox).toContainText(option);
+        if ((await combobox.evaluate(element => element.tagName)) === 'INPUT') {
+          if ((await combobox.getAttribute('aria-expanded')) === 'true') {
+            await expect(targetOption).toHaveAttribute('aria-selected', 'true');
+          } else {
+            await expect(combobox).toHaveValue(new RegExp(escapeRegExp(option)));
+          }
+        } else {
+          await expect(combobox).toContainText(option);
+        }
         if ((await combobox.getAttribute('aria-expanded')) === 'true') {
           await this.page.keyboard.press('Escape');
         }
