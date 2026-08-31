@@ -38,12 +38,29 @@ function createEducationForm(isUniversityDegreeProgram: () => boolean) {
 
 type EducationForm = ReturnType<typeof createEducationForm>;
 
+const breakpoint = signal({
+  isXSmall: true,
+  isSmall: false,
+  isMedium: false,
+  isLarge: false,
+  currentBreakpoint: 'xs',
+  screenWidth: 375,
+});
+
 describe('EnrollmentEducationSection', () => {
   let fixture: ComponentFixture<EnrollmentEducationSection>;
   let educationForm: EducationForm;
   let isUniversityDegreeProgram: boolean;
 
   beforeEach(() => {
+    breakpoint.set({
+      isXSmall: true,
+      isSmall: false,
+      isMedium: false,
+      isLarge: false,
+      currentBreakpoint: 'xs',
+      screenWidth: 375,
+    });
     isUniversityDegreeProgram = false;
     educationForm = createEducationForm(() => isUniversityDegreeProgram);
 
@@ -56,8 +73,8 @@ describe('EnrollmentEducationSection', () => {
         ],
         orientationOptions: () => [{ value: 'humanistico', label: 'Humanístico' }],
         previousDegreeProgramOptions: () => [{ value: '1', label: 'Sí' }],
-        departmentOptions: () => [],
-        institutionOptions: () => [],
+        departmentOptions: () => [{ value: '1', label: 'Montevideo' }],
+        institutionOptions: () => [{ value: '10', label: 'Liceo Nº 1' }],
         higherEducationUniversityOptions: () => [],
         educationLevelOptions: () => [{ value: '1', label: 'Primaria' }],
         loadingInitialSurveyCatalogs: () => false,
@@ -81,19 +98,7 @@ describe('EnrollmentEducationSection', () => {
     TestBed.configureTestingModule({
       imports: [EnrollmentEducationSection],
       providers: [
-        {
-          provide: BreakpointService,
-          useValue: {
-            breakpoint: signal({
-              isXSmall: true,
-              isSmall: false,
-              isMedium: false,
-              isLarge: false,
-              currentBreakpoint: 'xs',
-              screenWidth: 375,
-            }),
-          },
-        },
+        { provide: BreakpointService, useValue: { breakpoint } },
         { provide: EnrollmentSurveyFacade, useValue: facade },
       ],
     });
@@ -160,5 +165,45 @@ describe('EnrollmentEducationSection', () => {
     expect(error.textContent.trim()).toBe(
       'Para carreras universitarias, el bachillerato indicado debe ser quinto o sexto año.'
     );
+  });
+
+  it('renders the orientation required error only once', () => {
+    createFixture();
+
+    educationForm.controls.orientation.setValidators(Validators.required);
+    educationForm.controls.orientation.updateValueAndValidity();
+    educationForm.controls.studiesHighSchool.setValue('studying');
+    educationForm.controls.highSchoolYear.setValue('5');
+    educationForm.controls.orientation.markAsTouched();
+    fixture.detectChanges();
+
+    const alerts = Array.from(
+      fixture.nativeElement.querySelectorAll('[role="alert"]') as NodeListOf<HTMLElement>
+    ).filter(element => element.textContent?.includes('Seleccioná una opción'));
+
+    expect(alerts.length).toBe(1);
+  });
+
+  it('renders departamento and institución as searchable selects on desktop', () => {
+    breakpoint.set({
+      isXSmall: false,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false,
+      currentBreakpoint: 'md',
+      screenWidth: 900,
+    });
+    createFixture();
+
+    educationForm.controls.highSchoolLocation.setValue('1');
+    fixture.detectChanges();
+
+    const labels = Array.from(
+      fixture.nativeElement.querySelectorAll(
+        'app-responsive-select:has(ort-searchable-select) ort-label'
+      ) as NodeListOf<HTMLElement>
+    ).map(label => label.textContent?.trim());
+
+    expect(labels).toEqual(['Departamento', 'Institución educativa']);
   });
 });

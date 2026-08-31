@@ -22,6 +22,7 @@ import type { ConfirmedEnrollmentDetailsResponse } from 'src/app/shared/api/gene
 import type { ConfirmPreEnrollmentResponse } from 'src/app/shared/api/generated/models/confirmPreEnrollmentResponse';
 import type { EnrollmentOffering } from 'src/app/shared/api/generated/models/enrollmentOffering';
 import type { InitialSurveyDetails } from 'src/app/shared/api/generated/models/initialSurveyDetails';
+import type { SaveInitialSurveyRequest } from 'src/app/shared/api/generated/models/saveInitialSurveyRequest';
 
 import type {
   EnrollmentConfirmedDetail,
@@ -46,6 +47,47 @@ import type {
   SurveySectionId,
 } from '../models/enrollment-flow';
 import { buildPaymentPayload } from '../models/enrollment-flow-mappers';
+
+const SURVEY_PAYLOAD_TO_WIRE: Record<
+  keyof EnrollmentInitialSurveyPayload,
+  keyof SaveInitialSurveyRequest
+> = {
+  degreeProgramId: 'degreeProgramId',
+  intakeId: 'admissionProcessId',
+  highSchoolOrientationId: 'highSchoolTrackId',
+  highSchoolYear: 'highSchoolYear',
+  currentlyStudiesHighSchool: 'currentlyInSecondary',
+  highSchoolYearRepeatCount: 'highSchoolYearRepeatCount',
+  repeatsHighSchoolYear: 'repeatsHighSchoolYear',
+  fatherOrGuardianEducationLevelId: 'fatherEducationLevelId',
+  motherOrGuardianEducationLevelId: 'motherEducationLevelId',
+  degreeProgramDecisionYearId: 'careerDecisionYearId',
+  ortDecisionYearId: 'ortDecisionYearId',
+  researchedOtherUniversities: 'researchedOtherUniversities',
+  otherUniversitiesInfoLine1: 'otherUniversitiesInfoLine1',
+  otherUniversitiesInfoLine2: 'otherUniversitiesInfoLine2',
+  decisionSupportId: 'decisionSupportId',
+  highSchoolInstitutionId: 'secondaryInstitutionId',
+  highSchoolInstitutionName: 'secondaryInstitutionName',
+  finalHighSchoolYearLocationId: 'lastSecondaryYearLocationId',
+  priorHigherEducationStatusId: 'previousHigherEducationId',
+  decisionLevelId: 'decisionLevelId',
+  hadOrtAdvising: 'hadOrtAdvisory',
+  ortAdvisingRatingId: 'ortAdvisoryRatingId',
+  visitedOrtWebsite: 'visitedOrtWebsite',
+  ortWebsiteRatingId: 'ortWebsiteRatingId',
+  visitedOrtCampus: 'visitedOrtFacilities',
+  ortCampusRatingId: 'ortFacilitiesRatingId',
+  recallsOrtAdvertising: 'recallsOrtAdvertising',
+  isMotherOrGuardianOrtGraduate: 'motherIsOrtGraduate',
+  isFatherOrGuardianOrtGraduate: 'fatherIsOrtGraduate',
+  consideredUniversityIds: 'consideredUniversityIds',
+  otherConsideredUniversities: 'consideredUniversityOthers',
+  higherEducationUniversityIds: 'higherEducationUniversityIds',
+  otherHigherEducationUniversities: 'higherEducationUniversityOthers',
+  ortAdvertisingIds: 'ortAdvertisingIds',
+  ortChoiceReasonIds: 'ortChoiceReasonIds',
+};
 
 @Injectable({
   providedIn: 'root',
@@ -169,51 +211,19 @@ export class EnrollmentsApi {
     );
   }
 
-  public saveInitialSurvey(payload: EnrollmentInitialSurveyPayload): Observable<boolean> {
-    const body = {
-      degreeProgramId: payload.degreeProgramId,
-      admissionProcessId: payload.intakeId,
-      highSchoolTrackId: payload.highSchoolOrientationId,
-      highSchoolYear: payload.highSchoolYear,
-      currentlyInSecondary: payload.currentlyStudiesHighSchool,
-      highSchoolYearRepeatCount: payload.highSchoolYearRepeatCount,
-      repeatsHighSchoolYear: payload.repeatsHighSchoolYear,
-      fatherEducationLevelId: payload.fatherOrGuardianEducationLevelId,
-      motherEducationLevelId: payload.motherOrGuardianEducationLevelId,
-      careerDecisionYearId: payload.degreeProgramDecisionYearId,
-      ortDecisionYearId: payload.ortDecisionYearId,
-      researchedOtherUniversities: payload.researchedOtherUniversities,
-      otherUniversitiesInfoLine1: payload.otherUniversitiesInfoLine1,
-      otherUniversitiesInfoLine2: payload.otherUniversitiesInfoLine2,
-      decisionSupportId: payload.decisionSupportId,
-      secondaryInstitutionId: payload.highSchoolInstitutionId,
-      secondaryInstitutionName: payload.highSchoolInstitutionName,
-      lastSecondaryYearLocationId: payload.finalHighSchoolYearLocationId,
-      previousHigherEducationId: payload.priorHigherEducationStatusId,
-      decisionLevelId: payload.decisionLevelId,
-      hadOrtAdvisory: payload.hadOrtAdvising,
-      ortAdvisoryRatingId: payload.ortAdvisingRatingId,
-      visitedOrtWebsite: payload.visitedOrtWebsite,
-      ortWebsiteRatingId: payload.ortWebsiteRatingId,
-      visitedOrtFacilities: payload.visitedOrtCampus,
-      ortFacilitiesRatingId: payload.ortCampusRatingId,
-      recallsOrtAdvertising: payload.recallsOrtAdvertising,
-      motherIsOrtGraduate: payload.isMotherOrGuardianOrtGraduate,
-      fatherIsOrtGraduate: payload.isFatherOrGuardianOrtGraduate,
-      consideredUniversityIds: payload.consideredUniversityIds,
-      consideredUniversityOthers: payload.otherConsideredUniversities,
-      higherEducationUniversityIds: payload.higherEducationUniversityIds,
-      higherEducationUniversityOthers: payload.otherHigherEducationUniversities,
-      ortAdvertisingIds: payload.ortAdvertisingIds,
-      ortChoiceReasonIds: payload.ortChoiceReasonIds,
-    };
+  /**
+   * Guarda SOLO lo que cambió. El delta lo calcula la facade contra lo último persistido;
+   * acá únicamente se traducen las claves presentes al contrato generado.
+   */
+  public saveInitialSurvey(payload: Partial<EnrollmentInitialSurveyPayload>): Observable<void> {
+    const body: SaveInitialSurveyRequest = {};
+    for (const key of Object.keys(payload) as (keyof EnrollmentInitialSurveyPayload)[]) {
+      Object.assign(body, { [SURVEY_PAYLOAD_TO_WIRE[key]]: payload[key] });
+    }
 
     return this.api
-      .request(postEnrollmentsInitialSurveyEndpoint, {
-        body,
-        showLoader: true,
-      })
-      .pipe(map(() => true));
+      .request(postEnrollmentsInitialSurveyEndpoint, { body })
+      .pipe(map(() => undefined));
   }
 
   public getStudentRegulationAcceptance(): Observable<EnrollmentStudentRegulationAcceptance> {
@@ -302,6 +312,7 @@ export class EnrollmentsApi {
       repeatsHighSchoolYear: survey.repeatsHighSchoolYear ?? null,
       highSchoolYearRepeatCount: survey.highSchoolYearRepeatCount ?? null,
       highSchoolInstitutionId: survey.secondaryInstitutionId ?? null,
+      highSchoolInstitutionStateId: survey.secondaryInstitutionStateId ?? null,
       highSchoolLocationId: survey.lastSecondaryYearLocationId ?? null,
       highSchoolInstitutionName: survey.secondaryInstitutionName ?? null,
       priorHigherEducationStatusId: survey.previousHigherEducationId ?? null,

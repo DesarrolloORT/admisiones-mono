@@ -1,9 +1,5 @@
 import type { EnrollmentConfirmedDetail } from './enrollment-detail';
 
-export type EnrollmentScenario = 'first-time' | 'partial' | 'survey-complete';
-
-export type InitialSurveyStatus = 'not-started' | 'in-progress' | 'complete';
-
 export type SurveySectionId =
   | 'education'
   | 'academic-decision'
@@ -35,6 +31,7 @@ export interface EnrollmentInitialSurvey {
   repeatsHighSchoolYear: boolean | null;
   highSchoolYearRepeatCount: number | null;
   highSchoolInstitutionId: number | null;
+  highSchoolInstitutionStateId: number | null;
   highSchoolLocationId: number | null;
   highSchoolInstitutionName: string | null;
   priorHigherEducationStatusId: number | null;

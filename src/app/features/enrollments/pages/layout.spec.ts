@@ -52,7 +52,7 @@ describe('Layout', () => {
         })
       ),
       registerProductInterest: vi.fn().mockReturnValue(of(true)),
-      saveInitialSurvey: vi.fn().mockReturnValue(of(true)),
+      saveInitialSurvey: vi.fn().mockReturnValue(of('in-progress')),
     };
     TestBed.configureTestingModule({
       imports: [Layout],

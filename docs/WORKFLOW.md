@@ -8,7 +8,7 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 
 ## Flujo de desarrollo diario
 
-1. Crear una rama de trabajo.
+1. Crear la rama de trabajo con `npm run task:start -- <issue>` (ver [Tareas del project y ramas](#tareas-del-project-y-ramas)).
 2. Implementar cambios en `src/` y sus tests `.spec.ts` co-localizados.
 3. Ejecutar validaciones locales:
 
@@ -22,10 +22,59 @@ No define un proceso inmutable para todos los proyectos. Cada repositorio deriva
 
 4. Hacer commit y abrir un pull request.
 
+## Tareas del project y ramas
+
+El tablero [Admisiones](https://github.com/orgs/DesarrolloORT/projects/24) es la fuente de verdad del estado de cada tarea. Las tareas de integracion front son issues de `DesarrolloORT/api-admisiones`, mientras que la rama y el pull request viven en este repositorio.
+
+El ciclo esta automatizado en los dos extremos:
+
+1. `npm run task:start -- 137` crea la rama sobre el head de develop, la pushea, mueve la tarea a `In progress Front` y deja el checkout hecho. Acepta `137`, `api-admisiones#137` o la URL del issue.
+2. Se trabaja y se abre el pull request hacia `v*.*.*/develop`. No hace falta referenciar el issue a mano: la automatizacion se apoya solo en el nombre de la rama.
+3. Al mergear, [`dev-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/dev-test-deploy.yml) despliega a desarrollo y, recien cuando el deploy termino bien, mueve la tarea a `Testing`.
+
+Script: [`scripts/task/task.js`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/scripts/task/task.js). Usa solo built-ins de Node y toma el token de `GITHUB_TOKEN`, con `gh auth token` como fallback local.
+
+### El numero de issue va en el nombre de la rama
+
+`task:start` nombra la rama `v<version>/<tipo>/<issue>-<slug>`, por ejemplo `v1.0.0/feat/137-obtener-las-opciones-del-paso-1`. El tipo sale del prefijo convencional del titulo del issue.
+
+Ese numero al inicio del ultimo tramo no es cosmetico: es el vinculo entre la rama y la tarea, y la unica forma de recuperarla despues del merge. La API de GitHub va de issue a rama (`linkedBranches`) pero no expone el camino inverso, asi que el job de deploy lee el numero del nombre de la rama.
+
+No se usa el "linked branch" nativo de GitHub, el que aparece en la seccion Development del issue. Crearlo requiere `createLinkedBranch`, que modifica el issue y por lo tanto exige permiso de push en `api-admisiones`, donde el equipo de front solo tiene `triage`. Un PAT no puede exceder los permisos de la cuenta que lo emite, asi que no hay token que lo habilite: haria falta que el equipo de backend otorgue write sobre su repositorio, un permiso desproporcionado para ganar un widget en la UI. El vinculo por nombre de rama mas la mencion en el pull request cubren lo mismo en la practica.
+
+Si una rama no abre su ultimo tramo con el numero de issue, el job emite un warning y no mueve nada. El deploy no se ve afectado.
+
+### Token requerido
+
+El movimiento a `Testing` corre dentro de Actions y necesita el secreto de repositorio `PROJECTS_TOKEN`. Debe ser un **fine-grained PAT**, no uno classic, con este minimo:
+
+| Ambito                                  | Permiso                                                                           |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| Resource owner                          | `DesarrolloORT` (no la cuenta personal: hace falta para projects de organizacion) |
+| Repository access                       | Solo `admisiones` y `api-admisiones`                                              |
+| Organization permissions -> Projects    | Read and write                                                                    |
+| Repository permissions -> Issues        | Read-only                                                                         |
+| Repository permissions -> Pull requests | Read-only                                                                         |
+| Repository permissions -> Contents      | Read-only                                                                         |
+| Repository permissions -> Metadata      | Read (obligatorio)                                                                |
+
+Projects tiene que ser read **and** write: el job escribe el campo Status, y con solo lectura puede ver la tarjeta pero no moverla. Sobre el codigo, en cambio, el token nunca escribe: en Actions solo lee el issue en `api-admisiones` y resuelve el pull request desde el sha en `admisiones`.
+
+Un PAT classic no sirve para esto. Ambos repositorios son privados, y en classic la unica forma de leerlos es el scope `repo`, que da control total sobre el codigo incluido push. Los fine-grained separan lectura de escritura; los classic no.
+
+Que el token expire corta la automatizacion en silencio hasta el proximo merge, que falla en rojo en el job `Move task to Testing`. Si la renovacion o la aprobacion del owner se vuelven un tramite recurrente, la alternativa es un GitHub App de la organizacion: mismo minimo de permisos, sin expiracion y sin quedar atado a una persona.
+
+El `GITHUB_TOKEN` por defecto no alcanza: no puede escribir projects a nivel organizacion ni leer issues de `api-admisiones`.
+
+Debe ser un secreto de **repositorio**, no de environment: el job `move_task` no declara `environment`, asi que un secreto de environment resolveria a vacio.
+
+`task:start` no necesita ese secreto: corre local y usa el token del `gh` de cada persona.
+
 ## Convenciones de ramas y PR
 
 - La plantilla incluye soporte para ramas `feature/*`, `fix/*`, `hotfix/*` y `dependabot/*` en PRs hacia `main`.
-- La plantilla incluye automatizacion para ramas con patron `v*.*.*/main`.
+- La plantilla incluye automatizacion para ramas con patron `v*.*.*/main` y `v*.*.*/develop`.
+- Las ramas `v*.*.*/develop` son la integracion diaria: sus PRs corren CI permisivo y cada merge despliega a desarrollo.
 - Si el proyecto conserva ese flujo versionado, los PR a `main` que representen un release deben usar el titulo `release/vX.Y.Z`.
 - Si el proyecto conserva ese flujo versionado, la version declarada en `package.json` y `package-lock.json` debe coincidir con la version del release.
 
@@ -101,6 +150,25 @@ Notas:
 - cualquier otro secreto o variable adicional debe configurarse en el repositorio de la misma manera;
 - se debe crear el proyecto en SonarQube y contar con el runner correspondiente.
 
+### CI para ramas de desarrollo
+
+Archivo: [`.github/workflows/ci-develop.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/ci-develop.yml)
+
+Se dispara al crear un pull request hacia una rama con patron `v*.*.*/develop`.
+
+Es permisivo por diseno: corre `Prepare API contracts` y `CI Checks` con `strict: false`, es decir solo unit tests (`npm run test:ci`) y build. No corre lint, accessibility tests, E2E smoke ni SonarQube.
+
+El gate completo no desaparece: se aplica cuando la rama develop abre su pull request hacia `v*.*.*/main`, que dispara `ci.yml`.
+
+### Modo estricto de `ci-checks.yml`
+
+Archivo: [`.github/workflows/ci-checks.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/ci-checks.yml)
+
+Workflow reutilizable. El input `strict` (booleano, default `true`) controla los checks pesados:
+
+- `strict: true` (default, usado por `ci.yml` y `pr-to-main.yml`): instala Playwright y corre `lint:check`, `test:ci`, build, `test:a11y` y `test:e2e:smoke`.
+- `strict: false` (usado por `ci-develop.yml`): corre solo `test:ci` y build; los demas steps quedan skipped.
+
 ### Despliegue a Produccion
 
 Archivo: [`.github/workflows/cd.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/cd.yml)
@@ -123,17 +191,20 @@ Archivo: [`.github/workflows/dev-test-deploy.yml`](https://github.com/Desarrollo
 
 Disparadores:
 
-- push a ramas `v*.*.*/main`;
-- ejecucion manual.
+- push a ramas `v*.*.*/develop`, es decir cada merge de un pull request a develop;
+- ejecucion manual sobre cualquier rama.
 
-### Despliegue a Preproduccion
+Despliega en el runner `funcionarios-desa` sobre ambiente `desarrollo`. Usa `concurrency: deploy-desa` con `cancel-in-progress`, porque el recurso compartido es el sitio IIS y no la rama: si se mergean dos pull requests seguidos, el deploy viejo se cancela y gana el estado mas nuevo.
 
-Archivo: [`.github/workflows/preprod-test-deploy.yml`](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/.github/workflows/preprod-test-deploy.yml)
+Variable requerida:
 
-Disparadores:
+- `DEV_SERVER_SITE_PATH` (en el environment `desarrollo`). El workflow aborta si esta vacia o si el path no existe en el runner, para no borrar la raiz del disco.
 
-- pull requests a `main`;
-- ejecucion manual.
+Secreto requerido:
+
+- `PROJECTS_TOKEN`, un fine-grained PAT con Projects read/write y lectura de los dos repositorios. Lo usa el job `Move task to Testing`, que corre despues del deploy y mueve la tarea del project a `Testing`. Ver [Tareas del project y ramas](#tareas-del-project-y-ramas).
+
+El job solo corre en merges (`github.event_name == 'push'`) y solo si el deploy salio bien: un deploy manual no cambia el estado de ninguna tarea. Va en un job aparte del deploy, asi que si el secreto falta, desa igual queda actualizado y el fallo aparece acotado a ese job.
 
 ### Release
 

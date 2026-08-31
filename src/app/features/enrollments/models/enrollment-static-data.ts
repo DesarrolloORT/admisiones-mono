@@ -12,8 +12,8 @@ export type PaymentOption = EnrollmentOption & {
 export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
   {
     value: 'bank-account',
-    label: 'Cuenta bancaria',
-    hint: 'Pagá desde tu banco por Sistarbanc',
+    label: 'Pago con banco',
+    hint: 'Desde tu banco por Sistarbanc',
   },
   {
     value: 'personal-account',
@@ -23,12 +23,13 @@ export const PAYMENT_OPTIONS: readonly PaymentOption[] = [
   {
     value: 'banred',
     label: 'Banred',
-    hint: 'Te redirigiremos a la pasarela para completar el pago',
+    hint: 'Mediante la aplicación ingresando tu número de estudiante',
   },
   {
     value: 'geopay',
-    label: 'Geopay',
-    hint: 'Te redirigiremos a la pasarela para completar el pago',
+    label: 'Tarjeta de crédito',
+    hint: 'Podes seleccionar tu tarjeta de crédito dentro de Sistarbanc',
+    badges: ['Mastercard', 'Visa'],
   },
   {
     value: 'abitab',

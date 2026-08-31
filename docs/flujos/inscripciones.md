@@ -68,38 +68,116 @@ guarda primero los cambios de identidad, luego llama a
 `POST /enrollments/confirm-pre-enrollment`. El **paso 3** (Confirmacion /
 pago) llama a `POST /enrollments/start-payment`; el detalle operativo forma parte de esta misma página.
 
-Antes de entrar al paso 2 se consulta `GET /enrollments/initial-survey`.
-Si el usuario no tiene encuesta o la tiene en progreso, se muestran las
-secciones de Educacion, decision academica, experiencia ORT, situacion
-laboral, identidad y reglamento. Si `isEligibleForSurvey === false`, solo
-se muestran identidad y reglamento, salvo en Actualización profesional, donde
-también se pregunta si la inscripción es corporativa. Si la encuesta ya viene
-completa no se muestran secciones de encuesta, con la misma excepción para AP.
+Antes de entrar al paso 2 se consulta `GET /enrollments/initial-survey`. Su campo
+`canAnswerSurvey` (`isEligibleForSurvey` en el contrato de feature) es el **único** dato que
+decide qué se muestra: en `true` se ven Educación, decisión académica, experiencia ORT,
+identidad y reglamento, con lo ya respondido precargado y editable; en `false` solo identidad
+y reglamento. Actualización profesional es la excepción de siempre: muestra situación
+laboral, identidad y reglamento en los dos casos, para preguntar si la inscripción es
+corporativa.
 
 ```mermaid
 flowchart TD
-  A[Propuesta academica] -->|Interés registrado| B{Estado de encuesta}
-  B -->|Pendiente o en progreso| C[Encuesta + identidad + reglamento]
-  B -->|Sin derecho| D[Identidad + reglamento]
-  B -->|Completa| E[Identidad + reglamento]
+  A[Propuesta academica] -->|Interés registrado| B{canAnswerSurvey}
+  B -->|true| C[Encuesta + identidad + reglamento]
+  B -->|false| D[Identidad + reglamento]
   C --> F[Identidad + reglamento]
   D --> F
-  E --> F
+  C -->|Cada cambio de respuestas| N[Guardar delta de encuesta]
+  C -->|Salir del proceso| N
   F --> G[Subir cambios de documento y foto en paralelo]
-  G -->|Ambos OK y encuesta aplicable| H[Guardar encuesta]
-  G -->|Ambos OK y encuesta no aplicable / AP| I
+  G -->|Ambos OK y canAnswerSurvey true| H[Guardar delta de encuesta]
+  G -->|canAnswerSurvey false / AP / sin cambios pendientes| I
   G -->|Error| M[Reabrir identidad sin check]
   H -->|OK| I[Confirmar preinscripcion]
   H -->|Error| K[Mostrar error y permanecer]
   I -->|Confirmada| J[Seleccion de pago]
-  I -->|Error| K[Mostrar error y permanecer]
+  I -->|Error determinístico 400/403/404| K[Mostrar error y permanecer]
+  I -->|Error ambiguo 0/409/5xx| O[Pantalla de espera y salida]
   J --> L[Pago / estado terminal]
 ```
 
 Las cargas de identidad son condicionales: un archivo precargado y no modificado no se
-vuelve a enviar. AP nunca guarda encuesta. Para niveles 1/2, el `POST initial-survey`
-es un upsert parcial que queda `temporal` mientras falten respuestas y pasa a
-`definitivo` cuando la validación sobre lo persistido no encuentra pendientes.
+vuelve a enviar. AP nunca guarda encuesta.
+
+**`canAnswerSurvey` es el único dato que decide todo sobre la encuesta inicial.** Llega en
+`GET /enrollments/initial-survey` y es por persona:
+
+- `true`: los campos de encuesta se muestran editables (con lo respondido precargado, incluso
+  si el backend marca la encuesta como completa) y se guarda siempre que haya algo nuevo.
+- `false`: ya la respondió. El paso 2 muestra **solo** verificación de identidad y reglamento,
+  y no se llama al `POST initial-survey` desde ningún lugar.
+
+El estado de carga fallida (`GET` caído) se trata como "no sabemos": pantalla de error con
+reintento y nunca un POST a ciegas.
+
+### Hidratación de la encuesta
+
+`details` y `initial-survey` son resolvers de la misma ruta: corren en paralelo y los dos
+están resueltos antes de que exista la página, así que entre ellos no hay orden. `details` no
+aporta nada a la encuesta (solo Paso 1 y pago).
+
+El orden que sí importa es encuesta vs. **catálogos**: la encuesta trae ids y los catálogos que
+les dan sentido se piden recién al activarse el paso 2. Reglas:
+
+- **La encuesta se parchea UNA sola vez**, al derivar el estado inicial, con los catálogos
+  todavía vacíos. No hay un segundo parcheo: nada puede pisar lo que el usuario respondió
+  mientras los catálogos cargaban.
+- **Ninguna limpieza dependiente de catálogo corre sin ese catálogo cargado.** "No hay
+  opciones" no significa "la opción dejó de existir": con el catálogo vacío la orientación (y
+  cualquier valor equivalente) se conserva tal cual llegó del backend. La limpieza vuelve a
+  aplicar en cuanto el catálogo está, y también cuando el catálogo falla el valor se conserva.
+- El snapshot de "lo último que el backend confirmó" se toma justo después de ese parcheo
+  único, así que el primer delta no reenvía nada que el backend ya tenga.
+- Los selects reciben su valor antes que sus opciones. `ResponsiveSelect` proyecta su propio
+  `ort-select-trigger` derivado de `selectedOptions()` porque el trigger interno de
+  `ort-select` recorre las `ort-option` proyectadas y esa lista no es reactiva: sin trigger
+  propio, un valor escrito antes que las opciones deja el campo visualmente vacío en desktop.
+
+Para niveles 1/2 el `POST initial-survey` es un **upsert parcial de las claves que manda el
+front**: una clave ausente significa "sin cambios" y una clave presente en `null` significa
+"borrar". El front nunca manda la encuesta entera: manda el delta contra lo último que el
+backend confirmó (ver `## Payload de encuesta inicial`).
+
+Los valores "sin responder" viajan como `null`, nunca como el valor por defecto del control.
+Un campo cuyo payload no pueda expresar "sin responder" queda atrapado: si su valor vacío
+coincide con una respuesta válida (el caso de `currentlyInSecondary` con `false`), responder
+esa opción no produce delta, el backend nunca se entera y al volver el campo aparece vacío.
+
+Momentos de guardado, todos con `canAnswerSurvey` en `true` y ninguno bloqueante:
+
+1. **En el momento en que una sección de respuestas queda completa** (Educación, Decisión
+   académica, Experiencia ORT): el mismo instante en que el accordion muestra el check, sin
+   pulsar Continuar. Con el check ya puesto, **cada cambio posterior en esa sección vuelve a
+   guardar**. Una sección incompleta no postea. Identidad y reglamento no aportan campos de
+   encuesta, y `work-situation` es solo de AP.
+2. **Al pulsar Continuar** en una sección: reintento de lo que quedó pendiente por un guardado
+   fallido. Con todo guardado el delta está vacío y no hay request.
+3. **Al cerrar el paso 2** (Continuar de la última sección), antes de confirmar la
+   preinscripción.
+4. **Al salir** del paso 2. Salir no pide confirmación: el guardado sale al vuelo, no bloquea
+   la navegación y un fallo no muestra error. Es el único momento que rescata lo respondido en
+   una sección que todavía no quedó completa, porque el guardado por sección solo dispara con
+   la sección válida.
+
+En los cuatro casos, si no hay cambios pendientes no hay request. **No hay ningún guardado
+disparado por un timer.** El guardado es oportunista: corre en segundo plano sin loader y un
+fallo no muestra error, porque el cambio queda pendiente y viaja en el intento siguiente. Los
+POST no se solapan: mientras uno está en vuelo los disparos nuevos se descartan y su cambio
+entra en el delta siguiente (`exhaustMap`, nunca `switchMap`: cancelar un POST deja el
+servidor en estado desconocido).
+
+Los cuatro campos de **escritura libre** de la encuesta —"¿Cuál?" de universidad de educación
+superior, "¿Cuál?" de universidad consultada, institución educativa cuando la secundaria fue en
+el exterior y "¿Cuántas veces?" de recursado— usan `updateOn: 'blur'`: actualizan el form al
+salir del campo, no por tecla, así que escribir no dispara un POST por letra. La contracara es
+que el check de la sección y el error de esos campos también aparecen al salir del campo.
+
+> **Techo asumido:** no hay borrador local. Lo respondido en una sección que todavía no quedó
+> completa se pierde si el usuario recarga o cierra la pestaña sin usar "Salir". Persistir el
+> **delta pendiente** en `sessionStorage` (keyed por `idProducto`+`idProceso`, borrado al
+> confirmar el POST y en logout) es la forma barata de cerrarlo si algún día hace falta; se
+> descartó por ahora porque el dato está a la vista y son datos personales.
 
 ## Intención de entrada × estado × encuesta
 
@@ -118,7 +196,8 @@ matriz es su lectura de negocio.
   llegar con producto y proceso válidos **ya prueba que la inscripción existe**, así
   que el interés está registrado y el **Paso 1 nunca se muestra**. Al hacer clic en
   "Continuar inscripción", la tarjeta guarda sus `offeringIds` y `enrollmentIds` en
-  `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel`. El Paso 1 queda precargado y
+  `sessionStorage`; la URL conserva producto, proceso, `estado` y `nivel` (el `estado`, solo
+  hasta el primer avance). El Paso 1 queda precargado y
   deshabilitado (no se vuelve a enviar `POST /enrollments/product-interest`) y el flujo arranca en el Paso
   2 o en la pantalla que corresponda al estado.
 
@@ -170,6 +249,19 @@ matriz es su lectura de negocio.
   Los pasos no están en la URL, así que la flecha del navegador no vuelve un paso: sale
   del flujo, y al reingresar el estado se vuelve a derivar del backend.
 
+  **La URL identifica la inscripción, no su estado.** Como el paso no viaja en la URL,
+  recargar re-deriva todo, y los params de entrada son una foto del panel: `estado` y
+  `modo` describen la inscripción tal como estaba al entrar. En cuanto el flujo avanza esa
+  foto queda vieja, así que el primer avance reescribe la URL (`replaceUrl`) con
+  `idProducto`, `idProceso`, `idOferta` y `nivel`, y **sin** `estado` ni `modo`. Sin esa
+  reescritura, recargar en el Paso 3 volvía al Paso 2 —con `estado=En proceso` el Detalle
+  ya no encuentra ese estado (404) y el flujo cae en su fallback— y ahí "Continuar"
+  reintentaba `POST /enrollments/confirm-pre-enrollment` sobre una preinscripción ya
+  confirmada: `400` sin salida. En una inscripción nueva pasaba lo mismo por el otro lado:
+  sin params, la recarga volvía al Paso 1 con el interés ya registrado. Se reescribe una
+  sola vez por entrada y solo si algo cambia, porque el router usa
+  `onSameUrlNavigation: 'reload'` y navegar a la misma URL recargaría la ruta.
+
 - **Reactivar** (`/inscripciones?idProducto=X&idProceso=Y&modo=reactivar`): el botón
   del dashboard hace `POST /enrollments/reactivate` con **todas** las anotaciones de
   la tarjeta en `enrollmentIds` (una en niveles 1/2; una por seminario en los paquetes
@@ -201,7 +293,10 @@ front lo manda siempre que lo conoce, pero el param sigue siendo opcional: un li
 viejo sin `estado` se llama sin `status` y el backend resuelve como antes. El frontend
 lo propaga por el query param `estado` en la URL de `/inscripciones` (mismo mecanismo
 que `idProducto`/`idProceso`/`modo`), leído por `enrollmentDetailResolver` y por
-`EnrollmentPaymentFacade` al retomar el pago desde el panel.
+`EnrollmentPaymentFacade` al retomar el pago desde el panel. Es un disambiguador de **un
+solo uso**: describe el estado con el que se entró, así que el primer avance del flujo lo
+saca de la URL (ver "El flujo solo avanza") y desde ahí el Detalle se consulta sin
+`status`.
 
 `nivel` viaja por el mismo mecanismo y con la misma regla de opcionalidad: es el
 `productLevelId` que ya devuelve `GET /person/enrollments`, y existe para que el
@@ -243,20 +338,20 @@ Excepciones que si limpian valores:
 
 ## Matriz de campos condicionales
 
-| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                 | Payload si no aplica                             |
-| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------------ |
-| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido               | Conserva valor crudo                | `highSchoolYear = null`                          |
-| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes | Limpia si la opcion deja de existir | `highSchoolOrientationId = null`                 |
-| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0      | Conserva valor crudo                | `highSchoolYearRepeatCount = null`               |
-| `highSchoolLocation = 1`                | Departamento e institucion como selects | Ambos requeridos        | Limpia solo una opcion inexistente  | Institucion libre en `highSchoolInstitutionName` |
-| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior      | `highSchoolInstitutionId = null`                 |
-| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida     | Conserva valor crudo                | `higherEducationUniversityIds = null`            |
-| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                | Lista de otros `null`                            |
-| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido         | Conserva valor crudo                | Egresado ORT `null`                              |
-| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida     | Conserva valor crudo                | Ids y otros `null`                               |
-| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                | Valoracion o medios `null`                       |
-| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido      | No se envia                         | Solo controla validez de UI                      |
-| `paymentMethod = bank-account`          | `bank`                                  | Requerido               | Se limpia al elegir otro metodo     | Se envía como `sistarbancBankId`                 |
+| Condicion                               | Campo afectado                          | Validacion visible      | Limpieza al cambiar                                                     | Payload si no aplica                             |
+| --------------------------------------- | --------------------------------------- | ----------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| `studiesHighSchool = studying`          | `highSchoolYear`                        | Requerido               | Conserva valor crudo                                                    | `highSchoolYear = null`                          |
+| Año con orientaciones                   | `orientation`                           | Segun opciones vigentes | Limpia si la opcion deja de existir                                     | `highSchoolOrientationId = null`                 |
+| `repeatsHighSchoolYear = yes`           | `highSchoolYearRepeatCount`             | Entero mayor que 0      | Conserva valor crudo                                                    | `highSchoolYearRepeatCount = null`               |
+| `highSchoolLocation = 1`                | Departamento e institucion como selects | Ambos requeridos        | Limpia una opcion inexistente solo si el usuario cambio el departamento | Institucion libre en `highSchoolInstitutionName` |
+| `highSchoolLocation != 1`               | Institucion como texto libre            | Texto requerido         | Puede conservar el id anterior                                          | `highSchoolInstitutionId = null`                 |
+| `higherEducationStatus = 1`             | `higherEducationUniversities`           | Seleccion requerida     | Conserva valor crudo                                                    | `higherEducationUniversityIds = null`            |
+| Universidad seleccionada incluye `0`    | Campo de universidad "Otro"             | Texto requerido         | Conserva valor crudo                                                    | Lista de otros `null`                            |
+| Formacion de madre o padre es `5` o `6` | `motherOrtDegree` o `fatherOrtDegree`   | Si/no requerido         | Conserva valor crudo                                                    | Egresado ORT `null`                              |
+| `otherUniversities = yes`               | `researchedUniversities`                | Seleccion requerida     | Conserva valor crudo                                                    | Ids y otros `null`                               |
+| Experiencia ORT = `yes`                 | Rating o medios correspondiente         | Requerido               | Conserva valor crudo                                                    | Valoracion o medios `null`                       |
+| Identidad completa desde backend        | `isIdentityCorrect`                     | Checkbox requerido      | No se envia                                                             | Solo controla validez de UI                      |
+| `paymentMethod = bank-account`          | `bank`                                  | Requerido               | Se limpia al elegir otro metodo                                         | Se envía como `sistarbancBankId`                 |
 
 Las referencias Figma se agregan a esta matriz cuando diseño entrega una URL
 verificada al nodo exacto. No se publican enlaces generales ni placeholders.
@@ -442,11 +537,10 @@ Actualización profesional con más de una anotación.
 
 ### Paso 2 AP reducido
 
-`getVisibleSections(scenario, isProfessionalUpdate)` filtra por
-intersección con `PROFESSIONAL_UPDATE_SURVEY_SECTIONS`
-(`work-situation`, `identity`, `regulation`). Las tres se muestran siempre
-para AP, incluso sin derecho a encuesta o con una encuesta completa, para
-preguntar en todos los casos si la inscripción es corporativa. Un clamp en
+`getVisibleSections(canAnswerSurvey, isProfessionalUpdate)` devuelve
+`PROFESSIONAL_UPDATE_SURVEY_SECTIONS` (`work-situation`, `identity`, `regulation`)
+sin mirar `canAnswerSurvey`: las tres se muestran siempre para AP, para preguntar
+en todos los casos si la inscripción es corporativa. Un clamp en
 `EnrollmentSurveyFacade` reposiciona la sección activa si dejó de ser visible o
 cambió la primera sección aplicable.
 
@@ -456,8 +550,8 @@ selección es obligatoria y se representa como `isCorporate`: título personal e
 `false` y corporativa es `true`. Los tipos 1/2 no ven la sección y envían
 `isCorporate = false`.
 
-**AP no envía `POST /enrollments/initial-survey`** (ni al cerrar el paso 2 ni
-al guardar y salir: guard en `savePartial`). `isCorporate` se envía únicamente en
+**AP no envía `POST /enrollments/initial-survey`** (guard en `savePartial`, que
+solo corre al cerrar el paso 2). `isCorporate` se envía únicamente en
 `POST /enrollments/confirm-pre-enrollment`. Una inscripción personal continúa al paso 3; una
 corporativa termina en la pantalla "Inscripción corporativa pendiente" y espera
 que la empresa acredite el pago.
@@ -557,7 +651,15 @@ anterior no existe, se envia `highSchoolOrientationId = null`.
 cantidad puede quedar cruda en el form pero el backend recibe
 `highSchoolYearRepeatCount = null`.
 `highSchoolLocation` decide el control de institucion educativa. Con valor `1`
-(Uruguay) se muestran `state` e `educationalInstitution` como select; el
+(Uruguay) se muestran `state` e `educationalInstitution` como select, ambos requeridos.
+**El departamento no se guarda en la encuesta**: el backend lo deriva de la institucion
+elegida y lo devuelve de solo lectura en `secondaryInstitutionStateId` (contrato v11), que
+es lo que permite precargar el combo al retomar y con ese valor pedir
+`GET /catalogs/institutions?countryId=1&stateId=<state>`. Viene `null` si la secundaria fue
+en el exterior, si todavia no hay institucion elegida, o si la institucion no tiene
+departamento cargado; en ese ultimo caso el usuario tiene que volver a elegirlo.
+Al hidratar, una institucion que no aparezca en el catalogo de su departamento **se
+conserva**: solo se limpia cuando el departamento lo cambia el usuario. El
 backend recibe `finalHighSchoolYearLocationId = 1`,
 `highSchoolInstitutionId = Number(educationalInstitution)` y
 `highSchoolInstitutionName = null`. Con valor `2` (exterior)
@@ -644,10 +746,37 @@ solo si el usuario lo marca.
 
 ## Payload de encuesta inicial
 
-Se envia con `POST /enrollments/initial-survey` al cerrar el paso 2, despues de
-guardar correctamente los cambios de identidad y antes de confirmar la
-preinscripcion, siempre que el usuario tenga derecho a encuesta. Todos los campos
-envian `null` cuando no aplican.
+Se envía con `POST /enrollments/initial-survey` en los tres momentos listados arriba, y
+**solo con las claves que cambiaron**.
+
+Cómo se sabe qué cambió (`diffInitialSurveyPayload` en `models/enrollment-flow-mappers.ts`):
+
+- La facade guarda un **snapshot de lo último que el backend confirmó**, construido con el
+  mismo `buildInitialSurveyPayload` que arma el envío. Se toma al aplicar el estado inicial
+  del flujo: para una encuesta prellenada, justo después de parchear los formularios con los
+  datos del backend, así lo que vino de backend no cuenta como cambio del usuario.
+- Antes de cada envío se compara el payload actual contra el snapshot, clave por clave
+  (arrays por contenido y orden; nunca por _truthiness_, porque `0` y `false` son respuestas
+  válidas distintas de `null`). Si el delta es vacío, no hay request.
+- El snapshot **solo avanza con la confirmación del backend**, y solo con las claves
+  enviadas. Un POST fallido deja el cambio pendiente y vuelve en el delta siguiente; un
+  cambio hecho mientras hay un POST en vuelo tampoco se pierde (el trigger se descarta, no
+  el dato).
+- No se usa el `dirty` de los controles: hay claves del payload que agregan varios controles
+  y el prellenado con `patchValue` ensucia todo el formulario.
+
+Semántica en el backend: **clave ausente = sin cambios**, **clave presente en `null` =
+borrar**. Por eso el delta incluye los `null` (el usuario desmarcó una opción, o un
+validador condicional vació el campo dependiente).
+
+El adapter traduce las claves de feature a las del wire con la tabla
+`SURVEY_PAYLOAD_TO_WIRE` (`api/enrollments.api.ts`), que es la fuente única del renombrado
+(`intakeId` → `admissionProcessId`, `highSchoolOrientationId` → `highSchoolTrackId`,
+`currentlyStudiesHighSchool` → `currentlyInSecondary`, `finalHighSchoolYearLocationId` →
+`lastSecondaryYearLocationId`, `visitedOrtCampus` → `visitedOrtFacilities`, entre otros) y
+chequea en compilación los dos lados contra `SaveInitialSurveyRequest`. La lista de abajo
+usa los nombres **de feature** (`EnrollmentInitialSurveyPayload`) y describe cómo se calcula
+cada valor a partir de los formularios.
 
 - `degreeProgramId`: `Number(degreeProgram)`.
 - `intakeId`: `Number(intake)`.
@@ -685,10 +814,19 @@ envian `null` cuando no aplican.
 
 ### Persistencia y finalización de la encuesta
 
-El derecho a encuesta es por documento, no por inscripción. `GET initial-survey`
-devuelve `canAnswerSurvey = false` si la persona ya figura como Fresco, tiene la
-encuesta histórica o tiene una encuesta de admisión completa. En ese caso el POST
-queda además protegido por `INS_EI_56`/403.
+`canAnswerSurvey` es por documento, no por inscripción. `GET initial-survey` lo devuelve en
+`false` si la persona ya figura como Fresco, tiene la encuesta histórica o tiene una encuesta
+de admisión completa.
+
+El front **no interpreta ningún otro dato** para decidir: no mira el `status` de la respuesta
+del POST, ni el flag `complete` de la encuesta, ni el estado de la preinscripción. Mientras
+`canAnswerSurvey` sea `true` los campos siguen editables y cada cambio se guarda; en cuanto
+es `false`, el paso 2 queda en identidad + reglamento y no hay más POST. Una encuesta que el
+backend marca completa pero con `canAnswerSurvey = true` se muestra precargada y editable.
+
+Si `GET initial-survey` falla (`load-failed`), el valor es desconocido y se trata como
+`false`: no se postea a ciegas. El reintento manual de la pantalla de error vuelve a
+consultarlo.
 
 Cada guardado valida opciones fijas y catálogos dinámicos, resuelve producto/proceso
 contra el interés activo y actualiza la encuesta y sus listas hijas en una sola
@@ -712,8 +850,9 @@ Orden de cierre:
 
 1. En paralelo, `POST /person/identity-document` si se toco frente/dorso o cambio
    el vencimiento, y `POST /person/photo` si se toco la selfie.
-2. `POST /enrollments/initial-survey`, solo si las cargas de identidad
-   requeridas terminaron correctamente y la persona tiene derecho a encuesta.
+2. `POST /enrollments/initial-survey` con el delta pendiente, solo si las cargas de
+   identidad requeridas terminaron correctamente y `canAnswerSurvey` es `true`. Se **omite**
+   si los guardados por sección ya persistieron todo (delta vacío).
 3. `POST /enrollments/confirm-pre-enrollment` con:
 
 ```json
@@ -755,16 +894,63 @@ avanza al paso de pago. Si Documento o Foto falla por HTTP,
 se conserva la seleccion de archivos y se reactiva Verificacion de identidad sin
 el check de completada.
 
-### "Guardar y salir" no vuelve a postear la encuesta ya confirmada
+### Fallo ambiguo de la confirmación
 
-`EnrollmentSurveyFacade.savePartial()` (usado tanto al cerrar el paso 2 como
-al confirmar el modal "¿Querés salir de la inscripción?") solo llama a
+`confirm-pre-enrollment` no lleva clave de idempotencia y llama APIs externas, así que
+un `0` (red/timeout), `409` o `5xx` deja el resultado **indeterminado**: la inscripción
+pudo haber quedado creada. En ese caso el front no ofrece reintentar: cierra el flujo en
+la pantalla terminal "Inscripción en proceso", con un único enlace a `/inicio`. Ahí se
+muestra el copy genérico incluso en AP corporativa, porque el copy corporativo
+("tu empresa deberá enviar la solicitud…") daría por hecha una inscripción que quizá no
+existe.
+
+Un error determinístico (`400`, `403`, `404`) mantiene el error inline en el paso 2 con
+la opción de reintentar.
+
+### Salir del flujo nunca se bloquea
+
+El modal "¿Querés salir de la inscripción?" dispara el guardado del delta pendiente y
+**navega sin esperar la respuesta**: la salida no puede fallar ni mostrar error. El POST va
+adrede sin `takeUntilDestroyed`, porque navegar destruye el componente y cancelaría la
+peticiòn en vuelo.
+
+Solo se guarda **desde el paso 2** (`currentStep() === 'survey'`): fuera de él los
+formularios de encuesta no se editan, y como el POST es un upsert de las claves que manda el
+front, salir desde el paso 1 con los formularios vírgenes mandaría `null` en todo y borraría
+respuestas previas.
+
+Historia: antes de esto la salida intentaba guardar **y esperaba**, y el fallo típico —403
+porque el backend ya había marcado la encuesta `definitivo`— dejaba al usuario **encerrado en
+el flujo** con "No se pudo guardar la encuesta. Intentá nuevamente.". El guardado al salir
+volvió, pero nunca vuelve a bloquear.
+
+`EnrollmentSurveyFacade.savePartial()` (usado por el guardado al completar una sección, por el
+Continuar, por el cierre del paso 2 y por la salida) llama a `POST /enrollments/initial-survey` solo si `canAnswerSurvey`
+es `true`, no es AP y el delta no está vacío.
+
+### El guard de `savePartial()`
+
+`EnrollmentSurveyFacade.savePartial()` es el **único** punto que persiste la
+encuesta, y corre solo al cerrar el paso 2 (`finishSurveyStep`). Llama a
 `POST /enrollments/initial-survey` si la persona tiene derecho a encuesta, no
 es AP, **y** `EnrollmentProcessStore.preEnrollmentResponse` sigue en `null`.
 Una vez que `confirmPreEnrollment` respondio con éxito (paso 3, pago) ese
 signal deja de ser `null` y `savePartial()` retorna `true` sin llamar al
 backend: la encuesta ya quedo guardada como parte de la confirmacion y
-reintentar el POST no aporta nada, solo puede fallar y bloquear la salida.
+reintentar el POST no aporta nada, solo puede fallar.
+
+### Salir del flujo no confirma ni guarda
+
+La X del header y "Salir del proceso" del rail emiten `closeFlow`, que llama a
+`EnrollmentProcessFacade.exit()`: navega a `/inicio` y nada más. No hay diálogo
+de confirmación intermedio y no se dispara ningún POST, así que la salida nunca
+puede fallar ni dejar a la persona encerrada en el flujo. Mismo comportamiento
+que el flujo de becas, que ya salía directo.
+
+Contrapartida asumida: como el avance solo se persiste al cerrar el paso 2, lo
+que quede a medio completar al salir se pierde. Lo ya confirmado en pasos
+cerrados no se toca. No hay guard `CanDeactivate` ni `beforeunload`: el botón
+atrás del browser y F5 salen igual que el botón.
 
 ## Paso 3: pago
 
@@ -813,6 +999,11 @@ Mapping adapter:
 
 `tarjeta-credito` no queda como método activo hasta que el backend confirme un
 `tipoPago` propio o su mapeo dentro de Sistarbanc.
+
+`personal-account` solo se ofrece si la seña es positiva y el saldo de cuenta
+corriente (`currentAccount.currentBalance` de `/enrollments/details` o de la
+preinscripción) es distinto de `0`. Con saldo `0` la opción se oculta; con saldo
+informado pero menor a la seña se muestra deshabilitada.
 
 Comportamiento servidor:
 
@@ -863,6 +1054,11 @@ ni un `confirmed.firstSemesterSubjects` único. El adapter arma
 en `EnrollmentConfirmedDetail.enrollments`;
 `EnrollmentPaymentFacade.subjects()` lista las materias de **todos** los seminarios
 sin repetir las compartidas.
+
+El listado de la pantalla de éxito arranca recortado a 4 materias (`visibleSubjects()`)
+con el botón "Ver todas las materias", pero el contador del título usa siempre el total
+de `subjects()`: al desplegar el listado el número no cambia, solo aparecen las materias
+que faltaban.
 
 ## Estados frontend
 
@@ -965,7 +1161,9 @@ paso editable y usa un mensaje recuperable. Los códigos estables para diagnóst
 
 Resumen operativo de reintentos:
 
-- encuesta e identidad son upserts y admiten repetir el mismo contenido;
+- identidad es un upsert y admite repetir el mismo contenido; la encuesta también, y el
+  reintento sale gratis del delta: un POST fallido no avanza el snapshot, así que el cambio
+  vuelve a viajar en el intento siguiente (próxima edición, Continuar o salir del paso 2);
 - interés y reserva Abitab/Paganza rechazan el duplicado con 409;
 - confirmación, reactivación, cuenta personal y generación de URL no envían una clave
   de idempotencia: ante resultado incierto, releer estado antes de reintentar;

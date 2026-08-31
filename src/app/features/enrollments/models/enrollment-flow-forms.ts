@@ -71,19 +71,26 @@ export function createEnrollmentForms() {
         nonNullable: true,
         validators: Validators.required,
       }),
-      highSchoolYearRepeatCount: new FormControl<number | null>(null),
+      // Los campos de escritura libre de la encuesta (este, `educationalInstitution` en el
+      // exterior, `otherHigherEducationUniversity` y `otherResearchedUniversity`) actualizan al
+      // salir del campo: el guardado se dispara con la seccion completa, y por tecla mandaria
+      // un POST por letra. El check y el error de estos campos tambien llegan al blur.
+      highSchoolYearRepeatCount: new FormControl<number | null>(null, { updateOn: 'blur' }),
       highSchoolLocation: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
       state: new FormControl('', { nonNullable: true }),
-      educationalInstitution: new FormControl('', { nonNullable: true }),
+      educationalInstitution: new FormControl('', { nonNullable: true, updateOn: 'blur' }),
       higherEducationStatus: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
       }),
       higherEducationUniversities: new FormControl<string[]>([], { nonNullable: true }),
-      otherHigherEducationUniversity: new FormControl('', { nonNullable: true }),
+      otherHigherEducationUniversity: new FormControl('', {
+        nonNullable: true,
+        updateOn: 'blur',
+      }),
       motherEducation: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,
@@ -110,7 +117,7 @@ export function createEnrollmentForms() {
         validators: Validators.required,
       }),
       researchedUniversities: new FormControl<string[]>([], { nonNullable: true }),
-      otherResearchedUniversity: new FormControl('', { nonNullable: true }),
+      otherResearchedUniversity: new FormControl('', { nonNullable: true, updateOn: 'blur' }),
       decisionCertainty: new FormControl('', {
         nonNullable: true,
         validators: Validators.required,

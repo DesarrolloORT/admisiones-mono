@@ -2,6 +2,7 @@ import {
   findCountryByIso2,
   getIso2Codes,
   isValidIso2Code,
+  OrtPhoneCountry,
   OrtPhoneInputValue,
 } from '@desarrolloort/components';
 
@@ -28,6 +29,23 @@ export interface StoredPhoneNumber {
 
 /** Los telefonos guardados antes de la migracion no traen pais y casi todos son uruguayos. */
 export const PHONE_FALLBACK_ISO2 = 'UY';
+
+const URUGUAY_ISO2 = 'UY';
+const URUGUAY_NATIONAL_DIGITS = 8;
+const E164_MAX_DIGITS = 15;
+
+/**
+ * Digitos que admite el campo numerico de `ort-phone-input` segun el pais elegido. Solo
+ * Uruguay tiene una longitud fija conocida; para el resto se devuelve el techo de E.164 que
+ * el componente ya aplica al recortar `numberE164`, asi el largo real lo decide el pais.
+ */
+export function phoneMaxDigits(country: OrtPhoneCountry | null | undefined): number {
+  if (country?.iso2 === URUGUAY_ISO2) {
+    return URUGUAY_NATIONAL_DIGITS;
+  }
+
+  return E164_MAX_DIGITS - String(country?.prefix ?? '').length;
+}
 
 export function toBackendPhone(value: OrtPhoneInputValue | null): PhoneNumberValue {
   return {

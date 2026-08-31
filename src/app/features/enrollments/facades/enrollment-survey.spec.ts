@@ -49,7 +49,7 @@ describe('EnrollmentSurveyFacade', () => {
 
   beforeEach(() => {
     payment.outcome.set(null);
-    saveInitialSurvey.mockReset().mockReturnValue(of(true));
+    saveInitialSurvey.mockReset().mockReturnValue(of(undefined));
     confirmPreEnrollment.mockReset().mockReturnValue(
       of({
         confirmed: true,
@@ -86,6 +86,24 @@ describe('EnrollmentSurveyFacade', () => {
     expect(survey.activeSection()).toBe('academic-decision');
   });
 
+  // `canAnswerSurvey` manda sobre el estado de la encuesta: aunque el backend la marque
+  // completa, con derecho a responderla los campos siguen visibles y editables.
+  it('keeps the survey editable when the backend marks it complete', () => {
+    const { survey } = createFacade(
+      createSurveyResponse({ survey: createInitialSurvey({ complete: true }) })
+    );
+
+    expect(survey.canAnswerSurvey()).toBe(true);
+    expect(survey.visibleSections()).toEqual([
+      'education',
+      'academic-decision',
+      'ort-experience',
+      'identity',
+      'regulation',
+    ]);
+    expect(survey.activeSection()).toBe('education');
+  });
+
   it('keeps only identity and regulation when the survey is not required', async () => {
     const { survey } = createFacade({
       isEligibleForSurvey: false,
@@ -99,7 +117,7 @@ describe('EnrollmentSurveyFacade', () => {
     });
 
     expect(survey.visibleSections()).toEqual(['identity', 'regulation']);
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
@@ -142,7 +160,7 @@ describe('EnrollmentSurveyFacade', () => {
     const { survey, forms } = createFacade(createSurveyResponse(), {}, AP_CAREERS);
     forms.forms.academicForm.controls.proposalType.setValue('3');
 
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
   });
 
@@ -427,7 +445,7 @@ describe('EnrollmentSurveyFacade', () => {
     });
   });
 
-  it('waits for document and photo before saving the survey and confirming', () => {
+  it('waits for document and photo before confirming the pre-enrollment', () => {
     const documentResult = new Subject<boolean>();
     const photoResult = new Subject<boolean>();
     uploadIdentityDocument.mockReturnValue(documentResult);
@@ -438,29 +456,42 @@ describe('EnrollmentSurveyFacade', () => {
 
     expect(uploadIdentityDocument).toHaveBeenCalledOnce();
     expect(uploadIdentityPhoto).toHaveBeenCalledOnce();
-    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).not.toHaveBeenCalled();
 
     documentResult.next(true);
     documentResult.complete();
-    expect(saveInitialSurvey).not.toHaveBeenCalled();
+    expect(confirmPreEnrollment).not.toHaveBeenCalled();
 
     photoResult.next(true);
     photoResult.complete();
 
-    expect(saveInitialSurvey).toHaveBeenCalledOnce();
+    // La encuesta no se vuelve a postear: el guardado por check ya la persistió completa.
+    expect(saveInitialSurvey).not.toHaveBeenCalled();
     expect(confirmPreEnrollment).toHaveBeenCalledOnce();
     expect(process.flow.currentStep()).toBe('payment');
   });
 
-  it('does not re-save the survey when exiting after pre-enrollment was already confirmed', async () => {
+  it('does not post again when nothing changed since the last save', async () => {
     const { survey } = prepareFinalizableSurvey();
 
     survey.continue();
-    expect(saveInitialSurvey).toHaveBeenCalledOnce();
-    saveInitialSurvey.mockClear();
+    expect(confirmPreEnrollment).toHaveBeenCalledOnce();
 
-    await expect(firstValueFrom(survey.savePartial())).resolves.toBe(true);
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
     expect(saveInitialSurvey).not.toHaveBeenCalled();
+  });
+
+  // `canAnswerSurvey` es el único gate: con derecho a responderla se guarda siempre, incluso
+  // después de que la preinscripción quedó confirmada.
+  it('keeps saving edits after the pre-enrollment was confirmed', async () => {
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+    saveInitialSurvey.mockClear();
+    survey.educationForm.controls.motherEducation.setValue('6');
+
+    await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
+    expect(saveInitialSurvey).toHaveBeenCalledWith({ motherOrGuardianEducationLevelId: 6 });
   });
 
   it.each([
@@ -527,11 +558,8 @@ describe('EnrollmentSurveyFacade', () => {
     }
   );
 
-  it.each([
-    { failure: 'data false', result: of(false) },
-    { failure: 'HTTP 400', result: throwError(() => ({ status: 400 })) },
-  ])('does not confirm when the final survey save returns $failure', ({ result }) => {
-    saveInitialSurvey.mockReturnValue(result);
+  it('does not confirm when the final survey save fails', () => {
+    saveInitialSurvey.mockReturnValue(throwError(() => ({ status: 400 })));
     const { survey, process } = prepareFinalizableSurvey();
 
     survey.continue();
@@ -601,6 +629,154 @@ describe('EnrollmentSurveyFacade', () => {
 
     expect(process.flow.currentStep()).toBe('survey');
     expect(payment.outcome()).toBe('enrollment-in-progress');
+  });
+
+  // La encuesta se hidrata UNA sola vez, con los catálogos todavía vacíos: ningún catálogo
+  // que llegue después puede borrar lo que trajo el backend ni pisar al usuario.
+  it('keeps the answered orientation when the survey catalogs arrive late', () => {
+    const catalogs$ = new Subject<unknown>();
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: true,
+          highSchoolYearId: 11,
+          highSchoolOrientationId: 20,
+        }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => catalogs$ }
+    );
+    TestBed.tick();
+
+    // Sin catálogo todavía: el valor prellenado sobrevive.
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+
+    catalogs$.next({
+      education: {
+        lastSecondaryYearLocations: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
+        highSchoolYears: [
+          {
+            id: 11,
+            label: '2 EMS',
+            baccalaureates: [{ id: 20, label: 'Bachillerato A', orientation: 'Cientifico' }],
+          },
+        ],
+      },
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
+      },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
+    });
+    catalogs$.complete();
+
+    expect(survey.options.orientationOptions()).toEqual([{ value: '20', label: 'Cientifico' }]);
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+  });
+
+  it('keeps the answered orientation when the survey catalogs fail', () => {
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: true,
+          highSchoolYearId: 11,
+          highSchoolOrientationId: 20,
+        }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => throwError(() => new Error('network error')) }
+    );
+    TestBed.tick();
+
+    expect(survey.catalogError()).toBe('No se pudieron cargar los catálogos de encuesta inicial.');
+    expect(survey.educationForm.controls.orientation.value).toBe('20');
+  });
+
+  it('does not overwrite an answer the user changed while the catalogs were loading', () => {
+    const catalogs$ = new Subject<unknown>();
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({ activeSection: 'education', repeatsHighSchoolYear: false }),
+      }),
+      {},
+      [],
+      { getInitialSurveyCatalogs: () => catalogs$ }
+    );
+    TestBed.tick();
+
+    expect(survey.educationForm.controls.repeatsHighSchoolYear.value).toBe('no');
+    survey.educationForm.controls.repeatsHighSchoolYear.setValue('yes');
+
+    catalogs$.next({
+      education: {
+        lastSecondaryYearLocations: [],
+        highSchoolYears: [],
+        previousHigherEducationOptions: [],
+        universities: [],
+        guardianEducationLevels: [],
+      },
+      academicDecision: {
+        upperSecondaryYears: [],
+        decisionSupports: [],
+        decisionLevels: [],
+        universities: [],
+        ortChoiceReasons: [],
+      },
+      ortExperience: { ratings: [], ortAdvertisements: [] },
+    });
+    catalogs$.complete();
+
+    expect(survey.educationForm.controls.repeatsHighSchoolYear.value).toBe('yes');
+  });
+
+  // El departamento no viaja en la encuesta: sin sembrar la institución respondida, Educación
+  // quedaría inválida al retomar y el usuario tendría que rehacer los dos campos.
+  // El departamento no se guarda: el backend lo deriva de la institución y lo devuelve de solo
+  // lectura, y con él se arma la cascada departamento → instituciones al retomar.
+  it('hydrates the department derived by the backend and loads its institutions', () => {
+    const { survey } = createFacade(
+      createSurveyResponse({
+        survey: createInitialSurvey({
+          activeSection: 'education',
+          studiesHighSchool: false,
+          repeatsHighSchoolYear: false,
+          highSchoolLocationId: 1,
+          highSchoolInstitutionId: 500,
+          highSchoolInstitutionStateId: 5,
+          priorHigherEducationStatusId: 3,
+          motherEducationLevelId: 1,
+          fatherEducationLevelId: 1,
+        }),
+      }),
+      {},
+      [],
+      {
+        countryLocations: [
+          {
+            countryCode: 1,
+            name: 'Uruguay',
+            states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
+          },
+        ],
+        institutions: [{ id: 500, label: 'Liceo Nº 1' }],
+      }
+    );
+    TestBed.tick();
+
+    expect(survey.educationForm.controls.state.value).toBe('5');
+    expect(survey.options.institutionOptions()).toEqual([{ value: '500', label: 'Liceo Nº 1' }]);
+    expect(survey.educationForm.controls.educationalInstitution.value).toBe('500');
+    expect(survey.getSectionState('education')).toBe('complete');
   });
 
   it('uses school year orientations directly from the selected year catalog', () => {
@@ -820,8 +996,26 @@ describe('EnrollmentSurveyFacade', () => {
     ).toBe(false);
   });
 
-  it('sets the pre-enrollment error and stops the spinner when confirmation fails', () => {
-    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 500 })));
+  // Un 500/409/0 en confirm es indeterminado: el backend llama APIs externas y pudo haber
+  // creado la inscripción. Se cierra el flujo en la pantalla de espera en vez de dejar al
+  // usuario reintentando un confirm que quizá ya funcionó.
+  it.each([{ status: 0 }, { status: 409 }, { status: 500 }])(
+    'closes the flow on the waiting screen when the confirmation fails with $status',
+    ({ status }) => {
+      confirmPreEnrollment.mockReturnValue(throwError(() => ({ status })));
+      const { survey } = prepareFinalizableSurvey();
+
+      survey.continue();
+
+      expect(payment.outcome()).toBe('enrollment-in-progress');
+      expect(survey.confirmOutcomeUncertain()).toBe(true);
+      expect(survey.preEnrollmentError()).toBeNull();
+      expect(survey.finalizingPreEnrollment()).toBe(false);
+    }
+  );
+
+  it('sets the pre-enrollment error and stops the spinner when confirmation fails for good', () => {
+    confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 400 })));
     const { survey, process } = prepareFinalizableSurvey();
 
     survey.continue();
@@ -950,8 +1144,7 @@ describe('EnrollmentSurveyFacade', () => {
     const { survey } = createFacade(null);
 
     expect(survey.surveyLoadError()).toBeNull();
-    expect(survey.hasInitialSurveyRight()).toBe(true);
-    expect(survey.scenario()).toBe('first-time');
+    expect(survey.canAnswerSurvey()).toBe(true);
     expect(survey.activeSection()).toBe('education');
     expect(survey.loadingSurveyState()).toBe(false);
   });
@@ -986,6 +1179,252 @@ describe('EnrollmentSurveyFacade', () => {
     expect(survey.loadingSurveyState()).toBe(false);
   });
 
+  // Guardado por delta: cada guardado manda SOLO lo que cambió contra lo último que el backend
+  // confirmó. Lo dispara el check de la sección (su form quedó válido) y cada cambio posterior
+  // mientras siga completa; el Continuar, el cierre del paso y la salida solo reintentan lo que
+  // haya quedado pendiente. Nunca un timer.
+  describe('survey delta save', () => {
+    it('saves each section the moment it gets its check', () => {
+      const { survey } = createFacade(createSurveyResponse());
+
+      completeEducation(survey);
+
+      // Sin pulsar Continuar: alcanza con que la sección quede válida.
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
+        repeatsHighSchoolYear: false,
+        finalHighSchoolYearLocationId: 1,
+        priorHigherEducationStatusId: 2,
+        motherOrGuardianEducationLevelId: 1,
+        fatherOrGuardianEducationLevelId: 1,
+      });
+      expect(survey.getSectionState('education')).toBe('complete');
+
+      saveInitialSurvey.mockClear();
+      completeAcademicDecision(survey);
+
+      // Nada de la sección anterior se repite.
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        degreeProgramDecisionYearId: 1,
+        ortDecisionYearId: 1,
+        researchedOtherUniversities: false,
+        decisionSupportId: 1,
+        decisionLevelId: 1,
+        ortChoiceReasonIds: [1],
+      });
+
+      saveInitialSurvey.mockClear();
+      completeOrtExperience(survey);
+
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        hadOrtAdvising: false,
+        visitedOrtWebsite: false,
+        visitedOrtCampus: false,
+        recallsOrtAdvertising: false,
+      });
+    });
+
+    it('does not post while the section is incomplete and sends the whole delta when it completes', () => {
+      const { survey } = createFacade(createSurveyResponse());
+
+      survey.educationForm.controls.motherEducation.setValue('1');
+
+      expect(survey.getSectionState('education')).not.toBe('complete');
+      expect(saveInitialSurvey).not.toHaveBeenCalled();
+
+      completeEducation(survey);
+
+      // Lo respondido antes del check no se pierde: viaja en el delta del primer guardado.
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
+        repeatsHighSchoolYear: false,
+        finalHighSchoolYearLocationId: 1,
+        priorHigherEducationStatusId: 2,
+        motherOrGuardianEducationLevelId: 1,
+        fatherOrGuardianEducationLevelId: 1,
+      });
+    });
+
+    it('posts again on every change once the section keeps its check', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      completeEducation(survey);
+      saveInitialSurvey.mockClear();
+
+      survey.educationForm.controls.motherEducation.setValue('2');
+
+      expect(saveInitialSurvey).toHaveBeenCalledWith({ motherOrGuardianEducationLevelId: 2 });
+    });
+
+    it('ignores a change in an incomplete section even if another one is complete', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      completeEducation(survey);
+      saveInitialSurvey.mockClear();
+
+      survey.academicDecisionForm.controls.decisionSupport.setValue('1');
+
+      expect(saveInitialSurvey).not.toHaveBeenCalled();
+    });
+
+    it('sends the value again when it goes back to what it was before', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      completeEducation(survey);
+      survey.educationForm.controls.motherEducation.setValue('2');
+      saveInitialSurvey.mockClear();
+
+      survey.educationForm.controls.motherEducation.setValue('1');
+
+      expect(saveInitialSurvey).toHaveBeenCalledWith({ motherOrGuardianEducationLevelId: 1 });
+    });
+
+    it('sends nulls when a conditional answer clears dependent fields', async () => {
+      const { survey } = createFacade(createSurveyResponse());
+      survey.educationForm.patchValue({ studiesHighSchool: 'studying', highSchoolYear: '11' });
+
+      await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        currentlyStudiesHighSchool: true,
+        highSchoolYear: 11,
+      });
+      saveInitialSurvey.mockClear();
+
+      survey.educationForm.controls.studiesHighSchool.setValue('not-studying');
+      await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
+
+      // El campo vaciado viaja en null: ausente sería "sin cambios" y el backend lo dejaría.
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        currentlyStudiesHighSchool: false,
+        highSchoolYear: null,
+      });
+    });
+
+    it('keeps a failed change pending for the next delta', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      saveInitialSurvey.mockReturnValue(throwError(() => ({ status: 500 })));
+
+      completeEducation(survey);
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+      // Fallo silencioso: es un guardado oportunista, no molesta al usuario.
+      expect(survey.preEnrollmentError()).toBeNull();
+
+      saveInitialSurvey.mockClear().mockReturnValue(of(undefined));
+      survey.educationForm.controls.motherEducation.setValue('2');
+
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
+        repeatsHighSchoolYear: false,
+        finalHighSchoolYearLocationId: 1,
+        priorHigherEducationStatusId: 2,
+        motherOrGuardianEducationLevelId: 2,
+        fatherOrGuardianEducationLevelId: 1,
+      });
+    });
+
+    it('retries the pending delta when the section closes with Continuar', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      saveInitialSurvey.mockReturnValue(throwError(() => ({ status: 500 })));
+      completeEducation(survey);
+      saveInitialSurvey.mockClear().mockReturnValue(of(undefined));
+
+      survey.continue();
+
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        // `completeEducation` responde "No curso secundaria": la respuesta viaja como `false`,
+        // no se confunde con "sin responder".
+        currentlyStudiesHighSchool: false,
+        repeatsHighSchoolYear: false,
+        finalHighSchoolYearLocationId: 1,
+        priorHigherEducationStatusId: 2,
+        motherOrGuardianEducationLevelId: 1,
+        fatherOrGuardianEducationLevelId: 1,
+      });
+      expect(survey.activeSection()).toBe('academic-decision');
+    });
+
+    it('does not post when the section closes with nothing pending', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      completeEducation(survey);
+      saveInitialSurvey.mockClear();
+
+      survey.continue();
+
+      expect(saveInitialSurvey).not.toHaveBeenCalled();
+    });
+
+    it('drops the change during an in-flight save and sends it in the next delta', () => {
+      const { survey } = createFacade(createSurveyResponse());
+      const inFlight = new Subject<void>();
+      saveInitialSurvey.mockReturnValue(inFlight);
+
+      completeEducation(survey);
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+
+      survey.educationForm.controls.motherEducation.setValue('2');
+      // El POST sigue en vuelo: exhaustMap descarta el trigger en lugar de cancelarlo.
+      expect(saveInitialSurvey).toHaveBeenCalledOnce();
+
+      saveInitialSurvey.mockClear().mockReturnValue(of(undefined));
+      inFlight.next();
+      inFlight.complete();
+      survey.educationForm.controls.fatherEducation.setValue('2');
+
+      // El cambio descartado no se perdió: entra en el delta siguiente.
+      expect(saveInitialSurvey).toHaveBeenCalledWith({
+        motherOrGuardianEducationLevelId: 2,
+        fatherOrGuardianEducationLevelId: 2,
+      });
+    });
+
+    it('does not save while the survey right is unknown after a load failure', async () => {
+      const { survey } = createFacade(null, {}, [], { loadFailed: true });
+
+      completeEducation(survey);
+      await expect(firstValueFrom(survey.savePartial())).resolves.toBeUndefined();
+
+      expect(survey.canAnswerSurvey()).toBe(false);
+      expect(saveInitialSurvey).not.toHaveBeenCalled();
+    });
+  });
+
+  // Valores elegidos para que ninguna pregunta condicional quede requerida con los
+  // catálogos vacíos del test.
+  function completeEducation(survey: EnrollmentSurveyFacade): void {
+    survey.educationForm.patchValue({
+      studiesHighSchool: 'not-studying',
+      repeatsHighSchoolYear: 'no',
+      highSchoolLocation: '1',
+      higherEducationStatus: '2',
+      motherEducation: '1',
+      fatherEducation: '1',
+    });
+  }
+
+  function completeAcademicDecision(survey: EnrollmentSurveyFacade): void {
+    survey.academicDecisionForm.patchValue({
+      degreeProgramDecisionYear: '1',
+      decisionSupport: '1',
+      ortDecisionYear: '1',
+      otherUniversities: 'no',
+      decisionCertainty: '1',
+      ortReasons: ['1'],
+    });
+  }
+
+  function completeOrtExperience(survey: EnrollmentSurveyFacade): void {
+    survey.ortExperienceForm.patchValue({
+      advisingMeeting: 'no',
+      visitedWebsite: 'no',
+      visitedCampus: 'no',
+      recallsAdvertising: 'no',
+    });
+  }
+
   function createSurveyResponse(overrides: Record<string, unknown> = {}) {
     return {
       isEligibleForSurvey: true,
@@ -1017,7 +1456,14 @@ describe('EnrollmentSurveyFacade', () => {
     initialSurvey: unknown,
     catalogOverrides: Record<string, unknown> = {},
     degreePrograms: unknown[] = [],
-    options: { loadFailed?: boolean; getInitialSurvey?: () => unknown; skipApply?: boolean } = {}
+    options: {
+      loadFailed?: boolean;
+      getInitialSurvey?: () => unknown;
+      skipApply?: boolean;
+      getInitialSurveyCatalogs?: () => unknown;
+      countryLocations?: unknown[];
+      institutions?: unknown[];
+    } = {}
   ): {
     survey: EnrollmentSurveyFacade;
     process: EnrollmentProcessState;
@@ -1053,27 +1499,29 @@ describe('EnrollmentSurveyFacade', () => {
               of([
                 { offeringId: 300, admissionProcessId: 200, name: 'Marco legal', startDate: null },
               ]),
-            getCountryLocations: () => of([]),
-            getInstitutions: () => of([]),
-            getInitialSurveyCatalogs: () =>
-              of({
-                education: {
-                  lastSecondaryYearLocations: [],
-                  highSchoolYears: [],
-                  previousHigherEducationOptions: [],
-                  universities: [],
-                  guardianEducationLevels: [],
-                },
-                academicDecision: {
-                  upperSecondaryYears: [],
-                  decisionSupports: [],
-                  decisionLevels: [],
-                  universities: [],
-                  ortChoiceReasons: [],
-                },
-                ortExperience: { ratings: [], ortAdvertisements: [] },
-                ...catalogOverrides,
-              }),
+            getCountryLocations: () => of(options.countryLocations ?? []),
+            getInstitutions: () => of(options.institutions ?? []),
+            getInitialSurveyCatalogs:
+              options.getInitialSurveyCatalogs ??
+              (() =>
+                of({
+                  education: {
+                    lastSecondaryYearLocations: [],
+                    highSchoolYears: [],
+                    previousHigherEducationOptions: [],
+                    universities: [],
+                    guardianEducationLevels: [],
+                  },
+                  academicDecision: {
+                    upperSecondaryYears: [],
+                    decisionSupports: [],
+                    decisionLevels: [],
+                    universities: [],
+                    ortChoiceReasons: [],
+                  },
+                  ortExperience: { ratings: [], ortAdvertisements: [] },
+                  ...catalogOverrides,
+                })),
           },
         },
         { provide: EnrollmentPaymentFacade, useValue: payment },
@@ -1110,6 +1558,8 @@ describe('EnrollmentSurveyFacade', () => {
     return { survey, process, forms };
   }
 
+  // Paso 2 listo para cerrar: con derecho a encuesta las cinco secciones son visibles, así
+  // que las tres de respuestas se completan además de identidad y reglamento.
   function prepareFinalizableSurvey() {
     const result = createFacade({
       isEligibleForSurvey: true,
@@ -1121,6 +1571,9 @@ describe('EnrollmentSurveyFacade', () => {
       selectedReasonOptions: [],
       selectedAdvertisingOptions: [],
     });
+    completeEducation(result.survey);
+    completeAcademicDecision(result.survey);
+    completeOrtExperience(result.survey);
     const front = new File(['front'], 'front.png', { type: 'image/png' });
     const back = new File(['back'], 'back.png', { type: 'image/png' });
     const selfie = new File(['photo'], 'selfie.png', { type: 'image/png' });
@@ -1132,6 +1585,8 @@ describe('EnrollmentSurveyFacade', () => {
     result.survey.identity.updateIdentityFile('selfie', fileEvent(selfie));
     result.survey.regulationForm.controls.acceptsRegulation.setValue(true);
     result.forms.forms.academicForm.controls.shift.setValue('300');
+    // Completar las secciones ya posteo el delta por check: los tests de cierre miden desde acá.
+    saveInitialSurvey.mockClear();
 
     return { ...result, front, back, selfie };
   }
@@ -1186,6 +1641,7 @@ describe('EnrollmentSurveyFacade', () => {
       repeatsHighSchoolYear: null,
       highSchoolYearRepeatCount: null,
       highSchoolInstitutionId: null,
+      highSchoolInstitutionStateId: null,
       highSchoolLocationId: null,
       highSchoolInstitutionName: null,
       priorHigherEducationStatusId: null,

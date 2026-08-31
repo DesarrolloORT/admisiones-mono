@@ -247,6 +247,18 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.paymentOptions().some(option => option.value === 'personal-account')).toBe(false);
   });
 
+  it('hides personal account payment when the account balance is zero', () => {
+    process.preEnrollmentResponse.set({
+      confirmed: false,
+      paymentDueDate: null,
+      enrollmentDeposit: 100000,
+      accountBalance: 0,
+      summary: null,
+    });
+
+    expect(facade.paymentOptions().some(option => option.value === 'personal-account')).toBe(false);
+  });
+
   it('disables personal account payment when its balance does not cover the deposit', () => {
     process.preEnrollmentResponse.set({
       confirmed: false,

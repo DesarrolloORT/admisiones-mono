@@ -10,7 +10,6 @@ import {
 import { RouterLink } from '@angular/router';
 import {
   OrtButtonModule,
-  OrtDialog,
   OrtIconModule,
   OrtSpinnerModule,
   OrtStatusIconModule,
@@ -48,7 +47,6 @@ import { EnrollmentSuccessStep } from './steps/enrollment-success-step/enrollmen
     EnrollmentSuccessStep,
     ProcessLayout,
     OrtButtonModule,
-    OrtDialog,
     OrtIconModule,
     OrtSpinnerModule,
     RouterLink,

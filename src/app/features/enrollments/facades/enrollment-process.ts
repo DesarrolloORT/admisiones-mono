@@ -1,8 +1,10 @@
-import { computed, DestroyRef, inject, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
+import { getAcademicProposalLevelIds } from '../../catalogs/models/academic-proposal';
 import {
   deriveInitialEnrollmentState,
   type EnrollmentAcademicPrefill,
@@ -12,6 +14,7 @@ import {
   type EnrollmentInitialSurveyResolved,
   type EnrollmentPaymentInit,
 } from '../models/enrollment-entry';
+import { toNullableNumber } from '../models/enrollment-flow-mappers';
 import { ENROLLMENT_PROCESS_STATE } from '../models/enrollment-process';
 import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
@@ -34,14 +37,9 @@ export class EnrollmentProcessFacade {
     const step = this.stepItems()[this.process.flow.currentIndex()];
     return `Paso ${this.stepNumber()} de ${this.stepItems().length} - ${step.title}`;
   });
-  // Solo se retrocede DENTRO del paso 2 (ver `canGoBack`), así que no hay etiquetas
-  // "volver al paso N".
   public readonly backLabel = computed(() =>
     this.survey.readerOpen() ? 'Volver a Reglamento estudiantil' : 'Volver a la sección anterior'
   );
-  public readonly exitConfirmationOpen = signal(false);
-  public readonly surveySaveError = signal<string | null>(null);
-  public readonly savingSurvey = signal(false);
   public readonly catalogError = computed(
     () => this.proposal.catalogError() ?? this.survey.catalogError()
   );
@@ -62,7 +60,15 @@ export class EnrollmentProcessFacade {
     return this.currentStep() === 'survey' && this.survey.canGoBack();
   });
 
+  private readonly flowMovement = computed(() => ({
+    step: this.currentStep(),
+    preEnrollment: this.process.preEnrollmentResponse(),
+    paymentOutcome: this.payment.outcome(),
+  }));
+
   private entryContext: EnrollmentEntryContext;
+  private entryMovement = this.flowMovement();
+  private urlIdentifiesEnrollment = false;
 
   constructor() {
     this.entryContext = {
@@ -70,6 +76,11 @@ export class EnrollmentProcessFacade {
       survey: this.route.snapshot.data['initialSurvey'] as EnrollmentInitialSurveyResolved,
     };
     this.applyInitialState(deriveInitialEnrollmentState(this.entryContext));
+    effect(() => {
+      const movement = this.flowMovement();
+      if (movement === this.entryMovement || this.urlIdentifiesEnrollment) return;
+      this.urlIdentifiesEnrollment = this.syncEnrollmentParams();
+    });
   }
 
   public continue(): void {
@@ -90,45 +101,12 @@ export class EnrollmentProcessFacade {
     if (this.canGoBack()) this.survey.back();
   }
 
-  public requestExit(): void {
-    this.surveySaveError.set(null);
-    this.exitConfirmationOpen.set(true);
-  }
-
-  public cancelExit(): void {
-    this.surveySaveError.set(null);
-    this.exitConfirmationOpen.set(false);
-  }
-
-  public confirmExit(): void {
-    if (this.savingSurvey()) return;
-
-    if (!this.survey.hasInitialSurveyRight()) {
-      this.exitConfirmationOpen.set(false);
-      this.router.navigateByUrl('/inicio');
-      return;
-    }
-
-    this.surveySaveError.set(null);
-    this.savingSurvey.set(true);
+  public exit(): void {
     this.survey
       .savePartial()
-      .pipe(
-        finalize(() => this.savingSurvey.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: saved => {
-          if (!saved) {
-            this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.');
-            return;
-          }
-          this.exitConfirmationOpen.set(false);
-          this.router.navigateByUrl('/inicio');
-        },
-        error: () =>
-          this.surveySaveError.set('No se pudo guardar la encuesta. Intentá nuevamente.'),
-      });
+      .pipe(catchError(() => EMPTY))
+      .subscribe();
+    this.router.navigateByUrl('/inicio');
   }
 
   // Reintento manual (botón de la pantalla de error de encuesta): re-consulta el
@@ -158,6 +136,52 @@ export class EnrollmentProcessFacade {
     if (state.resumeInProgress) this.proposal.disableForResume();
     this.applyPaymentInit(state.payment);
     this.process.flow.goTo(state.step);
+    this.entryMovement = this.flowMovement();
+    this.urlIdentifiesEnrollment = false;
+  }
+
+  private syncEnrollmentParams(): boolean {
+    const controls = this.proposal.academicForm.controls;
+    const productId = toNullableNumber(controls.degreeProgram.value);
+    const admissionProcessId = toNullableNumber(controls.intake.value);
+    if (productId === null || admissionProcessId === null) return false;
+
+    // La app navega con `onSameUrlNavigation: 'reload'`: navegar a la MISMA URL recarga la
+    // ruta y re-crea la página. Si los params ya identifican la inscripción y no arrastran
+    // estado, no hay nada que reescribir.
+    const params = this.route.snapshot.queryParamMap;
+    if (
+      !params.has('estado') &&
+      !params.has('modo') &&
+      params.get('idProducto') === String(productId) &&
+      params.get('idProceso') === String(admissionProcessId)
+    ) {
+      return true;
+    }
+
+    const offeringIds = (
+      this.proposal.selection.isProfessionalUpdate()
+        ? controls.seminars.value
+        : [controls.shift.value]
+    ).filter(value => toNullableNumber(value) !== null);
+    // `nivel` solo alimenta el tipo de propuesta al reingresar, y en Actualización
+    // profesional cualquiera de sus niveles (3 o 4) elige el mismo tipo.
+    const productLevelId = getAcademicProposalLevelIds(controls.proposalType.value)[0];
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        idProducto: productId,
+        idProceso: admissionProcessId,
+        ...(offeringIds.length > 0 ? { idOferta: offeringIds } : {}),
+        ...(productLevelId ? { nivel: productLevelId } : {}),
+        estado: null,
+        modo: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    return true;
   }
 
   private applyAcademicPrefill(prefill: EnrollmentAcademicPrefill): void {

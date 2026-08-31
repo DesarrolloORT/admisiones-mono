@@ -2,11 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import {
-  getScholarshipsAvailableEndpoint,
-  getScholarshipsEnrollmentsEndpoint,
-  postScholarshipsApplicationsEndpoint,
-} from 'src/app/shared/api/generated/endpoints/scholarships.endpoints';
+import { getScholarshipsEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/scholarships.endpoints';
 import { vi } from 'vitest';
 
 import { ScholarshipsApi } from './scholarships.api';
@@ -30,51 +26,15 @@ describe('ScholarshipsApi', () => {
     api = TestBed.inject(ScholarshipsApi);
   });
 
+  // ponytail: `GET /scholarships/available` fue removido del backend y el adapter es un stub.
+  // Los tests del mapeo se fueron con el mapeo; vuelven cuando vuelva el endpoint.
   describe('getAvailableScholarships', () => {
-    it('maps the response into feature types', async () => {
-      requestMock.mockReturnValue(
-        of({
-          requiresPriorEnrollment: false,
-          scholarships: [
-            {
-              scholarshipTypeIds: [33, 57],
-              name: 'Fondo de Excelencia Académica',
-              description: 'Dirigida a estudiantes con destacado desempeño en secundaria.',
-              requiresTest: true,
-            },
-          ],
-        })
-      );
-
-      await expect(firstValueFrom(api.getAvailableScholarships())).resolves.toEqual({
-        requiresPriorEnrollment: false,
-        scholarships: [
-          {
-            scholarshipTypeIds: [33, 57],
-            name: 'Fondo de Excelencia Académica',
-            description: 'Dirigida a estudiantes con destacado desempeño en secundaria.',
-            requiresTest: true,
-          },
-        ],
-      });
-      expect(requestMock.mock.calls[0][0]).toBe(getScholarshipsAvailableEndpoint);
-    });
-
-    it('collapses nullable fields to safe defaults', async () => {
-      requestMock.mockReturnValue(of({ scholarships: [{}] }));
-
-      await expect(firstValueFrom(api.getAvailableScholarships())).resolves.toEqual({
-        // Sin el flag se asume el caso restrictivo: no habilitar la postulación.
-        requiresPriorEnrollment: true,
-        scholarships: [{ scholarshipTypeIds: [], name: '', description: '', requiresTest: false }],
-      });
-    });
-
-    it('returns an empty catalogue when there is no data', async () => {
+    it('returns an empty catalogue while the endpoint is gone', async () => {
       await expect(firstValueFrom(api.getAvailableScholarships())).resolves.toEqual({
         requiresPriorEnrollment: true,
         scholarships: [],
       });
+      expect(requestMock).not.toHaveBeenCalled();
     });
   });
 
@@ -150,42 +110,21 @@ describe('ScholarshipsApi', () => {
     });
   });
 
+  // ponytail: `POST /scholarships/applications` fue removido; el stub falla en vez de simular
+  // un alta que nunca ocurrio.
   describe('createApplication', () => {
-    it('sends the payload as the request body and maps the created application', async () => {
-      requestMock.mockReturnValue(
-        of({ applicationId: 9001, affidavitId: 55, affidavitStatus: 'PENDIENTE' })
-      );
-
-      await expect(
-        firstValueFrom(api.createApplication({ enrollmentId: 1072704, testId: 42 }))
-      ).resolves.toEqual({
-        applicationId: 9001,
-        affidavitId: 55,
-        affidavitStatus: 'PENDIENTE',
-      });
-      expect(requestMock).toHaveBeenCalledWith(postScholarshipsApplicationsEndpoint, {
-        body: { enrollmentId: 1072704, testId: 42 },
-        showLoader: true,
-      });
-    });
-
-    it('collapses nullable fields to safe defaults', async () => {
-      requestMock.mockReturnValue(of({}));
-
+    it('fails while the endpoint is gone', async () => {
       await expect(
         firstValueFrom(api.createApplication({ enrollmentId: 1, testId: 2 }))
-      ).resolves.toEqual({ applicationId: 0, affidavitId: null, affidavitStatus: '' });
+      ).rejects.toThrow('POST /scholarships/applications no está disponible.');
     });
   });
 
   it('propagates HTTP errors to the caller', async () => {
     requestMock.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
 
-    await expect(firstValueFrom(api.getAvailableScholarships())).rejects.toBeInstanceOf(
+    await expect(firstValueFrom(api.getConfirmedEnrollments())).rejects.toBeInstanceOf(
       HttpErrorResponse
     );
-    await expect(
-      firstValueFrom(api.createApplication({ enrollmentId: 1, testId: 2 }))
-    ).rejects.toBeInstanceOf(HttpErrorResponse);
   });
 });

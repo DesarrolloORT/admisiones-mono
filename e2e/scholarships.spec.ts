@@ -4,7 +4,9 @@ import { mockApi } from './support/api-mocks';
 import { addAuthenticatedSession } from './support/session';
 
 test.describe('Scholarships', () => {
-  test('lists the catalogue and gates the ones needing an enrollment @smoke', async ({ page }) => {
+  test('shows the safe empty state while the catalogue endpoint is unavailable @smoke', async ({
+    page,
+  }) => {
     await mockApi(page, { scholarshipEnrollments: 'none' });
     await addAuthenticatedSession(page);
 
@@ -12,13 +14,8 @@ test.describe('Scholarships', () => {
 
     await expect(page.getByRole('heading', { name: 'Postulación a becas' })).toBeVisible();
 
-    // Reválidas no exige inscripción previa: es la única postulable.
-    const cards = page.locator('app-scholarship-card');
-    await expect(cards).toHaveCount(4);
-    await expect(
-      page.getByRole('link', { name: /Postularme a Fondo Becas de Reválidas/ })
-    ).toHaveAttribute('href', '/becas/fbr');
-    await expect(page.getByRole('link', { name: 'Ir a inscripciones' })).toHaveCount(3);
+    await expect(page.getByText('No hay becas disponibles en este momento.')).toBeVisible();
+    await expect(page.locator('app-scholarship-card')).toHaveCount(0);
   });
 
   test('opens every scholarship on the shared process page @regression', async ({ page }) => {

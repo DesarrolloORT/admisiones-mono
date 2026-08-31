@@ -6,8 +6,8 @@ type PaymentMethod =
   'bank-account' | 'geopay' | 'personal-account' | 'banred' | 'abitab' | 'paganza';
 
 const paymentLabels: Record<PaymentMethod, string> = {
-  'bank-account': 'Cuenta bancaria',
-  geopay: 'Geopay',
+  'bank-account': 'Pago con banco',
+  geopay: 'Tarjeta de crédito/débito',
   'personal-account': 'Cuenta personal',
   banred: 'Banred',
   abitab: 'Abitab',
@@ -88,7 +88,7 @@ export class EnrollmentPage {
   public async fillEducation(): Promise<void> {
     await this.chooseRadio('studiesHighSchool', 'Sí, estoy cursando');
     await this.chooseRadio('highSchoolYear', 'Durante secundaria');
-    await this.select('orientation', 'Matemática');
+    await this.select('orientation', 'Científico');
     await this.chooseRadio('repeatsHighSchoolYear', 'No');
     await this.chooseRadio('highSchoolLocation', 'Uruguay');
     await this.select('state', 'Montevideo');
@@ -101,6 +101,67 @@ export class EnrollmentPage {
     await this.continue();
 
     await expect(this.radioGroup('degreeProgramDecisionYear')).toBeVisible();
+  }
+
+  // Educación con secundaria en el exterior: ahí la institución es un input de texto, así que
+  // queda sin responder (es el campo que completa la sección).
+  public async fillEducationAbroadWithoutInstitution(): Promise<void> {
+    await this.chooseRadio('studiesHighSchool', 'Sí, estoy cursando');
+    await this.chooseRadio('highSchoolYear', 'Durante secundaria');
+    await this.select('orientation', 'Científico');
+    await this.chooseRadio('repeatsHighSchoolYear', 'No');
+    await this.chooseRadio('highSchoolLocation', 'En el exterior');
+    await this.chooseRadio('higherEducationStatus', 'No cursé estudios superiores');
+    await this.select('motherEducation', 'Universitaria completa');
+    await this.chooseRadio('motherOrtDegree', 'No');
+    await this.select('fatherEducation', 'Universitaria completa');
+    await this.chooseRadio('fatherOrtDegree', 'No');
+  }
+
+  /**
+   * Sale del flujo. El control cambia por breakpoint: en desktop es el boton de texto
+   * "Salir del proceso" y en mobile el icono de cierre del header.
+   */
+  public async exitFlow(): Promise<void> {
+    const textButton = this.page.getByRole('button', { name: 'Salir del proceso' });
+    const iconButton = this.page.getByRole('button', { name: 'Cerrar inscripción' });
+    const exitButton = (await textButton.isVisible()) ? textButton : iconButton;
+    await exitButton.click();
+    await expect(this.page).toHaveURL(/\/inicio/);
+  }
+
+  /** Un radio de la encuesta por control + etiqueta, para afirmar sobre su estado. */
+  public surveyRadio(controlName: string, label: string): Locator {
+    return this.radioGroup(controlName).getByRole('radio', { name: label, exact: true });
+  }
+
+  public async chooseSurveyRadio(controlName: string, label: string): Promise<void> {
+    await this.surveyRadio(controlName, label).click();
+  }
+
+  /**
+   * Afirma lo que el select muestra, sea cual sea la variante que le toco renderizar:
+   * `ort-searchable-select` expone el valor en su `input`, `ort-select` en su trigger, y en
+   * mobile es el boton del drawer.
+   */
+  public async expectSelectToShow(controlName: string, expected: string): Promise<void> {
+    const root = this.responsiveSelect(controlName);
+    const searchInput = root.locator('ort-searchable-select input');
+    const trigger = root
+      .locator('.responsive-select__mobile-trigger, ort-select .ort-select-trigger')
+      .first();
+
+    await expect
+      .poll(async () =>
+        (await searchInput.count()) > 0
+          ? await searchInput.inputValue()
+          : ((await trigger.textContent()) ?? '')
+      )
+      .toContain(expected);
+  }
+
+  public institutionNameInput(): Locator {
+    return this.page.locator('input[formcontrolname="educationalInstitution"]');
   }
 
   public async fillAcademicDecision(): Promise<void> {
@@ -208,7 +269,7 @@ export class EnrollmentPage {
     await this.expectMainFocus();
     await this.chooseRadioWithKeyboard('studiesHighSchool', 'Sí, estoy cursando');
     await this.chooseRadioWithKeyboard('highSchoolYear', 'Durante secundaria');
-    await this.selectWithKeyboard('orientation', 'Matemática');
+    await this.selectWithKeyboard('orientation', 'Científico');
     await this.chooseRadioWithKeyboard('repeatsHighSchoolYear', 'No');
     await this.chooseRadioWithKeyboard('highSchoolLocation', 'Uruguay');
     await this.selectWithKeyboard('state', 'Montevideo');
@@ -301,13 +362,6 @@ export class EnrollmentPage {
     await expect(radio).toBeChecked();
   }
 
-  public async saveAndExit(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Cerrar inscripción' }).click();
-    await expect(this.page.getByText('¿Querés salir de la inscripción?')).toBeVisible();
-    await this.page.getByRole('button', { name: 'Guardar y salir' }).click();
-    await expect(this.page).toHaveURL(/\/inicio/);
-  }
-
   private async continue(): Promise<void> {
     const button = this.page.getByRole('button', { name: 'Continuar', exact: true });
     await button.click();
@@ -354,7 +408,7 @@ export class EnrollmentPage {
         return;
       }
 
-      const combobox = responsiveSelect.locator('ort-select');
+      const combobox = responsiveSelect.locator('ort-select, ort-searchable-select input').first();
       await this.expectOrtSelectEnabled(combobox);
       await selectOrtOption(this.page, combobox, option);
       return;
@@ -367,7 +421,9 @@ export class EnrollmentPage {
   // toBeEnabled no contempla aria-disabled en elementos custom como ort-select.
   private async expectOrtSelectEnabled(combobox: Locator): Promise<void> {
     await expect(combobox).toBeEnabled();
-    await expect(combobox).toHaveAttribute('aria-disabled', 'false');
+    if ((await combobox.evaluate(element => element.tagName)) === 'ORT-SELECT') {
+      await expect(combobox).toHaveAttribute('aria-disabled', 'false');
+    }
   }
 
   private async selectWithKeyboard(controlName: string, option: string): Promise<void> {
@@ -382,7 +438,10 @@ export class EnrollmentPage {
         return;
       }
 
-      await this.selectOrtWithKeyboard(responsiveSelect.locator('ort-select'), option);
+      await this.selectOrtWithKeyboard(
+        responsiveSelect.locator('ort-select, ort-searchable-select input').first(),
+        option
+      );
       return;
     }
 
@@ -392,7 +451,9 @@ export class EnrollmentPage {
   private async selectOrtWithKeyboard(combobox: Locator, option: string): Promise<void> {
     await this.expectOrtSelectEnabled(combobox);
     await this.tabTo(combobox);
-    await this.page.keyboard.press('Enter');
+    if ((await combobox.evaluate(element => element.tagName)) !== 'INPUT') {
+      await this.page.keyboard.press('Enter');
+    }
 
     await expect(combobox).toHaveAttribute('aria-controls', /.+/);
     const listboxId = await combobox.getAttribute('aria-controls');
@@ -411,7 +472,15 @@ export class EnrollmentPage {
       const activeOption = listbox.locator('ort-option.ort-option-active');
       if ((await activeOption.textContent())?.includes(option)) {
         await this.page.keyboard.press('Enter');
-        await expect(combobox).toContainText(option);
+        if ((await combobox.evaluate(element => element.tagName)) === 'INPUT') {
+          if ((await combobox.getAttribute('aria-expanded')) === 'true') {
+            await expect(targetOption).toHaveAttribute('aria-selected', 'true');
+          } else {
+            await expect(combobox).toHaveValue(new RegExp(escapeRegExp(option)));
+          }
+        } else {
+          await expect(combobox).toContainText(option);
+        }
         if ((await combobox.getAttribute('aria-expanded')) === 'true') {
           await this.page.keyboard.press('Escape');
         }

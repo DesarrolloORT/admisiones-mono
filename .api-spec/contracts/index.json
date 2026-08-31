@@ -1,9 +1,5 @@
 [
   {
-    "name": "becas.contract.json",
-    "url": "/contracts/becas.contract.json"
-  },
-  {
     "name": "carreras.contract.json",
     "url": "/contracts/carreras.contract.json"
   },

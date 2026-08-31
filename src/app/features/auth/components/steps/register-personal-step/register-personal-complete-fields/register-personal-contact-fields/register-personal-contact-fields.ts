@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, viewChild } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { OrtFormFieldModule, OrtInputModule } from '@desarrolloort/components';
+import { OrtFormFieldModule, OrtInputModule, OrtPhoneInput } from '@desarrolloort/components';
+import { phoneMaxDigits } from 'src/app/shared/forms/phone';
 
 import { PersonalForm } from '../../../../../forms/auth-forms';
 
@@ -12,4 +13,11 @@ import { PersonalForm } from '../../../../../forms/auth-forms';
 })
 export class RegisterPersonalContactFields {
   public readonly form = input.required<FormGroup<PersonalForm>>();
+
+  // El control es `updateOn: 'blur'`, asi que su valor no refleja el pais recien elegido:
+  // el largo se toma del propio input.
+  private readonly phoneField = viewChild(OrtPhoneInput);
+  protected readonly phoneMaxLength = computed(() =>
+    phoneMaxDigits(this.phoneField()?.selectedCountry())
+  );
 }

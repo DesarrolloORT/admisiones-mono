@@ -1,58 +1,67 @@
-<ort-form-field [hideRequiredMarker]="!!countryControl.value">
+<ort-form-field [hideRequiredMarker]="countryControl.value !== null">
   <ort-label>País de residencia</ort-label>
-  <ort-select
+  <ort-searchable-select
     aria-label="País de residencia"
+    noResultsText="No encontramos ese país"
+    placeholderInput="Buscá tu país"
+    [displayWith]="countryName"
     [formControl]="countryControl"
     [id]="'location-country'"
     [required]="true"
-    (blur)="onBlur()"
-    (selectionChange)="onCountryChange()">
-    <ort-option value="">Seleccioná...</ort-option>
+    (focusout)="onBlur()">
     @for (country of countries(); track country.countryCode) {
-    <ort-option [value]="country.countryCode.toString()">{{ country.name }}</ort-option>
+    <ort-option [value]="country.countryCode">{{ country.name }}</ort-option>
     }
-  </ort-select>
-  @if (countryControl.touched && countryControl.hasError('required')) {
-  <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+  </ort-searchable-select>
+  @if (countryControl.touched && countryControl.invalid) {
+  <ort-error [class.sr-only]="!countryControl.hasError('unresolvedOption')">
+    {{ fieldError(countryControl) }}
+  </ort-error>
   }
 </ort-form-field>
 
 @if (showStates()) {
-<ort-form-field [hideRequiredMarker]="!!stateControl.value">
+<ort-form-field [hideRequiredMarker]="stateControl.value !== null">
   <ort-label>Departamento / Estado</ort-label>
-  <ort-select
+  <ort-searchable-select
     aria-label="Departamento / Estado"
+    noResultsText="No encontramos ese departamento o estado"
+    placeholderInput="Buscá tu departamento o estado"
+    [displayWith]="stateName"
     [formControl]="stateControl"
     [id]="'location-state'"
     [required]="true"
-    (blur)="onBlur()"
-    (selectionChange)="onStateChange()">
-    <ort-option value="">Seleccioná...</ort-option>
+    (focusout)="onBlur()">
     @for (state of states(); track state.stateCode) {
-    <ort-option [value]="state.stateCode.toString()">{{ state.name }}</ort-option>
+    <ort-option [value]="state.stateCode">{{ state.name }}</ort-option>
     }
-  </ort-select>
-  @if (stateControl.touched && stateControl.hasError('required')) {
-  <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+  </ort-searchable-select>
+  @if (stateControl.touched && stateControl.invalid) {
+  <ort-error [class.sr-only]="!stateControl.hasError('unresolvedOption')">
+    {{ fieldError(stateControl) }}
+  </ort-error>
   }
 </ort-form-field>
 } @if (showCities()) {
-<ort-form-field [hideRequiredMarker]="!!cityControl.value">
+<ort-form-field [hideRequiredMarker]="cityControl.value !== null">
   <ort-label>Ciudad</ort-label>
-  <ort-select
+  <ort-searchable-select
     aria-label="Ciudad"
+    noResultsText="No encontramos esa ciudad"
+    placeholderInput="Buscá tu ciudad"
+    [displayWith]="cityName"
     [formControl]="cityControl"
     [id]="'location-city'"
     [required]="true"
-    (blur)="onBlur()"
-    (selectionChange)="onCityChange()">
-    <ort-option value="">Seleccioná...</ort-option>
+    (focusout)="onBlur()">
     @for (city of cities(); track city.cityCode) {
-    <ort-option [value]="city.cityCode.toString()">{{ city.name }}</ort-option>
+    <ort-option [value]="city.cityCode">{{ city.name }}</ort-option>
     }
-  </ort-select>
-  @if (cityControl.touched && cityControl.hasError('required')) {
-  <ort-error class="sr-only">Este campo es obligatorio</ort-error>
+  </ort-searchable-select>
+  @if (cityControl.touched && cityControl.invalid) {
+  <ort-error [class.sr-only]="!cityControl.hasError('unresolvedOption')">
+    {{ fieldError(cityControl) }}
+  </ort-error>
   }
 </ort-form-field>
 }

@@ -8,7 +8,11 @@ import type {
   InitialSurveyCatalogs,
   LocationCountry,
 } from '../../catalogs/models/catalog.interface';
-import { createEnrollmentFormsState, ENROLLMENT_FORMS } from '../models/enrollment-flow-forms';
+import {
+  createEnrollmentFormsState,
+  ENROLLMENT_FORMS,
+  type EnrollmentFormsState,
+} from '../models/enrollment-flow-forms';
 import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
 
 describe('EnrollmentSurveyOptionsFacade', () => {
@@ -16,7 +20,6 @@ describe('EnrollmentSurveyOptionsFacade', () => {
   const getCountryLocations = vi.fn();
   const getInstitutions = vi.fn();
   const onOptionsChanged = vi.fn();
-  const onInitialCatalogsApplied = vi.fn();
   let isSurveyStepActive: WritableSignal<boolean>;
 
   beforeEach(() => {
@@ -25,7 +28,6 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     getCountryLocations.mockReset().mockReturnValue(of([]));
     getInstitutions.mockReset().mockReturnValue(of([]));
     onOptionsChanged.mockReset();
-    onInitialCatalogsApplied.mockReset();
   });
 
   it('maps the initial survey catalogs into options and notifies callbacks', () => {
@@ -46,7 +48,6 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(options.initialized()).toBe(true);
     expect(options.loadingInitialSurveyCatalogs()).toBe(false);
     expect(options.catalogError()).toBeNull();
-    expect(onInitialCatalogsApplied).toHaveBeenCalledOnce();
     expect(onOptionsChanged).toHaveBeenCalled();
   });
 
@@ -58,7 +59,6 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(options.catalogError()).toBe('No se pudieron cargar los catálogos de encuesta inicial.');
     expect(options.advertisingOptions()).toEqual([]);
     expect(options.initialized()).toBe(true);
-    expect(onInitialCatalogsApplied).not.toHaveBeenCalled();
   });
 
   it('loads Uruguay departments and the institutions of the selected department', () => {
@@ -89,6 +89,103 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(getInstitutions).toHaveBeenCalledWith(1, 5);
     expect(options.institutionOptions()).toEqual([{ value: '9', label: 'Liceo 1' }]);
     expect(educationForm.controls.educationalInstitution.value).toBe('');
+  });
+
+  it('keeps the answered orientation while the high school years catalog has not loaded', () => {
+    const options = createFacade();
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
+
+    educationForm.controls.highSchoolYear.setValue('11', { emitEvent: false });
+    educationForm.controls.orientation.setValue('12', { emitEvent: false });
+
+    options.refreshOrientationOptions();
+
+    expect(options.orientationOptions()).toEqual([]);
+    expect(educationForm.controls.orientation.value).toBe('12');
+  });
+
+  it('clears an orientation that no longer exists once the catalog is loaded', () => {
+    getInitialSurveyCatalogs.mockReturnValue(
+      of({
+        ...emptyCatalogs(),
+        education: {
+          ...emptyCatalogs().education,
+          highSchoolYears: [
+            { id: 11, label: 'Quinto', baccalaureates: [{ id: 12, label: 'C', orientation: 'C' }] },
+          ],
+        },
+      })
+    );
+
+    const options = createFacade();
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
+
+    educationForm.controls.highSchoolYear.setValue('11', { emitEvent: false });
+    educationForm.controls.orientation.setValue('999', { emitEvent: false });
+
+    options.refreshOrientationOptions();
+
+    expect(options.orientationOptions()).toEqual([{ value: '12', label: 'C' }]);
+    expect(educationForm.controls.orientation.value).toBe('');
+  });
+
+  // El patch de la encuesta escribe `state` sin emitir, así que la carga hay que pedirla.
+  it('loads the institutions of a department hydrated by the survey', () => {
+    getCountryLocations.mockReturnValue(
+      of([
+        {
+          countryCode: 1,
+          name: 'Uruguay',
+          states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
+        },
+      ] satisfies LocationCountry[])
+    );
+    getInstitutions.mockReturnValue(of([{ id: 500, label: 'Liceo Nº 1' }]));
+
+    const options = createFacade();
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
+    educationForm.controls.state.setValue('5', { emitEvent: false });
+
+    options.loadInstitutionsForSelectedDepartment();
+
+    expect(getInstitutions).toHaveBeenCalledWith(1, 5);
+    expect(options.institutionOptions()).toEqual([{ value: '500', label: 'Liceo Nº 1' }]);
+  });
+
+  // El snapshot de lo persistido ya se tomó: limpiar acá mandaría `highSchoolInstitutionId: null`
+  // en el delta siguiente y borraría la respuesta en el backend.
+  it('keeps a hydrated institution that is missing from its department catalog', () => {
+    getInstitutions.mockReturnValue(of([{ id: 9, label: 'Liceo 9' }]));
+
+    const options = createFacade();
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
+    educationForm.controls.state.setValue('5', { emitEvent: false });
+    educationForm.controls.educationalInstitution.setValue('500', { emitEvent: false });
+
+    options.loadInstitutionsForSelectedDepartment();
+
+    expect(educationForm.controls.educationalInstitution.value).toBe('500');
+  });
+
+  // La hidratación puede llegar antes que el catálogo de departamentos, que es su precondición.
+  it('loads the hydrated department institutions once the departments arrive', () => {
+    getCountryLocations.mockReturnValue(
+      of([
+        {
+          countryCode: 1,
+          name: 'Uruguay',
+          states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
+        },
+      ] satisfies LocationCountry[])
+    );
+    getInstitutions.mockReturnValue(of([{ id: 500, label: 'Liceo Nº 1' }]));
+
+    const formsState = createEnrollmentFormsState();
+    formsState.forms.educationForm.controls.state.setValue('5', { emitEvent: false });
+    const options = createFacade(formsState);
+
+    expect(getInstitutions).toHaveBeenCalledWith(1, 5);
+    expect(options.institutionOptions()).toEqual([{ value: '500', label: 'Liceo Nº 1' }]);
   });
 
   it('does not query the survey catalogs until the survey step is active', () => {
@@ -122,10 +219,11 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(options).toBeTruthy();
   });
 
-  function createFacade(): EnrollmentSurveyOptionsFacade {
+  // `formsState` permite entrar con el form ya hidratado, como queda tras el patch de la encuesta.
+  function createFacade(formsState?: EnrollmentFormsState): EnrollmentSurveyOptionsFacade {
     TestBed.configureTestingModule({
       providers: [
-        { provide: ENROLLMENT_FORMS, useFactory: createEnrollmentFormsState },
+        { provide: ENROLLMENT_FORMS, useFactory: () => formsState ?? createEnrollmentFormsState() },
         EnrollmentSurveyOptionsFacade,
         {
           provide: CatalogsApi,
@@ -134,7 +232,7 @@ describe('EnrollmentSurveyOptionsFacade', () => {
       ],
     });
     const options = TestBed.inject(EnrollmentSurveyOptionsFacade);
-    options.initialize({ isSurveyStepActive, onOptionsChanged, onInitialCatalogsApplied });
+    options.initialize({ isSurveyStepActive, onOptionsChanged });
     TestBed.tick();
     return options;
   }

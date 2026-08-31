@@ -82,9 +82,8 @@ export class EnrollmentPaymentFacade {
       toCoordinatorContact('Coordinador(a) de Cursos:', detail?.courseCoordinator),
     ].filter((contact): contact is CoordinatorContact => contact !== null);
   });
-  // En Actualización profesional cada seminario confirmado trae sus propias materias:
-  // se listan todas juntas, sin repetir las que comparten varios seminarios.
-  private readonly subjects = computed<readonly string[]>(() => [
+
+  public readonly subjects = computed<readonly string[]>(() => [
     ...new Set(
       (this.confirmedDetail()?.enrollments ?? [])
         .flatMap(enrollment => enrollment.firstSemesterSubjects)
@@ -366,7 +365,8 @@ export class EnrollmentPaymentFacade {
 
     const amount = this.process.preEnrollmentResponse()?.enrollmentDeposit;
     const availableAmount = this.process.preEnrollmentResponse()?.accountBalance;
-    if (!isPositiveAmount(amount)) return [];
+    // Sin saldo en cuenta corriente el medio no aplica, aunque haya seña a pagar.
+    if (!isPositiveAmount(amount) || availableAmount === 0) return [];
 
     return [
       {

@@ -9,6 +9,7 @@
       numberAriaLabel="Número de teléfono"
       placeholderText="Número"
       [defaultCountry]="'UY'"
+      [maxLength]="phoneMaxLength()"
       [required]="true" />
     @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('required'))
     {

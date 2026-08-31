@@ -4,6 +4,32 @@
   class="responsive-select__desktop"
   [hideRequiredMarker]="!isRequired() || hasValue()">
   <ort-label>{{ label() }}</ort-label>
+  @if (searchable()) {
+  <ort-searchable-select
+    [aria-label]="ariaLabel() ?? ''"
+    [disabled]="isDisabled()"
+    [displayWith]="optionLabel"
+    [id]="fieldId()"
+    [loading]="loading()"
+    [loadingText]="loadingText()"
+    [multiple]="multiple()"
+    [noOptionsText]="noOptionsText()"
+    [placeholderInput]="placeholder()"
+    [required]="isRequired()"
+    [valueModel]="value()"
+    (openedChange)="onDesktopOpenedChange($event)"
+    (valueModelChange)="onSearchableValueChange($event)">
+    @for (group of groups(); track group.label) { @if (group.label) {
+    <ort-optgroup [label]="group.label">
+      @for (option of group.options; track option.value) {
+      <ort-option [textValue]="option.label" [value]="option.value">{{ option.label }}</ort-option>
+      }
+    </ort-optgroup>
+    } @else { @for (option of group.options; track option.value) {
+    <ort-option [textValue]="option.label" [value]="option.value">{{ option.label }}</ort-option>
+    } } }
+  </ort-searchable-select>
+  } @else {
   <ort-select
     [attr.aria-label]="ariaLabel()"
     [disabled]="isDisabled()"
@@ -18,7 +44,9 @@
     (keydown)="onDesktopKeydown($event)"
     (openedChange)="onDesktopOpenedChange($event)"
     (valueModelChange)="onDesktopValueChange($event)">
-    @if (!multiple()) {
+    @if (selectedOptions().length > 0) {
+    <ort-select-trigger>{{ selectedLabel() }}</ort-select-trigger>
+    } @if (!multiple()) {
     <ort-option value="">{{ placeholder() }}</ort-option>
     } @for (group of groups(); track group.label) { @if (group.label) {
     <ort-optgroup [label]="group.label">
@@ -54,7 +82,7 @@
     </ort-option>
     } } }
   </ort-select>
-  @if (invalid()) {
+  } @if (invalid()) {
   <ort-error>{{ errorText() }}</ort-error>
   }
 </ort-form-field>

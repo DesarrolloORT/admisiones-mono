@@ -4,7 +4,7 @@ import { loadE2eEnv } from './e2e/support/env';
 
 loadE2eEnv();
 
-const localBaseURL = 'http://localhost:4200';
+const localBaseURL = 'http://localhost:4201';
 const baseURL = process.env['E2E_BASE_URL'] ?? localBaseURL;
 const shouldStartLocalServer = baseURL === localBaseURL;
 
@@ -25,8 +25,8 @@ export default defineConfig({
   },
   webServer: shouldStartLocalServer
     ? {
-        command: 'npm start -- desa',
-        reuseExistingServer: !process.env['CI'],
+        command: 'npm start -- desa --port 4201',
+        reuseExistingServer: false,
         timeout: 120_000,
         url: baseURL,
       }

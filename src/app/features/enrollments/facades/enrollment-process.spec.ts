@@ -1,8 +1,8 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import type { EnrollmentDetail } from '../models/enrollment-detail';
@@ -277,79 +277,25 @@ describe('EnrollmentProcessFacade', () => {
     expect(facade.catalogError()).toBe('Propuesta sin catálogos');
   });
 
-  it('opens and closes the exit confirmation dialog', () => {
-    const { facade } = createFacade(NEW_ENTRY, FRESH);
-
-    facade.requestExit();
-    expect(facade.exitConfirmationOpen()).toBe(true);
-
-    facade.cancelExit();
-    expect(facade.exitConfirmationOpen()).toBe(false);
-    expect(facade.surveySaveError()).toBeNull();
-  });
-
-  it('exits without saving when the user has no initial survey right', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.hasInitialSurveyRight.set(false);
-
-    facade.requestExit();
-    facade.confirmExit();
-
-    expect(survey.savePartial).not.toHaveBeenCalled();
-    expect(facade.exitConfirmationOpen()).toBe(false);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
-  });
-
-  it('saves the partial survey and navigates home on exit', () => {
+  // Sin este guardado se pierde lo respondido en una seccion que todavia no quedo completa:
+  // el autoguardado por seccion solo dispara con la seccion valida.
+  it('saves the pending survey delta on exit and navigates home', () => {
     const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
 
-    facade.requestExit();
-    facade.confirmExit();
+    facade.exit();
 
     expect(survey.savePartial).toHaveBeenCalledOnce();
-    expect(facade.exitConfirmationOpen()).toBe(false);
-    expect(facade.surveySaveError()).toBeNull();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
   });
 
-  it('shows an error and stays when the partial save reports failure', () => {
+  // El guardado es oportunista: un fallo no bloquea ni rompe la salida.
+  it('still navigates home when the save on exit fails', () => {
     const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.savePartial.mockReturnValue(of(false));
+    survey.savePartial.mockReturnValue(throwError(() => new Error('network error')));
 
-    facade.requestExit();
-    facade.confirmExit();
+    facade.exit();
 
-    expect(facade.surveySaveError()).toBe('No se pudo guardar la encuesta. Intentá nuevamente.');
-    expect(facade.exitConfirmationOpen()).toBe(true);
-    expect(router.navigateByUrl).not.toHaveBeenCalled();
-  });
-
-  it('shows an error and stays when the partial save fails', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    survey.savePartial.mockReturnValue(throwError(() => new Error('offline')));
-
-    facade.requestExit();
-    facade.confirmExit();
-
-    expect(facade.surveySaveError()).toBe('No se pudo guardar la encuesta. Intentá nuevamente.');
-    expect(facade.exitConfirmationOpen()).toBe(true);
-    expect(router.navigateByUrl).not.toHaveBeenCalled();
-  });
-
-  it('ignores a second exit confirmation while the survey is saving', () => {
-    const { facade, survey, router } = createFacade(NEW_ENTRY, FRESH);
-    const saving = new Subject<boolean>();
-    survey.savePartial.mockReturnValue(saving.asObservable());
-
-    facade.requestExit();
-    facade.confirmExit();
-    facade.confirmExit();
-
-    expect(survey.savePartial).toHaveBeenCalledTimes(1);
-    saving.next(true);
-    saving.complete();
-    expect(router.navigateByUrl).toHaveBeenCalledTimes(1);
-    expect(facade.exitConfirmationOpen()).toBe(false);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
   });
 
   it('dispatches continue to the facade owning the current step', () => {
@@ -400,6 +346,147 @@ describe('EnrollmentProcessFacade', () => {
     expect(facade.canGoBack()).toBe(false);
     facade.back();
     expect(process.flow.currentStep()).toBe('payment');
+  });
+
+  // El bug: recargar en el paso 3 volvía al paso 2 (el Detalle no encuentra `estado=En
+  // proceso`) y ahí "Continuar" reconfirmaba una preinscripción ya confirmada (400, sin
+  // salida). La URL debe identificar la inscripción, nunca su estado.
+  it('rewrites the URL without the entry state when the flow advances a step', () => {
+    const { process, router } = createFacade(resume(inProgressDetail(), 1), FRESH);
+
+    TestBed.tick();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    process.flow.goTo('payment');
+    TestBed.tick();
+
+    expect(router.navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: {
+          idProducto: 20,
+          idProceso: 200,
+          idOferta: ['300'],
+          nivel: 1,
+          estado: null,
+          modo: null,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      })
+    );
+  });
+
+  // Seña 0, "a la espera" y corporativa cierran en pantalla terminal sin cambiar de paso:
+  // la preinscripción ya está confirmada igual, así que la URL tampoco puede seguir
+  // diciendo el estado con el que se entró.
+  it('rewrites the URL when the pre-enrollment is confirmed without changing the step', () => {
+    const { process, router } = createFacade(resume(inProgressDetail(), 1), FRESH);
+
+    TestBed.tick();
+
+    process.preEnrollmentResponse.set({
+      confirmed: true,
+      isWaiting: true,
+      enrollmentId: 1072704,
+      paymentDueDate: null,
+      enrollmentDeposit: 0,
+      accountBalance: null,
+      summary: null,
+      seminars: [],
+    });
+    TestBed.tick();
+
+    expect(router.navigate).toHaveBeenCalledOnce();
+    expect(process.flow.currentStep()).toBe('survey');
+  });
+
+  // Una inscripción nueva no llega con params: sin esto, recargar después de avanzar
+  // volvía al paso 1 con el interés ya registrado.
+  it('adds the enrollment params on a new enrollment as soon as the flow advances', () => {
+    const { process, proposal, router } = createFacade(NEW_ENTRY, FRESH);
+
+    TestBed.tick();
+
+    proposal.academicForm.setValue({
+      proposalType: '1',
+      degreeProgram: '20',
+      intake: '200',
+      shift: '300',
+      seminars: [],
+    });
+    process.flow.next();
+    TestBed.tick();
+
+    expect(router.navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: {
+          idProducto: 20,
+          idProceso: 200,
+          idOferta: ['300'],
+          nivel: 1,
+          estado: null,
+          modo: null,
+        },
+      })
+    );
+  });
+
+  // La app navega con `onSameUrlNavigation: 'reload'`: navegar a la MISMA URL recargaría la
+  // ruta y re-crearía la página en medio del flujo.
+  it('does not navigate when the URL already identifies the enrollment without its state', () => {
+    const { process, router } = createFacade(resume(inProgressDetail(), 1), FRESH, true, {
+      queryParams: { idProducto: '20', idProceso: '200', idOferta: '300', nivel: '1' },
+    });
+
+    TestBed.tick();
+    process.flow.goTo('payment');
+    TestBed.tick();
+
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  // Re-derivar por el retry de encuesta no es movimiento del flujo: `estado` sigue
+  // describiendo la inscripción con la que se entró y no hay que perderlo.
+  it('does not rewrite the URL when the initial state is re-derived on a survey retry', () => {
+    const { facade, survey, router } = createFacade(resume(inProgressDetail(), 1), {
+      initialSurvey: null,
+      loadFailed: true,
+    });
+
+    TestBed.tick();
+    survey.fetchResolvedInitialSurvey.mockReturnValue(of(FRESH));
+    facade.retryInitialSurvey();
+    TestBed.tick();
+
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  // Re-derivar puede no mover ninguna señal del flujo (inscripción nueva: sigue en el paso 1
+  // sin preinscripción). El punto de entrada no puede saltearse el primer avance posterior.
+  it('still rewrites the URL on the first advance after a retry that moved nothing', () => {
+    const { facade, process, proposal, survey, router } = createFacade(NEW_ENTRY, {
+      initialSurvey: null,
+      loadFailed: true,
+    });
+
+    TestBed.tick();
+    survey.fetchResolvedInitialSurvey.mockReturnValue(of(FRESH));
+    facade.retryInitialSurvey();
+    TestBed.tick();
+
+    proposal.academicForm.setValue({
+      proposalType: '1',
+      degreeProgram: '20',
+      intake: '200',
+      shift: '300',
+      seminars: [],
+    });
+    process.flow.next();
+    TestBed.tick();
+
+    expect(router.navigate).toHaveBeenCalledOnce();
   });
 
   it('blocks back while the payment is processing or being edited', () => {
@@ -467,6 +554,23 @@ function resume(
   };
 }
 
+function inProgressDetail(): EnrollmentDetail {
+  return {
+    status: 'En proceso',
+    summary: {
+      offeringId: 300,
+      productId: 20,
+      degreeProgram: 'Sistemas',
+      intake: 'Marzo 2027',
+      shift: 'Noche',
+    },
+    interests: [interest(300)],
+    pendingPayment: null,
+    minimumDeposit: null,
+    confirmed: null,
+  };
+}
+
 function interest(offeringId: number): EnrollmentOfferingSummary {
   return { enrollmentId: null, offeringId, name: 'Oferta', intake: null, shift: null };
 }
@@ -487,7 +591,7 @@ function createFacade(
   entry: EnrollmentEntryResolved,
   surveyResolved: EnrollmentInitialSurveyResolved,
   initialized = true,
-  options: { spyGoTo?: boolean } = {}
+  options: { spyGoTo?: boolean; queryParams?: Record<string, string> } = {}
 ) {
   const payment = {
     outcome: signal<string | null>(null),
@@ -525,20 +629,19 @@ function createFacade(
     initialized: signal(initialized),
     activeSection,
     readerOpen,
-    scenario: signal('first-time'),
     visibleSections,
     canGoBack: computed(() => readerOpen() || visibleSections().indexOf(activeSection()) > 0),
     catalogError: signal<string | null>(null),
     loadingSurveyState: signal(false),
     surveyLoadError: signal<string | null>(null),
-    hasInitialSurveyRight: signal(true),
+    canAnswerSurvey: signal(true),
     back: vi.fn(),
     continue: vi.fn(),
-    savePartial: vi.fn().mockReturnValue(of(true)),
+    savePartial: vi.fn().mockReturnValue(of(undefined)),
     applyInitialState: vi.fn(),
     fetchResolvedInitialSurvey: vi.fn(),
   };
-  const router = { navigateByUrl: vi.fn() };
+  const router = { navigateByUrl: vi.fn(), navigate: vi.fn() };
 
   TestBed.configureTestingModule({
     providers: [
@@ -546,7 +649,12 @@ function createFacade(
       { provide: ENROLLMENT_PROCESS_STATE, useFactory: createEnrollmentProcessState },
       {
         provide: ActivatedRoute,
-        useValue: { snapshot: { data: { entry, initialSurvey: surveyResolved } } },
+        useValue: {
+          snapshot: {
+            data: { entry, initialSurvey: surveyResolved },
+            queryParamMap: convertToParamMap(options.queryParams ?? {}),
+          },
+        },
       },
       { provide: Router, useValue: router },
       { provide: EnrollmentProposalFacade, useValue: proposal },
@@ -578,6 +686,7 @@ function createInitialSurvey(
     repeatsHighSchoolYear: null,
     highSchoolYearRepeatCount: null,
     highSchoolInstitutionId: null,
+    highSchoolInstitutionStateId: null,
     highSchoolLocationId: null,
     highSchoolInstitutionName: null,
     priorHigherEducationStatusId: null,

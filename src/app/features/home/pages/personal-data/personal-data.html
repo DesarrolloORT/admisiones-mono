@@ -168,6 +168,7 @@
         numberAriaLabel="Número de celular"
         placeholderText="00 000 000"
         [defaultCountry]="'UY'"
+        [maxLength]="phoneMaxLength()"
         [required]="true" />
       <ort-hint>Seleccioná el país e ingresá el número sin el prefijo internacional.</ort-hint>
       @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {

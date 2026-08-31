@@ -6,6 +6,7 @@ import {
   inject,
   OnInit,
   signal,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -21,6 +22,7 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtPhoneInput,
   OrtPhoneInputValue,
   ortPhoneValidator,
   OrtSelectModule,
@@ -39,7 +41,7 @@ import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
-import { toBackendPhone, toPhoneInputValue } from 'src/app/shared/forms/phone';
+import { phoneMaxDigits, toBackendPhone, toPhoneInputValue } from 'src/app/shared/forms/phone';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
 import { AccountApi } from '../../../auth/api/account.api';
@@ -122,6 +124,13 @@ export class PersonalData implements OnInit {
         }),
       ],
     }
+  );
+
+  // El control es `updateOn: 'blur'`, asi que su valor no refleja el pais recien elegido:
+  // el largo se toma del propio input.
+  private readonly phoneField = viewChild(OrtPhoneInput);
+  protected readonly phoneMaxLength = computed(() =>
+    phoneMaxDigits(this.phoneField()?.selectedCountry())
   );
 
   protected readonly locations = signal<LocationCountry[]>([]);
