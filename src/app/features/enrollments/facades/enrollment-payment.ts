@@ -84,7 +84,7 @@ export class EnrollmentPaymentFacade {
   });
   // En Actualización profesional cada seminario confirmado trae sus propias materias:
   // se listan todas juntas, sin repetir las que comparten varios seminarios.
-  private readonly subjects = computed<readonly string[]>(() => [
+  public readonly subjects = computed<readonly string[]>(() => [
     ...new Set(
       (this.confirmedDetail()?.enrollments ?? [])
         .flatMap(enrollment => enrollment.firstSemesterSubjects)
@@ -164,6 +164,7 @@ export class EnrollmentPaymentFacade {
   public readonly visibleSubjects = computed(() =>
     this.showAllSubjects() ? this.subjects() : this.subjects().slice(0, 4)
   );
+  public readonly totalSubjectCount = computed(() => this.subjects().length);
   public readonly canToggleSubjects = computed(() => this.subjects().length > 4);
   public readonly subjectsToggleLabel = computed(() =>
     this.showAllSubjects() ? 'Ver menos materias' : 'Ver todas las materias'
