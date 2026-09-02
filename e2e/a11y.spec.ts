@@ -177,6 +177,31 @@ test.describe('Keyboard and form accessibility @a11y', () => {
     await expectNoAxeViolations(page);
   });
 
+  test('expands additional subjects only on mobile @a11y', async ({ page }, testInfo) => {
+    await mockApi(page, { enrollmentDetail: 'duplicate-status' });
+    await addAuthenticatedSession(page);
+    await page.goto('/inscripciones?idProducto=20&idProceso=200&estado=Confirmada&nivel=1');
+
+    await expect(page.getByRole('heading', { name: '¡Confirmamos tu inscripción!' })).toBeVisible();
+    const subjects = page.locator('#degree-program-subject-list li');
+    const subjectsToggle = page.locator('button[aria-controls="degree-program-subject-list"]');
+
+    if (testInfo.project.name === 'chromium-mobile') {
+      await expect(subjects).toHaveCount(4);
+      await expect(subjectsToggle).toHaveAccessibleName('Ver todas las materias');
+      await expect(subjectsToggle).toHaveAttribute('aria-expanded', 'false');
+      await subjectsToggle.click();
+      await expect(subjects).toHaveCount(5);
+      await expect(subjectsToggle).toHaveAccessibleName('Ver menos materias');
+      await expect(subjectsToggle).toHaveAttribute('aria-expanded', 'true');
+    } else {
+      await expect(subjects).toHaveCount(5);
+      await expect(subjectsToggle).toHaveCount(0);
+    }
+
+    await expectNoAxeViolations(page);
+  });
+
   test('completes enrollment from start to finish using only the keyboard @a11y @regression', async ({
     page,
   }) => {
