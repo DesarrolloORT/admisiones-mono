@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   getBankSvg,
@@ -7,6 +7,7 @@ import {
   OrtIconModule,
   OrtStatusIconModule,
 } from '@desarrolloort/components';
+import { BreakpointService } from '@desarrolloort/ngx-utils';
 
 import { EnrollmentPaymentFacade } from '../../../facades/enrollment-payment';
 
@@ -20,4 +21,16 @@ import { EnrollmentPaymentFacade } from '../../../facades/enrollment-payment';
 export class EnrollmentSuccessStep {
   protected readonly getBankSvg = getBankSvg;
   protected readonly facade = inject(EnrollmentPaymentFacade);
+  private readonly breakpointService = inject(BreakpointService);
+
+  protected readonly displayedSubjects = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+    return breakpoint.isXSmall || breakpoint.isSmall
+      ? this.facade.visibleSubjects()
+      : this.facade.subjects();
+  });
+  protected readonly canToggleSubjects = computed(() => {
+    const breakpoint = this.breakpointService.breakpoint();
+    return (breakpoint.isXSmall || breakpoint.isSmall) && this.facade.canToggleSubjects();
+  });
 }
