@@ -15,6 +15,16 @@ describe('auth forms', () => {
     expect(createPersonalForm().controls.primaryPhone.updateOn).toBe('blur');
   });
 
+  it('should reject more than eight digits only for a Uruguayan phone', () => {
+    const phone = createPersonalForm().controls.primaryPhone;
+
+    phone.setValue({ iso2: 'UY', number: '099123456', numberE164: '' });
+    expect(phone.hasError('phone')).toBe(true);
+
+    phone.setValue({ iso2: 'AR', number: '91123456789', numberE164: '' });
+    expect(phone.hasError('phone')).toBe(false);
+  });
+
   it('should accept matching emails case-insensitively', () => {
     const form = createPersonalForm();
 
