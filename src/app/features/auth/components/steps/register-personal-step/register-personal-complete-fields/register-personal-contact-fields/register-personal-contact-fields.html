@@ -4,17 +4,21 @@
   <ort-form-field [hideRequiredMarker]="!!form().controls.primaryPhone.value?.number">
     <ort-label>Celular</ort-label>
     <ort-phone-input
+      #phoneInput
       countryAriaLabel="Código de país"
       formControlName="primaryPhone"
       numberAriaLabel="Número de teléfono"
       placeholderText="Número"
       [defaultCountry]="'UY'"
+      [maxLength]="
+        phoneInput.selectedCountry()?.iso2 === 'UY' ? uruguayPhoneMaxLength : undefined
+      "
       [required]="true" />
-    @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('required'))
-    {
-    <ort-error>El celular es obligatorio.</ort-error>
-    } @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('phone')) {
+    @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('phone')) {
     <ort-error>Ingresá un celular válido.</ort-error>
+    } @else if (form().controls.primaryPhone.touched &&
+    form().controls.primaryPhone.hasError('required')) {
+    <ort-error>El celular es obligatorio.</ort-error>
     }
   </ort-form-field>
 
