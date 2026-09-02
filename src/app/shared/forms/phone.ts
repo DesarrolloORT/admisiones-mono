@@ -1,8 +1,9 @@
+import type { AbstractControl, ValidationErrors } from '@angular/forms';
 import {
   findCountryByIso2,
   getIso2Codes,
   isValidIso2Code,
-  OrtPhoneInputValue,
+  type OrtPhoneInputValue,
 } from '@desarrolloort/components';
 
 /**
@@ -28,6 +29,25 @@ export interface StoredPhoneNumber {
 
 /** Los telefonos guardados antes de la migracion no traen pais y casi todos son uruguayos. */
 export const PHONE_FALLBACK_ISO2 = 'UY';
+export const URUGUAY_PHONE_MAX_LENGTH = 8;
+
+export function uruguayPhoneMaxLengthValidator(
+  control: AbstractControl<OrtPhoneInputValue | null>
+): ValidationErrors | null {
+  const value = control.value;
+  const actualLength = value?.number.replaceAll(/\D/g, '').length ?? 0;
+
+  return value?.iso2 === PHONE_FALLBACK_ISO2 && actualLength > URUGUAY_PHONE_MAX_LENGTH
+    ? {
+        phone: {
+          value,
+          reason: 'invalid-length',
+          maxLength: URUGUAY_PHONE_MAX_LENGTH,
+          actualLength,
+        },
+      }
+    : null;
+}
 
 export function toBackendPhone(value: OrtPhoneInputValue | null): PhoneNumberValue {
   return {

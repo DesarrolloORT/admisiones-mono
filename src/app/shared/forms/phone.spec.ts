@@ -1,5 +1,24 @@
+import { FormControl } from '@angular/forms';
+
 import type { StoredPhoneNumber } from './phone';
-import { PHONE_FALLBACK_ISO2, toBackendPhone, toPhoneInputValue } from './phone';
+import {
+  PHONE_FALLBACK_ISO2,
+  toBackendPhone,
+  toPhoneInputValue,
+  uruguayPhoneMaxLengthValidator,
+} from './phone';
+
+describe('uruguayPhoneMaxLengthValidator', () => {
+  it('should reject more than eight digits only for Uruguay', () => {
+    const control = new FormControl({ iso2: 'UY', number: '099123456', numberE164: '' });
+
+    expect(uruguayPhoneMaxLengthValidator(control)?.['phone']).toBeTruthy();
+
+    control.setValue({ iso2: 'AR', number: '91123456789', numberE164: '' });
+
+    expect(uruguayPhoneMaxLengthValidator(control)).toBeNull();
+  });
+});
 
 describe('toBackendPhone', () => {
   it('should send only the fields the backend uses on save', () => {
