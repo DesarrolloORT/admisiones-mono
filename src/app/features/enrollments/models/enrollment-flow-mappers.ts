@@ -3,6 +3,7 @@ import type { DegreeProgram } from '../../catalogs/models/catalog.interface';
 import type {
   ApiPaymentMethod,
   EnrollmentInitialSurvey,
+  EnrollmentInitialSurveyPayload,
   EnrollmentInitialSurveyResponse,
   EnrollmentPaymentPayload,
   PaymentMethod,
@@ -39,8 +40,15 @@ export function patchBackendSurveyForms(
     levelId === undefined
       ? forms.academicForm.controls.proposalType.value
       : (getAcademicProposalTypeByLevel(levelId)?.value ?? '');
+  const schoolPlace = getSchoolPlaceValue(survey);
   const schoolInstitution =
-    survey.highSchoolInstitutionId ?? survey.highSchoolInstitutionName ?? '';
+    schoolPlace === SCHOOL_PLACE_INTERNATIONAL
+      ? (survey.highSchoolInstitutionName ?? '')
+      : (survey.highSchoolInstitutionId?.toString() ?? '');
+  const schoolDepartment =
+    schoolPlace === SCHOOL_PLACE_NATIONAL
+      ? (survey.highSchoolInstitutionStateId?.toString() ?? '')
+      : '';
 
   if (context.includeAcademicSelection !== false) {
     forms.academicForm.patchValue(
@@ -64,8 +72,9 @@ export function patchBackendSurveyForms(
       orientation: toFormValue(survey.highSchoolOrientationId),
       repeatsHighSchoolYear: toYesNoValue(survey.repeatsHighSchoolYear),
       highSchoolYearRepeatCount: survey.highSchoolYearRepeatCount,
-      highSchoolLocation: getSchoolPlaceValue(survey),
-      educationalInstitution: schoolInstitution.toString(),
+      highSchoolLocation: schoolPlace,
+      state: schoolDepartment,
+      educationalInstitution: schoolInstitution,
       higherEducationStatus: toFormValue(survey.priorHigherEducationStatusId),
       higherEducationUniversities: toSelectedOptionValues(response.higherEducationUniversities),
       otherHigherEducationUniversity: toFirstText(response.otherHigherEducationUniversities),
@@ -130,7 +139,7 @@ export function buildInitialSurveyPayload(forms: EnrollmentForms) {
       ? toNullableNumber(education.orientation.value)
       : null,
     highSchoolYear: currentlyInSchool ? toNullableNumber(education.highSchoolYear.value) : null,
-    currentlyStudiesHighSchool: currentlyInSchool,
+    currentlyStudiesHighSchool: toStudiesHighSchoolBoolean(education.studiesHighSchool.value),
     highSchoolYearRepeatCount: recursedBaccalaureate
       ? education.highSchoolYearRepeatCount.value
       : null,
@@ -189,6 +198,40 @@ export function buildInitialSurveyPayload(forms: EnrollmentForms) {
       : null,
     ortChoiceReasonIds: toNumberArray(decision.ortReasons.value),
   };
+}
+
+/**
+ * Delta contra lo último persistido: solo las claves cuyo valor cambió. El endpoint es un
+ * upsert parcial, así que mandar la encuesta entera en cada cambio es trabajo de más.
+ *
+ * Una clave AUSENTE significa "sin cambios" y una clave presente en `null` significa
+ * "borrar", así que los `null` SÍ entran al delta: es como viaja el desmarcado de una
+ * opción o el vaciado de un campo por validadores condicionales.
+ *
+ * Los dos lados se construyen con `buildInitialSurveyPayload`, y de ahí sale gratis que
+ * las claves que el builder fija duras nunca se reporten como cambio.
+ */
+export function diffInitialSurveyPayload(
+  current: EnrollmentInitialSurveyPayload,
+  persisted: EnrollmentInitialSurveyPayload
+): Partial<EnrollmentInitialSurveyPayload> {
+  const delta: Partial<EnrollmentInitialSurveyPayload> = {};
+  for (const key of Object.keys(current) as (keyof EnrollmentInitialSurveyPayload)[]) {
+    if (!isSameSurveyValue(current[key], persisted[key])) {
+      Object.assign(delta, { [key]: current[key] });
+    }
+  }
+  return delta;
+}
+
+// Comparación por valor. Nunca por truthiness: `0` y `false` son respuestas válidas y
+// distintas de `null`. Los arrays se comparan por contenido y orden; reordenar una
+// multiselección manda la clave de nuevo, que es inofensivo y no vale un set.
+function isSameSurveyValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((item, index) => item === b[index]);
+  }
+  return a === b;
 }
 
 export function buildConfirmPreEnrollmentPayload(
@@ -283,6 +326,10 @@ export function parseDate(value: string | null | undefined): Date | null {
 
 export function toYesNoValue(value: boolean | null): string {
   return value === null ? '' : value ? 'yes' : 'no';
+}
+
+function toStudiesHighSchoolBoolean(value: string): boolean | null {
+  return value === '' ? null : value === 'studying';
 }
 
 export function toNullableBoolean(value: string): boolean | null {

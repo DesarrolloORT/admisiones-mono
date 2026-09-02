@@ -19,8 +19,6 @@ export interface SurveyOptionsCallbacks {
   isSurveyStepActive: Signal<boolean>;
   /** Cambió algún catálogo de opciones: revalidar los campos condicionales. */
   onOptionsChanged(): void;
-  /** Llegaron los catálogos de la encuesta inicial: re-aplicar la encuesta del backend. */
-  onInitialCatalogsApplied(): void;
 }
 
 /**
@@ -37,7 +35,6 @@ export class EnrollmentSurveyOptionsFacade {
   private callbacks: SurveyOptionsCallbacks = {
     isSurveyStepActive: signal(false),
     onOptionsChanged: () => undefined,
-    onInitialCatalogsApplied: () => undefined,
   };
   private readonly context = signal<SurveyOptionsCallbacks | null>(null);
   private catalogsRequested = false;
@@ -89,12 +86,12 @@ export class EnrollmentSurveyOptionsFacade {
   }
 
   public refreshOrientationOptions(): void {
+    const years = this.baccalaureateYears();
     this.orientationOptions.set(
-      buildOrientationOptions(
-        this.baccalaureateYears(),
-        this.educationForm.controls.highSchoolYear.value
-      )
+      buildOrientationOptions(years, this.educationForm.controls.highSchoolYear.value)
     );
+    if (years.length === 0) return;
+
     if (
       this.educationForm.controls.orientation.value &&
       !this.orientationOptions().some(
@@ -114,7 +111,7 @@ export class EnrollmentSurveyOptionsFacade {
       });
     this.educationForm.controls.state.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadInstitutionsForSelectedDepartment());
+      .subscribe(() => this.loadInstitutionsForSelectedDepartment(true));
   }
 
   private loadInitialSurveyCatalogs(): void {
@@ -129,10 +126,7 @@ export class EnrollmentSurveyOptionsFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: catalogs => {
-          this.applyInitialSurveyCatalogs(catalogs);
-          this.callbacks.onInitialCatalogsApplied();
-        },
+        next: catalogs => this.applyInitialSurveyCatalogs(catalogs),
         error: () => {
           this.catalogError.set('No se pudieron cargar los catálogos de encuesta inicial.');
           this.applyInitialSurveyCatalogs({
@@ -208,9 +202,11 @@ export class EnrollmentSurveyOptionsFacade {
       }))
     );
     this.callbacks.onOptionsChanged();
+
+    if (this.educationForm.controls.state.value) this.loadInstitutionsForSelectedDepartment();
   }
 
-  private loadInstitutionsForSelectedDepartment(): void {
+  public loadInstitutionsForSelectedDepartment(clearMissingSelection = false): void {
     const departmentValue = this.educationForm.controls.state.value;
     const statusCode = departmentValue ? Number(departmentValue) : null;
     if (this.uruguayCountryCode === null || statusCode === null) {
@@ -230,7 +226,11 @@ export class EnrollmentSurveyOptionsFacade {
             }))
           );
           const selected = this.educationForm.controls.educationalInstitution.value;
-          if (selected && !this.institutionOptions().some(option => option.value === selected)) {
+          if (
+            clearMissingSelection &&
+            selected &&
+            !this.institutionOptions().some(option => option.value === selected)
+          ) {
             this.educationForm.controls.educationalInstitution.setValue('', { emitEvent: false });
           }
           this.callbacks.onOptionsChanged();

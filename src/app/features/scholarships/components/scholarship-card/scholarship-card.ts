@@ -27,7 +27,6 @@ export interface ScholarshipCardModel {
 export class ScholarshipCard {
   readonly scholarship = input.required<ScholarshipCardModel>();
   readonly isEnrolled = input.required<boolean>();
-  readonly single = input<boolean>(false);
 
   /**
    * Cada card necesita un `id` propio: con uno fijo, todos los `aria-labelledby`

@@ -16,6 +16,16 @@ Usa .github/copilot-instructions.md como baseline compartido del equipo.
 - Seguridad: .github/instructions/toolkit/secure-code.instructions.md
 - UI/SCSS: antes de entregar, respeta `.stylelintrc.json`; no uses `px` en `font-size`, `line-height`, `width`, `height`, `margin`, `padding` ni `gap`. Usa tokens `--ort-sys-*` o `rem` permitido.
 
+## Comentarios en codigo
+
+- El codigo se explica solo. Un comentario es el ultimo recurso, nunca el primero.
+- **Dentro del cuerpo de una funcion no va prosa.** Un comentario ahi es la senal de que falta un nombre: extrae la condicion a un predicado nombrado, el bloque a un metodo privado, el valor magico a una constante, las señales que observa un `effect` a un `computed` que las nombre. Si escribiste tres lineas de `//` para explicar cinco de codigo, el problema es el codigo.
+- "Explica el por que" NO alcanza como excusa: un comentario correcto y bien escrito sobre codigo poco claro sigue siendo codigo poco claro. Primero arregla el codigo; despues fijate si el comentario todavia hace falta.
+- Prohibido: JSDoc que repite la firma, `/** Input for X. */` sobre una interfaz que ya se llama X, narrar la linea siguiente (`Behind the scenes: POST /auth/login`), banners de seccion (`// -------`).
+- El racional de dominio (por que el flujo funciona asi, que bug lo origino, que escenario cubre) va a `docs/flujos/` con su `businessId`, no al codigo: ahi se versiona, se busca y no se desincroniza.
+- Sobrevive solo lo que no puede vivir ni en un nombre ni en `docs/`: una restriccion externa no evidente (quirk de un sistema legacy, contrato del backend) y los `ponytail:` con su techo conocido.
+- `npm run check-comment-noise` lo valida en `lint:check`: maximo 2 lineas `//` seguidas. Referencia limpia: `features/auth/api/auth.api.ts`.
+
 ## Arquitectura Angular/API
 
 - Solo los adapters en `api/` (`features/*/api/*.api.ts`) pueden importar contratos generados desde `src/app/shared/api/generated/**`.

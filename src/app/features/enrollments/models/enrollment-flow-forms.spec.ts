@@ -22,6 +22,19 @@ describe('EnrollmentForms', () => {
     expect(Object.keys(forms.ortExperienceForm.controls)).toContain('campusRating');
   });
 
+  // Los campos de escritura libre actualizan al salir del campo: el guardado de la encuesta se
+  // dispara con la sección completa, y por tecla mandaría un POST por letra.
+  it('updates the free-text survey controls on blur', () => {
+    const forms = createEnrollmentForms();
+
+    expect(forms.educationForm.controls.otherHigherEducationUniversity.updateOn).toBe('blur');
+    expect(forms.educationForm.controls.educationalInstitution.updateOn).toBe('blur');
+    expect(forms.educationForm.controls.highSchoolYearRepeatCount.updateOn).toBe('blur');
+    expect(forms.academicDecisionForm.controls.otherResearchedUniversity.updateOn).toBe('blur');
+    // Los que se responden con un click siguen actualizando al cambiar.
+    expect(forms.educationForm.controls.studiesHighSchool.updateOn).toBe('change');
+  });
+
   it('supports required validation for draft controls', () => {
     const forms = createEnrollmentForms();
     const control = forms.ortExperienceForm.controls.websiteRating;

@@ -2,25 +2,25 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DoCheck,
+  effect,
   forwardRef,
   inject,
-  Injector,
+  input,
   OnInit,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   ControlValueAccessor,
   FormControl,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
-  NgControl,
   ReactiveFormsModule,
   ValidationErrors,
   Validator,
 } from '@angular/forms';
-import { OrtFormFieldModule, OrtSelectModule } from '@desarrolloort/components';
+import { OrtFormFieldModule, OrtSearchableSelectModule } from '@desarrolloort/components';
 
 import { CatalogsApi } from '../../api/catalogs.api';
 import { LocationCountry, LocationState } from '../../models/catalog.interface';
@@ -28,7 +28,7 @@ import { LocationValue } from '../../models/location-value';
 
 @Component({
   selector: 'app-location-select',
-  imports: [OrtFormFieldModule, OrtSelectModule, ReactiveFormsModule],
+  imports: [OrtFormFieldModule, OrtSearchableSelectModule, ReactiveFormsModule],
   templateUrl: './location-select.html',
   styleUrl: './location-select.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,23 +45,22 @@ import { LocationValue } from '../../models/location-value';
     },
   ],
 })
-export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Validator {
+export class LocationSelect implements ControlValueAccessor, OnInit, Validator {
   private readonly catalogs = inject(CatalogsApi);
-  private readonly injector = inject(Injector);
+
+  /** Marca los campos sin completar cuando el formulario ya se intentó enviar. */
+  public readonly submitted = input(false);
 
   protected readonly countries = signal<LocationCountry[]>([]);
   protected readonly isDisabled = signal(false);
 
-  protected readonly countryControl = new FormControl<string>('', { nonNullable: true });
-  protected readonly stateControl = new FormControl<string>('', { nonNullable: true });
-  protected readonly cityControl = new FormControl<string>('', { nonNullable: true });
+  protected readonly countryControl = new FormControl<number | null>(null);
+  protected readonly stateControl = new FormControl<number | null>(null);
+  protected readonly cityControl = new FormControl<number | null>(null);
 
   protected readonly selectedCountryCode = signal<number | null>(null);
   protected readonly selectedStateCode = signal<number | null>(null);
   protected readonly selectedCityCode = signal<number | null>(null);
-
-  private readonly statesVisible = signal(true);
-  private readonly citiesVisible = signal(true);
 
   protected readonly states = computed(() => {
     const countryCode = this.selectedCountryCode();
@@ -77,41 +76,45 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
     return state?.cities ?? [];
   });
 
-  protected readonly showStates = computed(
-    () => this.statesVisible() && this.selectedCountryCode() !== null && this.states().length > 0
-  );
-  protected readonly showCities = computed(
-    () => this.citiesVisible() && this.selectedStateCode() !== null && this.cities().length > 0
-  );
+  protected readonly showStates = computed(() => this.states().length > 0);
+  protected readonly showCities = computed(() => this.cities().length > 0);
 
   private onChange: (value: LocationValue) => void = () => {};
   private onTouched: () => void = () => {};
   private onValidatorChange: () => void = () => {};
 
+  constructor() {
+    // El searchable select también confirma valores al escribir o al limpiar el texto,
+    // no solo con selectionChange, por eso la cascada escucha el control. Los handlers
+    // ignoran emisiones sin cambio real: revalidar el control reemite valueChanges.
+    this.countryControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.onCountryChange());
+    this.stateControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.onStateChange());
+    this.cityControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.onCityChange());
+
+    // Cada campo se marca en rojo por sí solo al perder el foco sin completar
+    // (validador required + touched del control). Al enviar el formulario hay que
+    // marcarlos aunque el usuario nunca los haya visitado.
+    effect(() => {
+      if (!this.submitted()) return;
+      this.countryControl.markAsTouched();
+      this.stateControl.markAsTouched();
+      this.cityControl.markAsTouched();
+    });
+  }
+
   ngOnInit(): void {
     this.loadCountries();
   }
 
-  ngDoCheck(): void {
-    this.syncFieldVisualState();
-  }
-
   writeValue(value: LocationValue | null): void {
-    if (!value) {
-      this.selectedCountryCode.set(null);
-      this.selectedStateCode.set(null);
-      this.selectedCityCode.set(null);
-      this.countryControl.setValue('');
-      this.stateControl.setValue('');
-      this.cityControl.setValue('');
-      return;
-    }
-    this.selectedCountryCode.set(value.countryCode);
-    this.selectedStateCode.set(value.stateCode);
-    this.selectedCityCode.set(value.cityCode);
-    this.countryControl.setValue(value.countryCode?.toString() ?? '', { emitEvent: false });
-    this.stateControl.setValue(value.stateCode?.toString() ?? '', { emitEvent: false });
-    this.cityControl.setValue(value.cityCode?.toString() ?? '', { emitEvent: false });
+    this.selectedCountryCode.set(value?.countryCode ?? null);
+    this.selectedStateCode.set(value?.stateCode ?? null);
+    this.selectedCityCode.set(value?.cityCode ?? null);
+    this.countryControl.setValue(value?.countryCode ?? null, { emitEvent: false });
+    this.stateControl.setValue(value?.stateCode ?? null, { emitEvent: false });
+    this.cityControl.setValue(value?.cityCode ?? null, { emitEvent: false });
   }
 
   registerOnChange(fn: (value: LocationValue) => void): void {
@@ -163,43 +166,55 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
     }
   }
 
-  protected onCountryChange(): void {
-    const code = this.countryControl.value ? Number(this.countryControl.value) : null;
+  protected onBlur(): void {
+    this.onTouched();
+  }
+
+  // El valor puede llegar antes que las opciones (precarga por documento): el select
+  // necesita estas funciones para mostrar el nombre en lugar del código.
+  protected readonly countryName = (code: number): string =>
+    this.countries().find(item => item.countryCode === code)?.name ?? '';
+
+  protected readonly stateName = (code: number): string =>
+    this.states().find(item => item.stateCode === code)?.name ?? '';
+
+  protected readonly cityName = (code: number): string =>
+    this.cities().find(item => item.cityCode === code)?.name ?? '';
+
+  protected fieldError(control: FormControl<number | null>): string {
+    return control.hasError('unresolvedOption')
+      ? 'Seleccioná una opción de la lista'
+      : 'Este campo es obligatorio';
+  }
+
+  private onCountryChange(): void {
+    const code = this.countryControl.value;
+    if (code === this.selectedCountryCode()) return;
     this.selectedCountryCode.set(code);
     this.selectedStateCode.set(null);
     this.selectedCityCode.set(null);
-    this.stateControl.setValue('', { emitEvent: false });
-    this.cityControl.setValue('', { emitEvent: false });
-    this.statesVisible.set(false);
-    this.citiesVisible.set(false);
-    setTimeout(() => {
-      this.statesVisible.set(true);
-      this.citiesVisible.set(true);
-    });
+    this.stateControl.setValue(null, { emitEvent: false });
+    this.cityControl.setValue(null, { emitEvent: false });
     this.emitValue();
     this.onValidatorChange();
   }
 
-  protected onStateChange(): void {
-    const code = this.stateControl.value ? Number(this.stateControl.value) : null;
+  private onStateChange(): void {
+    const code = this.stateControl.value;
+    if (code === this.selectedStateCode()) return;
     this.selectedStateCode.set(code);
     this.selectedCityCode.set(null);
-    this.cityControl.setValue('', { emitEvent: false });
-    this.citiesVisible.set(false);
-    setTimeout(() => this.citiesVisible.set(true));
+    this.cityControl.setValue(null, { emitEvent: false });
     this.emitValue();
     this.onValidatorChange();
   }
 
-  protected onCityChange(): void {
-    const code = this.cityControl.value ? Number(this.cityControl.value) : null;
+  private onCityChange(): void {
+    const code = this.cityControl.value;
+    if (code === this.selectedCityCode()) return;
     this.selectedCityCode.set(code);
     this.emitValue();
     this.onValidatorChange();
-  }
-
-  protected onBlur(): void {
-    this.onTouched();
   }
 
   private emitValue(): void {
@@ -215,43 +230,11 @@ export class LocationSelect implements ControlValueAccessor, DoCheck, OnInit, Va
       this.countries.set(countries);
       const code = this.selectedCountryCode();
       if (code !== null) {
-        this.countryControl.setValue(code.toString(), { emitEvent: false });
+        // Reaplica el valor para que el select resuelva el nombre ahora que existen las opciones.
+        this.countryControl.setValue(code, { emitEvent: false });
       }
 
       this.onValidatorChange();
     });
-  }
-
-  private syncFieldVisualState(): void {
-    const controlToSync = this.injector.get(NgControl, null, {
-      self: true,
-      optional: true,
-    })?.control;
-    if (!controlToSync) {
-      return;
-    }
-
-    const touched = controlToSync.touched;
-    this.syncFieldError(this.countryControl, touched && controlToSync.hasError('locationRequired'));
-    this.syncFieldError(
-      this.stateControl,
-      touched && controlToSync.hasError('locationStateRequired')
-    );
-    this.syncFieldError(
-      this.cityControl,
-      touched && controlToSync.hasError('locationCityRequired')
-    );
-  }
-
-  private syncFieldError(control: FormControl<string>, hasError: boolean): void {
-    if (hasError) {
-      control.markAsTouched({ onlySelf: true });
-      control.setErrors({ required: true });
-      return;
-    }
-
-    if (control.hasError('required')) {
-      control.setErrors(null);
-    }
   }
 }

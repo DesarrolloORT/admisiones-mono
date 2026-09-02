@@ -56,9 +56,9 @@
         }
       </dl>
 
-      @if (displayedSubjects().length > 0) {
+      @if (facade.subjects().length > 0) {
       <h4 id="degree-program-subject-list-title">
-        Listado de materias a cursar ({{ facade.totalSubjectCount() }})
+        Listado de materias a cursar ({{ facade.subjects().length }})
       </h4>
       <ul
         aria-labelledby="degree-program-subject-list-title"

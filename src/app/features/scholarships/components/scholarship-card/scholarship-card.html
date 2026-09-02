@@ -1,7 +1,4 @@
-<article
-  class="scholarship-card"
-  [attr.aria-labelledby]="titleId()"
-  [class.scholarship-card--single]="single()">
+<article class="scholarship-card" [attr.aria-labelledby]="titleId()">
   <div class="scholarship-card__header">
     <span class="scholarship-card__title-span">Fondo</span>
     <h2 class="scholarship-card__title" [id]="titleId()">{{ scholarship().title }}</h2>
@@ -22,7 +19,6 @@
     Postularme
   </a>
   } @else {
-  <ort-chip label="Requiere inscripción previa" type="status" variant="primary" />
   <a
     class="scholarship-card__btn"
     ort-secondary-button

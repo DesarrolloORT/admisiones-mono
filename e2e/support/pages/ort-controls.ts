@@ -9,7 +9,9 @@ export async function selectOrtOption(
     element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   );
   await trigger.focus();
-  await page.keyboard.press('Enter');
+  if ((await trigger.evaluate(element => element.tagName)) !== 'INPUT') {
+    await page.keyboard.press('Enter');
+  }
 
   await expect(trigger).toHaveAttribute('aria-controls', /.+/);
   const listboxId = await trigger.getAttribute('aria-controls');

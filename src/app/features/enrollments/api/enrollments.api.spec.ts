@@ -427,8 +427,9 @@ describe('EnrollmentsApi', () => {
       ortChoiceReasonIds: null,
     };
 
-    await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBe(true);
+    await expect(firstValueFrom(endpoint.saveInitialSurvey(payload))).resolves.toBeUndefined();
 
+    // Sin `showLoader`: el guardado de la encuesta corre en segundo plano.
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
       body: expect.objectContaining({
         degreeProgramId: 20,
@@ -437,7 +438,6 @@ describe('EnrollmentsApi', () => {
         consideredUniversityOthers: null,
         higherEducationUniversityOthers: null,
       }),
-      showLoader: true,
     });
   });
 
@@ -757,10 +757,22 @@ describe('EnrollmentsApi', () => {
     }
   });
 
+  // Delta de una sola respuesta: el body lleva SOLO esa clave, con su nombre de wire. Una
+  // clave ausente es "sin cambios" para el backend.
+  it('sends only the keys present in the survey delta', async () => {
+    await expect(
+      firstValueFrom(endpoint.saveInitialSurvey({ visitedOrtCampus: false }))
+    ).resolves.toBeUndefined();
+
+    expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
+      body: { visitedOrtFacilities: false },
+    });
+  });
+
   it('maps the complete survey payload to the generated request', async () => {
-    await expect(firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))).resolves.toBe(
-      true
-    );
+    await expect(
+      firstValueFrom(endpoint.saveInitialSurvey(createSurveyPayload()))
+    ).resolves.toBeUndefined();
 
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsInitialSurveyEndpoint, {
       body: {
@@ -800,7 +812,6 @@ describe('EnrollmentsApi', () => {
         ortAdvertisingIds: [7],
         ortChoiceReasonIds: [5],
       },
-      showLoader: true,
     });
   });
 

@@ -6,6 +6,7 @@ import {
   inject,
   OnInit,
   signal,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -21,6 +22,7 @@ import {
   OrtFormFieldModule,
   OrtIconModule,
   OrtInputModule,
+  OrtPhoneInput,
   OrtPhoneInputValue,
   ortPhoneValidator,
   OrtSelectModule,
@@ -40,9 +42,9 @@ import {
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
 import {
+  phoneMaxDigits,
   toBackendPhone,
   toPhoneInputValue,
-  URUGUAY_PHONE_MAX_LENGTH,
   uruguayPhoneMaxLengthValidator,
 } from 'src/app/shared/forms/phone';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
@@ -129,6 +131,13 @@ export class PersonalData implements OnInit {
     }
   );
 
+  // El control es `updateOn: 'blur'`, asi que su valor no refleja el pais recien elegido:
+  // el largo se toma del propio input.
+  private readonly phoneField = viewChild(OrtPhoneInput);
+  protected readonly phoneMaxLength = computed(() =>
+    phoneMaxDigits(this.phoneField()?.selectedCountry())
+  );
+
   protected readonly locations = signal<LocationCountry[]>([]);
   protected readonly selectedCountryCode = signal<number | null>(null);
   protected readonly selectedStateCode = signal<number | null>(null);
@@ -136,7 +145,6 @@ export class PersonalData implements OnInit {
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly identityRestricted = signal(false);
-  protected readonly uruguayPhoneMaxLength = URUGUAY_PHONE_MAX_LENGTH;
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });

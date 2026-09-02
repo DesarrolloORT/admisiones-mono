@@ -1,6 +1,5 @@
 import {
   COMPLETE_SURVEY_SECTIONS,
-  EnrollmentScenario,
   PaymentResult,
   PROFESSIONAL_UPDATE_SURVEY_SECTIONS,
   SURVEY_SECTIONS,
@@ -12,11 +11,10 @@ export function parseForcedResult(value: string | null): PaymentResult | null {
 }
 
 export function getVisibleSections(
-  scenario: EnrollmentScenario,
+  canAnswerSurvey: boolean,
   isProfessionalUpdate = false
 ): readonly SurveySectionId[] {
   if (isProfessionalUpdate) return PROFESSIONAL_UPDATE_SURVEY_SECTIONS;
 
-  const base = scenario === 'survey-complete' ? COMPLETE_SURVEY_SECTIONS : SURVEY_SECTIONS;
-  return base;
+  return canAnswerSurvey ? SURVEY_SECTIONS : COMPLETE_SURVEY_SECTIONS;
 }

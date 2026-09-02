@@ -178,10 +178,6 @@ como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste 
 formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son
 informativos y el servidor los recalcula o ignora.
 
-En registro y edición de datos personales, Uruguay admite hasta ocho dígitos en
-el número nacional. Para los demás países no se aplica ese límite local; se
-mantienen la validación internacional del componente y la validación del backend.
-
 El mapeo del teléfono es único para registro y para la edición de datos
 personales, y vive en `src/app/shared/forms/phone.ts`:
 
@@ -197,6 +193,17 @@ personales, y vive en `src/app/shared/forms/phone.ts`:
   texto asumiendo `UY` si no viene en internacional (`+` o `00`), descartando el
   `0` de salida nacional. Un número internacional cuyo prefijo no se reconoce
   **no** se re-etiqueta: se envía tal cual con `iso2` nulo, que el contrato acepta.
+
+El campo numérico limita cuánto se puede escribir según el país elegido: 8 dígitos
+para `UY`, que es su largo nacional fijo, y para el resto solo el techo de E.164
+(`15` menos los dígitos del prefijo), que es el mismo recorte que `ort-phone-input`
+ya aplica al armar `numberE164`. La regla es `phoneMaxDigits` y ambos formularios la
+resuelven contra el `selectedCountry` del propio input y no contra el control:
+`primaryPhone` y `phone` son `updateOn: 'blur'`, así que su valor todavía no refleja
+el país recién elegido y el límite quedaría un paso atrás. Ambos controles también
+aplican `uruguayPhoneMaxLengthValidator`, que rechaza números uruguayos de más de
+ocho dígitos aunque el valor llegue precargado o de forma programática y el atributo
+`maxlength` no pueda frenarlo.
 
 Como ese default por país es una suposición, el formulario de datos personales
 revalida el teléfono contra el servidor apenas lo carga y marca el campo en error

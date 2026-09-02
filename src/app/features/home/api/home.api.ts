@@ -4,10 +4,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isProfessionalUpdateLevel } from 'src/app/features/catalogs/models/academic-proposal';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
-import {
-  getPersonEnrollmentsEndpoint,
-  getPersonScholarshipsEndpoint,
-} from 'src/app/shared/api/generated/endpoints/person.endpoints';
+import { getPersonEnrollmentsEndpoint } from 'src/app/shared/api/generated/endpoints/person.endpoints';
 import type { MyEnrollmentsResponse } from 'src/app/shared/api/generated/models/myEnrollmentsResponse';
 
 import { EnrollmentSeminarSummary, EnrollmentSummary } from '../models/enrollment-summary';
@@ -31,25 +28,14 @@ export class HomeApi {
   }
 
   /**
-   * Postulaciones a becas de la persona. Lista vacia = no se postulo a ninguna.
+   * ponytail: stub temporal. El backend removió `GET /person/scholarships` (commit
+   * "Remove GetMyScholarships endpoint from PersonController"). Devuelve la lista vacía,
+   * que es el mismo estado que "no se postuló a ninguna", así el panel no rompe.
    *
-   * Las fechas viajan como el `string` que manda la API (ISO): armar el texto visible
-   * —unir fecha y hora, formato corto— es trabajo de la UI, no del adapter.
-   *
-   * `examResult` y `benefit` quedan vacios: `MyScholarshipsResponse` todavia no los trae.
+   * Techo conocido: si la persona tiene postulaciones, no se ven.
    */
   public getMyScholarships(): Observable<ScholarshipSummary[]> {
-    return this.api.list(getPersonScholarshipsEndpoint, item => ({
-      id: item.testEnrollmentId ?? 0,
-      scholarshipName: item.scholarshipTypeName ?? '',
-      degreeProgramName: item.productName ?? '',
-      status: item.testEnrollmentStatus ?? '',
-      applicationDeadline: item.applicationCloseDate ?? '',
-      examDate: item.examDate ?? '',
-      examResult: '',
-      benefit: '',
-      resultsDate: item.resultDate ?? '',
-    }));
+    return of([]);
   }
 
   private toEnrollmentSummariesFromGroup(group: MyEnrollmentsResponse): EnrollmentSummary[] {

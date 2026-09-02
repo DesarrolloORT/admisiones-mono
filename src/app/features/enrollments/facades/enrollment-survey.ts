@@ -2,8 +2,8 @@ import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtErrorItem } from '@desarrolloort/components';
-import { merge, Observable, of } from 'rxjs';
-import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { EMPTY, merge, Observable, of } from 'rxjs';
+import { catchError, exhaustMap, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -13,9 +13,9 @@ import { EnrollmentsApi } from '../api/enrollments.api';
 import type { EnrollmentSurveyInit } from '../models/enrollment-entry';
 import type {
   EnrollmentInitialSurvey,
+  EnrollmentInitialSurveyPayload,
   EnrollmentInitialSurveyResponse,
   EnrollmentStudentRegulationAcceptance,
-  InitialSurveyStatus,
   SurveySectionId,
   SurveySectionStatus,
 } from '../models/enrollment-flow';
@@ -29,6 +29,7 @@ import {
 import {
   buildConfirmPreEnrollmentPayload,
   buildInitialSurveyPayload,
+  diffInitialSurveyPayload,
   hasCompleteUniversityEducation,
   parseDate,
   patchBackendSurveyForms,
@@ -45,6 +46,13 @@ import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
 import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
 
 const IDENTITY_SAVE_ERROR = 'identity-save';
+// Las únicas secciones que aportan campos de encuesta: identidad y reglamento no tienen
+// respuestas, y `work-situation` es solo de AP (que no postea encuesta).
+const SURVEY_ANSWER_SECTIONS = [
+  'education',
+  'academic-decision',
+  'ort-experience',
+] as const satisfies readonly SurveySectionId[];
 
 interface SectionProgress {
   completed: boolean;
@@ -70,11 +78,6 @@ export class EnrollmentSurveyFacade {
   public readonly options = inject(EnrollmentSurveyOptionsFacade);
   public readonly identity = inject(EnrollmentSurveyIdentityFacade);
 
-  // Slice de encuesta prellenada ya aplicado:
-  // se conserva para re-aplicarlo cuando llegan los catálogos, respetando su flag
-  // `includeAcademicSelection` original.
-  private appliedSurveyState: Extract<EnrollmentSurveyInit, { kind: 'prefilled' }> | null = null;
-
   public readonly educationForm = this.formsStore.forms.educationForm;
   public readonly academicDecisionForm = this.formsStore.forms.academicDecisionForm;
   public readonly ortExperienceForm = this.formsStore.forms.ortExperienceForm;
@@ -88,14 +91,13 @@ export class EnrollmentSurveyFacade {
   private readonly sectionProgress = signal<
     Readonly<Partial<Record<SurveySectionId, SectionProgress>>>
   >({});
-  // Suprime la completitud reactiva de identidad tras un fallo de subida: el form
-  // sigue válido y los archivos presentes, pero el paso debe reabrirse SIN check
-  // hasta que el usuario modifique datos de identidad o arranque un nuevo intento.
   private readonly identityUploadFailed = signal(false);
+  private persistedPayload: EnrollmentInitialSurveyPayload = buildInitialSurveyPayload(
+    this.formsStore.forms
+  );
   public readonly activeSection = signal<SurveySectionId>('education');
   public readonly readerOpen = signal(false);
-  public readonly surveyState = signal<InitialSurveyStatus>('not-started');
-  public readonly hasInitialSurveyRight = signal(true);
+  public readonly canAnswerSurvey = signal(true);
   public readonly hasAcceptedStudentRegulation = signal(false);
   public readonly submittedAcceptanceDate = signal<Date | null>(null);
 
@@ -106,17 +108,11 @@ export class EnrollmentSurveyFacade {
   public readonly preEnrollmentError = signal<string | null>(null);
   public readonly loadingSurveyState = signal(false);
   public readonly finalizingPreEnrollment = signal(false);
+  public readonly confirmOutcomeUncertain = signal(false);
 
-  public readonly scenario = computed(() =>
-    !this.hasInitialSurveyRight() || this.surveyState() === 'complete'
-      ? 'survey-complete'
-      : this.surveyState() === 'in-progress'
-        ? 'partial'
-        : 'first-time'
-  );
   public readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
   public readonly visibleSections = computed(() =>
-    getVisibleSections(this.scenario(), this.isProfessionalUpdate())
+    getVisibleSections(this.canAnswerSurvey(), this.isProfessionalUpdate())
   );
   // Único predicado de "hay algo hacia atrás" del paso 2: lo consumen el botón del
   // footer y el `canGoBack` del ProcessFacade (chevron del header).
@@ -158,7 +154,6 @@ export class EnrollmentSurveyFacade {
     this.options.initialize({
       isSurveyStepActive: computed(() => this.process.flow.currentStep() === 'survey'),
       onOptionsChanged: () => this.updateConditionalValidators(),
-      onInitialCatalogsApplied: () => this.reapplyBackendSurvey(),
     });
     this.identity.initialize({
       isIdentitySectionActive: computed(
@@ -173,6 +168,7 @@ export class EnrollmentSurveyFacade {
     this.configureConditionalValidators();
     this.observeIdentityRecovery();
     this.observeForms();
+    this.observeCompletedSectionSave();
     this.observeIdentityConfirmation();
     this.deferStudentRegulationAcceptance();
     let previousFirstVisibleSection = this.visibleSections()[0];
@@ -195,32 +191,33 @@ export class EnrollmentSurveyFacade {
     this.identityUploadFailed.set(false);
     switch (state.kind) {
       case 'load-failed':
-        this.appliedSurveyState = null;
+        // Sin respuesta no sabemos el valor de `canAnswerSurvey`: nunca se postea a ciegas.
+        // Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
         this.surveyLoadError.set(
           'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
         );
         return;
       case 'identity-only':
-        this.appliedSurveyState = null;
-        this.hasInitialSurveyRight.set(false);
-        this.surveyState.set('complete');
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
         this.sectionProgress.set({});
         this.activeSection.set('identity');
         return;
       case 'fresh':
-        this.appliedSurveyState = null;
-        this.hasInitialSurveyRight.set(true);
-        this.surveyState.set('not-started');
+        this.canAnswerSurvey.set(true);
+        this.snapshotPersistedPayload();
         this.sectionProgress.set({});
         this.activeSection.set('education');
         return;
       case 'prefilled': {
         const survey = state.response.survey;
         if (!survey) return;
-        this.appliedSurveyState = state;
-        this.hasInitialSurveyRight.set(true);
-        this.surveyState.set(state.surveyState);
+        this.canAnswerSurvey.set(true);
         this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
+        // Después del parcheo: lo que trajo el backend no es un cambio del usuario.
+        this.snapshotPersistedPayload();
         this.sectionProgress.set(
           Object.fromEntries(
             state.completedSections.map(section => [section, { completed: true, submitted: false }])
@@ -258,6 +255,15 @@ export class EnrollmentSurveyFacade {
     this.patchProgress(section, { completed: true });
     const nextSection = this.findNextInvalidSection(section);
     if (nextSection) {
+      // Reintento: con la sección completa el delta ya se guardó al aparecer el check, así que
+      // acá normalmente no hay nada que mandar. Solo cubre el caso en que ese guardado falló y
+      // el delta sigue pendiente. Sin loader y sin bloquear el avance.
+      this.savePartial()
+        .pipe(
+          catchError(() => EMPTY),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe();
       this.activeSection.set(nextSection);
       return;
     }
@@ -372,14 +378,31 @@ export class EnrollmentSurveyFacade {
     this.readerOpen.set(false);
   }
 
-  public savePartial(): Observable<boolean> {
-    if (
-      !this.hasInitialSurveyRight() ||
-      this.isProfessionalUpdate() ||
-      this.process.preEnrollmentResponse() !== null
-    )
-      return of(true);
-    return this.enrollments.saveInitialSurvey(buildInitialSurveyPayload(this.formsStore.forms));
+  /**
+   * Guarda la encuesta. `canAnswerSurvey` es el único gate (Actualización profesional no
+   * tiene encuesta inicial), y se manda SOLO el delta contra lo último persistido. El
+   * snapshot avanza únicamente con la confirmación del backend: un fallo deja el cambio
+   * pendiente para el intento siguiente (próximo Continuar, cierre del paso o salida).
+   */
+  public savePartial(): Observable<void> {
+    if (!this.canAnswerSurvey() || this.isProfessionalUpdate()) return of(undefined);
+
+    const delta = diffInitialSurveyPayload(
+      buildInitialSurveyPayload(this.formsStore.forms),
+      this.persistedPayload
+    );
+    // Nada cambió: no hay nada que guardar.
+    if (Object.keys(delta).length === 0) return of(undefined);
+
+    return this.enrollments.saveInitialSurvey(delta).pipe(
+      tap(() => {
+        this.persistedPayload = { ...this.persistedPayload, ...delta };
+      })
+    );
+  }
+
+  private snapshotPersistedPayload(): void {
+    this.persistedPayload = buildInitialSurveyPayload(this.formsStore.forms);
   }
 
   private progressOf(section: SurveySectionId): SectionProgress {
@@ -417,17 +440,13 @@ export class EnrollmentSurveyFacade {
           if (!savedIdentity) throw new Error(IDENTITY_SAVE_ERROR);
           return this.savePartial();
         }),
-        switchMap(saved => {
-          if (!saved) throw new Error('No se pudo guardar la encuesta inicial final.');
-          return this.enrollments.confirmPreEnrollment(confirmPayload);
-        }),
+        switchMap(() => this.enrollments.confirmPreEnrollment(confirmPayload)),
         finalize(() => this.finalizingPreEnrollment.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: response => {
           this.process.preEnrollmentResponse.set(response);
-          this.surveyState.set('complete');
           // Corporativa: el pago lo acredita la empresa y la respuesta no trae datos de
           // pago (seña 0), así que se evalúa antes que la rama de seña 0.
           if (confirmPayload.isCorporateEnrollment) {
@@ -453,6 +472,15 @@ export class EnrollmentSurveyFacade {
             this.patchProgress('identity', { completed: false, submitted: true });
             this.activeSection.set('identity');
             this.identityForm.markAllAsTouched();
+          }
+          // Fallo ambiguo de `confirm-pre-enrollment` (no lleva clave de idempotencia): el
+          // backend llama APIs externas y pudo haber creado la inscripción sin saberlo.
+          // Reintentar a ciegas es peor que derivar a Admisiones, así que el flujo cierra en
+          // la pantalla de espera en lugar de dejar al usuario atrapado reintentando.
+          if (!identitySaveFailed && isAmbiguousConfirmFailure(error)) {
+            this.confirmOutcomeUncertain.set(true);
+            this.payment.outcome.set('enrollment-in-progress');
+            return;
           }
           this.preEnrollmentError.set(
             identitySaveFailed
@@ -494,6 +522,29 @@ export class EnrollmentSurveyFacade {
   private isSectionValid(section: SurveySectionId): boolean {
     if (section !== 'identity') return this.sectionConfig[section].form.valid;
     return this.identity.isComplete();
+  }
+
+  // Guardado en el momento en que la sección muestra el check (su form quedó válido) y en cada
+  // cambio posterior mientras lo siga mostrando. Una sección incompleta no postea: su delta
+  // espera a completarse, al cierre del paso o a la salida. Los campos de escritura libre
+  // actualizan al blur (ver `enrollment-flow-forms.ts`), así que tipear no dispara guardados.
+  // exhaustMap y no switchMap: cancelar un POST en vuelo deja el servidor en estado
+  // desconocido. El trigger que llegue durante el guardado se descarta y su cambio entra en el
+  // delta siguiente.
+  // ponytail: guardado oportunista, sin reintentos ni cola offline. Un fallo es silencioso y el
+  // cambio vuelve solo en el delta siguiente (próximo cambio, Continuar o salida).
+  private observeCompletedSectionSave(): void {
+    merge(
+      ...SURVEY_ANSWER_SECTIONS.map(section =>
+        this.sectionConfig[section].form.valueChanges.pipe(map(() => section))
+      )
+    )
+      .pipe(
+        filter(section => !this.finalizingPreEnrollment() && this.isSectionValid(section)),
+        exhaustMap(() => this.savePartial().pipe(catchError(() => EMPTY))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   private observeForms(): void {
@@ -663,14 +714,6 @@ export class EnrollmentSurveyFacade {
       });
   }
 
-  private reapplyBackendSurvey(): void {
-    const state = this.appliedSurveyState;
-    const survey = state?.response.survey;
-    if (state && survey) {
-      this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
-    }
-  }
-
   private applyBackendSurvey(
     survey: EnrollmentInitialSurvey,
     response: EnrollmentInitialSurveyResponse,
@@ -686,7 +729,22 @@ export class EnrollmentSurveyFacade {
       this.proposal.setProposalType(proposalType);
       this.proposal.loadAcademicOptionsForSurvey(survey);
     }
+    if (this.isNationalSchoolPlace()) this.options.loadInstitutionsForSelectedDepartment();
     this.options.refreshOrientationOptions();
     this.updateConditionalValidators();
   }
+}
+
+// Solo lo indeterminado: 0 (red/timeout), 409 y 5xx. Un 400/403/404 es determinístico y
+// mantiene el error inline con reintento. Los fallos de identidad y de encuesta llegan como
+// `Error` sin `status`, así que no matchean.
+function isAmbiguousConfirmFailure(error: unknown): boolean {
+  const status = httpStatusOf(error);
+  return status === 0 || status === 409 || (status !== null && status >= 500);
+}
+
+function httpStatusOf(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null || !('status' in error)) return null;
+  const status = (error as { status: unknown }).status;
+  return typeof status === 'number' ? status : null;
 }

@@ -247,6 +247,18 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.paymentOptions().some(option => option.value === 'personal-account')).toBe(false);
   });
 
+  it('hides personal account payment when the account balance is zero', () => {
+    process.preEnrollmentResponse.set({
+      confirmed: false,
+      paymentDueDate: null,
+      enrollmentDeposit: 100000,
+      accountBalance: 0,
+      summary: null,
+    });
+
+    expect(facade.paymentOptions().some(option => option.value === 'personal-account')).toBe(false);
+  });
+
   it('disables personal account payment when its balance does not cover the deposit', () => {
     process.preEnrollmentResponse.set({
       confirmed: false,
@@ -340,12 +352,10 @@ describe('EnrollmentPaymentFacade', () => {
     });
 
     expect(facade.visibleSubjects()).toHaveLength(4);
-    expect(facade.totalSubjectCount()).toBe(5);
 
     facade.toggleSubjects();
 
     expect(facade.visibleSubjects()).toHaveLength(5);
-    expect(facade.totalSubjectCount()).toBe(5);
   });
 
   it('reads estado from the resume query params when retomando pago from the panel', () => {

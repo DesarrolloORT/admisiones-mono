@@ -3,10 +3,26 @@ import { FormControl } from '@angular/forms';
 import type { StoredPhoneNumber } from './phone';
 import {
   PHONE_FALLBACK_ISO2,
+  phoneMaxDigits,
   toBackendPhone,
   toPhoneInputValue,
   uruguayPhoneMaxLengthValidator,
 } from './phone';
+
+describe('phoneMaxDigits', () => {
+  it('should cap uruguayan numbers at their fixed national length', () => {
+    expect(phoneMaxDigits({ name: 'Uruguay', iso2: 'UY', prefix: 598 })).toBe(8);
+  });
+
+  it('should leave other countries with only the E.164 ceiling', () => {
+    expect(phoneMaxDigits({ name: 'Estados Unidos', iso2: 'US', prefix: 1 })).toBe(14);
+    expect(phoneMaxDigits({ name: 'Argentina', iso2: 'AR', prefix: 54 })).toBe(13);
+  });
+
+  it('should fall back to the full E.164 length when no country is selected', () => {
+    expect(phoneMaxDigits(null)).toBe(15);
+  });
+});
 
 describe('uruguayPhoneMaxLengthValidator', () => {
   it('should reject more than eight digits only for Uruguay', () => {
