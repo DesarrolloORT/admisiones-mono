@@ -328,6 +328,36 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.studentNumber()).toBe(412001);
   });
 
+  it('keeps the total subject count while limiting the visible subjects', () => {
+    facade.confirmedDetail.set({
+      ...CONFIRMED_DETAIL,
+      enrollments: [
+        {
+          ...CONFIRMED_DETAIL.enrollments[0],
+          firstSemesterSubjects: [
+            { subjectId: 1, name: 'Programación I' },
+            { subjectId: 2, name: 'Bases de datos' },
+            { subjectId: 3, name: 'Algoritmos' },
+            { subjectId: 4, name: 'Redes' },
+          ],
+        },
+        {
+          ...CONFIRMED_DETAIL.enrollments[1],
+          firstSemesterSubjects: [
+            { subjectId: 1, name: 'Programación I' },
+            { subjectId: 5, name: 'Experiencia de usuario' },
+          ],
+        },
+      ],
+    });
+
+    expect(facade.visibleSubjects()).toHaveLength(4);
+
+    facade.toggleSubjects();
+
+    expect(facade.visibleSubjects()).toHaveLength(5);
+  });
+
   it('reads estado from the resume query params when retomando pago from the panel', () => {
     configureFacade({
       queryParams: { idProducto: '20', idProceso: '200', estado: 'Pago pendiente' },

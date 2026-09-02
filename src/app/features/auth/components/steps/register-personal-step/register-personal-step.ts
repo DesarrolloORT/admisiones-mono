@@ -83,7 +83,12 @@ export class RegisterPersonalStep {
       label: 'Ubicación',
     },
     { controlName: 'address', fieldId: 'address', label: 'Dirección' },
-    { controlName: 'primaryPhone', fieldId: 'phone', label: 'Celular' },
+    {
+      controlName: 'primaryPhone',
+      fieldId: 'phone',
+      label: 'Celular',
+      messages: { phone: 'Ingresá un celular válido.' },
+    },
     { controlName: 'email', fieldId: 'email', label: 'E-mail' },
     { controlName: 'emailConfirmation', fieldId: 'confirm-email', label: 'Confirmar e-mail' },
   ];

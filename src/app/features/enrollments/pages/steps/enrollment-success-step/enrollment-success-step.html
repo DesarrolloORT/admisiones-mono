@@ -64,14 +64,14 @@
         aria-labelledby="degree-program-subject-list-title"
         class="enrollment-subject-list"
         id="degree-program-subject-list">
-        @for (subject of facade.visibleSubjects(); track subject) {
+        @for (subject of displayedSubjects(); track subject) {
         <li>
           <ort-icon aria-hidden="true">chevron_right</ort-icon>
           {{ subject }}
         </li>
         }
       </ul>
-      @if (facade.canToggleSubjects()) {
+      @if (canToggleSubjects()) {
       <button
         aria-controls="degree-program-subject-list"
         ort-tonal-button

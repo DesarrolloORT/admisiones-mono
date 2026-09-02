@@ -8,6 +8,7 @@ import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
+import { uruguayPhoneMaxLengthValidator } from 'src/app/shared/forms/phone';
 
 import { LocationValue } from '../../catalogs/models/location-value';
 import { isNationalIdDocumentType } from '../models/document-number';
@@ -138,7 +139,7 @@ export function createPersonalForm(): FormGroup<PersonalForm> {
         validators: [Validators.required, Validators.maxLength(ADDRESS_MAX_LENGTH)],
       }),
       primaryPhone: new FormControl<OrtPhoneInputValue | null>(null, {
-        validators: [Validators.required, ortPhoneValidator],
+        validators: [Validators.required, ortPhoneValidator, uruguayPhoneMaxLengthValidator],
         updateOn: 'blur',
       }),
       email: new FormControl('', {

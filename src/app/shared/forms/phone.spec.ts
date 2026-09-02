@@ -1,5 +1,13 @@
+import { FormControl } from '@angular/forms';
+
 import type { StoredPhoneNumber } from './phone';
-import { PHONE_FALLBACK_ISO2, phoneMaxDigits, toBackendPhone, toPhoneInputValue } from './phone';
+import {
+  PHONE_FALLBACK_ISO2,
+  phoneMaxDigits,
+  toBackendPhone,
+  toPhoneInputValue,
+  uruguayPhoneMaxLengthValidator,
+} from './phone';
 
 describe('phoneMaxDigits', () => {
   it('should cap uruguayan numbers at their fixed national length', () => {
@@ -13,6 +21,18 @@ describe('phoneMaxDigits', () => {
 
   it('should fall back to the full E.164 length when no country is selected', () => {
     expect(phoneMaxDigits(null)).toBe(15);
+  });
+});
+
+describe('uruguayPhoneMaxLengthValidator', () => {
+  it('should reject more than eight digits only for Uruguay', () => {
+    const control = new FormControl({ iso2: 'UY', number: '099123456', numberE164: '' });
+
+    expect(uruguayPhoneMaxLengthValidator(control)?.['phone']).toBeTruthy();
+
+    control.setValue({ iso2: 'AR', number: '91123456789', numberE164: '' });
+
+    expect(uruguayPhoneMaxLengthValidator(control)).toBeNull();
   });
 });
 

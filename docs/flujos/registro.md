@@ -200,7 +200,10 @@ para `UY`, que es su largo nacional fijo, y para el resto solo el techo de E.164
 ya aplica al armar `numberE164`. La regla es `phoneMaxDigits` y ambos formularios la
 resuelven contra el `selectedCountry` del propio input y no contra el control:
 `primaryPhone` y `phone` son `updateOn: 'blur'`, así que su valor todavía no refleja
-el país recién elegido y el límite quedaría un paso atrás.
+el país recién elegido y el límite quedaría un paso atrás. Ambos controles también
+aplican `uruguayPhoneMaxLengthValidator`, que rechaza números uruguayos de más de
+ocho dígitos aunque el valor llegue precargado o de forma programática y el atributo
+`maxlength` no pueda frenarlo.
 
 Como ese default por país es una suposición, el formulario de datos personales
 revalida el teléfono contra el servidor apenas lo carga y marca el campo en error

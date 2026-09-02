@@ -82,7 +82,6 @@ export class EnrollmentPaymentFacade {
       toCoordinatorContact('Coordinador(a) de Cursos:', detail?.courseCoordinator),
     ].filter((contact): contact is CoordinatorContact => contact !== null);
   });
-
   public readonly subjects = computed<readonly string[]>(() => [
     ...new Set(
       (this.confirmedDetail()?.enrollments ?? [])

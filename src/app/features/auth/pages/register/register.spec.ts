@@ -278,7 +278,7 @@ function setValidPersonalForm(facade: RegisterFlowFacade): void {
     address: 'Mercedes 1234',
     primaryPhone: {
       iso2: 'UY',
-      number: '099123456',
+      number: '99123456',
       numberE164: '+59899123456',
     },
     email: 'ana@example.com',
