@@ -163,17 +163,21 @@
     <ort-form-field [hideRequiredMarker]="!!form.controls.phone.value?.number">
       <ort-label>Celular</ort-label>
       <ort-phone-input
+        #phoneInput
         countryAriaLabel="País del celular"
         formControlName="phone"
         numberAriaLabel="Número de celular"
         placeholderText="00 000 000"
         [defaultCountry]="'UY'"
+        [maxLength]="
+          phoneInput.selectedCountry()?.iso2 === 'UY' ? uruguayPhoneMaxLength : undefined
+        "
         [required]="true" />
       <ort-hint>Seleccioná el país e ingresá el número sin el prefijo internacional.</ort-hint>
-      @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
-      <ort-error>Este campo es obligatorio</ort-error>
-      } @if (form.controls.phone.touched && form.controls.phone.hasError('phone')) {
+      @if (form.controls.phone.touched && form.controls.phone.hasError('phone')) {
       <ort-error>Ingresá un celular válido</ort-error>
+      } @else if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+      <ort-error>Este campo es obligatorio</ort-error>
       }
     </ort-form-field>
 

@@ -162,6 +162,17 @@ describe('PersonalData', () => {
     });
   });
 
+  it('should reject more than eight digits only for a Uruguayan phone', () => {
+    fixture.detectChanges();
+    const phone = component.form.controls.phone;
+
+    phone.setValue({ iso2: 'UY', number: '099123456', numberE164: '' });
+    expect(phone.hasError('phone')).toBe(true);
+
+    phone.setValue({ iso2: 'AR', number: '91123456789', numberE164: '' });
+    expect(phone.hasError('phone')).toBe(false);
+  });
+
   it('should submit editable fields to the backend service', () => {
     fixture.detectChanges();
 

@@ -39,7 +39,12 @@ import {
   matchingFieldsValidator,
   normalizeEmailValue,
 } from 'src/app/shared/forms/matching-fields.validator';
-import { toBackendPhone, toPhoneInputValue } from 'src/app/shared/forms/phone';
+import {
+  toBackendPhone,
+  toPhoneInputValue,
+  URUGUAY_PHONE_MAX_LENGTH,
+  uruguayPhoneMaxLengthValidator,
+} from 'src/app/shared/forms/phone';
 import { SnackbarHandler } from 'src/app/shared/ui/snackbar/snackbar-handler';
 
 import { AccountApi } from '../../../auth/api/account.api';
@@ -101,7 +106,7 @@ export class PersonalData implements OnInit {
       cityCode: new FormControl('', { nonNullable: true }),
       address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       phone: new FormControl<OrtPhoneInputValue | null>(null, {
-        validators: [Validators.required, ortPhoneValidator],
+        validators: [Validators.required, ortPhoneValidator, uruguayPhoneMaxLengthValidator],
         asyncValidators: [this.phoneValidator()],
         updateOn: 'blur',
       }),
@@ -131,6 +136,7 @@ export class PersonalData implements OnInit {
   protected readonly isSubmitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly identityRestricted = signal(false);
+  protected readonly uruguayPhoneMaxLength = URUGUAY_PHONE_MAX_LENGTH;
   private readonly documentTypeValue = toSignal(this.form.controls.documentType.valueChanges, {
     initialValue: this.form.controls.documentType.value,
   });
@@ -158,7 +164,12 @@ export class PersonalData implements OnInit {
         { controlName: 'countryCode', fieldId: 'profile-country', label: 'País de residencia' },
         { controlName: 'stateCode', fieldId: 'profile-state', label: 'Departamento' },
         { controlName: 'address', fieldId: 'profile-address', label: 'Dirección' },
-        { controlName: 'phone', fieldId: 'profile-phone', label: 'Celular' },
+        {
+          controlName: 'phone',
+          fieldId: 'profile-phone',
+          label: 'Celular',
+          messages: { phone: 'Ingresá un celular válido.' },
+        },
         { controlName: 'email', fieldId: 'profile-email', label: 'E-mail' },
         {
           controlName: 'emailConfirmation',
