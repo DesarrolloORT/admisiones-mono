@@ -178,6 +178,10 @@ como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste 
 formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son
 informativos y el servidor los recalcula o ignora.
 
+En registro y edición de datos personales, Uruguay admite hasta ocho dígitos en
+el número nacional. Para los demás países no se aplica ese límite local; se
+mantienen la validación internacional del componente y la validación del backend.
+
 El mapeo del teléfono es único para registro y para la edición de datos
 personales, y vive en `src/app/shared/forms/phone.ts`:
 
