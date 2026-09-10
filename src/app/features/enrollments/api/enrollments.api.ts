@@ -269,7 +269,6 @@ export class EnrollmentsApi {
       })
       .pipe(
         map(response => ({
-          success: true,
           result: response.result ?? null,
           paymentUrl: response.paymentUrl ?? null,
           encryptedParameters: response.encryptedParameters ?? null,
@@ -279,8 +278,6 @@ export class EnrollmentsApi {
               value: message.value ?? null,
             })) ?? [],
           confirmed: this.toConfirmedDetail(response.confirmed),
-          message: null,
-          errorCode: null,
         }))
       );
   }

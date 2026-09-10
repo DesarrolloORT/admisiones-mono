@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import type { NormalizedApiError } from '@desarrolloort/ngx-utils';
 import { type Observable, of, Subject, throwError } from 'rxjs';
 import { afterEach, vi } from 'vitest';
 
@@ -20,14 +21,11 @@ import { EnrollmentPaymentFacade } from './enrollment-payment';
 import { EnrollmentProposalFacade } from './enrollment-proposal';
 
 const PAYMENT_OK: EnrollmentPaymentResponse = {
-  success: true,
   result: null,
   paymentUrl: null,
   encryptedParameters: null,
   messages: [],
   confirmed: null,
-  message: null,
-  errorCode: null,
 };
 
 const CONFIRMED_DETAIL = {
@@ -184,13 +182,21 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.paymentErrorAlert()?.title).toBe('Banco requerido');
   });
 
-  it('surfaces payment API errors without leaving the user in processing', () => {
+  it('shows the backend rejection message without leaving the user in processing', () => {
+    // `operationResultInterceptor` convierte el `success:false` del backend en un
+    // `NormalizedApiError`: el rechazo llega por el canal de error, no por `next`.
     enrollments.pay.mockReturnValueOnce(
-      of({
-        ...PAYMENT_OK,
-        success: false,
-        message: 'Saldo insuficiente',
-      })
+      throwError(
+        () =>
+          ({
+            status: 409,
+            errorCode: 'PAY_INS_04',
+            message: 'Saldo insuficiente',
+            action: 'notify',
+            isOperationResult: true,
+            originalError: null,
+          }) satisfies NormalizedApiError
+      )
     );
     facade.paymentForm.controls.paymentMethod.setValue('personal-account');
 
@@ -200,6 +206,18 @@ describe('EnrollmentPaymentFacade', () => {
     expect(facade.paymentErrorAlert()).toEqual({
       title: 'No pudimos procesar el pago',
       message: 'Saldo insuficiente',
+    });
+  });
+
+  it('falls back to its own copy when the failure carries no backend message', () => {
+    enrollments.pay.mockReturnValueOnce(throwError(() => new Error('network down')));
+    facade.paymentForm.controls.paymentMethod.setValue('personal-account');
+
+    facade.confirm();
+
+    expect(facade.paymentErrorAlert()).toEqual({
+      title: 'No pudimos procesar el pago',
+      message: 'Intentá nuevamente en unos minutos.',
     });
   });
 

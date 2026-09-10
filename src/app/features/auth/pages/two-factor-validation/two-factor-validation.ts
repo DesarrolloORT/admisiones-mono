@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { TwoFactorValidation } from '../../components/two-factor-validation/two-factor-validation';
-import { getApiErrorMessage } from '../../models/api-error-message';
 import { AuthSessionService } from '../../services/auth-session';
 
 @Component({

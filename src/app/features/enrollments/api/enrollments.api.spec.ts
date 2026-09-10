@@ -599,14 +599,11 @@ describe('EnrollmentsApi', () => {
         })
       )
     ).resolves.toEqual({
-      success: true,
       result: 'pendiente',
       paymentUrl: 'https://pagos.example/sistarbanc',
       encryptedParameters: 'token-encriptado',
       messages: [{ key: 'factura', value: 'Creada' }],
       confirmed: null,
-      message: null,
-      errorCode: null,
     });
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsStartPaymentEndpoint, {
       body: {

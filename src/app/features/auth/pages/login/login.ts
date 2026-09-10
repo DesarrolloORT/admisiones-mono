@@ -9,6 +9,7 @@ import {
   OrtIconModule,
   OrtInputModule,
 } from '@desarrolloort/components';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import {
   focusFieldById,
@@ -20,7 +21,6 @@ import { ErrorAlert } from '../../../../shared/ui/error-alert/error-alert';
 import { AuthForm } from '../../components/shared/auth-form/auth-form';
 import { DocumentFields } from '../../components/shared/document-fields/document-fields';
 import { createLoginForm } from '../../forms/auth-forms';
-import { getApiErrorMessage } from '../../models/api-error-message';
 import { cleanDocumentNumber } from '../../models/document-number';
 import { AuthSessionService } from '../../services/auth-session';
 

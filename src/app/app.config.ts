@@ -29,6 +29,7 @@ import { environment } from 'src/environments/environment';
 import { routes } from './app.routes';
 import { authRefreshInterceptor, httpInterceptor } from './core/interceptors/http';
 import { AppApiErrorNotifier } from './core/services/api-error-notifier';
+import { APP_API_ERROR_POLICY } from './core/services/api-error-policy';
 import { TelemetryService } from './core/services/telemetry';
 
 registerLocaleData(localeEsUy);
@@ -73,6 +74,7 @@ export const appConfig: ApplicationConfig = {
       },
     },
     ...provideOrtApiErrorHandling({
+      config: { errorPolicy: APP_API_ERROR_POLICY },
       notifier: { provide: ApiErrorNotifier, useClass: AppApiErrorNotifier },
     }),
     { provide: LOCALE_ID, useValue: 'es-UY' },

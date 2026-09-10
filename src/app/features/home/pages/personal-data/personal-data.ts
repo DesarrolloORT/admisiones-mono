@@ -28,11 +28,11 @@ import {
   OrtSelectModule,
   OrtSkeletonModule,
 } from '@desarrolloort/components';
-import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { forkJoin, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 import { isNationalIdDocumentType } from 'src/app/features/auth/models/document-number';
 import { CatalogsApi } from 'src/app/features/catalogs/api/catalogs.api';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 import {
   buildFormErrorSummary,
   ORT_COMPONENT_ERROR_SUMMARY_LINKS_UNSUPPORTED,
@@ -265,11 +265,8 @@ export class PersonalData implements OnInit {
           this.snackbar.success('Datos personales actualizados.');
         },
         error: (error: unknown) => {
-          // PER_ADP_07: el backend rechazo el celular.
           this.snackbar.error(
-            isNormalizedApiError(error) && error.errorCode === 'PER_ADP_07'
-              ? 'El celular no es válido para el país seleccionado. Revisá el número y el país.'
-              : 'No se pudieron guardar los datos personales.'
+            getApiErrorMessage(error, 'No se pudieron guardar los datos personales.')
           );
         },
       });
@@ -292,8 +289,10 @@ export class PersonalData implements OnInit {
           this.locations.set(locations);
           this.patchForm(data);
         },
-        error: () => {
-          this.snackbar.error('No se pudieron cargar los datos personales.');
+        error: (error: unknown) => {
+          this.snackbar.error(
+            getApiErrorMessage(error, 'No se pudieron cargar los datos personales.')
+          );
         },
       });
   }

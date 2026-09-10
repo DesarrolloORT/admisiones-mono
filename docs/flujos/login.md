@@ -108,7 +108,7 @@ Las cookies de autenticacion son HttpOnly y las emite el backend. El frontend so
 - Login requiere tipo de documento, numero y password.
 - Para cedula, el numero se limpia/formatea antes de llegar al backend.
 - `POST /auth/login`, `POST /auth/verify-two-factor-code` y `POST /auth/resend-two-factor-code` declaran `captchaAction`; el interceptor agrega el header de captcha.
-- `POST /auth/login` usa mensajes custom para `401` y `429`.
+- `POST /auth/login` muestra el mensaje que manda el backend: no remapea `401` ni `429` (ver `docs/ERROR-HANDLING.md`, "Criterio unico").
 - El refresh no se intenta para endpoints `/auth/` para evitar loops.
 - Los drafts de inscripcion en `sessionStorage` se limpian al cerrar o invalidar sesion.
 

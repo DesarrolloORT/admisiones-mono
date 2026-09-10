@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 import type { ErrorAlertState } from 'src/app/shared/ui/error-alert/error-alert';
 
 import { CatalogsApi } from '../../catalogs/api/catalogs.api';
@@ -255,8 +256,10 @@ export class EnrollmentPaymentFacade {
       )
       .subscribe({
         next: response => this.resolvePaymentResponse(method, response),
-        error: () => {
-          this.paymentApiError.set('Intentá nuevamente en unos minutos.');
+        error: (error: unknown) => {
+          this.paymentApiError.set(
+            getApiErrorMessage(error, 'Intentá nuevamente en unos minutos.')
+          );
         },
       });
   }
@@ -303,11 +306,6 @@ export class EnrollmentPaymentFacade {
   }
 
   private resolvePaymentResponse(method: PaymentMethod, response: EnrollmentPaymentResponse): void {
-    if (!response.success) {
-      this.paymentApiError.set(getPaymentErrorMessage(response));
-      return;
-    }
-
     // Si el backend confirmó el pago en línea ya trae el detalle (número de
     // estudiante, coordinación y materias): lo usamos directo y evitamos el
     // getDetail posterior.
@@ -475,12 +473,4 @@ function normalizePaymentResult(value: string | null): PaymentResult | null {
   if (normalized.includes('reserv')) return 'reserved';
   if (normalized.includes('proceso')) return 'in-progress';
   return null;
-}
-
-function getPaymentErrorMessage(response: EnrollmentPaymentResponse): string {
-  return (
-    response.message ??
-    response.messages.find(message => message.value?.trim())?.value ??
-    'Intentá nuevamente en unos minutos.'
-  );
 }

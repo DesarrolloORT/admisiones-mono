@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import type { OrtPhoneInputValue } from '@desarrolloort/components';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import { toBackendPhone } from '../../../shared/forms/phone';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
@@ -20,7 +21,6 @@ import {
   toRegisterPayload,
   toVerifyIdentityPayload,
 } from '../mappers/registration.mapper';
-import { getApiErrorMessage } from '../models/api-error-message';
 import { AuthIdentityData } from '../models/auth.interface';
 import {
   cleanDocumentNumber,

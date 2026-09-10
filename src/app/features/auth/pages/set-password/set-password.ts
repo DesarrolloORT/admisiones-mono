@@ -19,6 +19,7 @@ import {
 import { ValidationUtils } from '@desarrolloort/ngx-utils';
 import { catchError, map, of, switchMap } from 'rxjs';
 
+import { getApiErrorMessage } from '../../../../shared/errors/api-error-message';
 import {
   focusFieldById,
   FormErrorField,
@@ -173,9 +174,11 @@ export class SetPassword {
       )
       .subscribe({
         next: url => this.navigateAfterSubmit(url),
-        error: () => {
+        error: (error: unknown) => {
           this.isSubmittingState.set(false);
-          this.snackbar.error('No se pudo crear la contraseña. Intentá de nuevo.');
+          this.snackbar.error(
+            getApiErrorMessage(error, 'No se pudo crear la contraseña. Intentá de nuevo.')
+          );
         },
       });
   }
@@ -215,8 +218,10 @@ export class SetPassword {
       .activatePasswordLink({ token })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: () =>
-          this.tokenErrorState.set('El enlace expiró o ya fue utilizado. Solicitá uno nuevo.'),
+        error: (error: unknown) =>
+          this.tokenErrorState.set(
+            getApiErrorMessage(error, 'El enlace expiró o ya fue utilizado. Solicitá uno nuevo.')
+          ),
       });
   }
 }

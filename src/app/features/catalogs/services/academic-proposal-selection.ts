@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type FormGroup, Validators } from '@angular/forms';
 import { of, Subscription } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import { CatalogsApi } from '../api/catalogs.api';
 import {
@@ -269,8 +270,8 @@ export class AcademicProposalSelection {
             this.loadSeminars(selectedDegreeProgram.productId);
           }
         },
-        error: () => {
-          this.catalogError.set('No se pudieron cargar las carreras.');
+        error: (error: unknown) => {
+          this.catalogError.set(getApiErrorMessage(error, 'No se pudieron cargar las carreras.'));
           this.degreeProgramsState.set([]);
         },
       });

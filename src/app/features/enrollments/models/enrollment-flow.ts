@@ -169,14 +169,11 @@ export interface EnrollmentPaymentMessage {
 }
 
 export interface EnrollmentPaymentResponse {
-  success: boolean;
   result: string | null;
   paymentUrl: string | null;
   encryptedParameters: string | null;
   messages: EnrollmentPaymentMessage[];
   confirmed: EnrollmentConfirmedDetail | null;
-  message: string | null;
-  errorCode: string | null;
 }
 
 // Datos que el backend informa para pagar una reserva (Abitab/Paganza). Llegan

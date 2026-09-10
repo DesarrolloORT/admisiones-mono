@@ -196,7 +196,7 @@ describe('PersonalData', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Datos personales actualizados.');
   });
 
-  it('should explain a phone rejected by the backend', () => {
+  it('should show the backend message when it rejects the phone', () => {
     service.updatePersonalData.mockReturnValue(
       throwError(() => ({
         status: 400,
@@ -211,9 +211,16 @@ describe('PersonalData', () => {
 
     component.submit();
 
-    expect(snackbar.error).toHaveBeenCalledWith(
-      'El celular no es válido para el país seleccionado. Revisá el número y el país.'
-    );
+    expect(snackbar.error).toHaveBeenCalledWith('Telefono invalido');
+  });
+
+  it('should fall back to its own copy when the failure carries no backend message', () => {
+    service.updatePersonalData.mockReturnValue(throwError(() => new Error('network down')));
+    fixture.detectChanges();
+
+    component.submit();
+
+    expect(snackbar.error).toHaveBeenCalledWith('No se pudieron guardar los datos personales.');
   });
 
   it('should submit international phone numbers with their prefix', () => {

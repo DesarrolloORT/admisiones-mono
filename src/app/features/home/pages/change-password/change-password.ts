@@ -11,6 +11,7 @@ import {
 } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
 
+import { getApiErrorMessage } from '../../../../shared/errors/api-error-message';
 import { matchingFieldsValidator } from '../../../../shared/forms/matching-fields.validator';
 import {
   buildOrtPasswordRequirements,
@@ -128,9 +129,12 @@ export class ChangePassword {
       .pipe(finalize(() => this.isSubmittingState.set(false)))
       .subscribe({
         next: () => this.router.navigate(['/inicio']),
-        error: () =>
+        error: (error: unknown) =>
           this.errorState.set(
-            'No se pudo cambiar la contraseña. Verificá que la actual sea correcta.'
+            getApiErrorMessage(
+              error,
+              'No se pudo cambiar la contraseña. Verificá que la actual sea correcta.'
+            )
           ),
       });
   }

@@ -2,6 +2,7 @@ import { computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { OrtErrorItem } from '@desarrolloort/components';
 import { finalize } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -96,9 +97,12 @@ export class EnrollmentProposalFacade {
           }
           this.process.flow.next();
         },
-        error: () =>
+        error: (error: unknown) =>
           this.productInterestError.set(
-            'No se pudo registrar el interés por la propuesta seleccionada.'
+            getApiErrorMessage(
+              error,
+              'No se pudo registrar el interés por la propuesta seleccionada.'
+            )
           ),
       });
   }

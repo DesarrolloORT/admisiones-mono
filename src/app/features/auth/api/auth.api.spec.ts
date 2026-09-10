@@ -11,6 +11,7 @@ import {
 } from '@desarrolloort/ngx-utils';
 
 import { CAPTCHA_ACTION } from '../../../core/services/captcha-token';
+import { APP_API_ERROR_POLICY } from '../../../core/services/api-error-policy';
 import { SHOW_GLOBAL_LOADER } from '../../../shared/api/core/api-http-client';
 import type { DocumentRecognitionData } from '../models/document-recognition.interface';
 import { AUTH_FLOW_ID_HEADER, AuthApi } from './auth.api';
@@ -27,7 +28,9 @@ describe('AuthApi', () => {
           withInterceptors([ortApiErrorInterceptor, operationResultInterceptor])
         ),
         provideHttpClientTesting(),
-        ...provideOrtApiErrorHandling({ config: { logErrors: false } }),
+        ...provideOrtApiErrorHandling({
+          config: { logErrors: false, errorPolicy: APP_API_ERROR_POLICY },
+        }),
       ],
     });
 
@@ -62,10 +65,7 @@ describe('AuthApi', () => {
       expect(req.request.withCredentials).toBe(true);
       expect(req.request.context.get(CAPTCHA_ACTION)).toBe('login');
       expect(req.request.context.get(SUPPRESS_GLOBAL_ERROR)).toBe(true);
-      expect(req.request.context.get(CUSTOM_ERROR_MESSAGES)).toEqual({
-        401: 'Credenciales inválidas.',
-        429: 'Demasiados intentos. Intentá nuevamente más tarde.',
-      });
+      expect(req.request.context.get(CUSTOM_ERROR_MESSAGES)).toEqual({});
 
       req.flush({
         success: true,
@@ -115,7 +115,7 @@ describe('AuthApi', () => {
       );
     });
 
-    it('should propagate normalized API failures', () => {
+    it('should surface the backend message on a 401 instead of a frontend remap', () => {
       endpoint.login({ documentType: 'CI', documentNumber: '1', password: 'bad' }).subscribe({
         error: error => {
           expect(isNormalizedApiError(error)).toBe(true);
@@ -124,7 +124,32 @@ describe('AuthApi', () => {
           }
 
           expect(error.status).toBe(401);
-          expect(error.message).toBe('Credenciales inválidas.');
+          expect(error.message).toBe('Usuario o contraseña incorrectos.');
+        },
+      });
+
+      const req = httpController.expectOne(r => r.url.includes('/auth/login'));
+      req.flush(
+        {
+          success: false,
+          httpCode: 401,
+          errorCode: 'AUTH_LDAP_03',
+          message: 'Usuario o contraseña incorrectos.',
+          data: null,
+        },
+        { status: 401, statusText: 'Unauthorized' }
+      );
+    });
+
+    it('should fall back to the policy message when the backend sends none', () => {
+      endpoint.login({ documentType: 'CI', documentNumber: '1', password: 'bad' }).subscribe({
+        error: error => {
+          expect(isNormalizedApiError(error)).toBe(true);
+          if (!isNormalizedApiError(error)) {
+            return;
+          }
+
+          expect(error.message).toBe('Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
         },
       });
 

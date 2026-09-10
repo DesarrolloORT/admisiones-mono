@@ -1039,7 +1039,13 @@ flowchart TD
 
 El adapter mapea `result`, `paymentUrl`, `encryptedParameters`, `messages` y el
 bloque `confirmed` (número de estudiante, coordinación y materias) cuando el
-backend confirma el pago en línea (p. ej. cuenta personal). Con eso la pantalla de
+backend confirma el pago en línea (p. ej. cuenta personal).
+
+`EnrollmentPaymentResponse` no tiene `success`, `message` ni `errorCode`: un rechazo
+del backend llega por el canal de error, porque `operationResultInterceptor` convierte
+`success: false` en `NormalizedApiError` aunque venga con HTTP `2xx`. La fachada
+muestra ese mensaje con `getApiErrorMessage(error, 'Intentá nuevamente en unos minutos.')`
+(ver `docs/ERROR-HANDLING.md`, "Criterio unico"). Con eso la pantalla de
 éxito pinta el detalle sin un `getDetail` adicional; ese `getDetail` queda solo
 como fallback si la respuesta no trae `confirmed`.
 

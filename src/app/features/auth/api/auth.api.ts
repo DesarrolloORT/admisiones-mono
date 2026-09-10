@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { CUSTOM_ERROR_MESSAGES, suppressGlobalErrorContext } from '@desarrolloort/ngx-utils';
+import { suppressGlobalErrorContext } from '@desarrolloort/ngx-utils';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiHttpClient } from 'src/app/shared/api/core/api-http-client';
@@ -29,11 +29,6 @@ import type {
 } from '../models/document-recognition.interface';
 
 export const AUTH_FLOW_ID_HEADER = 'X-Flow-Id';
-
-const LOGIN_ERROR_MESSAGES: Record<number, string> = {
-  401: 'Credenciales inválidas.',
-  429: 'Demasiados intentos. Intentá nuevamente más tarde.',
-};
 
 export interface LoginPayload {
   documentType: string;
@@ -166,7 +161,7 @@ export class AuthApi {
         body,
         withCredentials: true,
         captchaAction: 'login',
-        context: suppressGlobalErrorContext().set(CUSTOM_ERROR_MESSAGES, LOGIN_ERROR_MESSAGES),
+        context: suppressGlobalErrorContext(),
       })
       .pipe(
         map(response => {
