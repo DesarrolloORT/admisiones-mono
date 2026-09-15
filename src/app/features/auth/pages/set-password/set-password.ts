@@ -187,8 +187,10 @@ export class SetPassword {
   private hydrateSessionAndGoHome() {
     return this.authSession.hydrateAuthenticatedSession().pipe(
       map(() => '/inicio'),
-      catchError(() => {
-        this.snackbar.error('No se pudo iniciar la sesión automáticamente.');
+      catchError((error: unknown) => {
+        this.snackbar.error(
+          getApiErrorMessage(error, 'No se pudo iniciar la sesión automáticamente.')
+        );
         return of(null);
       })
     );

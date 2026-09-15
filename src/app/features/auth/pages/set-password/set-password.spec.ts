@@ -116,6 +116,27 @@ describe('SetPassword', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/iniciar-sesion');
   });
 
+  it('should show the backend message when session hydration fails after activation', () => {
+    setup();
+    authSessionMock.hydrateAuthenticatedSession.mockReturnValue(
+      throwError(() => ({
+        status: 401,
+        message: 'La sesión de activación ya no es válida.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unauthorized'),
+      }))
+    );
+    component['form'].setValue({
+      password: 'NuevaPassword1!',
+      confirmPassword: 'NuevaPassword1!',
+    });
+
+    component['submit']();
+
+    expect(snackbarMock.error).toHaveBeenCalledWith('La sesión de activación ya no es válida.');
+  });
+
   it('should report an expired or already used token', () => {
     setup();
     authEndpointMock.activatePasswordLink.mockReturnValue(throwError(() => new Error('expired')));
