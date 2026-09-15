@@ -1,0 +1,37 @@
+﻿using System;
+
+namespace BusinessLogic.IServices
+{
+    /// <summary>
+    /// Interfaz para el servicio de gestión de refresh tokens.
+    /// </summary>
+    public interface IRefreshTokenService
+    {
+        /// <summary>
+        /// Guarda un nuevo refresh token en la base de datos, revocando los tokens activos anteriores.
+        /// </summary>
+        /// <param name="codigoPersona">Código de la persona.</param>
+        /// <param name="sistema">Sistema que genera el token (ej: "ADMISIONES").</param>
+        /// <param name="tokenHash">Hash del refresh token.</param>
+        /// <param name="expiresAt">Fecha y hora de expiración del token.</param>
+        /// <returns>Task que representa la operación asíncrona.</returns>
+        Task SaveRefreshTokenAsync(long codigoPersona, string sistema, string tokenHash, DateTime expiresAt);
+
+        /// <summary>
+        /// Obtiene el código de persona asociado a un refresh token activo y no expirado.
+        /// </summary>
+        /// <param name="sistema">Sistema del token.</param>
+        /// <param name="tokenHash">Hash del refresh token.</param>
+        /// <returns>Código de persona si existe un token válido, null en caso contrario.</returns>
+        Task<long?> GetCodigoPersonaByRefreshTokenAsync(string sistema, string tokenHash);
+
+        /// <summary>
+        /// Revoca un refresh token específico.
+        /// </summary>
+        /// <param name="codigoPersona">Código de la persona.</param>
+        /// <param name="sistema">Sistema del token.</param>
+        /// <param name="tokenHash">Hash del token a revocar.</param>
+        /// <returns>Task que representa la operación asíncrona.</returns>
+        Task RevokeRefreshTokenAsync(long codigoPersona, string sistema, string tokenHash);
+    }
+}

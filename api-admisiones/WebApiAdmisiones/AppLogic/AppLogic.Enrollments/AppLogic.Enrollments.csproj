@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<!-- Nivel 5. InterÃ©s por producto, encuesta inicial, preinscripciÃ³n y pagos. -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Core\DbConnectionContext\ConnectionContext.csproj" />
+		<ProjectReference Include="..\..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />
+		<ProjectReference Include="..\..\..\Core\Utilities\Utilities.csproj" />
+		<ProjectReference Include="..\..\BusinessLogic\BusinessLogic.csproj" />
+		<ProjectReference Include="..\AppLogic.Contracts\AppLogic.Contracts.csproj" />
+		<ProjectReference Include="..\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />
+		<ProjectReference Include="..\AppLogic.Identity\AppLogic.Identity.csproj" />
+		<ProjectReference Include="..\AppLogic.People\AppLogic.People.csproj" />
+		<ProjectReference Include="..\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />
+		<ProjectReference Include="..\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
+	</ItemGroup>
+</Project>

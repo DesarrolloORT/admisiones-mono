@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">  
+ <PropertyGroup>  
+   <TargetFramework>net10.0</TargetFramework>  
+   <Nullable>enable</Nullable>  
+   <ImplicitUsings>enable</ImplicitUsings>  
+   <InvariantGlobalization>true</InvariantGlobalization>  
+   <GenerateDocumentationFile>true</GenerateDocumentationFile>
+   <NoWarn>$(NoWarn);1591;1587</NoWarn>
+   <UserSecretsId>8d58b2fb-9540-4aaa-af90-773ebbc44030</UserSecretsId>  
+   <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>  
+ </PropertyGroup>  
+ <ItemGroup>  
+   <PackageReference Include="HtmlSanitizer" Version="9.1.982" />
+   <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
+     <PrivateAssets>all</PrivateAssets>  
+     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>  
+   </PackageReference>  
+   <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
+   <PackageReference Include="OpenTelemetry" Version="1.15.3" />
+   <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+   <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+   <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
+   <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
+   <PackageReference Include="prometheus-net" Version="8.2.1" />  
+   <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />  
+   <PackageReference Include="Serilog" Version="4.3.1" />
+   <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+   <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1-dev-02339" />
+   <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+   <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-dev-02331" />
+   <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
+   <PackageReference Include="Serilog.Sinks.OpenTelemetry" Version="4.2.1-dev-02318" />
+   <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+   <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+   <PackageReference Include="NJsonSchema" Version="11.6.1" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.7" />
+ </ItemGroup>  
+ <ItemGroup>  
+   <ProjectReference Include="..\..\Core\AzureService\AzureService.csproj" />  
+   <ProjectReference Include="..\..\Core\DbConnectionContext\ConnectionContext.csproj" />  
+   <ProjectReference Include="..\..\Core\MailORT\MailORT.csproj" />  
+   <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModAppLogic\ModBandejaAppLogic.csproj" />  
+   <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModBusinessLogic\ModBandejaBusinessLogic.csproj" />  
+   <ProjectReference Include="..\..\Core\Modules\ModBandeja\ModDataAccess\ModBandejaDataAccess.csproj" />  
+   <ProjectReference Include="..\..\Core\Utilities\Utilities.csproj" />  
+   <ProjectReference Include="..\DataAccess\DataAccess.csproj" />  
+   <ProjectReference Include="..\..\Core\LdapService\LdapService.csproj" />  
+   <ProjectReference Include="..\..\Core\Modules\ModGenericBase\ModDataAccess\ModGenericBaseDataAccess.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Contracts\AppLogic.Contracts.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Platform\AppLogic.Platform.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.DevartDtos\AppLogic.DevartDtos.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Integrations.Tivenos\AppLogic.Integrations.Tivenos.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Integrations.EnrollmentsAndPayments\AppLogic.Integrations.EnrollmentsAndPayments.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Identity\AppLogic.Identity.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.People\AppLogic.People.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Scholarships\AppLogic.Scholarships.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Authentication\AppLogic.Authentication.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Registration\AppLogic.Registration.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Enrollments\AppLogic.Enrollments.csproj" />  
+   <ProjectReference Include="..\AppLogic\AppLogic.Catalogs\AppLogic.Catalogs.csproj" />  
+ </ItemGroup>  
+ <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
+</Project>

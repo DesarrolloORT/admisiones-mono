@@ -1,0 +1,161 @@
+{
+  "version": 2,
+  "description": "Contrato de respuesta de las pantallas de inscripción: confirmar preinscripción, reactivar y detalle de 'Mis carreras'. Documenta la forma del JSON que recibe el front para que sepa qué renderizar en cada estado.",
+  "conventions": {
+    "propertyNaming": "camelCase",
+    "nullHandling": "Los campos marcados omitEmpty NO aparecen en el JSON cuando su valor es null (System.Text.Json JsonIgnoreCondition.WhenWritingNull). El front debe tratarlos como opcionales.",
+    "envelope": "Todas las respuestas vienen envueltas en OperationResult<T>. El payload de negocio está en 'data'; en error 'data' es null y 'errorCode'/'message' describen la falla."
+  },
+  "envelope": {
+    "dto": "OperationResult<T>",
+    "fields": {
+      "success": { "type": "boolean", "desc": "true si la operación fue OK." },
+      "httpCode": { "type": "integer", "desc": "Código HTTP (200/400/404/409/502)." },
+      "errorCode": { "type": "string", "desc": "Código de negocio cuando success=false (ej. INS_CPI_17). Vacío si OK." },
+      "method": { "type": "string", "desc": "Nombre del método backend que respondió." },
+      "message": { "type": "string", "desc": "Mensaje de error legible cuando success=false." },
+      "data": { "type": "object|null", "desc": "Payload; null en error." }
+    }
+  },
+  "types": {
+    "EnrollmentHeader": {
+      "desc": "Cabecera común a todas las ofertas de la selección. Producto es igual para todas; el comienzo y el turno pueden diferir en nivel 3 y 4, por eso van por oferta, no acá.",
+      "fields": {
+        "productId": { "type": "long", "desc": "Id del producto/carrera." },
+        "degreeProgram": { "type": "string|null", "desc": "Nombre de la carrera (web, extenso o corto, el primero disponible)." },
+        "paymentDueDate": { "type": "datetime", "omitEmpty": true, "desc": "Fecha límite de pago de la reserva, igual para todas las ofertas. Ausente mientras no hay confirmación (estado 'En proceso')." }
+      }
+    },
+    "EnrollmentOffering": {
+      "desc": "Una entrada por oferta. Los campos presentes dependen del estado (ver endpoints).",
+      "fields": {
+        "enrollmentId": { "type": "long", "omitEmpty": true, "desc": "Id de la inscripción generada. Ausente en 'En proceso' (todavía no hay inscripción)." },
+        "offeringId": { "type": "long", "desc": "Id de la oferta." },
+        "intake": { "type": "string|null", "desc": "Nombre del comienzo de esta oferta (puede variar entre ofertas en nivel 3 y 4)." },
+        "shift": { "type": "string|null", "desc": "Nombre del turno de esta oferta (puede variar entre ofertas en nivel 3 y 4)." },
+        "offeringDescription": { "type": "string|null", "omitEmpty": true, "desc": "Descripción de la oferta. Solo nivel 3 y 4 (sale de la vista de ofertas disponibles); ausente en nivel 1 y 2." }
+      }
+    },
+    "CurrentAccountBalance": {
+      "fields": {
+        "currentBalance": { "type": "decimal", "desc": "Saldo actual de la cuenta corriente del alumno." }
+      }
+    },
+    "MinimumDepositDetails": {
+      "desc": "Bloque compacto para 'Pago pendiente' cuando el alumno YA eligió método de pago externo (Abitab/Paganza).",
+      "fields": {
+        "paymentType": { "type": "string", "desc": "ABITAB | PAGANZA." },
+        "documentNumber": { "type": "string|null", "desc": "Documento del alumno." },
+        "personId": { "type": "long", "desc": "Código de persona." },
+        "depositAmount": { "type": "decimal", "desc": "Total de reserva a pagar." }
+      }
+    },
+    "ConfirmedEnrollment": {
+      "desc": "Una entrada por cada oferta confirmada y pagada (nivel 3 y 4 con seminarios puede traer varias, cada una con su propio comienzo/turno/materias).",
+      "fields": {
+        "enrollmentId": { "type": "long" },
+        "offeringId": { "type": "long" },
+        "intakeId": { "type": "long" },
+        "intake": { "type": "string|null" },
+        "shiftId": { "type": "long" },
+        "shift": { "type": "string|null" },
+        "firstSemesterSubjects": { "type": "Subject[]" }
+      }
+    },
+    "Coordinator": {
+      "fields": {
+        "name": { "type": "string|null" },
+        "email": { "type": "string|null" }
+      }
+    },
+    "Subject": {
+      "fields": {
+        "subjectId": { "type": "long" },
+        "name": { "type": "string|null" }
+      }
+    }
+  },
+  "endpoints": {
+    "confirmarPreInscripcion": {
+      "method": "POST",
+      "route": "enrollments/confirm-pre-enrollment",
+      "requestDto": "DtoConfirmarPreInscripcionRequest",
+      "request": {
+        "idsOfertasSeleccionadas": { "type": "long[]", "desc": "Una oferta para nivel 1 y 2; una o varias para nivel 3 y 4." },
+        "aceptoReglamento": { "type": "boolean", "desc": "Aceptación del reglamento estudiantil." }
+      },
+      "dataDto": "ConfirmPreEnrollmentResponse",
+      "data": {
+        "confirmed": { "type": "boolean", "desc": "La preinscripción quedó confirmada." },
+        "waiting": { "type": "boolean", "desc": "true si la inscripción fue a bandeja ('A la espera'). El front muestra 'Inscripción en proceso'." },
+        "summary": { "type": "EnrollmentHeader", "desc": "Cabecera común; paymentDueDate presente." },
+        "currentAccount": { "type": "CurrentAccountBalance|null", "desc": "Saldo del alumno si la API lo devolvió." },
+        "enrollments": { "type": "EnrollmentOffering[]", "desc": "Una por oferta confirmada. Trae enrollmentId; intake/shift por oferta; offeringDescription en nivel 3 y 4." },
+        "depositAmount": { "type": "decimal", "desc": "TOTAL de reserva (suma de todas las ofertas). El alumno paga todo junto, no elige." }
+      },
+      "frontHint": "Mostrar la cabecera (carrera + vencimiento), listar 'inscripciones' (para nivel 3 y 4 pueden ser varias, cada una con su comienzo) y el total 'pagoReserva'. Si enEspera=true, mostrar 'en proceso' en vez de 'confirmada'.",
+      "mainErrors": ["INS_CPI_01", "INS_CPI_03", "INS_CPI_05", "INS_CPI_15", "INS_CPI_16", "INS_CPI_17", "INS_CPI_02", "INS_CPI_13"]
+    },
+    "reactivarInscripcion": {
+      "method": "POST",
+      "route": "enrollments/reactivate",
+      "requestDto": "ReactivateEnrollmentRequest",
+      "request": {
+        "enrollmentIds": { "type": "long[]", "desc": "Inscripciones dadas de baja a reactivar. Una en nivel 1 y 2; una o varias (una por seminario) en nivel 3 y 4. Todas deben ser del mismo producto." }
+      },
+      "dataDto": "ConfirmPreEnrollmentResponse",
+      "data": "Idéntico a confirmarPreInscripcion.data (delega en ConfirmarPreInscripcion con las ofertas de las bajas).",
+      "mainErrors": ["INS_REA_00", "INS_REA_01", "INS_REA_02", "INS_CPI_15", "INS_CPI_17"]
+    },
+    "obtenerDetalleInscripcion": {
+      "method": "GET",
+      "route": "enrollments/details",
+      "query": {
+        "productId": { "type": "long" },
+        "idProceso": { "type": "long" }
+      },
+      "dataDto": "EnrollmentDetailsResponse",
+      "desc": "El contenido depende de 'estado'. Solo se completa el bloque del estado actual; el resto se omite (omitEmpty).",
+      "data": {
+        "status": { "type": "string", "desc": "Uno de: 'En proceso' | 'A la espera' | 'Pago pendiente' | 'Confirmada'." },
+        "inProgress": { "type": "InProgressDetails", "omitEmpty": true, "desc": "Solo estado 'En proceso'." },
+        "pendingPayment": { "type": "ConfirmPreEnrollmentResponse", "omitEmpty": true, "desc": "Solo 'Pago pendiente' cuando aún NO eligió método de pago. Misma forma que confirmarPreInscripcion.data." },
+        "minimumDeposit": { "type": "MinimumDepositDetails", "omitEmpty": true, "desc": "Solo 'Pago pendiente' cuando YA eligió método de pago externo." },
+        "confirmed": { "type": "ConfirmedEnrollmentDetailsResponse", "omitEmpty": true, "desc": "Solo estado 'Confirmada'." }
+      },
+      "estados": {
+        "En proceso": {
+          "presentes": ["status", "inProgress"],
+          "inProgress": {
+            "dto": "InProgressDetails",
+            "summary": "EnrollmentHeader (sin paymentDueDate: todavía no hay pago).",
+            "interests": "EnrollmentOffering[] — una o varias ofertas con interés (nivel 3 y 4). Cada ítem trae offeringId/intake/shift; SIN enrollmentId (aún no hay inscripción)."
+          }
+        },
+        "A la espera": {
+          "presentes": ["status"],
+          "frontHint": "Solo el estado, sin detalle. Mostrar 'Inscripción en proceso / en espera'."
+        },
+        "Pago pendiente": {
+          "presentes": ["status", "pendingPayment | minimumDeposit"],
+          "frontHint": "Si vino 'minimumDeposit', ya eligió método externo: mostrar cédula + total. Si vino 'pendingPayment', ofrecer los métodos de pago (misma forma que confirmarPreInscripcion.data)."
+        },
+        "Confirmada": {
+          "presentes": ["status", "confirmed"],
+          "confirmed": {
+            "dto": "ConfirmedEnrollmentDetailsResponse",
+            "fields": {
+              "personId": "long",
+              "productId": "long (cabecera, compartido por todas las ofertas confirmadas).",
+              "degreeProgram": "string|null (cabecera, compartido).",
+              "academicCoordinator": "Coordinator|null (cabecera, compartido).",
+              "courseCoordinator": "Coordinator|null (cabecera, compartido).",
+              "enrollments": "ConfirmedEnrollment[] — una por cada oferta confirmada (nivel 3 y 4 con seminarios puede traer varias, cada una con su propio comienzo/turno/materias)."
+            }
+          }
+        }
+      },
+      "mainErrors": ["INS_DET_01", "INS_DET_02"]
+    }
+  }
+}
