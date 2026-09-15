@@ -173,6 +173,8 @@
       <ort-hint>Seleccioná el país e ingresá el número sin el prefijo internacional.</ort-hint>
       @if (form.controls.phone.touched && form.controls.phone.hasError('phone')) {
       <ort-error>Ingresá un celular válido</ort-error>
+      } @else if (form.controls.phone.touched && form.controls.phone.hasError('phoneValidation')) {
+      <ort-error>No se pudo validar el celular</ort-error>
       } @else if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
       <ort-error>Este campo es obligatorio</ort-error>
       }

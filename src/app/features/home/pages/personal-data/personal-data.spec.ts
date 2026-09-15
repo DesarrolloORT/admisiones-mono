@@ -63,7 +63,7 @@ describe('PersonalData', () => {
   beforeEach(() => {
     service = {
       getPersonalData: vi.fn().mockReturnValue(of(basePersonalData)),
-      updatePersonalData: vi.fn().mockReturnValue(of(true)),
+      updatePersonalData: vi.fn().mockReturnValue(of(undefined)),
       validatePhone: vi.fn().mockReturnValue(of(true)),
     };
     snackbar = { success: vi.fn(), error: vi.fn() };
@@ -260,6 +260,23 @@ describe('PersonalData', () => {
 
     expect(component.form.controls.phone.touched).toBe(true);
     expect(component.form.controls.phone.hasError('phone')).toBe(true);
+  });
+
+  it('should block the phone and show the backend message when validation fails', () => {
+    service.validatePhone.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        message: 'No pudimos validar ese celular.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('validation failed'),
+      }))
+    );
+
+    fixture.detectChanges();
+
+    expect(component.form.controls.phone.hasError('phoneValidation')).toBe(true);
+    expect(snackbar.error).toHaveBeenCalledWith('No pudimos validar ese celular.');
   });
 
   it('should wait for the pending phone validation before submitting', () => {

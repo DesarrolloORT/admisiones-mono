@@ -176,7 +176,10 @@ export class PersonalData implements OnInit {
           controlName: 'phone',
           fieldId: 'profile-phone',
           label: 'Celular',
-          messages: { phone: 'Ingresá un celular válido.' },
+          messages: {
+            phone: 'Ingresá un celular válido.',
+            phoneValidation: 'No se pudo validar el celular.',
+          },
         },
         { controlName: 'email', fieldId: 'profile-email', label: 'E-mail' },
         {
@@ -256,12 +259,7 @@ export class PersonalData implements OnInit {
       })
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: success => {
-          if (!success) {
-            this.snackbar.error('No se pudieron guardar los datos personales.');
-            return;
-          }
-
+        next: () => {
           this.snackbar.success('Datos personales actualizados.');
         },
         error: (error: unknown) => {
@@ -370,7 +368,10 @@ export class PersonalData implements OnInit {
 
       return this.account.validatePhone(toBackendPhone(value)).pipe(
         map(isValid => (isValid ? null : { phone: true })),
-        catchError(() => of(null))
+        catchError((error: unknown) => {
+          this.snackbar.error(getApiErrorMessage(error, 'No se pudo validar el celular.'));
+          return of({ phoneValidation: true });
+        })
       );
     };
   }
