@@ -61,6 +61,35 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(options.initialized()).toBe(true);
   });
 
+  it('reports the error when departments fail to load', () => {
+    getCountryLocations.mockReturnValue(throwError(() => new Error('network error')));
+
+    const options = createFacade();
+
+    expect(options.catalogError()).toBe('No se pudieron cargar los departamentos disponibles.');
+    expect(options.departmentOptions()).toEqual([]);
+  });
+
+  it('reports the error and clears options when institutions fail to load', () => {
+    getCountryLocations.mockReturnValue(
+      of([
+        {
+          countryCode: 1,
+          name: 'Uruguay',
+          states: [{ countryCode: 1, stateCode: 5, name: 'Montevideo' }],
+        },
+      ] satisfies LocationCountry[])
+    );
+    getInstitutions.mockReturnValue(throwError(() => new Error('network error')));
+
+    const options = createFacade();
+    const educationForm = TestBed.inject(ENROLLMENT_FORMS).forms.educationForm;
+    educationForm.controls.state.setValue('5');
+
+    expect(options.institutionOptions()).toEqual([]);
+    expect(options.catalogError()).toBe('No se pudieron cargar las instituciones disponibles.');
+  });
+
   it('loads Uruguay departments and the institutions of the selected department', () => {
     getCountryLocations.mockReturnValue(
       of([

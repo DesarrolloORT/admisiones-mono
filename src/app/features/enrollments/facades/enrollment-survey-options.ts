@@ -1,6 +1,7 @@
 import { computed, DestroyRef, effect, inject, type Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import { CatalogsApi } from '../../catalogs/api/catalogs.api';
 import type {
@@ -188,7 +189,11 @@ export class EnrollmentSurveyOptionsFacade {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: countries => this.applyDepartmentOptions(countries),
-        error: () => undefined,
+        error: (error: unknown) => {
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar los departamentos disponibles.')
+          );
+        },
       });
   }
 
@@ -235,8 +240,11 @@ export class EnrollmentSurveyOptionsFacade {
           }
           this.callbacks.onOptionsChanged();
         },
-        error: () => {
+        error: (error: unknown) => {
           this.institutionOptions.set([]);
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar las instituciones disponibles.')
+          );
           this.callbacks.onOptionsChanged();
         },
       });
