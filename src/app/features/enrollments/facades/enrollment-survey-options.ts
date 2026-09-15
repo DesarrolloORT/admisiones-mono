@@ -128,8 +128,10 @@ export class EnrollmentSurveyOptionsFacade {
       )
       .subscribe({
         next: catalogs => this.applyInitialSurveyCatalogs(catalogs),
-        error: () => {
-          this.catalogError.set('No se pudieron cargar los catálogos de encuesta inicial.');
+        error: (error: unknown) => {
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar los catálogos de encuesta inicial.')
+          );
           this.applyInitialSurveyCatalogs({
             education: {
               lastSecondaryYearLocations: [],

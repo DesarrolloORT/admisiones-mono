@@ -513,6 +513,24 @@ describe('EnrollmentSurveyFacade', () => {
     );
   });
 
+  it('shows the backend message when the identity upload fails', () => {
+    uploadIdentityPhoto.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        message: 'La foto no cumple el formato requerido.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('bad request'),
+      }))
+    );
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(survey.activeSection()).toBe('identity');
+    expect(survey.preEnrollmentError()).toBe('La foto no cumple el formato requerido.');
+  });
+
   it('marks identity complete reactively once files and expiry are set, without pressing Continuar', () => {
     const { survey } = createFacade(createSurveyResponse({ isEligibleForSurvey: false }));
     const front = new File(['front'], 'front.png', { type: 'image/png' });
@@ -1014,6 +1032,42 @@ describe('EnrollmentSurveyFacade', () => {
     }
   );
 
+  // Un fallo del guardado parcial no dice nada sobre la confirmación: nunca llegó a
+  // llamarse. Es reintentable, así que no cierra el flujo en la pantalla de espera.
+  it.each([{ status: 0 }, { status: 409 }, { status: 500 }])(
+    'stays on the survey when the partial save fails with $status',
+    ({ status }) => {
+      saveInitialSurvey.mockReturnValue(throwError(() => ({ status })));
+      const { survey } = prepareFinalizableSurvey();
+
+      survey.continue();
+
+      expect(confirmPreEnrollment).not.toHaveBeenCalled();
+      expect(payment.outcome()).toBeNull();
+      expect(survey.confirmOutcomeUncertain()).toBe(false);
+      expect(survey.preEnrollmentError()).toBe(
+        'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+      );
+    }
+  );
+
+  it('shows the backend message when the partial save fails', () => {
+    saveInitialSurvey.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        message: 'La encuesta ya fue confirmada.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('conflict'),
+      }))
+    );
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(survey.preEnrollmentError()).toBe('La encuesta ya fue confirmada.');
+  });
+
   it('sets the pre-enrollment error and stops the spinner when confirmation fails for good', () => {
     confirmPreEnrollment.mockReturnValue(throwError(() => ({ status: 400 })));
     const { survey, process } = prepareFinalizableSurvey();
@@ -1027,6 +1081,23 @@ describe('EnrollmentSurveyFacade', () => {
     expect(survey.finalizingPreEnrollment()).toBe(false);
     expect(process.flow.currentStep()).toBe('survey');
     expect(payment.outcome()).toBeNull();
+  });
+
+  it('shows the backend message when confirmation fails for good with a normalized error', () => {
+    confirmPreEnrollment.mockReturnValue(
+      throwError(() => ({
+        status: 422,
+        message: 'La oferta seleccionada ya no está disponible.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unprocessable'),
+      }))
+    );
+    const { survey } = prepareFinalizableSurvey();
+
+    survey.continue();
+
+    expect(survey.preEnrollmentError()).toBe('La oferta seleccionada ya no está disponible.');
   });
 
   it('reports an error instead of confirming when no shift is selected', () => {
@@ -1157,6 +1228,15 @@ describe('EnrollmentSurveyFacade', () => {
     );
   });
 
+  it('shows the backend message when the resolver carries one', () => {
+    const { survey } = createFacade(null, {}, [], {
+      loadFailed: true,
+      loadFailedMessage: 'El servicio no está disponible.',
+    });
+
+    expect(survey.surveyLoadError()).toBe('El servicio no está disponible.');
+  });
+
   it('fetchResolvedInitialSurvey maps errors to loadFailed and toggles the loading flag', async () => {
     const getInitialSurvey = vi.fn().mockReturnValue(throwError(() => ({ status: 500 })));
     const { survey } = createFacade(null, {}, [], { skipApply: true, getInitialSurvey });
@@ -1164,6 +1244,7 @@ describe('EnrollmentSurveyFacade', () => {
     await expect(firstValueFrom(survey.fetchResolvedInitialSurvey())).resolves.toEqual({
       initialSurvey: null,
       loadFailed: true,
+      loadFailedMessage: 'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.',
     });
     expect(survey.loadingSurveyState()).toBe(false);
   });
@@ -1458,6 +1539,7 @@ describe('EnrollmentSurveyFacade', () => {
     degreePrograms: unknown[] = [],
     options: {
       loadFailed?: boolean;
+      loadFailedMessage?: string;
       getInitialSurvey?: () => unknown;
       skipApply?: boolean;
       getInitialSurveyCatalogs?: () => unknown;
@@ -1539,6 +1621,7 @@ describe('EnrollmentSurveyFacade', () => {
       const resolved: EnrollmentInitialSurveyResolved = {
         initialSurvey: (initialSurvey ?? null) as EnrollmentInitialSurveyResolved['initialSurvey'],
         loadFailed: options.loadFailed ?? false,
+        loadFailedMessage: options.loadFailedMessage,
       };
       const state = deriveInitialEnrollmentState({
         entry: {

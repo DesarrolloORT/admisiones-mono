@@ -80,6 +80,27 @@ describe('RecoverAccess', () => {
     );
   });
 
+  it('shows the normalized API message when recovery fails outside the hidden 4xx range', () => {
+    authEndpointMock.recoverPassword.mockReturnValue(
+      throwError(() => ({
+        status: 503,
+        message: 'El servicio no está disponible.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unavailable'),
+      }))
+    );
+    component['form'].setValue({
+      documentType: 'CI',
+      documentNumber: '11111111',
+      firstSurname: 'Silva',
+    });
+
+    component['submit']();
+
+    expect(snackbarMock.error).toHaveBeenCalledWith('El servicio no está disponible.');
+  });
+
   it('does not reveal whether an account exists', () => {
     authEndpointMock.recoverPassword.mockReturnValue(
       throwError(() => ({

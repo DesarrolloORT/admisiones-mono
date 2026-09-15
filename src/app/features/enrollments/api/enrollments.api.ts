@@ -282,7 +282,7 @@ export class EnrollmentsApi {
       );
   }
 
-  public registerProductInterest(payload: EnrollmentProductInterestPayload): Observable<boolean> {
+  public registerProductInterest(payload: EnrollmentProductInterestPayload): Observable<void> {
     return this.api
       .request(postEnrollmentsProductInterestEndpoint, {
         body: {
@@ -292,7 +292,7 @@ export class EnrollmentsApi {
         },
         showLoader: true,
       })
-      .pipe(map(() => true));
+      .pipe(map(() => undefined));
   }
 
   private toInitialSurvey(survey: InitialSurveyDetails): EnrollmentInitialSurvey {

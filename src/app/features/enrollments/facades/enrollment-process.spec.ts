@@ -256,7 +256,10 @@ describe('EnrollmentProcessFacade', () => {
     const { facade, survey } = createFacade(NEW_ENTRY, { initialSurvey: null, loadFailed: true });
 
     TestBed.tick();
-    expect(survey.applyInitialState).toHaveBeenLastCalledWith({ kind: 'load-failed' });
+    expect(survey.applyInitialState).toHaveBeenLastCalledWith({
+      kind: 'load-failed',
+      message: 'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.',
+    });
 
     survey.fetchResolvedInitialSurvey.mockReturnValue(of(FRESH));
     facade.retryInitialSurvey();

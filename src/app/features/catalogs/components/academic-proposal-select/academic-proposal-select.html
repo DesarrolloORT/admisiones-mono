@@ -44,6 +44,8 @@
       <p class="academic-proposal-select__error" id="academic-proposal-type-error" role="alert">
         Seleccioná una propuesta académica
       </p>
+      } @if (selection().catalogError(); as catalogError) {
+      <p class="academic-proposal-select__error" role="alert">{{ catalogError }}</p>
       }
 
       <div class="academic-proposal-select__fields">

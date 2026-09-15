@@ -131,8 +131,20 @@ describe('RegisterFlowFacade', () => {
         variant: 'warning',
       })
     );
+    expect(snackbarMock.show.mock.calls[0][0].hint).toBeUndefined();
     // Sin usuario LDAP todavia: ofrecer iniciar sesion seria un callejon sin salida.
     expect(snackbarMock.show.mock.calls[0][0].actionLabel).toBeUndefined();
+  });
+
+  it('uses a generic fallback when a terminal registration flow has no backend message', async () => {
+    mockEvaluation({ userExists: true, message: null });
+    facade.identityForm.setValue({ documentType: 'CI', documentNumber: '11111111' });
+
+    await facade.continueToPersonalData();
+
+    expect(snackbarMock.show).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'No se pudo continuar con el registro.' })
+    );
   });
 
   it('should verify an existing CI person from the personal step', async () => {
@@ -338,6 +350,23 @@ describe('RegisterFlowFacade', () => {
       nationalNumber: '99123456',
       iso2: 'UY',
     });
+  });
+
+  it('blocks the phone and shows the backend message when validation fails', () => {
+    accountMock.validatePhone.mockReturnValue(
+      throwError(() => ({
+        status: 503,
+        message: 'No pudimos validar ese celular.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unavailable'),
+      }))
+    );
+
+    setValidPersonalForm(facade);
+
+    expect(facade.personalForm.controls.primaryPhone.hasError('phoneValidation')).toBe(true);
+    expect(snackbarMock.error).toHaveBeenCalledWith('No pudimos validar ese celular.');
   });
 });
 

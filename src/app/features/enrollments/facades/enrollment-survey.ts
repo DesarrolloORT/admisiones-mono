@@ -2,8 +2,9 @@ import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 import type { OrtErrorItem } from '@desarrolloort/components';
-import { EMPTY, merge, Observable, of } from 'rxjs';
+import { EMPTY, merge, Observable, of, throwError } from 'rxjs';
 import { catchError, exhaustMap, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 import {
   DEFAULT_ERROR_ALERT,
   type ErrorAlertState,
@@ -45,7 +46,18 @@ import { EnrollmentProposalFacade } from './enrollment-proposal';
 import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
 import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
 
-const IDENTITY_SAVE_ERROR = 'identity-save';
+class IdentitySaveError extends Error {
+  constructor(public readonly reason?: unknown) {
+    super('identity-save');
+  }
+}
+
+class SurveySaveError extends Error {
+  constructor(public readonly reason: unknown) {
+    super('survey-save');
+  }
+}
+
 // Las únicas secciones que aportan campos de encuesta: identidad y reglamento no tienen
 // respuestas, y `work-situation` es solo de AP (que no postea encuesta).
 const SURVEY_ANSWER_SECTIONS = [
@@ -195,9 +207,7 @@ export class EnrollmentSurveyFacade {
         // Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
         this.canAnswerSurvey.set(false);
         this.snapshotPersistedPayload();
-        this.surveyLoadError.set(
-          'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.'
-        );
+        this.surveyLoadError.set(state.message);
         return;
       case 'identity-only':
         this.canAnswerSurvey.set(false);
@@ -435,10 +445,12 @@ export class EnrollmentSurveyFacade {
     this.identity
       .saveIdentityChanges()
       .pipe(
-        catchError(() => of(false)),
+        catchError((error: unknown) => throwError(() => new IdentitySaveError(error))),
         switchMap(savedIdentity => {
-          if (!savedIdentity) throw new Error(IDENTITY_SAVE_ERROR);
-          return this.savePartial();
+          if (!savedIdentity) throw new IdentitySaveError();
+          return this.savePartial().pipe(
+            catchError((error: unknown) => throwError(() => new SurveySaveError(error)))
+          );
         }),
         switchMap(() => this.enrollments.confirmPreEnrollment(confirmPayload)),
         finalize(() => this.finalizingPreEnrollment.set(false)),
@@ -464,28 +476,34 @@ export class EnrollmentSurveyFacade {
           }
           this.process.flow.next();
         },
-        error: error => {
-          const identitySaveFailed =
-            error instanceof Error && error.message === IDENTITY_SAVE_ERROR;
-          if (identitySaveFailed) {
+        error: (error: unknown) => {
+          if (error instanceof IdentitySaveError) {
             this.identityUploadFailed.set(true);
             this.patchProgress('identity', { completed: false, submitted: true });
             this.activeSection.set('identity');
             this.identityForm.markAllAsTouched();
+            this.preEnrollmentError.set(
+              getApiErrorMessage(
+                error.reason,
+                'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
+              )
+            );
+            return;
           }
           // Fallo ambiguo de `confirm-pre-enrollment` (no lleva clave de idempotencia): el
           // backend llama APIs externas y pudo haber creado la inscripción sin saberlo.
           // Reintentar a ciegas es peor que derivar a Admisiones, así que el flujo cierra en
           // la pantalla de espera en lugar de dejar al usuario atrapado reintentando.
-          if (!identitySaveFailed && isAmbiguousConfirmFailure(error)) {
+          if (isAmbiguousConfirmFailure(error)) {
             this.confirmOutcomeUncertain.set(true);
             this.payment.outcome.set('enrollment-in-progress');
             return;
           }
           this.preEnrollmentError.set(
-            identitySaveFailed
-              ? 'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
-              : 'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+            getApiErrorMessage(
+              error instanceof SurveySaveError ? error.reason : error,
+              'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+            )
           );
         },
       });

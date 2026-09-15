@@ -173,6 +173,11 @@ y las comparaciones para personas existentes en
 | `user-exists`                    | Acción para login                                                             | No permite confirmar              | No se llama a confirmación                                                                          |
 | `application-exists`             | Mensaje de solicitud pendiente                                                | No permite confirmar              | No se vuelve a crear la solicitud; el `flowId` recibido no se usa                                   |
 
+En los flujos terminales `user-exists` y `application-exists`, el aviso muestra
+el `message` del backend sin agregar explicaciones de negocio. Si el contrato no
+lo incluye, se usa solamente el fallback genérico "No se pudo continuar con el
+registro.".
+
 El frontend valida que el teléfono principal sea celular y envía `primaryPhone`
 como `{ nationalNumber, iso2 }`. El backend normaliza ese número y lo persiste en
 formato E.164; `e164`, `countryCode` e `isValid` no se envían porque son

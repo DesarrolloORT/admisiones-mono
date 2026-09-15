@@ -7,6 +7,7 @@ import { OrtButtonModule, OrtFormFieldModule, OrtInputModule } from '@desarrollo
 import { isNormalizedApiError } from '@desarrolloort/ngx-utils';
 import { finalize } from 'rxjs/operators';
 
+import { getApiErrorMessage } from '../../../../shared/errors/api-error-message';
 import {
   focusFieldById,
   FormErrorField,
@@ -97,7 +98,9 @@ export class RecoverAccess {
             return;
           }
 
-          this.snackbar.error('No se pudo procesar la solicitud. Intentá nuevamente.');
+          this.snackbar.error(
+            getApiErrorMessage(error, 'No se pudo procesar la solicitud. Intentá nuevamente.')
+          );
         },
       });
   }

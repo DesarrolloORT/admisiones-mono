@@ -107,6 +107,18 @@ describe('AcademicProposalSelect', () => {
     expect(fixture.componentInstance.selection().initialized()).toBe(true);
   });
 
+  it('renders the catalog error exposed by the selection', async () => {
+    fixture.componentInstance
+      .selection()
+      .catalogError.set('No se pudieron cargar las carreras disponibles.');
+
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'No se pudieron cargar las carreras disponibles.'
+    );
+  });
+
   it('adapts the design-system card content to the current breakpoint', () => {
     const card = fixture.nativeElement.querySelector('ort-card') as HTMLElement;
 

@@ -181,11 +181,17 @@ export class AcademicProposalSelection {
       return;
     }
 
+    this.catalogError.set(null);
     this.loadingSeminars.set(true);
     this.catalogs
       .getSeminars(degreeProgramId, admissionProcessId)
       .pipe(
-        catchError(() => of<Seminar[]>([])),
+        catchError((error: unknown) => {
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar los seminarios disponibles.')
+          );
+          return of<Seminar[]>([]);
+        }),
         finalize(() => this.loadingSeminars.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -211,10 +217,16 @@ export class AcademicProposalSelection {
       return;
     }
 
+    this.catalogError.set(null);
     this.catalogs
       .getIntakes(degreeProgramId)
       .pipe(
-        catchError(() => of<Intake[]>([])),
+        catchError((error: unknown) => {
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar los comienzos disponibles.')
+          );
+          return of<Intake[]>([]);
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(intakes => this.intakeOptions.set(intakes.map(toAcademicIntakeOption)));
@@ -223,7 +235,12 @@ export class AcademicProposalSelection {
     this.catalogs
       .getShifts(degreeProgramId, processId)
       .pipe(
-        catchError(() => of<Shift[]>([])),
+        catchError((error: unknown) => {
+          this.catalogError.set(
+            getApiErrorMessage(error, 'No se pudieron cargar los turnos disponibles.')
+          );
+          return of<Shift[]>([]);
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(shifts => {
@@ -302,6 +319,7 @@ export class AcademicProposalSelection {
             this.shiftOptions.set([]);
             this.seminarsState.set([]);
             this.seminarsDegreeProgramId.set(null);
+            this.catalogError.set(null);
           }),
           switchMap(value => {
             const degreeProgramId = toNullableNumber(value);
@@ -317,7 +335,12 @@ export class AcademicProposalSelection {
 
             this.loadingIntakes.set(true);
             return this.catalogs.getIntakes(degreeProgramId).pipe(
-              catchError(() => of<Intake[]>([])),
+              catchError((error: unknown) => {
+                this.catalogError.set(
+                  getApiErrorMessage(error, 'No se pudieron cargar los comienzos disponibles.')
+                );
+                return of<Intake[]>([]);
+              }),
               finalize(() => this.loadingIntakes.set(false))
             );
           })
@@ -331,6 +354,7 @@ export class AcademicProposalSelection {
           tap(() => {
             form.controls.shift.setValue('', { emitEvent: false });
             this.shiftOptions.set([]);
+            this.catalogError.set(null);
           }),
           switchMap(value => {
             const degreeProgramId = toNullableNumber(form.controls.degreeProgram.value);
@@ -342,7 +366,12 @@ export class AcademicProposalSelection {
 
             this.loadingShifts.set(true);
             return this.catalogs.getShifts(degreeProgramId, intakeId).pipe(
-              catchError(() => of<Shift[]>([])),
+              catchError((error: unknown) => {
+                this.catalogError.set(
+                  getApiErrorMessage(error, 'No se pudieron cargar los turnos disponibles.')
+                );
+                return of<Shift[]>([]);
+              }),
               finalize(() => this.loadingShifts.set(false))
             );
           })

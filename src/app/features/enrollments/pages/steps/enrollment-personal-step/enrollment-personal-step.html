@@ -17,6 +17,8 @@
     (submit)="onSubmit($event)">
     @if (facade.activeSectionErrorAlert(); as error) {
     <app-error-alert [message]="error.message" [title]="error.title" />
+    } @if (facade.catalogError(); as catalogError) {
+    <app-error-alert title="Hubo un problema al cargar la encuesta" [message]="catalogError" />
     }
     <ort-accordion [multi]="false">
       @if (facade.visibleSections().includes('education')) {

@@ -7,6 +7,7 @@ import { firstValueFrom, of } from 'rxjs';
 import { catchError, filter, finalize, map, take } from 'rxjs/operators';
 import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
+import { MAX_IMAGE_SIZE_BYTES } from '../../../shared/files/image-upload';
 import { toBackendPhone } from '../../../shared/forms/phone';
 import { SnackbarHandler } from '../../../shared/ui/snackbar/snackbar-handler';
 import { AccountApi } from '../api/account.api';
@@ -304,7 +305,10 @@ export class RegisterFlowFacade {
 
       return this.account.validatePhone(toBackendPhone(value)).pipe(
         map(isValid => (isValid ? null : { phone: true })),
-        catchError(() => of(null))
+        catchError((error: unknown) => {
+          this.snackbar.error(getApiErrorMessage(error, 'No se pudo validar el celular.'));
+          return of({ phoneValidation: true });
+        })
       );
     };
   }
@@ -371,7 +375,7 @@ export class RegisterFlowFacade {
     this.snackbar.error(message);
   }
 
-  private showGoToLoginSnackbar(message = 'Ya existe un registro con este documento.'): void {
+  private showGoToLoginSnackbar(message = 'No se pudo continuar con el registro.'): void {
     this.snackbar.show({
       message,
       variant: 'warning',
@@ -383,12 +387,9 @@ export class RegisterFlowFacade {
     });
   }
 
-  private showPendingApplicationSnackbar(
-    message = 'Ya existe una solicitud de alta pendiente para este documento.'
-  ): void {
+  private showPendingApplicationSnackbar(message = 'No se pudo continuar con el registro.'): void {
     this.snackbar.show({
       message,
-      hint: 'Admisiones la revisa y te avisa por correo cuando esté aprobada.',
       variant: 'warning',
       duration: 10000,
     });
@@ -429,7 +430,8 @@ export class RegisterFlowFacade {
 
   private getDocumentRecognitionFileErrorMessage(error: DocumentRecognitionFileError): string {
     if (error.code === 'maxFileSize') {
-      return 'El archivo supera el límite de 5 MB.';
+      const maxSizeMb = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
+      return `El archivo supera el límite de ${maxSizeMb} MB.`;
     }
 
     if (error.code === 'invalidMimeType') {

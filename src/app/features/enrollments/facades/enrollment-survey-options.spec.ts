@@ -61,6 +61,22 @@ describe('EnrollmentSurveyOptionsFacade', () => {
     expect(options.initialized()).toBe(true);
   });
 
+  it('shows the backend message when the catalogs fail with a normalized error', () => {
+    getInitialSurveyCatalogs.mockReturnValue(
+      throwError(() => ({
+        status: 403,
+        message: 'No tenés permisos para responder la encuesta.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('forbidden'),
+      }))
+    );
+
+    const options = createFacade();
+
+    expect(options.catalogError()).toBe('No tenés permisos para responder la encuesta.');
+  });
+
   it('reports the error when departments fail to load', () => {
     getCountryLocations.mockReturnValue(throwError(() => new Error('network error')));
 

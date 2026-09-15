@@ -14,6 +14,9 @@
     @if (form().controls.primaryPhone.touched && form().controls.primaryPhone.hasError('phone')) {
     <ort-error>Ingresá un celular válido.</ort-error>
     } @else if (form().controls.primaryPhone.touched &&
+    form().controls.primaryPhone.hasError('phoneValidation')) {
+    <ort-error>No se pudo validar el celular.</ort-error>
+    } @else if (form().controls.primaryPhone.touched &&
     form().controls.primaryPhone.hasError('required')) {
     <ort-error>El celular es obligatorio.</ort-error>
     }

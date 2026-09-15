@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { CatalogsApi } from '../api/catalogs.api';
@@ -95,6 +95,56 @@ describe('AcademicProposalSelection', () => {
     form.controls.intake.setValue('200');
     expect(getShifts).toHaveBeenCalledWith(20, 200);
     expect(selection.shiftOptions()[0]?.value).toBe('300');
+  });
+
+  it('reports a catalog error and degrades to an empty list when starts fail to load', () => {
+    getIntakes.mockReturnValue(
+      throwError(() => ({
+        status: 503,
+        message: 'El servicio de catálogos no está disponible.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unavailable'),
+      }))
+    );
+
+    form.controls.proposalType.setValue('2');
+    form.controls.degreeProgram.setValue('20');
+
+    expect(selection.intakeOptions()).toEqual([]);
+    expect(selection.catalogError()).toBe('El servicio de catálogos no está disponible.');
+  });
+
+  it('reports a catalog error and degrades to an empty list when shifts fail to load', () => {
+    getShifts.mockReturnValue(throwError(() => new Error('network down')));
+
+    form.controls.proposalType.setValue('2');
+    form.controls.degreeProgram.setValue('20');
+    form.controls.intake.setValue('200');
+
+    expect(selection.shiftOptions()).toEqual([]);
+    expect(selection.catalogError()).toBe('No se pudieron cargar los turnos disponibles.');
+  });
+
+  it('reports a catalog error and degrades to an empty list when seminars fail to load', () => {
+    getSeminars.mockReturnValue(throwError(() => new Error('network down')));
+
+    form.controls.proposalType.setValue('3');
+    form.controls.degreeProgram.setValue('30');
+
+    expect(selection.seminarOptions()).toEqual([]);
+    expect(selection.catalogError()).toBe('No se pudieron cargar los seminarios disponibles.');
+  });
+
+  it('clears a previous catalog error once the degree program changes again', () => {
+    getIntakes.mockReturnValueOnce(throwError(() => new Error('network down')));
+
+    form.controls.proposalType.setValue('2');
+    form.controls.degreeProgram.setValue('20');
+    expect(selection.catalogError()).not.toBeNull();
+
+    form.controls.degreeProgram.setValue('');
+    expect(selection.catalogError()).toBeNull();
   });
 
   it('clears dependent controls when the proposal changes', () => {

@@ -138,4 +138,13 @@ describe('EnrollmentPersonalStep', () => {
     expect(decision).toContain('formControlName="decisionSupport"');
     expect(decision).toContain('<app-responsive-select');
   });
+
+  it('renders the survey catalog load error', () => {
+    const template = readFileSync(
+      'src/app/features/enrollments/pages/steps/enrollment-personal-step/enrollment-personal-step.html',
+      'utf8'
+    );
+
+    expect(template).toContain('facade.catalogError()');
+  });
 });

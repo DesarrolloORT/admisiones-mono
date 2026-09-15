@@ -722,10 +722,12 @@ describe('EnrollmentsApi', () => {
       expect.objectContaining({ body: expect.objectContaining({ paymentType: 'GEOPAY' }) })
     );
   });
-  it('maps product interest payload and boolean response', async () => {
+  it('maps product interest payload and resolves on success', async () => {
     const payload = { offeringIds: [300], selectedAdmissionProcessId: 200, productId: 20 };
 
-    await expect(firstValueFrom(endpoint.registerProductInterest(payload))).resolves.toBe(true);
+    await expect(
+      firstValueFrom(endpoint.registerProductInterest(payload))
+    ).resolves.toBeUndefined();
 
     expect(apiMock.request).toHaveBeenCalledWith(postEnrollmentsProductInterestEndpoint, {
       body: { offeringIds: [300], admissionProcessId: 200, productId: 20 },
