@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { Router, RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule } from '@desarrolloort/components';
 
+import { getApiErrorMessage } from '../../../../shared/errors/api-error-message';
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { EnrollmentsApi } from '../../../enrollments/api/enrollments.api';
 import type { EnrollmentPreEnrollmentResponse } from '../../../enrollments/models/enrollment-flow';
 import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
@@ -45,6 +47,7 @@ export class DashboardQuickActions {
   private readonly enrollments = inject(EnrollmentsApi);
   private readonly router = inject(Router);
   private readonly resumeContext = inject(EnrollmentResumeContextStore);
+  private readonly snackbar = inject(SnackbarHandler);
 
   readonly status = input.required<string>();
   readonly degreeProgramName = input.required<string>();
@@ -103,7 +106,12 @@ export class DashboardQuickActions {
           queryParams: { ...this.resumeQueryParams(), modo: 'reactivar' },
         });
       },
-      error: () => this.isReactivating.set(false),
+      error: (error: unknown) => {
+        this.isReactivating.set(false);
+        this.snackbar.error(
+          getApiErrorMessage(error, 'No se pudo reactivar la inscripción. Intentá nuevamente.')
+        );
+      },
     });
   }
 

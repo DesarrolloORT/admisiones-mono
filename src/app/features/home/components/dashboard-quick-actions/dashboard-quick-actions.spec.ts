@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
+import { SnackbarHandler } from '../../../../shared/ui/snackbar/snackbar-handler';
 import { EnrollmentsApi } from '../../../enrollments/api/enrollments.api';
 import { EnrollmentResumeContextStore } from '../../../enrollments/services/enrollment-resume-context';
 import { DashboardQuickActions } from './dashboard-quick-actions';
@@ -34,14 +35,20 @@ const REACTIVATION_RESPONSE = {
 
 describe('DashboardQuickActions', () => {
   let enrollments: { reactivate: ReturnType<typeof vi.fn> };
+  let snackbar: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     sessionStorage.clear();
     enrollments = { reactivate: vi.fn().mockReturnValue(of(REACTIVATION_RESPONSE)) };
+    snackbar = { error: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [DashboardQuickActions],
-      providers: [provideRouter([]), { provide: EnrollmentsApi, useValue: enrollments }],
+      providers: [
+        provideRouter([]),
+        { provide: EnrollmentsApi, useValue: enrollments },
+        { provide: SnackbarHandler, useValue: snackbar },
+      ],
     });
   });
 
@@ -145,6 +152,24 @@ describe('DashboardQuickActions', () => {
     (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
 
     expect(enrollments.reactivate).toHaveBeenCalledWith([7010, 7011]);
+  });
+
+  it('shows the backend message and stops reactivating when it fails', async () => {
+    enrollments.reactivate.mockReturnValue(
+      throwError(() => ({
+        status: 409,
+        message: 'La inscripción ya fue reactivada.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('conflict'),
+      }))
+    );
+    const fixture = createComponent('Dada de baja');
+
+    await fixture.whenStable();
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+
+    expect(snackbar.error).toHaveBeenCalledWith('La inscripción ya fue reactivada.');
   });
 
   it('keeps Dada de baja inert without enrollment ids', async () => {
