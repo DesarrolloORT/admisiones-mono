@@ -1,0 +1,54 @@
+{
+  "README": "Traduce alertas ZAP a acciones para desarrollo. Clave: pluginid. 'name' permite resolver el pluginid cuando solo se dispone del reporte HTML. 'action' agrupa alertas que se resuelven con el mismo cambio. 'verdict': fix | likely-false-positive | informational.",
+  "plugins": {
+    "10020": {
+      "name": "Missing Anti-clickjacking Header",
+      "verdict": "fix",
+      "action": "Agregar headers de seguridad de respuesta",
+      "where": "Configuración de nginx que sirve el frontend",
+      "fix": "add_header Content-Security-Policy \"frame-ancestors 'self'\" always; (o X-Frame-Options: DENY si hay que soportar navegadores viejos)"
+    },
+    "10021": {
+      "name": "X-Content-Type-Options Header Missing",
+      "verdict": "fix",
+      "action": "Agregar headers de seguridad de respuesta",
+      "where": "Configuración de nginx que sirve el frontend",
+      "fix": "add_header X-Content-Type-Options \"nosniff\" always;"
+    },
+    "10038": {
+      "name": "Content Security Policy (CSP) Header Not Set",
+      "verdict": "fix",
+      "action": "Agregar headers de seguridad de respuesta",
+      "where": "Configuración de nginx que sirve el frontend",
+      "fix": "add_header Content-Security-Policy \"...\" always; Angular con estilos inline requiere ajustar style-src; empezar en Report-Only para medir rupturas."
+    },
+    "10036": {
+      "name": "Server Leaks Version Information via \"Server\" HTTP Response Header Field",
+      "verdict": "fix",
+      "action": "Ocultar la versión del servidor",
+      "where": "Configuración de nginx que sirve el frontend",
+      "fix": "server_tokens off;"
+    },
+    "90034": {
+      "name": "Cloud Metadata Potentially Exposed",
+      "verdict": "likely-false-positive",
+      "action": "Verificar antes de escalar",
+      "where": "Regla que evalúa solo el código de estado",
+      "fix": "En un SPA, nginx devuelve index.html con 200 para cualquier ruta desconocida. Confirmar si el cuerpo de la respuesta es el index de la app: si lo es, es falso positivo. Solo es real si la respuesta trae metadata de la instancia cloud."
+    },
+    "10027": {
+      "name": "Information Disclosure - Suspicious Comments",
+      "verdict": "informational",
+      "action": "Ruido de bundles",
+      "where": "Bundles minificados de Angular",
+      "fix": "La regla busca palabras como TODO, FIXME o BUG en el JS servido. En bundles de producción son casi siempre restos de dependencias. Revisar solo si aparece en código propio."
+    },
+    "10109": {
+      "name": "Modern Web Application",
+      "verdict": "informational",
+      "action": "Ajustar la configuración del escaneo",
+      "where": "Configuración de ZAP, no de la aplicación",
+      "fix": "No es un hallazgo de la app: ZAP detectó un SPA y avisa que el spider tradicional no alcanza. Habilitar el AJAX Spider y definir un contexto con autenticación para cubrir la aplicación real."
+    }
+  }
+}
