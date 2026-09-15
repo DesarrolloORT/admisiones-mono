@@ -37,16 +37,21 @@ baseline_commit: 8354b7af905917007e27be150c5b30dad7fa242c
 history_boundary: 4bb986030f9efe8b0e24d33a79366d0593e97716
 traversal: all-reachable-topological
 publication_order: oldest-first
-last_batch: LOTE-01
+last_batch: LOTE-02
 last_commits_reviewed:
-  - 4bb98603
-  - 06142d7d
-  - 0dbd9a10
-  - 2ec7478944611098c95ad30f718ba47c0c8383cd
-next_candidate_id: ARCH-HIST-003
+  - 56c5536c7544fdac5327c22604c145fd49e635e0
+  - 66a19be4bc6f9207d5348c4a2cbbd8e956221424
+  - 564ae0a24c4b25cfcaae027a80a67ec1dcb2f82c
+  - a209d44c27dcb09899b8a1fd6a554bc8266f414b
+  - a255e12e1d0ea5455c64f1d1b1ed29e2a5f8ae1b
+  - f1dd554a13f9aad12919cfb40f725e3ec29967ce
+  - 825fd59a47f66e31da32ce4f7710043540d8d47a
+next_candidate_id: ARCH-HIST-005
 next_adr_id: ADR-002
 status: in-progress
 ```
+
+Nota de progreso: `LOTE-02` cubrió solo el arranque de `api-admisiones` (roots hasta el primer merge `develop`←`main`, 7 commits de los ~540 pre-merge de esa rama). Quedan pendientes: el resto de `api-admisiones` hasta `e772ab60` (~533 commits) y toda la historia de `admisiones` (~990 commits desde `aa3b22c9` hasta `888ecfc8`, arranca 2026-04-08 renombrando un `angular-template` interno). Dado el volumen (~1516 commits restantes), este trabajo continúa en lotes sucesivos; no se agotó en esta sesión.
 
 Total de ancestros de `history_boundary`: 1535 commits (incluyéndolo). Roots detectados en todo el DAG (`git rev-list --all --max-parents=0`): `2ec7478` (mono, hoy), `aa3b22c9` (repo `admisiones` frontend), `56c5536c` (repo `api-admisiones`, rama principal), `66a19be4` (repo `api-admisiones`, rama `develop`, histórico disjunto — ver gap en ARCH-HIST-002). Pendiente recorrer: historia completa de `admisiones` (root `aa3b22c9`) y de `api-admisiones` (roots `56c5536c`/`66a19be4`), ~1530 commits restantes.
 
@@ -99,6 +104,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | Lote | Rango/DAG | Commits revisados | Candidatos | ADR redactados | Estado |
 |---|---|---:|---:|---:|---|
 | LOTE-01 | `4bb98603`, `06142d7d`, `0dbd9a10`, `2ec7478` (los 4 commits entre `history_boundary` y los roots de `admisiones`/`api-admisiones`) | 4 | 2 | 1 (`ADR-001`, vía testimonio directo del autor el 2026-09-15, no solo evidencia de commits) | completado |
+| LOTE-02 | Arranque de `api-admisiones`: roots `56c5536c`/`66a19be4` hasta el merge `825fd59a` (2026-03-02 a 2026-03-11) | 7 | 3 (`ARCH-HIST-002` resuelto/descartado, `ARCH-HIST-003`, `ARCH-HIST-004`) | 0 (candidatos `medium`, requieren validación del equipo antes de redactar ADR) | completado (parcial: resto de `api-admisiones` y toda `admisiones` pendientes) |
 
 ## Registro de candidatos
 
@@ -154,11 +160,11 @@ Alternativas descartadas: no confirmadas todavía (el testimonio no cubrió por 
 ### ARCH-HIST-002 — Historia disjunta de `api-admisiones`: dos roots (`main` y `develop`) unidos por "merge main with develop"
 
 ```yaml
-status: discovered
-confidence: low
-decision_date: null
+status: rejected # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-03-02
 domain: control-de-versiones
-commits: [56c5536c, 66a19be4, 825fd59a47f66e31da32ce4f7710043540d8d47a]
+commits: [56c5536c, 66a19be4, 564ae0a2, 825fd59a47f66e31da32ce4f7710043540d8d47a]
 pull_requests: []
 issues: []
 files: []
@@ -167,26 +173,105 @@ adr: null
 
 #### Hechos verificados
 
-- `git rev-list --all --max-parents=0` muestra dos commits raíz distintos y **no relacionados** (`git merge-base --is-ancestor` confirma que ninguno es ancestro del otro) que ambos terminan siendo ancestros del backend: `56c5536c` ("Initial commit", historia principal con entidades generadas por Devart, servicios, LDAP, etc.) y `66a19be4` ("Initialize develop").
-- Se unen recién en el commit `825fd59a` ("merge main with develop"), con padres `[66a19be4, ba7f26f0…]`.
+- `56c5536c` ("Initial commit", 2026-03-02 10:36:52) y `66a19be4` ("Initialize develop", 2026-03-02 10:36:53) son dos roots **sin ancestro común**, creados por el mismo autor (`Emanuelle-Gabriele`) con **1 segundo de diferencia**, y con el **mismo scaffolding inicial** (mismos archivos de workflow, `.gitmodules`, `Core` como submódulo, entidades Devart).
+- `56c5536c` es la línea que efectivamente recibe todo el desarrollo posterior (17 commits reales entre el 2 y el 9-11 de marzo: regeneración de entidades Devart, LDAP, JWT, etc.) hasta llegar a `ba7f26f0`. `66a19be4` ("develop") **no vuelve a recibir commits propios** — queda congelado en su único commit de creación.
+- `825fd59a` ("merge main with develop", 2026-03-11, autor `emanuelle-gabriele`) tiene como primer padre `66a19be4` (rama `develop`, la que estaba checkouteada) y segundo padre `ba7f26f0` (punta de `main`). El diffstat es `485 files changed, 80897 insertions(+), 67 deletions(-)`: las únicas líneas eliminadas corresponden al puntero del submódulo `Core` y a texto del `README.md`, no a código de aplicación. **No se descartó trabajo real.**
 
 #### Decisión inferida
 
-Ninguna decisión de arquitectura — es evidencia de una anomalía de control de versiones: la rama `develop` del backend se inicializó en algún momento como historia huérfana (sin compartir ancestro con `main`) y luego se reconcilió con un merge. Causa no determinada (reset de rama, recreación tras pérdida de historia, migración de otro sistema de control de versiones, etc.).
+No es una decisión de arquitectura: es un **artefacto de creación de repositorio**. Todo indica que `main` y `develop` se crearon como dos commits raíz independientes con el mismo scaffolding (probablemente al inicializar el repo con ambas ramas desde una plantilla, en vez de crear `develop` a partir de `main`), y que el desarrollo real ocurrió solo en `main`. El merge del 11 de marzo simplemente hizo que `develop` "alcanzara" a `main`, sin pérdida de código.
 
 #### Motivación y alternativas
 
-No recuperable del historial local. Requiere a alguien del equipo que haya estado en el proyecto en esa época (fecha exacta no determinada aún, está muy cerca de los primeros commits de `api-admisiones`).
+No recuperable del historial local (no hay PR/issue). El patrón (mismo autor, mismo scaffolding, 1 segundo de diferencia) es consistente con una inicialización de repositorio que crea ambas ramas por separado en vez de derivar `develop` de `main`, pero esto sigue siendo inferencia sobre la causa raíz — no confirmado por testimonio.
 
 #### Consecuencias observadas
 
-Ninguna funcional aparente; el merge no descarta código (a validar en el próximo lote al leer el diff completo de `825fd59a`).
+Ninguna funcional. No hay pérdida de código verificada (confirmado con el diffstat completo de `825fd59a`).
 
 #### Gaps y validación requerida
 
-- No se determinó aún la fecha ni el diff completo de `825fd59a`; queda para el lote que cubra el inicio de `api-admisiones`.
-- Preguntar al equipo si recuerdan una recreación/reset de la rama `develop` en el backend.
-- Candidato de **investigación únicamente** por ahora (confianza `low`); no se propone ADR salvo que el próximo lote revele una decisión real detrás del reset.
+- Causa raíz de la creación de dos roots no confirmada por testimonio (queda como curiosidad de bajo impacto, no bloqueante).
+- **Descartado como ADR** conforme al protocolo (cambio táctico/reversible sin consecuencia arquitectónica ni de negocio) — se conserva aquí solo como investigación.
+
+### ARCH-HIST-003 — Acceso a datos generado por Devart Entity Developer sobre base de datos preexistente (DB-first, sin migraciones EF en el repo)
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-03-02
+domain: persistencia
+commits: [56c5536c7544fdac5327c22604c145fd49e635e0, 564ae0a24c4b25cfcaae027a80a67ec1dcb2f82c, a209d44c27dcb09899b8a1fd6a554bc8266f414b]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `56c5536c` (commit inicial de `api-admisiones`) ya incluye entidades y contexto EF Core **generados por Devart Entity Developer** (`APIModel.edps`, `APIModel.efml`, `DevartEntities/*.cs`, `DevartConverters/*.cs`, repositorios `*.Generated.cs`), es decir: el modelo de datos existía en el repo desde el primer commit, generado a partir de una base de datos ya existente (reverse engineering / DB-first), no creado por migraciones versionadas en el código.
+- `564ae0a2` ("initial commit", 17 min después) **elimina** ese primer set de archivos Devart generados (miles de líneas).
+- `a209d44c` ("generated devart entities", ~4 horas después) vuelve a generar entidades y convertidores Devart (distinto conjunto/alcance de tablas).
+- No se observó, en ninguno de estos commits, carpeta de EF Core Migrations ni scripts de esquema versionados junto al código.
+
+#### Decisión inferida
+
+Usar **Devart Entity Developer** como generador del modelo de acceso a datos a partir de una base de datos SQL existente (enfoque *database-first* vía herramienta comercial de terceros), en lugar de Entity Framework Core Code-First con migraciones versionadas en el repositorio. El esquema de base de datos vive y se administra fuera de este repo; el código solo consume una regeneración del modelo.
+
+#### Motivación y alternativas
+
+No hay motivación explícita (sin PR/issue). Es consistente con un escenario típico de modernización de una API sobre una base de datos legacy ya en producción (de ahí el nombre `Devart`/`APIModel` y la reutilización de `Core` como submódulo con utilidades de conexión a BD). No se observan alternativas evaluadas (p. ej. Code-First, Dapper, otro ORM).
+
+#### Consecuencias observadas
+
+- El esquema de base de datos es una dependencia externa e implícita: cualquier cambio de esquema requiere regenerar el modelo Devart fuera de este flujo de commits, sin registro versionado del cambio de esquema en sí (solo del código generado resultante).
+- El borrado y regeneración en `564ae0a2`/`a209d44c` sugiere ajuste de alcance de tablas mapeadas en las primeras horas del proyecto, no un cambio de estrategia.
+
+#### Gaps y validación requerida
+
+- **Falta contexto de base de datos**: motor y versión del SGBD, quién administra el esquema, cómo y dónde se versionan sus cambios (¿scripts SQL en otro repo? ¿herramienta de DB migration separada?), y si existe documentación del modelo de datos fuera de este repositorio. Este es exactamente el tipo de gap advertido por el autor ("muchos cambios fueron realizados previamente" sin documentación) — no inventar la respuesta, preguntar al equipo de datos/DBA.
+- Falta de análisis funcional: no hay documentación de por qué se mapearon esas tablas específicas primero, ni de las reglas de negocio detrás de entidades como `Comienzo`, `EncuestaIniAdmision`, `FondoDeBeca` (aparecen en commits siguientes sin contexto funcional).
+- Confianza `medium`: el cambio y sus consecuencias son claros; la motivación (por qué Devart y no otra alternativa) es inferida, no confirmada.
+
+### ARCH-HIST-004 — Autenticación combinada: LDAP (`a255e12e`) + JWT/refresh-token con cookies seguras (`f1dd554a`)
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-03-03
+domain: autenticacion-autorizacion
+commits: [a255e12e1d0ea5455c64f1d1b1ed29e2a5f8ae1b, f1dd554a13f9aad12919cfb40f725e3ec29967ce]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `a255e12e` (2026-03-03) agrega "LDAP auth support and generic module data access": cambios mínimos y focalizados (extensión de DI, un campo en `appsettings.json`), reutilizando módulos genéricos que vienen de `Core` (el submódulo compartido).
+- `f1dd554a` (2026-03-09, 6 días después) agrega un mecanismo de autenticación **completo y separado**: `AuthController`, `AuthService`, `TokenService`, `RefreshTokenService`, `CookieAuthenticationHelper`, y una nueva entidad de datos `RefreshToken` (persistida vía el mismo modelo Devart/EF de `ARCH-HIST-003`, sin migración visible).
+- Ambos mecanismos coexisten en el código; no hay commit que remueva o reemplace LDAP al introducir JWT.
+
+#### Decisión inferida
+
+Sostener **dos mecanismos de autenticación en paralelo**: LDAP (típicamente usado para autenticación de usuarios internos/staff contra un directorio corporativo) y JWT con refresh token en cookies seguras (típico de un API pública consumida por un frontend SPA, aquí probablemente `admisiones`). No se puede confirmar desde el código cuál mecanismo protege qué endpoints sin leer los controllers en detalle (pendiente para un lote posterior si se retoma este candidato).
+
+#### Motivación y alternativas
+
+No hay PR/issue ni documentación contemporánea. Es plausible (no confirmado) que LDAP sirva para consumidores internos (staff/administración) y JWT para el frontend público de postulantes, pero es una inferencia de patrón común, no un hecho verificado.
+
+#### Consecuencias observadas
+
+- Dos superficies de autenticación para auditar en seguridad (relevante para el baseline ASVS del monorepo).
+- La entidad `RefreshToken` se suma al modelo de datos sin migración versionada visible — mismo gap de base de datos que `ARCH-HIST-003`.
+
+#### Gaps y validación requerida
+
+- Confirmar con el equipo qué endpoints/consumidores usa cada mecanismo, y si hay plan de deprecar uno en favor del otro.
+- Mismo gap de base de datos que `ARCH-HIST-003` (tabla `RefreshToken` sin migración visible).
+- Confianza `medium`: cambio y alcance de código claros; motivación y separación de responsabilidades entre ambos mecanismos, inferida.
 
 ## Guardrails
 
