@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["control", "reason", "risk", "approvedBy", "createdAt", "expiresAt", "ticket"],
+  "properties": {
+    "control": { "type": "string", "pattern": "^v5\\.0\\.0-[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "reason": { "type": "string", "minLength": 1 },
+    "risk": { "enum": ["low", "medium", "high", "critical"] },
+    "approvedBy": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date" },
+    "expiresAt": { "type": "string", "format": "date" },
+    "ticket": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}
+

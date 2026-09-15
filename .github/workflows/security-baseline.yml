@@ -1,0 +1,31 @@
+name: Security baseline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test security tooling
+        run: node --test security/tests/*.test.mjs
+      - name: Validate exceptions
+        run: node security/tools/validate-exceptions.mjs
+      - name: Evaluate ASVS baseline
+        run: node security/tools/evaluate.mjs
+      - name: Upload ASVS summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asvs-summary
+          path: security/reports/asvs-summary.md
+
