@@ -1,0 +1,13 @@
+name: Documentación
+description: Sugerencias donde falta documentación.
+title: 'docs(SCOPE): TITLE'
+labels: ['docs', 'needs triage', 'state: pending']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: |
+        Provea una breve descripción de lo que se desea agregar o mejorar en la documentación.
+    validations:
+      required: true

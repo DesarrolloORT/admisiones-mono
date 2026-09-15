@@ -1,0 +1,51 @@
+name: CI - version branches
+
+on:
+  pull_request:
+    branches:
+      - v*.*.*/main
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  # Cancel any running workflow for the same branch when new commits are pushed.
+  # We group both by ref_name (available when CI is triggered by a push to a branch/tag)
+  # and head_ref (available when CI is triggered by a PR).
+  group: '${{ github.ref_name }}-${{ github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  prepare_api:
+    name: Prepare API contracts
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
+  ci:
+    name: CI Checks
+    needs: prepare_api
+    uses: ./.github/workflows/ci-checks.yml
+    with:
+      environment: desarrollo
+      build-configuration: development
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
+  sonar:
+    name: SonarQube Scan
+    needs: ci
+    uses: ./.github/workflows/sonar-scan.yml
+    with:
+      branch: ${{ github.head_ref }}
+      pr-mode: true
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit

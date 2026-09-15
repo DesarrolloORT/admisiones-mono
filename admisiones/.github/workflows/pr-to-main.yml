@@ -1,0 +1,142 @@
+name: Audit version
+
+concurrency:
+  # Cancel any running workflow for the same branch when new commits are pushed.
+  # We group both by ref_name (available when CI is triggered by a push to a branch/tag)
+  # and head_ref (available when CI is triggered by a PR).
+  group: '${{ github.ref_name }}-${{ github.head_ref }}'
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  audit_dependencies:
+    name: Audit dependencies
+    runs-on: blacksmith-8vcpu-ubuntu-2404
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit dependencies for high/critical vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+  prepare_api:
+    name: Prepare API contracts
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (startsWith(github.event.pull_request.head.ref, 'feature/') ||
+      startsWith(github.event.pull_request.head.ref, 'fix/') ||
+      startsWith(github.event.pull_request.head.ref, 'release/') ||
+      startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
+      startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: preprod
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
+  CI:
+    name: CI Checks (unplanned features/hotfixes or release PRs)
+    needs: prepare_api
+    if: >
+      startsWith(github.event.pull_request.head.ref, 'feature/') ||
+      startsWith(github.event.pull_request.head.ref, 'fix/') ||
+      startsWith(github.event.pull_request.head.ref, 'release/') ||
+      startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
+      startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    uses: ./.github/workflows/ci-checks.yml
+    with:
+      environment: preprod
+      checkout-repository: ${{ github.event.pull_request.head.repo.full_name }}
+      checkout-ref: ${{ github.event.pull_request.head.ref }}
+    secrets: inherit
+
+  version_matches:
+    name: Check version matches
+    if: >
+      (startsWith(github.event.pull_request.head.ref, 'v') &&
+      endsWith(github.event.pull_request.head.ref, '/main')) ||
+      startsWith(github.event.pull_request.title, 'release/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Check version match
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Extract branch and PR title
+          branch_name="$BRANCH_NAME"
+          echo "Full branch name: $branch_name"
+
+          pr_title="$PR_TITLE"
+          echo "PR title: $pr_title"
+
+          # Initialize version variable
+          version_extracted=""
+
+          # Check if branch matches pattern: v*.*.*/main
+          if [[ "$branch_name" =~ ^v[0-9]+\.[0-9]+\.[0-9]+/main$ ]]; then
+            echo "Branch matches pattern v*.*.*/main"
+            # Extract the version part before the first slash and remove the leading 'v'
+            branch_version="${branch_name%%/*}"
+            version_extracted="${branch_version#v}"
+            echo "Extracted version from branch: $version_extracted"
+
+          # Else, check if PR title matches pattern: release/v*.*.*
+          elif [[ "$pr_title" =~ ^release/v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "PR title matches pattern release/v*.*.*"
+            # Extract the version from the PR title.
+            # This sed command captures the version (including the leading 'v') right after 'release/'
+            pr_version=$(echo "$pr_title" | sed -E 's/^release\/(v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            # Remove the leading 'v' for consistency
+            version_extracted="${pr_version#v}"
+            echo "Extracted version from PR title: $version_extracted"
+
+          else
+            echo "Error: Neither branch nor PR title contains valid version information."
+            exit 1
+          fi
+
+          # Read version from package.json using jq
+          version_in_pkg=$(jq -r '.version' package.json)
+          echo "Version in package.json: $version_in_pkg"
+
+          # Read version from package-lock.json using jq
+          version_in_lock=$(jq -r '.version' package-lock.json)
+          echo "Version in package-lock.json: $version_in_lock"
+
+          # Compare the extracted version to the package.json version
+          if [ "$version_extracted" != "$version_in_pkg" ]; then
+            echo "Version mismatch: extracted version ($version_extracted) does not match package.json version ($version_in_pkg)."
+            exit 1
+          fi
+
+          # Compare package.json and package-lock.json versions
+          if [ "$version_in_pkg" != "$version_in_lock" ]; then
+            echo "Version mismatch: package.json version ($version_in_pkg) does not match package-lock.json version ($version_in_lock)."
+            exit 1
+          fi
+
+          echo "Version match confirmed."

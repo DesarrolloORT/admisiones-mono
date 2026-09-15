@@ -1,0 +1,48 @@
+<ort-form-field [hideRequiredMarker]="!!form().controls.documentType.value">
+  <ort-label>Tipo de documento</ort-label>
+  <ort-select
+    aria-label="Tipo de documento"
+    [formControl]="form().controls.documentType"
+    [id]="idPrefix() + '-document-type'">
+    <ort-option value="CI">Cédula</ort-option>
+    <ort-option value="PS">Pasaporte</ort-option>
+    <ort-option value="DE">Documento extranjero</ort-option>
+  </ort-select>
+  @if ( form().controls.documentType.touched && form().controls.documentType.hasError('required') )
+  {
+  <ort-error>Este campo es obligatorio</ort-error>
+  }
+</ort-form-field>
+
+<!-- TODO(a11y-ort-component): OrtInput no conserva siempre el nombre accesible del OrtFormField al alternar entre cédula y documento no-CI; se explicita aria-label hasta que la librería lo resuelva. -->
+<ort-form-field [hideRequiredMarker]="!!form().controls.documentNumber.value">
+  <ort-label>{{ numberLabel() }}</ort-label>
+  @if (isNationalIdInput()) {
+  <input
+    ortCedulaInput
+    type="text"
+    [aria-label]="numberLabel()"
+    [autocomplete]="autocomplete() ?? ''"
+    [formControl]="form().controls.documentNumber"
+    [id]="idPrefix() + '-document-number'" />
+  } @else {
+  <input
+    ortInput
+    type="text"
+    [aria-label]="numberLabel()"
+    [autocomplete]="autocomplete() ?? ''"
+    [formControl]="form().controls.documentNumber"
+    [id]="idPrefix() + '-document-number'" />
+  } @if (isNationalIdInput()) {
+  <ort-hint>Sin puntos ni guiones</ort-hint>
+  } @if ( form().controls.documentNumber.touched &&
+  form().controls.documentNumber.hasError('required') ) {
+  <ort-error>Este campo es obligatorio</ort-error>
+  } @if ( isNationalIdInput() && form().controls.documentNumber.touched &&
+  form().controls.documentNumber.hasError('nationalId') ) {
+  <ort-error>Ingresá un número de cédula válido</ort-error>
+  } @if ( !isNationalIdInput() && form().controls.documentNumber.touched &&
+  form().controls.documentNumber.hasError('pattern') ) {
+  <ort-error>Ingresá solo caracteres alfanuméricos o guiones</ort-error>
+  }
+</ort-form-field>

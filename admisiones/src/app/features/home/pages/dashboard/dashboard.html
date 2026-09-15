@@ -1,0 +1,96 @@
+@if (!showScholarshipResult()) { @if (hasPendingPayment()) {
+<ort-alert
+  actionAriaLabel="Ir al pago pendiente"
+  purpose="warning"
+  radius="straight"
+  [actionIcon]="pendingPaymentSummary().navigable ? 'arrow_forward' : undefined"
+  [hideStatusIcon]="hideStatusIcon()"
+  (actionTriggered)="navigateToPendingPayment()">
+  <ort-alert-title>
+    {{ pendingPaymentSummary().title }}
+    <span class="alert-detail--inline">{{ pendingPaymentSummary().detail }}</span>
+  </ort-alert-title>
+  <ort-alert-supporting-text class="alert-detail--block">
+    {{ pendingPaymentSummary().detail }}
+  </ort-alert-supporting-text>
+</ort-alert>
+}
+
+<main class="dashboard-main" id="main-content" tabindex="-1">
+  <header class="dashboard-greeting">
+    <h1>{{ greeting() }}</h1>
+    <p>Aquí podés gestionar tu inscripción y postulación a becas.</p>
+  </header>
+
+  <section class="dashboard-container">
+    <section class="dashboard-actions">
+      <app-dashboard-action-card variant="enrollment" />
+      <app-dashboard-action-card variant="scholarship" />
+    </section>
+    <div class="dashboard-cards" [class.dashboard-cards--row]="singleRow()">
+      <app-dashboard-enrollments-section
+        class="dashboard-enrollments"
+        [enrollments]="enrollments()"
+        [singleRow]="singleRow()" />
+      <app-dashboard-scholarships-section
+        class="dashboard-scholarships"
+        [scholarships]="scholarships()"
+        [singleRow]="singleRow()"
+        (consultar)="showScholarshipReview()"
+        (openDialog)="openDialog()" />
+    </div>
+  </section>
+</main>
+
+} @else {
+<app-review-scholarship-result (closeReview)="closeReview()" />
+} @if (isDialogOpen()) {
+<ort-dialog
+  align="start"
+  class="scholarship-dialog"
+  showCloseButton="false"
+  title="Aceptar Beca del 25%"
+  [open]="isDialogOpen()"
+  (closed)="closeDialog()"
+  (openChange)="isDialogOpen.set($event)">
+  <p class="dialog-text">
+    Estás por aceptar la beca del Fondo de Excelencia Académica. Al confirmar, el beneficio se
+    aplicará directamente a tu carrera.
+  </p>
+  <ul class="scholarship-dialog__list">
+    <li class="scholarship-dialog__list-item">
+      <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+        chevron_right
+      </ort-icon>
+      <div class="scholarship-dialog__list-item-content">
+        <span>Puntaje total:</span>
+        1500 / 1600 pts
+      </div>
+    </li>
+    <li class="scholarship-dialog__list-item">
+      <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+        chevron_right
+      </ort-icon>
+      <div class="scholarship-dialog__list-item-content">
+        <span>Verbal:</span>
+        700 pts
+      </div>
+    </li>
+    <li class="scholarship-dialog__list-item">
+      <ort-icon aria-hidden="true" class="scholarship-dialog__list-marker" size="md">
+        chevron_right
+      </ort-icon>
+      <div class="scholarship-dialog__list-item-content">
+        <span>Matemática:</span>
+        800 pts
+      </div>
+    </li>
+  </ul>
+  <ng-container ortDialogFooter>
+    <button ort-primary-button type="button" (click)="closeDialog()">Confirmar beca</button>
+    <button ort-secondary-button ortDialogClose type="button" (click)="closeDialog()">
+      Cancelar
+    </button>
+  </ng-container>
+</ort-dialog>
+}

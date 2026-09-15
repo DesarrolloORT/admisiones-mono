@@ -1,0 +1,45 @@
+<article class="dashboard-card" [attr.aria-labelledby]="titleId">
+  <ort-icon aria-hidden="true" class="dashboard-card__icon" size="lg">{{ icon() }}</ort-icon>
+
+  @if (showChip()) {
+  <div class="dashboard-card__chip">
+    <app-dashboard-enrollment-status-chip [status]="status()" />
+  </div>
+  }
+
+  <h3 class="dashboard-card__title" [id]="titleId">{{ title() }}</h3>
+
+  <div class="dashboard-card__meta">
+    @if (variant() === 'enrollments') { @if (enrollmentsCount() === 1) {
+    <app-dashboard-card-summary
+      variant="enrollments"
+      [startDate]="enrollment()?.intakeName ?? ''" />
+    } @else {
+    <p class="dashboard-card__seminars">Anotado a {{ enrollmentsCount() }} seminarios</p>
+    } } @else {
+    <app-dashboard-card-summary
+      variant="scholarships"
+      [applicationDeadline]="scholarship()?.applicationDeadline ?? ''"
+      [benefit]="scholarship()?.benefit ?? ''"
+      [degreeProgramName]="scholarship()?.degreeProgramName ?? ''"
+      [examDate]="scholarship()?.examDate ?? ''"
+      [examResult]="scholarship()?.examResult ?? ''"
+      [resultsDate]="scholarship()?.resultsDate ?? ''"
+      [status]="status()" />
+    }
+  </div>
+
+  @if (showActions()) {
+  <div class="dashboard-card__actions">
+    <app-dashboard-quick-actions
+      [admissionProcessId]="enrollment()?.admissionProcessId ?? null"
+      [cardType]="variant()"
+      [degreeProgramName]="title()"
+      [enrollmentIds]="enrollmentIds()"
+      [offeringIds]="enrollment()?.offeringIds ?? []"
+      [productId]="enrollment()?.productId ?? null"
+      [productLevelId]="enrollment()?.productLevelId ?? null"
+      [status]="status()" />
+  </div>
+  }
+</article>

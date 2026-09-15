@@ -1,0 +1,35 @@
+<section
+  class="dashboard-enrollments"
+  [class.dashboard-enrollments--single]="enrollments().length === 1 && !singleRow()">
+  @if (enrollments().length > 0) {
+  <div class="section-header">
+    <h3 class="section-header__title">Mis carreras</h3>
+    <a
+      aria-label="Inscribirme a carrera"
+      class="section-header__add"
+      ort-icon-button
+      variant="tonal"
+      [routerLink]="'/inscripciones'">
+      <ort-icon name="add" />
+    </a>
+  </div>
+  } @if (enrollments().length === 0) {
+  <div class="dashboard-enrollments__empty">
+    <app-dashboard-action-card variant="enrollment" />
+  </div>
+  } @else if (enrollments().length === 1) {
+  <app-dashboard-card [enrollment]="enrollments()[0]" />
+  } @else {
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      @for (enrollment of enrollments(); track enrollment.productId + '-' +
+      enrollment.admissionProcessId) {
+      <div class="swiper-slide">
+        <app-dashboard-card [enrollment]="enrollment" />
+      </div>
+      }
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+  }
+</section>

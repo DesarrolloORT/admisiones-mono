@@ -1,0 +1,50 @@
+<form class="auth-form-body" novalidate [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <section class="auth-form-section">
+    <section aria-labelledby="document-capture-title" class="auth-capture">
+      <div>
+        <h2 id="document-capture-title">Ahorrá tiempo escaneando tu documento</h2>
+        <p>Los campos se autocompletarán</p>
+      </div>
+
+      <ort-file-uploader
+        [acceptedTypes]="acceptedDocumentTypes()"
+        [disabled]="isRecognizingDocument()"
+        [maxFileSize]="maxDocumentFileSize"
+        [maxFiles]="1"
+        (filesChanged)="onDocumentFilesChanged($event)" />
+
+      @if (isRecognizingDocument()) {
+      <ort-progress-bar aria-label="Procesando documento" variant="indeterminate" />
+      }
+    </section>
+
+    <div class="auth-divider">O ingresá tus datos manualmente</div>
+
+    <app-document-fields
+      idPrefix="register"
+      [form]="form()"
+      [numberLabel]="documentNumberLabel()" />
+  </section>
+
+  <div #errorSummaryAnchor tabindex="-1">
+    <ort-error-summary [errors]="errorSummary()" />
+  </div>
+
+  @if (showLoginAction()) {
+  <button ort-primary-button type="button" (click)="loginAction.emit()">Iniciar sesión</button>
+  }
+
+  <button
+    loadingLabel="Verificando documento"
+    ort-primary-button
+    type="submit"
+    [disabled]="isRecognizingDocument() || isSubmitting() || showLoginAction()"
+    [loading]="isSubmitting()">
+    {{ isSubmitting() ? 'Verificando...' : 'Continuar' }}
+  </button>
+
+  <p class="auth-login-switch">
+    ¿Ya tenés cuenta?
+    <a routerLink="/iniciar-sesion">Iniciar sesión</a>
+  </p>
+</form>

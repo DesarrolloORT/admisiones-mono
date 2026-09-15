@@ -1,0 +1,73 @@
+name: SonarQube - Main Branches
+
+on:
+  push:
+    branches:
+      - main
+      - v*.*.*/main
+      - latest/main
+
+concurrency:
+  group: 'sonar-main-${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  prepare_api:
+    name: Prepare API contracts
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: blacksmith-8vcpu-ubuntu-2404
+    secrets: inherit
+
+  coverage:
+    name: Generate coverage results
+    needs: prepare_api
+    runs-on: blacksmith-8vcpu-ubuntu-2404
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.3'
+          cache: 'npm'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env -- desa
+
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+
+      - name: Generate coverage
+        run: npm run test:ci
+
+      - name: Upload coverage files
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage
+
+  sonar-scan:
+    name: SonarQube Scan
+    needs: coverage
+    uses: ./.github/workflows/sonar-scan.yml
+    with:
+      branch: ${{ github.ref_name }}
+    secrets: inherit

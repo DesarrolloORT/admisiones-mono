@@ -1,0 +1,27 @@
+<article class="dashboard-card" [attr.aria-labelledby]="'dashboard-card-title'">
+  <img alt="" src="assets/home/party-popper.gif" />
+  <h3 class="dashboard-card__title" id="dashboard-card-title">¡Felicitaciones!</h3>
+  <p class="dashboard-card__text">
+    Obtuviste una
+    <strong>beca del 55%</strong>
+    para la carrera Licenciatura en Diseño Gráfico.
+  </p>
+  <div class="dashboard-card__actions">
+    <button
+      class="action-btn"
+      ort-primary-button
+      type="button"
+      [attr.aria-label]="'Aceptar beca'"
+      (click)="onOpenDialogClick()">
+      Aceptar beca
+    </button>
+    <button
+      class="action-btn"
+      ort-secondary-button
+      type="button"
+      [attr.aria-label]="'Consultar beca'"
+      (click)="onConsultarClick()">
+      Consultar
+    </button>
+  </div>
+</article>

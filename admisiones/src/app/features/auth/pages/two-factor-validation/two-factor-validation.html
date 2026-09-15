@@ -1,0 +1,15 @@
+<app-auth-form
+  description="Ingresá el código para confirmar tu identidad."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
+  heroIcon="lock"
+  heroTitle="Tu seguridad es prioridad."
+  title="Autenticación requerida"
+  [centerContent]="true"
+  [hideHeader]="true">
+  <app-two-factor-validation
+    [email]="email()"
+    [error]="error()"
+    [isSubmitting]="isSubmitting()"
+    (confirm)="verify($event)"
+    (resend)="resend()" />
+</app-auth-form>

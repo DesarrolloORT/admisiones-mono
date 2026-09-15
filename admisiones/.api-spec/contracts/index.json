@@ -1,0 +1,22 @@
+[
+  {
+    "name": "carreras.contract.json",
+    "url": "/contracts/carreras.contract.json"
+  },
+  {
+    "name": "encuesta-inicial.contract.json",
+    "url": "/contracts/encuesta-inicial.contract.json"
+  },
+  {
+    "name": "inscripcion-detalle.contract.json",
+    "url": "/contracts/inscripcion-detalle.contract.json"
+  },
+  {
+    "name": "registro.contract.json",
+    "url": "/contracts/registro.contract.json"
+  },
+  {
+    "name": "telefono.contract.json",
+    "url": "/contracts/telefono.contract.json"
+  }
+]

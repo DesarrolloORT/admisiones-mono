@@ -1,0 +1,57 @@
+.enrollment-screen__header h2 {
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-heading-level4-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level4-line-height);
+}
+
+.enrollment-subsection > h2,
+.enrollment-subsection > h3,
+.enrollment-subsection > h4 {
+  font-weight: var(--ort-sys-font-weight-bold);
+  font-size: var(--ort-sys-heading-level6-text-size);
+  font-family: var(--ort-sys-font-family-display);
+  line-height: var(--ort-sys-heading-level6-line-height);
+}
+
+.enrollment-form__stack > h5 {
+  font-weight: var(--ort-sys-font-weight-semibold);
+  font-size: var(--ort-sys-body-text-size);
+  font-family: var(--ort-sys-font-family-plain);
+  line-height: var(--ort-sys-body-line-height);
+}
+
+.enrollment-identity-confirmation {
+  font-size: var(--ort-sys-body-sm-text-size);
+  line-height: var(--ort-sys-body-sm-line-height);
+}
+
+ort-accordion-description {
+  color: var(--ort-sys-base-text-error-color);
+}
+
+.enrollment-accordion__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ort-sys-spacing-2);
+}
+
+.back-button {
+  display: none;
+}
+
+.enrollment-accordion__state-icon-wrapper {
+  position: relative;
+}
+
+.enrollment-accordion__state-badge {
+  position: absolute;
+  top: calc(-1 * var(--ort-sys-spacing-6));
+  right: calc(-1 * var(--ort-sys-spacing-6));
+}
+
+@media (width >= 52.5rem) {
+  .back-button {
+    display: block;
+  }
+}

@@ -1,0 +1,128 @@
+name: Deploy to Development Environment
+
+# Deploy automatico en cada merge a las ramas de desarrollo.
+# Tambien se puede disparar a mano desde Actions -> Run workflow sobre la rama deseada.
+on:
+  push:
+    branches:
+      - v*.*.*/develop
+  workflow_dispatch:
+
+concurrency:
+  # El recurso compartido es el sitio IIS, no la rama: dos deploys nunca deben
+  # solaparse sobre el mismo site path. Si se mergean dos PRs seguidos, el deploy
+  # viejo se cancela y gana el estado mas nuevo.
+  group: deploy-desa
+  cancel-in-progress: true
+
+jobs:
+  prepare_api:
+    name: Prepare API contracts
+    uses: ./.github/workflows/prepare-api-contracts.yml
+    with:
+      environment: desarrollo
+      runs-on: ubuntu-latest
+    secrets: inherit
+
+  build:
+    name: Build
+    needs: prepare_api
+    runs-on: ubuntu-latest
+    environment: desarrollo
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.3'
+
+      - name: Authenticate to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@desarrolloort:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync environment from Azure App Configuration
+        run: npm run env -- desa
+
+      - name: Download API contracts
+        uses: actions/download-artifact@v8
+        with:
+          name: api-generated
+          path: src/app/shared/api/generated
+
+      - name: Build
+        run: npx ng build --configuration development
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifact
+          path: dist/admisiones/browser
+
+  deploy:
+    name: Deploy
+    runs-on: funcionarios-desa
+    environment: desarrollo
+    needs: build
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: build-artifact
+
+      - name: Delete existing files from site directory
+        run: |
+          $sitePath = '${{ vars.DEV_SERVER_SITE_PATH }}'
+          if ([string]::IsNullOrWhiteSpace($sitePath)) {
+            throw "vars.DEV_SERVER_SITE_PATH no esta configurada para el environment 'desarrollo'; se aborta para evitar borrar la raiz del disco."
+          }
+          if (-not (Test-Path -LiteralPath $sitePath)) {
+            throw "El path '$sitePath' no existe en este runner; se aborta el borrado."
+          }
+          Remove-Item -Recurse -Force (Join-Path $sitePath '*')
+
+      - name: Copy Build files into site directory
+        run: Copy-Item -Path .\* -Destination '${{vars.DEV_SERVER_SITE_PATH}}' -Recurse
+
+  move_task:
+    # Mueve la tarea del project a "Testing" recien cuando el deploy a desa quedo
+    # arriba. Solo en merges: un deploy manual no cambia el estado de ninguna tarea.
+    name: Move task to Testing
+    needs: deploy
+    if: success() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.3'
+
+      - name: Move linked task to Testing
+        # El script solo usa built-ins de Node, asi que no hace falta npm ci.
+        # GITHUB_TOKEN no alcanza: escribir un project de organizacion y leer los
+        # issues de api-admisiones requieren un PAT con scopes repo + project.
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+        run: node ./scripts/task/task.js move --sha ${{ github.sha }}
+
+  notify_deploy_execution:
+    name: Notify deploy execution status
+    if: always()
+    needs: deploy
+    uses: ./.github/workflows/notification.yml
+    secrets: inherit
+    with:
+      result: ${{ needs.deploy.result }}
+      workflow-name: ${{ github.workflow }}

@@ -1,0 +1,60 @@
+<section aria-labelledby="tfv-title" class="container">
+  <div aria-hidden="true" class="icon">
+    <ort-icon>lock</ort-icon>
+  </div>
+
+  <h1 class="title" id="tfv-title">Autenticación requerida</h1>
+
+  <p class="description">
+    Para continuar, ingresá el código de 6 dígitos recibido en
+    <strong>{{ email() }}</strong>
+    .
+  </p>
+
+  <form class="form" novalidate (ngSubmit)="submitFromButton()">
+    <fieldset class="code" [disabled]="isSubmitting()">
+      <legend class="sr-only">Código de verificación de 6 dígitos</legend>
+
+      @for (slot of slots; track $index) {
+      <input
+        #digitInput
+        autocomplete="one-time-code"
+        class="digit"
+        inputmode="numeric"
+        maxlength="1"
+        type="text"
+        [attr.aria-describedby]="error() ? 'tfv-error' : null"
+        [attr.aria-invalid]="error() ? true : null"
+        [attr.aria-label]="'Dígito ' + ($index + 1) + ' de 6'"
+        [formControl]="form.controls[$index]"
+        (input)="handleInput($index, $event)"
+        (keydown)="handleKeydown($index, $event)"
+        (paste)="handlePaste($event)" />
+      }
+    </fieldset>
+
+    @if (error()) {
+    <p class="error" id="tfv-error" role="alert">{{ error() }}</p>
+    }
+
+    <footer class="footer">
+      <button
+        class="confirm"
+        loadingLabel="Validando código"
+        ort-primary-button
+        type="submit"
+        [disabled]="isSubmitting()"
+        [loading]="isSubmitting()">
+        {{ isSubmitting() ? 'Validando' : 'Confirmar' }}
+      </button>
+      <p class="resend">
+        Debería llegarte el código máximo en un minuto.
+        <br />
+        ¿No lo recibiste?
+        <button class="resend-link" type="button" [disabled]="isSubmitting()" (click)="onResend()">
+          Enviar un nuevo código.
+        </button>
+      </p>
+    </footer>
+  </form>
+</section>

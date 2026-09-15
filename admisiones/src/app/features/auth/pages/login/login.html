@@ -1,0 +1,54 @@
+<app-auth-form
+  description="Inscribite y postulate a becas."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
+  heroIcon="school"
+  heroTitle="Tu red profesional comienza hoy."
+  title="Tu inscripción empieza aquí">
+  @if (formError(); as error) {
+  <app-error-alert title="No pudimos continuar" [message]="error" />
+  }
+
+  <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <section class="auth-form-section">
+      <app-document-fields autocomplete="username" idPrefix="login" [form]="form" />
+
+      <ort-form-field [hideRequiredMarker]="!!form.controls.password.value">
+        <ort-label>Contraseña</ort-label>
+        <input
+          autocomplete="current-password"
+          formControlName="password"
+          ortInput
+          [id]="'login-password'"
+          [type]="passwordVisibility.inputType()" />
+        <button
+          class="password-visibility-toggle"
+          ortSuffix
+          type="button"
+          [attr.aria-label]="passwordVisibility.toggleLabel()"
+          [attr.aria-pressed]="passwordVisibility.visible()"
+          (click)="passwordVisibility.toggle()">
+          <ort-icon aria-hidden="true" [name]="passwordVisibility.icon()" />
+        </button>
+        @if ( form.controls.password.touched && form.controls.password.hasError('required') ) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+
+      <a class="auth-link" routerLink="/recuperar-acceso">¿Olvidaste tu contraseña?</a>
+    </section>
+
+    <button
+      loadingLabel="Validando credenciales"
+      ort-primary-button
+      type="submit"
+      [disabled]="isSubmitting()"
+      [loading]="isSubmitting()">
+      {{ isSubmitting() ? 'Validando credenciales' : 'Iniciar sesión' }}
+    </button>
+
+    <section aria-label="Opciones de cuenta" class="auth-stack">
+      <div class="auth-divider">¿Aún no tenés cuenta?</div>
+      <button ort-secondary-button routerLink="/registro" type="button">Crear cuenta</button>
+    </section>
+  </form>
+</app-auth-form>

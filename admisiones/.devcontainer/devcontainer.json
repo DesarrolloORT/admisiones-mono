@@ -1,0 +1,108 @@
+{
+  "name": "Angular + Node",
+  "image": "mcr.microsoft.com/vscode/devcontainers/typescript-node:22",
+  "containerEnv": {
+    "CI": "true"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers-extra/features/angular-cli:2": {
+      "version": "20.0.0"
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.npmrc,target=/home/node/.npmrc,type=bind,consistency=cached",
+    "source=node-modules-cache,target=/workspace/node_modules,type=volume"
+  ],
+  "additionalProperties": {
+    "description": "Container para apps desarrolladas con Angular y Node",
+    "ng-version": "20.0.0",
+    "node-major-version": "22"
+  },
+  "runArgs": ["--init", "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
+  "shutdownAction": "stopContainer",
+  "forwardPorts": [4200],
+  "appPort": ["4200:4200"],
+  "postCreateCommand": "npm install",
+  "postStartCommand": "npm start -- desa --host=0.0.0.0 --disable-host-check",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md", "package.json"]
+    },
+    "vscode": {
+      "extensions": [
+        // Angular specific
+        "angular.ng-template",
+        "sp90.angular-control-flow-snippets",
+        "imgildev.vscode-angular-generator",
+        "jmgomes.angular-latest-snippets",
+        "natewallace.angular2-inline",
+        "tomwhite007.rename-angular-component",
+        "ghaschel.vscode-angular-html",
+
+        // JavaScript/TypeScript
+        "mgmcdermott.vscode-language-babel",
+        "yoavbls.pretty-ts-errors",
+        "pmneo.tsimporter",
+        "wix.vscode-import-cost",
+        "tobermory.es6-string-html",
+        "meganrogge.template-string-converter",
+
+        // HTML/CSS
+        "mrmlnc.vscode-scss",
+        "pranaygp.vscode-css-peek",
+        "pucelle.vscode-css-navigation",
+        "mrmlnc.vscode-autoprefixer",
+        "zignd.html-css-class-completion",
+        "bradgashler.htmltagwrap",
+        "htmlhint.vscode-htmlhint",
+        "ecmel.vscode-html-css",
+        "vincaslt.highlight-matching-tag",
+        "formulahendry.auto-rename-tag",
+        "formulahendry.auto-complete-tag",
+        "formulahendry.auto-close-tag",
+
+        // Code Quality & Formatting
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "stylelint.vscode-stylelint",
+        "sonarsource.sonarlint-vscode",
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens",
+        "shardulm94.trailing-spaces",
+
+        // IntelliSense & Productivity
+        "visualstudioexptteam.vscodeintellicode",
+        "christian-kohler.path-intellisense",
+        "christian-kohler.npm-intellisense",
+        "steoates.autoimport",
+
+        // Tools
+        "kisstkondoros.vscode-gutter-preview",
+        "aykutsarac.jsoncrack-vscode",
+        "quicktype.quicktype",
+        "jock.svg",
+        "albert.tabout",
+
+        // Testing
+        "vitest.explorer",
+
+        // GitHub
+        "me-dutour-mathieu.vscode-github-actions",
+        "github.vscode-github-actions",
+
+        // Documentation & Markdown
+        "yzhang.markdown-all-in-one",
+        "aaron-bond.better-comments",
+        "gruntfuggly.todo-tree",
+
+        // Development Environment
+        "ms-vscode-remote.remote-containers",
+        "vsls-contrib.codetour",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
+        "docker.docker"
+      ]
+    }
+  }
+}

@@ -1,0 +1,301 @@
+/* stylelint-disable declaration-property-unit-allowed-list -- Header and drawer follow Figma px measurements and ORT token fallbacks. */
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--ort-sys-base-surface-background-dim);
+  color: var(--ort-sys-base-text-color-headline);
+  font-family: var(--ort-sys-font-family-open-sans);
+}
+
+.process-layout {
+  width: 100%;
+  min-height: 100dvh;
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout--desktop {
+  background: var(--ort-sys-base-surface-background-page);
+}
+
+.process-layout__top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout__header {
+  background: var(--ort-sys-base-surface-primary-background);
+  color: var(--ort-sys-base-text-on-color-header);
+}
+
+.process-layout__header-content {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  gap: var(--ort-sys-spacing-12);
+  align-items: center;
+  width: 100%;
+  height: 80px;
+  margin: 0;
+  padding: var(--ort-sys-spacing-8);
+}
+
+.process-layout__header-action {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.process-layout__icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ort-sys-border-radius-round);
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.process-layout__icon-button:focus-visible {
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
+
+.process-layout__icon-button ort-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.process-layout__brand {
+  display: flex;
+  gap: var(--ort-sys-spacing-16);
+  justify-content: center;
+  align-items: center;
+  justify-self: center;
+  overflow: hidden;
+  width: fit-content;
+  max-width: 212px;
+  height: 48px;
+}
+
+.process-layout__logo {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  width: 56px;
+  height: auto;
+  aspect-ratio: 67 / 30;
+}
+
+.process-layout__brand-divider {
+  width: 0.0625rem;
+  height: 1.75rem;
+  border-radius: var(--ort-sys-border-radius-round);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.process-layout__brand-name {
+  overflow: hidden;
+  color: var(--ort-sys-base-text-on-color-header);
+  font-weight: 700;
+  font-size: var(--ort-sys-body-text-size);
+  line-height: var(--ort-sys-body-line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.process-layout__mobile-stepper {
+  background: var(--ort-sys-base-surface-background-page-default);
+}
+
+.process-layout__rail {
+  display: none;
+}
+
+.process-layout__main {
+  min-height: calc(100dvh - 4rem);
+  outline: none;
+}
+
+.process-layout__content {
+  min-width: 0;
+}
+
+.process-layout__header-content--no-back {
+  grid-template-columns: minmax(0, 1fr) 48px;
+}
+
+.process-layout__header-content--no-back .process-layout__header-action:first-child {
+  display: none;
+}
+
+.process-layout__header-content--no-back .process-layout__brand {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.process-layout__header-content--no-back .process-layout__header-action:last-child {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.process-layout__header-content--no-close .process-layout__header-action:last-child {
+  visibility: hidden;
+}
+
+.process-layout__header-action--end {
+  position: relative;
+  justify-self: end;
+}
+
+.process-layout__profile {
+  position: relative;
+  display: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.process-layout__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ort-sys-avatar-border-radius);
+  background: var(--ort-sys-avatar-background);
+  color: var(--ort-sys-base-surface-primary-background);
+  cursor: pointer;
+}
+
+.process-layout__avatar ort-icon {
+  font-size: 24px;
+}
+
+.process-layout__avatar:focus-visible,
+.process-layout__profile-menu-item:focus-visible {
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
+
+.process-layout__profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+}
+
+.process-layout__profile-menu-sheet {
+  display: grid;
+  width: 233px;
+  padding-block: var(--ort-sys-menu-item-padding-block);
+  border-radius: var(--ort-sys-menu-border-radius);
+  background: var(--ort-sys-menu-background);
+  box-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
+    var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
+    var(--ort-sys-elevation-sm-color);
+}
+
+.process-layout__profile-menu-list {
+  display: grid;
+  width: 100%;
+}
+
+.process-layout__profile-menu-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--ort-sys-menu-item-gap);
+  align-items: center;
+  min-height: 48px;
+  padding: var(--ort-sys-menu-item-padding-block) var(--ort-sys-menu-item-padding-inline);
+  border: 0;
+  border-bottom: 1px solid var(--ort-sys-base-border-subtle-color);
+  background: transparent;
+  color: var(--ort-sys-menu-item-color);
+  font: inherit;
+  font-size: var(--ort-sys-menu-item-font-size);
+  line-height: var(--ort-sys-menu-item-line-height);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.process-layout__profile-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.process-layout__profile-menu-item ort-icon {
+  color: var(--ort-sys-base-icon-color-subtle);
+  font-size: 24px;
+}
+
+.process-layout:is(.process-layout--compact, .process-layout--wide-mobile, .process-layout--tablet)
+  .process-layout__header-content {
+  height: 6.9375rem;
+  padding: var(--ort-sys-spacing-48) var(--ort-sys-spacing-16) 0;
+}
+
+.process-layout--tablet {
+  --process-layout-inline-padding: clamp(0rem, calc(10.53vw - 4.278rem), 1.25rem);
+}
+
+.process-layout--tablet .process-layout__main {
+  padding-inline: var(--process-layout-inline-padding);
+}
+
+.process-layout--desktop .process-layout__brand {
+  width: 13.25rem;
+  max-width: none;
+}
+
+.process-layout--desktop .process-layout__body {
+  display: grid;
+  grid-template-columns: minmax(18rem, 22.375rem) minmax(0, 1fr);
+  min-height: calc(100dvh - 5rem);
+}
+
+.process-layout--without-stepper .process-layout__body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.process-layout--desktop .process-layout__rail {
+  display: block;
+  min-width: 0;
+  border-right: 1px solid var(--ort-sys-base-border-subtle-color);
+  background: var(--ort-sys-base-surface-background);
+}
+
+.process-layout--desktop .process-layout__rail-inner {
+  position: sticky;
+  top: 5rem;
+  display: grid;
+  align-content: space-between;
+  min-height: calc(100dvh - 5rem);
+  padding: var(--ort-sys-spacing-48);
+}
+
+.process-layout--desktop .process-layout__main {
+  min-height: auto;
+  padding: var(--ort-sys-spacing-32) var(--ort-sys-spacing-48);
+  padding-inline-start: var(--ort-sys-spacing-36);
+}
+
+.process-layout--desktop .process-layout__close-button {
+  display: none;
+}
+
+.process-layout--desktop .process-layout__profile {
+  display: grid;
+}
+
+.process-layout--desktop .process-layout__exit {
+  width: fit-content;
+  text-align: start;
+}

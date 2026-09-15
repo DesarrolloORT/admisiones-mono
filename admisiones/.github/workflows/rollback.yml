@@ -1,0 +1,81 @@
+name: Rollback to Latest Stable Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      password:
+        description: 'Servidores y Operaciones: ingrese la contraseña para ejecutar el rollback'
+        required: true
+
+jobs:
+  authentication:
+    name: Autenticación - Servidores y Operaciones
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check password
+        run: |
+          if [ "${{ github.event.inputs.password }}" != "${{ secrets.AUTH_ADM_SERV }}" ]; then
+            echo "Contraseña incorrecta. No se ejecutará el rollback."
+            exit 1
+          else
+            echo "Contraseña correcta. Continuando con el rollback."
+          fi
+        shell: bash
+
+  rollback:
+    runs-on: production-server #TODO: set to self-hosted runner
+    needs: authentication
+    environment: prod
+    steps:
+      - name: Get latest stable release tag
+        id: get_latest_stable_release
+        run: |
+          $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/releases" -Headers @{ Authorization = "token ${{ secrets.GITHUB_TOKEN }}" }
+          $latest_stable_release = $releases | Where-Object { $_.prerelease -eq $false } | Select-Object -First 2 | Select-Object -Last 1
+          $tag = $latest_stable_release.tag_name
+          echo "tag=$tag" >> $env:GITHUB_ENV
+
+      - name: Download build artifact from latest stable release
+        id: release_downloader
+        uses: robinraju/release-downloader@v1
+        with:
+          tag: ${{ env.tag }}
+          tarBall: false
+          zipBall: false
+          fileName: '*.zip'
+          extract: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing files from site directory
+        run: Remove-Item -Recurse -Force '${{secrets.SERVER_SITE_PATH}}*'
+
+      - name: Copy Build files into site directory
+        run: |
+          Get-ChildItem -Path .\ -Recurse | Where-Object { $_.Extension -ne ".zip" } | ForEach-Object {
+            $destination = "${{secrets.SERVER_SITE_PATH}}" + $_.FullName.Substring($PWD.Path.Length)
+            Copy-Item -Path $_.FullName -Destination $destination -Recurse -Force
+          }
+
+      - name: Notify to Microsoft Teams Release Channel
+        uses: carriquiry-g/ms-teams-notification@v2
+        with:
+          github-token: ${{ github.token }}
+          ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_RELEASE_CHANNEL_WEBHOOK_URI }}
+          notification-summary: 'admisiones: ${{ steps.release_downloader.outputs.tag_name }}'
+          notification-style: good
+          timezone: America/Montevideo
+          verbose-logging: true
+
+      - name: Cleanup workspace
+        if: always()
+        run: Remove-Item -Recurse -Force ${{ github.workspace }}\*
+
+  notify_rollback_execution:
+    name: Notify rollback execution status
+    if: always()
+    needs: rollback
+    uses: ./.github/workflows/notification.yml
+    secrets: inherit
+    with:
+      result: ${{ needs.rollback.result }}
+      workflow-name: ${{ github.workflow }}

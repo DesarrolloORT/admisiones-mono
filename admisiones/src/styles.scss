@@ -1,0 +1,49 @@
+@use '@angular/material' as mat;
+@use './styles/auth';
+@use './styles/enrollments';
+
+// Global cascade:
+// 1. angular.json loads @desarrolloort/design-system/index.min.css first.
+// 2. This file only keeps app-level bridges and overrides that must come after it.
+// 3. Domain globals in src/styles/_*.scss are for projected content or ORT library overrides.
+// Do not re-import design-system SCSS here; utilities like .sr-only come from index.min.css.
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+:root {
+  --mat-sys-primary: var(--ort-sys-base-surface-primary-background);
+  --mat-sys-on-surface: var(--ort-sys-base-text-color-headline);
+  --mat-sys-surface: var(--ort-sys-base-surface-background);
+  --mat-sys-surface-variant: var(--ort-sys-base-surface-background-dim);
+  --mat-sys-corner-none: var(--ort-sys-border-radius-none);
+}
+
+html,
+body {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+.password-visibility-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ort-sys-spacing-4);
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.password-visibility-toggle:focus-visible {
+  border-radius: var(--ort-sys-border-radius-4);
+  outline: 2px solid var(--ort-sys-base-border-color-on-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+}

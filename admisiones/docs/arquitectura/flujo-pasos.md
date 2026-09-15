@@ -1,0 +1,202 @@
+---
+slug: /arquitectura/flujo-pasos
+title: Anatomía del flujo paso a paso
+description: Responsabilidades de stores, fachadas y componentes en una inscripción.
+---
+
+# Enrollments — anatomía del flujo paso a paso
+
+Esta feature es la **referencia** del patrón de "proceso paso a paso" del repo.
+Si vas a trabajar en otro flujo multi‑paso (p. ej. [becas](https://github.com/DesarrolloORT/admisiones/blob/v1.0.0/main/src/app/features/scholarships/README.md)),
+leé esto primero: explica qué hace cada capa, cómo se pasa de un paso al
+siguiente y dónde tocar para cada tipo de cambio.
+
+> TL;DR del recorrido de una acción del usuario:
+> **componente de paso → fachada → store (`ProcessFlow`) → la señal del paso
+> cambia → la página re‑renderiza el componente del paso nuevo.**
+> Nadie cambia el paso "a mano" desde el template; todo pasa por una fachada.
+
+---
+
+## Las capas, de afuera hacia adentro
+
+```
+routes  ──►  page (pages/layout)  ──►  ProcessLayout (stepper + chrome)
+                     │
+                     ├─ providers: store + fachadas + forms store
+                     │
+                     ▼
+              ProcessFacade  ◄── orquesta ──►  facades de sección
+              (enrollment-process)            (proposal / survey / payment)
+                     │                                  │
+                     ▼                                  ▼
+              ProcessStore  ──► createProcessFlow   FormsStore (form groups)
+              (paso actual, señales del flujo)      services ──► endpoints ──► API
+```
+
+### 1. `models/` — tipos y la definición de los pasos
+
+- **`enrollment-process.ts`** es el corazón del flujo: define el union
+  `EnrollmentStep` y la constante `ENROLLMENT_STEPS` (array **ordenado** de
+  `ProcessStepDefinition`). **El orden de ese array es el orden del proceso.**
+  Para agregar/quitar/reordenar pasos, editás solo este array.
+- El resto de `models/` son tipos de la feature (formularios, payloads, respuestas
+  de API mapeadas) y helpers puros (`enrollment-flow-mappers`,
+  `enrollment-flow-policy`, `enrollment-flow-options`). Regla del repo: las
+  fechas viajan como `string | null` en los contratos y se convierten a `Date`
+  explícitamente en fachadas/UI.
+
+### 2. `shared/process-flow/process-flow.ts` — el motor genérico
+
+No vive en la feature: es **compartido**. `createProcessFlow(definiciones, pasoInicial)`
+devuelve un `ProcessFlow` con señales (`currentStep`, `currentIndex`, `stepItems`,
+`canGoBack`, `canGoNext`) y acciones (`next`, `previous`, `goTo`, `reset`).
+Avanza por **índice** sobre el array de definiciones. No sabe nada de
+inscripciones ni de validación: solo "en qué paso estoy y cómo me muevo".
+
+### 3. `models/` — estado del proceso
+
+- **`models/enrollment-process.ts`** exporta `createEnrollmentProcessState()`
+  —`createProcessFlow(ENROLLMENT_STEPS, 'proposal')` más
+  `preEnrollmentResponse`— y el token `ENROLLMENT_PROCESS_STATE`. Es la
+  **fuente de verdad del paso actual**.
+- **`models/enrollment-flow-forms.ts`** exporta `createEnrollmentFormsState()`
+  (los `FormGroup` + el `sectionConfig`) y el token `ENROLLMENT_FORMS`. Las
+  fachadas leen los forms desde ahí (`formsStore.forms.<form>`).
+
+Los dos tokens se proveen **a nivel de página** (`useFactory`), así cada
+inscripción tiene su propio estado. En becas no hace falta token: el estado del
+proceso vive directamente en `ScholarshipProcessFacade`, que también se provee en
+la página.
+
+### 4. `facades/` — orquestación (acá vive la lógica de "pasar de paso")
+
+- **`enrollment-process.ts`** (`EnrollmentProcessFacade`) es la fachada que la
+  página conoce. Expone al template lo que el stepper necesita (`currentStep`,
+  `stepItems`, `stepLabel`, `canGoBack`) y centraliza `continue()` / `back()`.
+  `continue()` hace un `switch (currentStep())` y **delega** en la fachada de la
+  sección activa. Es además el **único inicializador**: en su constructor lee la
+  intención + encuesta resueltas, llama a `deriveInitialEnrollmentState` y aplica
+  el resultado con `applyInitialState` (un solo lugar, orden determinístico, el
+  paso del flujo se posiciona al final). Las fachadas de sección **no** se
+  posicionan solas ni leen la ruta.
+- **`enrollment-proposal.ts` / `enrollment-survey.ts` / `enrollment-payment.ts`**
+  son las fachadas de cada paso. Cada una valida su sección, llama a los services
+  y, **cuando la sección está OK, llama a `this.process.flow.next()`** (o avanza
+  de sub‑sección). Ahí es donde "se pasa de paso".
+
+  `enrollment-survey.ts` cierra el paso en una única cadena: guarda Documento y
+  Foto en paralelo, guarda EncuestaInicial solo si ambos terminan correctamente y
+  finalmente confirma la preinscripción.
+
+> **Quién decide el avance:** la fachada de sección, no el template. El template
+> solo invoca `process.continue()` / `process.back()`.
+
+### 5. `api/` (+ `services/` cuando aportan) — datos
+
+- **`api/`** son los adapters que importan los contratos generados
+  (`shared/api/generated/**`). **Solo acá** se permiten esos imports. Mapean
+  request/response a tipos propios de la feature.
+- **`services/`** existen solo si agregan comportamiento (combinan llamadas,
+  preparan archivos, guardan estado propio). Un service que solo reenvía al
+  adapter no existe: la fachada, la page o el resolver inyectan el adapter.
+
+### 6. `resolvers/` — precarga e **intención de entrada**
+
+Resuelven datos antes de activar la ruta. `enrollment-initial-survey.resolver`
+trae el estado de encuesta inicial (por persona). `enrollment-detail.resolver`
+decide la **intención de entrada** (`resolveEntryIntent`) a partir de la URL —no
+del backend— y devuelve `EnrollmentEntryResolved`:
+
+- `nueva`: sin query params. Paso 1 **siempre** virgen y editable.
+- `retomar`: con `idProducto`+`idProceso` (desde el panel); carga el detalle.
+- `reactivar`: agrega `modo=reactivar`. El botón del dashboard hace
+  `POST /enrollments/reactivate`, guarda transitoriamente su respuesta y navega con
+  esta intención. El resolver consume esa respuesta para iniciar el pago sin repetir
+  `GET /enrollments/details`; si falta por recarga o acceso directo, carga el detalle
+  como fallback.
+
+Si el detalle de fallback falla, la intención se conserva con `detail:null` y el flujo
+continúa con la precarga mínima de los parámetros.
+
+### 7. `models/enrollment-entry.ts` — derivación pura del estado inicial
+
+`deriveInitialEnrollmentState(context)` es una **función pura sin efectos** que,
+dado `(intención, detalle/respuesta de reactivación, encuesta)`, devuelve el estado
+inicial completo: paso, slice de encuesta, slice de pago y si reanuda `En proceso`. Es
+la **única fuente de verdad** de "en qué estado arranca la inscripción". Su contrato de negocio es la
+tabla ejecutable `enrollment-entry.spec.ts` (intención × estado × encuesta). El
+backend manda sobre los datos; la intención manda sobre presentación/navegación
+(por eso `nueva` nunca precarga el paso 1 aunque exista una encuesta previa).
+
+### 8. `pages/` — UI
+
+- **`pages/layout`** es el contenedor: declara los `providers` (stores y
+  fachadas), monta `app-process-layout` y, con un `@switch (process.currentStep())`,
+  muestra el componente del paso actual. No tiene lógica de negocio.
+- **`pages/steps/inscripcion-*-step`** son los pasos visuales. Hablan con
+  su fachada y disparan `continue()` / `back()`. El árbol de carpetas refleja
+  quién renderiza a quién: `enrollment-personal-step/sections/` contiene las
+  6 secciones que **solo** ese paso usa (para ver quién le pasa `orientation`
+  a una sección, el padre está en la carpeta de arriba, no disperso entre 15
+  hermanos).
+
+---
+
+## Cómo se pasa de un paso al siguiente (paso a paso)
+
+1. El usuario completa el paso y toca **Continuar** en el componente del paso.
+2. El componente llama a la fachada (directa o vía `ProcessFacade.continue()`).
+3. La fachada de sección valida. Si falla, marca los forms y corta.
+4. Si valida, hace su efecto (llamada a API si corresponde) y al confirmar llama
+   a `this.process.flow.next()` (o avanza de sub‑sección dentro del mismo paso,
+   como hace `survey` con sus secciones).
+5. `createProcessFlow` actualiza la señal `currentIndex` → cambian `currentStep`
+   y `stepItems`.
+6. La página, al ser reactiva a `process.currentStep()`, renderiza el componente
+   del paso nuevo; `ProcessLayout` actualiza el stepper.
+
+Dentro de la encuesta no hay guardados automáticos por completar expansibles. El
+guardado y la confirmación se ejecutan juntos al cerrar el paso.
+
+`back()` no es el espejo exacto de `continue()`: en inscripciones el flujo **solo
+avanza**, porque cada paso completado ya quedó registrado en el backend. `back()`
+retrocede sub‑sección (o cierra el lector) y nunca llama a `flow.previous()`;
+`canGoBack` es `false` fuera del paso 2, y el botón de volver se oculta cuando no hay
+nada hacia atrás. Un proceso que sí admita retroceder entre pasos puede seguir usando
+`flow.previous()`: el motor `ProcessFlow` lo soporta.
+
+---
+
+## "¿Dónde hago X?"
+
+| Quiero…                                             | Voy a…                                                                                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Agregar / quitar / reordenar un paso                | `models/enrollment-process.ts` → `ENROLLMENT_STEPS` (y el `@switch` de la página + el `switch` de `ProcessFacade.continue()`)                    |
+| Cambiar el título/overline de un paso               | `ENROLLMENT_STEPS`                                                                                                                               |
+| Cambiar cuándo se puede avanzar/volver              | la fachada de la sección (validación) y `canGoBack` en `ProcessFacade`                                                                           |
+| Cambiar la lógica de avance de un paso              | la fachada de ese paso (`proposal` / `survey` / `payment`)                                                                                       |
+| Agregar un campo a un formulario                    | `models/enrollment-flow-forms.ts` (form) + el componente del paso                                                                                |
+| Llamar a un endpoint nuevo                          | `api/` (adapter) → la fachada (sin service intermedio)                                                                                           |
+| Tocar el contrato con la API                        | **solo** en `api/` (única capa que ve `generated/**`)                                                                                            |
+| Cambiar el chrome (header, stepper, botón cerrar)   | `shared/ui/process-layout`                                                                                                                       |
+| Tocar el motor de pasos genérico                    | `shared/process-flow/process-flow.ts` (afecta a todas las features)                                                                              |
+| Cambiar qué muestra cada intención/estado al entrar | `models/enrollment-entry.ts` (`deriveInitialEnrollmentState`) + su tabla `enrollment-entry.spec.ts`; la aplica `ProcessFacade.applyInitialState` |
+| Retomar/reactivar una inscripción desde el panel    | `resolvers/enrollment-detail.resolver` (`resolveEntryIntent`) + la derivación de `enrollment-entry.ts`                                           |
+
+---
+
+## Reglas que el patrón da por sentadas
+
+- El template **nunca** cambia el paso directamente: siempre vía una fachada.
+- Solo los adapters de `api/` importan de `shared/api/generated/**`; el resto usa
+  tipos propios de la feature.
+- Las fechas son `string | null` en los contratos; la conversión a `Date` es
+  explícita en fachadas/UI.
+- El estado del proceso y las fachadas se proveen **en la página**, no en root.
+- Los constructores de las fachadas de sección **no posicionan el flujo ni leen la
+  ruta**: el estado inicial lo deriva `deriveInitialEnrollmentState` (pura) y lo
+  aplica solo `ProcessFacade.applyInitialState`.
+- La **intención de entrada** (`nueva`/`retomar`/`reactivar`) sale de la URL, nunca
+  se infiere del estado del backend. El backend manda sobre los datos; la intención,
+  sobre presentación y navegación.

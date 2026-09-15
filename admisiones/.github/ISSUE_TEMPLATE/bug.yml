@@ -1,0 +1,43 @@
+name: Bug Report
+description: Reportar un bug o error.
+title: 'fix(SCOPE): TITLE'
+labels: ['bug', 'needs triage', 'state: pending']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Describe el bug o error que se ha encontrado.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproducción
+      description: |
+        Agregue un resumen de los pasos para reproducir el bug o error.
+      value: |
+        Pasos para reproducir:
+        1.
+        2.
+    validations:
+      required: false
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Comportamiento Esperado
+      description: Describe el comportamiento esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Comportamiento Actual
+      description: Describe el comportamiento que se ha observado.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Información Adicional
+      description: Agrega información adicional capturas de pantalla sobre el bug o error si es posible.

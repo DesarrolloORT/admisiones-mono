@@ -1,0 +1,39 @@
+<app-auth-form
+  description="Ingresá tus datos."
+  heroDescription="Formá parte de la comunidad de graduados con mayor empleabilidad del país."
+  heroIcon="lock"
+  heroTitle="Recuperá el acceso a tu cuenta."
+  title="Recuperar contraseña">
+  <form class="auth-form-body" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <section class="auth-form-section">
+      <app-document-fields autocomplete="username" idPrefix="recover" [form]="form" />
+
+      <ort-form-field [hideRequiredMarker]="!!form.controls.firstSurname.value">
+        <ort-label>Primer apellido</ort-label>
+        <input
+          autocomplete="family-name"
+          formControlName="firstSurname"
+          ortInput
+          type="text"
+          [id]="'recover-first-surname'" />
+        @if ( form.controls.firstSurname.touched && form.controls.firstSurname.hasError('required')
+        ) {
+        <ort-error>Este campo es obligatorio</ort-error>
+        }
+      </ort-form-field>
+    </section>
+
+    <button
+      loadingLabel="Enviando solicitud"
+      ort-primary-button
+      type="submit"
+      [disabled]="isSubmitting()"
+      [loading]="isSubmitting()">
+      {{ isSubmitting() ? 'Enviando...' : 'Enviar' }}
+    </button>
+
+    <button ort-secondary-button routerLink="/iniciar-sesion" type="button">
+      Volver al inicio de sesión
+    </button>
+  </form>
+</app-auth-form>

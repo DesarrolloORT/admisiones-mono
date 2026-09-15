@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "docs": "*.md",
+    "test": [
+      "*.spec.ts",
+      "*.spec.ts.snap",
+      "tsconfig.spec.json",
+      "setup-vitest.ts",
+      "vitest-global-mocks.ts"
+    ],
+    "style": ["*.scss", "*.css"],
+    "build": [
+      "**/package.json",
+      "**/tsconfig.json",
+      "tsconfig.app.json",
+      "**/tsconfig.spec.json",
+      "angular.json",
+      "eslint.config.mjs",
+      ".pretierrc",
+      ".npmrc",
+      ".stylelintrc.json",
+      ".editorconfig"
+    ],
+    "dependencies": "package-lock.json",
+    "devops": [
+      ".github/workflows/*",
+      ".github/workflows/*.yml",
+      ".github/workflows/*.json",
+      ".husky/**/*"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+<app-auth-form
+  [cardSize]="facade.stepViewModel().cardSize"
+  [description]="facade.stepViewModel().description"
+  [heroDescription]="facade.stepViewModel().heroDescription"
+  [heroIcon]="facade.stepViewModel().heroIcon"
+  [heroTitle]="facade.stepViewModel().heroTitle"
+  [stepLabel]="facade.stepViewModel().stepLabel"
+  [stepTitle]="facade.stepViewModel().stepTitle"
+  [title]="facade.stepViewModel().title">
+  @if (facade.step() === 'identity') {
+  <app-register-identity-step
+    [documentNumberLabel]="facade.documentNumberLabel()"
+    [form]="facade.identityForm"
+    [isRecognizingDocument]="facade.isRecognizingDocument()"
+    [isSubmitting]="facade.isSubmitting()"
+    [showLoginAction]="facade.registrationFlow() === 'user-exists' || facade.registrationFlow() === 'application-exists'"
+    (continueStep)="facade.continueToPersonalData()"
+    (documentSelected)="facade.onDocumentSelected($event)"
+    (loginAction)="facade.navigateToLogin()" />
+  } @else if (facade.step() === 'personal') {
+  <app-register-personal-step
+    [form]="facade.personalForm"
+    [isCompleted]="facade.isCompleted()"
+    [isSubmitting]="facade.isSubmitting()"
+    [personalMode]="facade.personalMode()"
+    (back)="facade.backToIdentity()"
+    (submitStep)="facade.submitPersonalData()" />
+  }
+</app-auth-form>

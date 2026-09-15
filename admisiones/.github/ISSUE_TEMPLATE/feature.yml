@@ -1,0 +1,19 @@
+name: Funcionalidad
+description: Describe una nueva funcionalidad que se desea agregar.
+title: 'feat(SCOPE): TITLE'
+labels: ['feature', 'needs triage', 'state: pending']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Provea una breve descripción de la funcionalidad que se desea agregar.
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describa el/los caso/s de uso de la funcionalidad para poder entender todos los requerimientos.
+    validations:
+      required: false

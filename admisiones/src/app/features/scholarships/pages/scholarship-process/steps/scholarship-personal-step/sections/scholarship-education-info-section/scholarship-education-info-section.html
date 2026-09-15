@@ -1,0 +1,38 @@
+<div class="scholarship-accordion__content" [formGroup]="educationInfoForm">
+  <ort-form-field>
+    <ort-label for="average-second-year">Promedio de 2° EMS (5to)</ort-label>
+    <input
+      aria-label="Promedio de 2° EMS (5to)"
+      formControlName="averageSecondYear"
+      id="average-second-year"
+      name="average-second-year"
+      ortNumberInput
+      required />
+  </ort-form-field>
+  @if (averageSecondYearControl.invalid && (facade.submitted() || averageSecondYearControl.touched))
+  {
+  <ort-error>Ingresá tu promedio</ort-error>
+  }
+
+  <ort-form-field>
+    <ort-label for="average-third-year">Promedio de 3° EMS (6to)</ort-label>
+    <input
+      aria-label="Promedio de 3° EMS (6to)"
+      formControlName="averageThirdYear"
+      id="average-third-year"
+      name="average-third-year"
+      ortNumberInput
+      required />
+  </ort-form-field>
+  @if (averageThirdYearControl.invalid && (facade.submitted() || averageThirdYearControl.touched)) {
+  <ort-error>Ingresá tu promedio</ort-error>
+  } @if (showCertificateUpload()) {
+  <ort-file-uploader
+    label="Certificado de secundaria (Formula 69) *"
+    [acceptedTypes]="['.pdf', '.png', '.jpg']"
+    [display]="fileUploaderDisplay()"
+    (filesChanged)="onCertificateFilesChanged($event)" />
+  @if (certificateFileControl.invalid && (facade.submitted() || certificateFileControl.touched)) {
+  <ort-error>Adjuntá el certificado de secundaria</ort-error>
+  } }
+</div>

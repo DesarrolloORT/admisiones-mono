@@ -1,0 +1,40 @@
+name: Notify Execution Status
+
+on:
+  workflow_call:
+    inputs:
+      result:
+        type: string
+        required: true
+      workflow-name:
+        type: string
+        required: true
+    secrets:
+      MS_TEAMS_WORKFLOW_LOG_CHANNEL_WEBHOOK_URI:
+        required: true
+
+jobs:
+  notify_execution_status:
+    name: Notify Execution Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set notification status and summary
+        id: notify_status
+        run: |
+          if [[ "${{ inputs.result }}" == "success" ]]; then
+            echo "summary=${{ github.repository }}: ${{ inputs.workflow-name }} ✅" >> $GITHUB_ENV
+            echo "style=good" >> $GITHUB_ENV
+          else
+            echo "summary=${{ github.repository }}: ${{ inputs.workflow-name }} ❌" >> $GITHUB_ENV
+            echo "style=danger" >> $GITHUB_ENV
+          fi
+
+      - name: Log workflow status to Microsoft Teams Channel
+        uses: carriquiry-g/ms-teams-notification@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ms-teams-webhook-uri: ${{ secrets.MS_TEAMS_WORKFLOW_LOG_CHANNEL_WEBHOOK_URI }}
+          notification-summary: ${{ env.summary }}
+          notification-style: ${{ env.style }}
+          timezone: America/Montevideo
+          verbose-logging: true

@@ -1,0 +1,20 @@
+<div class="scholarship-accordion__content" [formGroup]="personalDataForm">
+  <ort-radio-group
+    divider="true"
+    formControlName="attendanceMode"
+    legend="Si comenzás la carrera, ¿cómo asistirás?"
+    [indicatorPosition]="radioGroupIndicatorPosition()"
+    [orientation]="radioGroupOrientation()"
+    [required]="true">
+    <ort-radio-button class="inscription-radio-option" value="montevideo">
+      Residiré en Montevideo
+    </ort-radio-button>
+    <ort-radio-button class="inscription-radio-option" value="viajare">
+      Viajaré para asistir a clases
+    </ort-radio-button>
+  </ort-radio-group>
+
+  @if (attendanceModeControl.invalid && (facade.submitted() || attendanceModeControl.touched)) {
+  <ort-error>Seleccioná una opción</ort-error>
+  }
+</div>

@@ -1,0 +1,77 @@
+<section aria-label="Datos personales" class="auth-form-grid" [formGroup]="form()">
+  <ort-form-field [hideRequiredMarker]="!!form().controls.firstName.value">
+    <ort-label>Primer nombre</ort-label>
+    <input formControlName="firstName" ortInput type="text" [id]="'first-name'" />
+    @if (form().controls.firstName.touched && form().controls.firstName.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field>
+    <ort-label>Segundo nombre</ort-label>
+    <input formControlName="middleName" ortInput type="text" [id]="'second-name'" />
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.firstSurname.value">
+    <ort-label>Primer apellido</ort-label>
+    <input formControlName="firstSurname" ortInput type="text" [id]="'first-last-name'" />
+    @if (form().controls.firstSurname.touched && form().controls.firstSurname.hasError('required'))
+    {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field>
+    <ort-label>Segundo apellido</ort-label>
+    <input formControlName="secondSurname" ortInput type="text" [id]="'second-last-name'" />
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.birthDate.value">
+    <ort-label>Fecha de nacimiento</ort-label>
+    <input
+      formControlName="birthDate"
+      format="DD/MM/YYYY"
+      ortDateInput
+      placeholder="dd/mm/aaaa"
+      valueType="date"
+      [id]="'birth-date'" />
+    <ort-datepicker-toggle ortSuffix [selectedDate]="initDate" />
+    @if (form().controls.birthDate.touched && form().controls.birthDate.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <ort-form-field [hideRequiredMarker]="!!form().controls.sex.value">
+    <ort-label>Sexo</ort-label>
+    <ort-select aria-label="Sexo" formControlName="sex" [id]="'sex'">
+      <ort-option value="">Seleccioná...</ort-option>
+      <ort-option value="F">Femenino</ort-option>
+      <ort-option value="M">Masculino</ort-option>
+    </ort-select>
+    @if (form().controls.sex.touched && form().controls.sex.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+
+  <app-location-select
+    class="auth-field--wide"
+    formControlName="location"
+    [submitted]="submitted()" />
+  @if (submitted() && form().controls.location.hasError('locationRequired')) {
+  <p class="sr-only" id="location-country-error" role="alert">Seleccioná el país de residencia</p>
+  } @if (submitted() && form().controls.location.hasError('locationStateRequired')) {
+  <p class="sr-only" id="location-state-error" role="alert">Seleccioná el departamento o estado</p>
+  } @if (submitted() && form().controls.location.hasError('locationCityRequired')) {
+  <p class="sr-only" id="location-city-error" role="alert">Seleccioná la ciudad</p>
+  }
+
+  <ort-form-field class="auth-field--wide" [hideRequiredMarker]="!!form().controls.address.value">
+    <ort-label>Dirección</ort-label>
+    <input formControlName="address" ortInput type="text" [id]="'address'" />
+    @if (form().controls.address.touched && form().controls.address.hasError('required')) {
+    <ort-error>Este campo es obligatorio</ort-error>
+    }
+  </ort-form-field>
+</section>
+
+<app-register-personal-contact-fields [form]="form()" />

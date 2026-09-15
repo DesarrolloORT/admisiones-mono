@@ -1,0 +1,37 @@
+{
+  "arrowParens": "avoid",
+  "bracketSameLine": true,
+  "bracketSpacing": true,
+  "embeddedLanguageFormatting": "auto",
+  "endOfLine": "auto",
+  "htmlWhitespaceSensitivity": "ignore",
+  "jsxSingleQuote": false,
+  "printWidth": 100,
+  "proseWrap": "preserve",
+  "quoteProps": "as-needed",
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "useTabs": false,
+  "overrides": [
+    {
+      "files": "*.component.html",
+      "options": {
+        "parser": "html"
+      }
+    },
+    {
+      "files": "*.component.ts",
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": "*.scss",
+      "options": {
+        "parser": "scss"
+      }
+    }
+  ]
+}

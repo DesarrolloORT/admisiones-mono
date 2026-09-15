@@ -1,0 +1,22 @@
+:host {
+  display: block;
+}
+
+.home-layout {
+  --home-page: var(--ort-sys-base-surface-background-page);
+  --home-heading: var(--ort-sys-base-text-color-headline);
+  --home-body: var(--ort-sys-base-text-color-body);
+  --home-display: var(--ort-sys-font-family-display);
+  --home-border: var(--ort-sys-base-border-primary-color);
+  --home-tonal: var(--ort-sys-button-tonal-background);
+  --home-shadow: var(--ort-sys-elevation-sm-x) var(--ort-sys-elevation-sm-y)
+    var(--ort-sys-elevation-sm-blur) var(--ort-sys-elevation-sm-spread)
+    var(--ort-sys-elevation-sm-color);
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100dvh;
+  background: var(--home-page);
+  color: var(--home-heading);
+  font-family: var(--ort-sys-font-family-open-sans, 'Open Sans', sans-serif);
+}

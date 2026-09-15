@@ -1,0 +1,768 @@
+import { computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
+import type { OrtErrorItem } from '@desarrolloort/components';
+import { EMPTY, merge, Observable, of, throwError } from 'rxjs';
+import { catchError, exhaustMap, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
+import {
+  DEFAULT_ERROR_ALERT,
+  type ErrorAlertState,
+} from 'src/app/shared/ui/error-alert/error-alert';
+
+import { EnrollmentsApi } from '../api/enrollments.api';
+import type { EnrollmentSurveyInit } from '../models/enrollment-entry';
+import type {
+  EnrollmentInitialSurvey,
+  EnrollmentInitialSurveyPayload,
+  EnrollmentInitialSurveyResponse,
+  EnrollmentStudentRegulationAcceptance,
+  SurveySectionId,
+  SurveySectionStatus,
+} from '../models/enrollment-flow';
+import {
+  buildFormErrors,
+  disallowedHighSchoolYearForUniversity,
+  ENROLLMENT_FORMS,
+  type IdentityFileTarget,
+  UNIVERSITY_LEVEL,
+} from '../models/enrollment-flow-forms';
+import {
+  buildConfirmPreEnrollmentPayload,
+  buildInitialSurveyPayload,
+  diffInitialSurveyPayload,
+  hasCompleteUniversityEducation,
+  parseDate,
+  patchBackendSurveyForms,
+} from '../models/enrollment-flow-mappers';
+import { getVisibleSections } from '../models/enrollment-flow-policy';
+import { ENROLLMENT_PROCESS_STATE } from '../models/enrollment-process';
+import {
+  type EnrollmentInitialSurveyResolved,
+  resolveInitialSurvey,
+} from '../resolvers/enrollment-initial-survey.resolver';
+import { EnrollmentPaymentFacade } from './enrollment-payment';
+import { EnrollmentProposalFacade } from './enrollment-proposal';
+import { EnrollmentSurveyIdentityFacade } from './enrollment-survey-identity';
+import { EnrollmentSurveyOptionsFacade } from './enrollment-survey-options';
+
+class IdentitySaveError extends Error {
+  constructor(public readonly reason?: unknown) {
+    super('identity-save');
+  }
+}
+
+class SurveySaveError extends Error {
+  constructor(public readonly reason: unknown) {
+    super('survey-save');
+  }
+}
+
+// Las únicas secciones que aportan campos de encuesta: identidad y reglamento no tienen
+// respuestas, y `work-situation` es solo de AP (que no postea encuesta).
+const SURVEY_ANSWER_SECTIONS = [
+  'education',
+  'academic-decision',
+  'ort-experience',
+] as const satisfies readonly SurveySectionId[];
+
+interface SectionProgress {
+  completed: boolean;
+  submitted: boolean;
+}
+
+const EMPTY_PROGRESS: SectionProgress = { completed: false, submitted: false };
+
+/**
+ * Orquestador del paso 2 (encuesta inicial + identidad + reglamento): estado de
+ * secciones, validadores condicionales y cierre del paso. Los catálogos viven en
+ * `EnrollmentSurveyOptionsFacade` (`options`) y la verificación de identidad en
+ * `EnrollmentSurveyIdentityFacade` (`identity`).
+ */
+export class EnrollmentSurveyFacade {
+  private readonly enrollments = inject(EnrollmentsApi);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly formsStore = inject(ENROLLMENT_FORMS);
+  private readonly process = inject(ENROLLMENT_PROCESS_STATE);
+  private readonly payment = inject(EnrollmentPaymentFacade);
+  private readonly proposal = inject(EnrollmentProposalFacade);
+
+  public readonly options = inject(EnrollmentSurveyOptionsFacade);
+  public readonly identity = inject(EnrollmentSurveyIdentityFacade);
+
+  public readonly educationForm = this.formsStore.forms.educationForm;
+  public readonly academicDecisionForm = this.formsStore.forms.academicDecisionForm;
+  public readonly ortExperienceForm = this.formsStore.forms.ortExperienceForm;
+  public readonly workForm = this.formsStore.forms.workForm;
+  public readonly identityForm = this.formsStore.forms.identityForm;
+  public readonly regulationForm = this.formsStore.forms.regulationForm;
+  private readonly sectionConfig = this.formsStore.sectionConfig;
+
+  // Estado por sección en un único registro; `getSectionState` es el contrato
+  // que consume el template.
+  private readonly sectionProgress = signal<
+    Readonly<Partial<Record<SurveySectionId, SectionProgress>>>
+  >({});
+  private readonly identityUploadFailed = signal(false);
+  private persistedPayload: EnrollmentInitialSurveyPayload = buildInitialSurveyPayload(
+    this.formsStore.forms
+  );
+  public readonly activeSection = signal<SurveySectionId>('education');
+  public readonly readerOpen = signal(false);
+  public readonly canAnswerSurvey = signal(true);
+  public readonly hasAcceptedStudentRegulation = signal(false);
+  public readonly submittedAcceptanceDate = signal<Date | null>(null);
+
+  public readonly catalogError = this.options.catalogError;
+  public readonly loadingInitialSurveyCatalogs = this.options.loadingInitialSurveyCatalogs;
+  public readonly initialized = this.options.initialized;
+  public readonly surveyLoadError = signal<string | null>(null);
+  public readonly preEnrollmentError = signal<string | null>(null);
+  public readonly loadingSurveyState = signal(false);
+  public readonly finalizingPreEnrollment = signal(false);
+  public readonly confirmOutcomeUncertain = signal(false);
+
+  public readonly isProfessionalUpdate = this.proposal.selection.isProfessionalUpdate;
+  public readonly visibleSections = computed(() =>
+    getVisibleSections(this.canAnswerSurvey(), this.isProfessionalUpdate())
+  );
+  // Único predicado de "hay algo hacia atrás" del paso 2: lo consumen el botón del
+  // footer y el `canGoBack` del ProcessFacade (chevron del header).
+  public readonly canGoBack = computed(
+    () => this.readerOpen() || this.visibleSections().indexOf(this.activeSection()) > 0
+  );
+  public readonly sectionItems = computed(() =>
+    this.visibleSections().map(section => ({
+      id: section,
+      label: this.sectionConfig[section].label,
+      icon: this.sectionConfig[section].icon,
+      state: this.getSectionState(section),
+    }))
+  );
+  public readonly activeSectionErrors = computed<OrtErrorItem[]>(() => {
+    const section = this.activeSection();
+    if (!this.progressOf(section).submitted) return [];
+    const formErrors = buildFormErrors(
+      this.sectionConfig[section].form,
+      this.sectionConfig[section].errorFields
+    );
+    if (section !== 'identity') return formErrors;
+
+    const files = this.identity.identityFiles();
+    return [
+      ...formErrors,
+      ...(!files.front ? [{ message: 'Frente del documento es obligatorio.' }] : []),
+      ...(!files.back ? [{ message: 'Dorso del documento es obligatorio.' }] : []),
+      ...(!files.selfie ? [{ message: 'Foto del rostro es obligatoria.' }] : []),
+    ];
+  });
+  public readonly activeSectionErrorAlert = computed<ErrorAlertState | null>(() =>
+    this.activeSectionErrors().length > 0 ? DEFAULT_ERROR_ALERT : null
+  );
+
+  private regulationAcceptanceRequested = false;
+
+  constructor() {
+    this.options.initialize({
+      isSurveyStepActive: computed(() => this.process.flow.currentStep() === 'survey'),
+      onOptionsChanged: () => this.updateConditionalValidators(),
+    });
+    this.identity.initialize({
+      isIdentitySectionActive: computed(
+        () => this.process.flow.currentStep() === 'survey' && this.activeSection() === 'identity'
+      ),
+      surveyLoadError: this.surveyLoadError,
+      onIdentityChanged: () => {
+        this.identityUploadFailed.set(false);
+        this.syncSectionCompletion('identity');
+      },
+    });
+    this.configureConditionalValidators();
+    this.observeIdentityRecovery();
+    this.observeForms();
+    this.observeCompletedSectionSave();
+    this.observeIdentityConfirmation();
+    this.deferStudentRegulationAcceptance();
+    let previousFirstVisibleSection = this.visibleSections()[0];
+    effect(() => {
+      const sections = this.visibleSections();
+      if (!sections.includes(this.activeSection()) || sections[0] !== previousFirstVisibleSection) {
+        this.activeSection.set(sections[0]);
+      }
+      previousFirstVisibleSection = sections[0];
+    });
+    // El posicionamiento del flujo y la aplicación del estado inicial los hace
+    // `EnrollmentProcessFacade` (único inicializador) vía `applyInitialState`.
+  }
+
+  /**
+   * Aplica el slice de encuesta derivado por `deriveInitialEnrollmentState`. NO
+   * toca `process.flow`: el paso lo posiciona `ProcessFacade` una sola vez.
+   */
+  public applyInitialState(state: EnrollmentSurveyInit): void {
+    this.identityUploadFailed.set(false);
+    switch (state.kind) {
+      case 'load-failed':
+        // Sin respuesta no sabemos el valor de `canAnswerSurvey`: nunca se postea a ciegas.
+        // Un `retryInitialSurvey()` exitoso cae en `fresh`/`prefilled` y lo restaura.
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
+        this.surveyLoadError.set(state.message);
+        return;
+      case 'identity-only':
+        this.canAnswerSurvey.set(false);
+        this.snapshotPersistedPayload();
+        this.sectionProgress.set({});
+        this.activeSection.set('identity');
+        return;
+      case 'fresh':
+        this.canAnswerSurvey.set(true);
+        this.snapshotPersistedPayload();
+        this.sectionProgress.set({});
+        this.activeSection.set('education');
+        return;
+      case 'prefilled': {
+        const survey = state.response.survey;
+        if (!survey) return;
+        this.canAnswerSurvey.set(true);
+        this.applyBackendSurvey(survey, state.response, state.includeAcademicSelection);
+        // Después del parcheo: lo que trajo el backend no es un cambio del usuario.
+        this.snapshotPersistedPayload();
+        this.sectionProgress.set(
+          Object.fromEntries(
+            state.completedSections.map(section => [section, { completed: true, submitted: false }])
+          )
+        );
+        this.activeSection.set(state.activeSection);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Re-consulta el estado de encuesta (para el retry manual). Gestiona los flags de
+   * carga/error; el mapeo del 404 lo comparte con el resolver. `ProcessFacade`
+   * re-deriva y re-aplica el estado con el resultado.
+   */
+  public fetchResolvedInitialSurvey(): Observable<EnrollmentInitialSurveyResolved> {
+    this.surveyLoadError.set(null);
+    this.loadingSurveyState.set(true);
+    return resolveInitialSurvey(this.enrollments.getInitialSurvey()).pipe(
+      finalize(() => this.loadingSurveyState.set(false))
+    );
+  }
+
+  public continue(): void {
+    if (this.finalizingPreEnrollment()) return;
+
+    const section = this.activeSection();
+    this.patchProgress(section, { submitted: true });
+    if (!this.isSectionValid(section)) {
+      this.sectionConfig[section].form.markAllAsTouched();
+      return;
+    }
+
+    this.patchProgress(section, { completed: true });
+    const nextSection = this.findNextInvalidSection(section);
+    if (nextSection) {
+      // Reintento: con la sección completa el delta ya se guardó al aparecer el check, así que
+      // acá normalmente no hay nada que mandar. Solo cubre el caso en que ese guardado falló y
+      // el delta sigue pendiente. Sin loader y sin bloquear el avance.
+      this.savePartial()
+        .pipe(
+          catchError(() => EMPTY),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe();
+      this.activeSection.set(nextSection);
+      return;
+    }
+    this.finishSurveyStep();
+  }
+
+  // Retroceder dentro del paso 2: nunca sale del paso. En la primera sección visible no
+  // hay a dónde volver (el flujo no permite regresar al paso 1).
+  public back(): void {
+    if (this.readerOpen()) {
+      this.readerOpen.set(false);
+      return;
+    }
+
+    const sections = this.visibleSections();
+    const currentIndex = sections.indexOf(this.activeSection());
+    if (currentIndex > 0) this.activeSection.set(sections[currentIndex - 1]);
+  }
+
+  public openSection(section: SurveySectionId): void {
+    if (this.visibleSections().includes(section)) this.activeSection.set(section);
+  }
+
+  public getSectionState(section: SurveySectionId): SurveySectionStatus {
+    if (this.progressOf(section).completed || this.canSectionAutoComplete(section)) {
+      return 'complete';
+    }
+    if (this.activeSection() === section) return 'active';
+    return 'pending';
+  }
+
+  // Una sección válida se marca completa sola (sin apretar Continuar). Identidad es
+  // la excepción tras un fallo de subida: sigue válida pero no debe auto-completarse.
+  private canSectionAutoComplete(section: SurveySectionId): boolean {
+    return (section !== 'identity' || !this.identityUploadFailed()) && this.isSectionValid(section);
+  }
+
+  public isSectionPending(section: SurveySectionId): boolean {
+    return this.progressOf(section).submitted && !this.isSectionValid(section);
+  }
+
+  public isIdentityFileMissing(target: IdentityFileTarget): boolean {
+    return this.progressOf('identity').submitted && !this.identity.identityFiles()[target];
+  }
+
+  public isUniversityDegreeProgram(): boolean {
+    const selectedDegreeProgram = this.formsStore.forms.academicForm.controls.degreeProgram.value;
+    if (!selectedDegreeProgram) return false;
+    const level = this.proposal
+      .degreePrograms()
+      .find(
+        degreeProgram => degreeProgram.productId.toString() === selectedDegreeProgram
+      )?.productLevelId;
+    return level === UNIVERSITY_LEVEL;
+  }
+
+  public isNationalSchoolPlace(): boolean {
+    return this.educationForm.controls.highSchoolLocation.value === '1';
+  }
+
+  public isForeignSchoolPlace(): boolean {
+    return this.educationForm.controls.highSchoolLocation.value === '2';
+  }
+
+  public shouldAskHighSchoolOrientation(): boolean {
+    const selectedYear = this.educationForm.controls.highSchoolYear.value;
+    return (
+      this.educationForm.controls.studiesHighSchool.value === 'studying' &&
+      !!selectedYear &&
+      this.options.orientationOptions().length > 0
+    );
+  }
+
+  public shouldAskHighSchoolRepeatCount(): boolean {
+    return this.educationForm.controls.repeatsHighSchoolYear.value === 'yes';
+  }
+
+  public shouldAskHigherEducationUniversities(): boolean {
+    return this.educationForm.controls.higherEducationStatus.value === '1';
+  }
+
+  public shouldAskHigherEducationOtherUniversity(): boolean {
+    return (
+      this.shouldAskHigherEducationUniversities() &&
+      this.educationForm.controls.higherEducationUniversities.value.includes('0')
+    );
+  }
+
+  public shouldAskInformedOtherUniversity(): boolean {
+    return (
+      this.academicDecisionForm.controls.otherUniversities.value === 'yes' &&
+      this.academicDecisionForm.controls.researchedUniversities.value.includes('0')
+    );
+  }
+
+  public shouldAskMotherOrtDegree(): boolean {
+    return hasCompleteUniversityEducation(this.educationForm.controls.motherEducation.value);
+  }
+
+  public shouldAskFatherOrtDegree(): boolean {
+    return hasCompleteUniversityEducation(this.educationForm.controls.fatherEducation.value);
+  }
+
+  public openRegulationReader(): void {
+    this.readerOpen.set(true);
+  }
+
+  public acceptRegulation(): void {
+    this.regulationForm.controls.acceptsRegulation.setValue(true);
+    this.patchProgress('regulation', { completed: true });
+    this.activeSection.set('regulation');
+    this.readerOpen.set(false);
+  }
+
+  /**
+   * Guarda la encuesta. `canAnswerSurvey` es el único gate (Actualización profesional no
+   * tiene encuesta inicial), y se manda SOLO el delta contra lo último persistido. El
+   * snapshot avanza únicamente con la confirmación del backend: un fallo deja el cambio
+   * pendiente para el intento siguiente (próximo Continuar, cierre del paso o salida).
+   */
+  public savePartial(): Observable<void> {
+    if (!this.canAnswerSurvey() || this.isProfessionalUpdate()) return of(undefined);
+
+    const delta = diffInitialSurveyPayload(
+      buildInitialSurveyPayload(this.formsStore.forms),
+      this.persistedPayload
+    );
+    // Nada cambió: no hay nada que guardar.
+    if (Object.keys(delta).length === 0) return of(undefined);
+
+    return this.enrollments.saveInitialSurvey(delta).pipe(
+      tap(() => {
+        this.persistedPayload = { ...this.persistedPayload, ...delta };
+      })
+    );
+  }
+
+  private snapshotPersistedPayload(): void {
+    this.persistedPayload = buildInitialSurveyPayload(this.formsStore.forms);
+  }
+
+  private progressOf(section: SurveySectionId): SectionProgress {
+    return this.sectionProgress()[section] ?? EMPTY_PROGRESS;
+  }
+
+  private patchProgress(section: SurveySectionId, patch: Partial<SectionProgress>): void {
+    this.sectionProgress.update(progress => ({
+      ...progress,
+      [section]: { ...(progress[section] ?? EMPTY_PROGRESS), ...patch },
+    }));
+  }
+
+  private finishSurveyStep(): void {
+    if (!this.ensureAllVisibleSectionsValid()) return;
+
+    const confirmPayload = buildConfirmPreEnrollmentPayload(
+      this.formsStore.forms,
+      this.isProfessionalUpdate()
+    );
+    if (!confirmPayload) {
+      this.preEnrollmentError.set('No se pudo confirmar la preinscripción.');
+      return;
+    }
+
+    this.preEnrollmentError.set(null);
+    // Un intento nuevo supersede el fallo anterior: "Continuar" sin modificar reintenta.
+    this.identityUploadFailed.set(false);
+    this.finalizingPreEnrollment.set(true);
+    this.identity
+      .saveIdentityChanges()
+      .pipe(
+        catchError((error: unknown) => throwError(() => new IdentitySaveError(error))),
+        switchMap(savedIdentity => {
+          if (!savedIdentity) throw new IdentitySaveError();
+          return this.savePartial().pipe(
+            catchError((error: unknown) => throwError(() => new SurveySaveError(error)))
+          );
+        }),
+        switchMap(() => this.enrollments.confirmPreEnrollment(confirmPayload)),
+        finalize(() => this.finalizingPreEnrollment.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: response => {
+          this.process.preEnrollmentResponse.set(response);
+          // Corporativa: el pago lo acredita la empresa y la respuesta no trae datos de
+          // pago (seña 0), así que se evalúa antes que la rama de seña 0.
+          if (confirmPayload.isCorporateEnrollment) {
+            this.payment.outcome.set('enrollment-in-progress');
+            return;
+          }
+          // Seña 0: no hay nada que pagar; la pantalla terminal explica cómo continuar.
+          if (response.enrollmentDeposit === 0) {
+            this.payment.outcome.set('reservation');
+            return;
+          }
+          if (response.isWaiting === true) {
+            this.payment.outcome.set('enrollment-in-progress');
+            return;
+          }
+          this.process.flow.next();
+        },
+        error: (error: unknown) => {
+          if (error instanceof IdentitySaveError) {
+            this.identityUploadFailed.set(true);
+            this.patchProgress('identity', { completed: false, submitted: true });
+            this.activeSection.set('identity');
+            this.identityForm.markAllAsTouched();
+            this.preEnrollmentError.set(
+              getApiErrorMessage(
+                error.reason,
+                'No se pudo guardar la verificación de identidad. Intentá nuevamente.'
+              )
+            );
+            return;
+          }
+          // Fallo ambiguo de `confirm-pre-enrollment` (no lleva clave de idempotencia): el
+          // backend llama APIs externas y pudo haber creado la inscripción sin saberlo.
+          // Reintentar a ciegas es peor que derivar a Admisiones, así que el flujo cierra en
+          // la pantalla de espera en lugar de dejar al usuario atrapado reintentando.
+          if (isAmbiguousConfirmFailure(error)) {
+            this.confirmOutcomeUncertain.set(true);
+            this.payment.outcome.set('enrollment-in-progress');
+            return;
+          }
+          this.preEnrollmentError.set(
+            getApiErrorMessage(
+              error instanceof SurveySaveError ? error.reason : error,
+              'No se pudo guardar y confirmar la preinscripción. Intentá nuevamente.'
+            )
+          );
+        },
+      });
+  }
+
+  private findNextInvalidSection(section: SurveySectionId): SurveySectionId | undefined {
+    const sections = this.visibleSections();
+    return sections.slice(sections.indexOf(section) + 1).find(next => !this.isSectionValid(next));
+  }
+
+  private ensureAllVisibleSectionsValid(): boolean {
+    const invalidSection = this.visibleSections().find(section => !this.isSectionValid(section));
+    if (!invalidSection) return true;
+
+    this.patchProgress(invalidSection, { submitted: true });
+    this.activeSection.set(invalidSection);
+    this.sectionConfig[invalidSection].form.markAllAsTouched();
+    this.preEnrollmentError.set(
+      'Completá la información pendiente antes de confirmar la preinscripción.'
+    );
+    return false;
+  }
+
+  private syncSectionCompletion(section: SurveySectionId): void {
+    if (this.canSectionAutoComplete(section)) {
+      this.patchProgress(section, { completed: true });
+      return;
+    }
+    if (!this.isSectionValid(section)) {
+      this.patchProgress(section, { completed: false });
+    }
+  }
+
+  private isSectionValid(section: SurveySectionId): boolean {
+    if (section !== 'identity') return this.sectionConfig[section].form.valid;
+    return this.identity.isComplete();
+  }
+
+  // Guardado en el momento en que la sección muestra el check (su form quedó válido) y en cada
+  // cambio posterior mientras lo siga mostrando. Una sección incompleta no postea: su delta
+  // espera a completarse, al cierre del paso o a la salida. Los campos de escritura libre
+  // actualizan al blur (ver `enrollment-flow-forms.ts`), así que tipear no dispara guardados.
+  // exhaustMap y no switchMap: cancelar un POST en vuelo deja el servidor en estado
+  // desconocido. El trigger que llegue durante el guardado se descarta y su cambio entra en el
+  // delta siguiente.
+  // ponytail: guardado oportunista, sin reintentos ni cola offline. Un fallo es silencioso y el
+  // cambio vuelve solo en el delta siguiente (próximo cambio, Continuar o salida).
+  private observeCompletedSectionSave(): void {
+    merge(
+      ...SURVEY_ANSWER_SECTIONS.map(section =>
+        this.sectionConfig[section].form.valueChanges.pipe(map(() => section))
+      )
+    )
+      .pipe(
+        filter(section => !this.finalizingPreEnrollment() && this.isSectionValid(section)),
+        exhaustMap(() => this.savePartial().pipe(catchError(() => EMPTY))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+  }
+
+  private observeForms(): void {
+    merge(
+      this.educationForm.valueChanges,
+      this.academicDecisionForm.valueChanges,
+      this.ortExperienceForm.valueChanges,
+      this.workForm.valueChanges,
+      this.identityForm.valueChanges,
+      this.regulationForm.valueChanges
+    )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.preEnrollmentError.set(null);
+        for (const section of this.visibleSections()) this.syncSectionCompletion(section);
+      });
+  }
+
+  // Debe suscribirse ANTES que `observeForms`: los subscribers de un mismo
+  // `valueChanges` corren en orden de suscripción, así la re-sincronización de
+  // completitud ve el flag ya limpio en el mismo tick que el cambio de identidad.
+  private observeIdentityRecovery(): void {
+    this.identityForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.identityUploadFailed.set(false));
+  }
+
+  private observeIdentityConfirmation(): void {
+    this.identityForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const confirmed = this.identityForm.controls.isIdentityCorrect.value;
+      if (
+        !confirmed ||
+        !this.identity.requiresIdentityConfirmation() ||
+        !this.isSectionValid('identity')
+      ) {
+        return;
+      }
+
+      this.patchProgress('identity', { completed: true });
+      if (this.activeSection() !== 'identity') return;
+
+      const sections = this.visibleSections();
+      const nextSection = sections[sections.indexOf('identity') + 1];
+      if (nextSection) this.activeSection.set(nextSection);
+    });
+  }
+
+  private configureConditionalValidators(): void {
+    merge(
+      this.formsStore.forms.academicForm.controls.proposalType.valueChanges,
+      this.formsStore.forms.academicForm.controls.degreeProgram.valueChanges,
+      this.educationForm.controls.highSchoolYear.valueChanges,
+      this.educationForm.controls.studiesHighSchool.valueChanges,
+      this.educationForm.controls.highSchoolLocation.valueChanges,
+      this.educationForm.controls.higherEducationStatus.valueChanges,
+      this.educationForm.controls.higherEducationUniversities.valueChanges,
+      this.educationForm.controls.repeatsHighSchoolYear.valueChanges,
+      this.educationForm.controls.motherEducation.valueChanges,
+      this.educationForm.controls.fatherEducation.valueChanges,
+      this.academicDecisionForm.controls.otherUniversities.valueChanges,
+      this.academicDecisionForm.controls.researchedUniversities.valueChanges,
+      this.ortExperienceForm.controls.advisingMeeting.valueChanges,
+      this.ortExperienceForm.controls.visitedWebsite.valueChanges,
+      this.ortExperienceForm.controls.visitedCampus.valueChanges,
+      this.ortExperienceForm.controls.recallsAdvertising.valueChanges
+    )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.updateConditionalValidators());
+    this.updateConditionalValidators();
+  }
+
+  private updateConditionalValidators(): void {
+    const education = this.educationForm.controls;
+    const decision = this.academicDecisionForm.controls;
+    const experience = this.ortExperienceForm.controls;
+    const work = this.workForm.controls;
+    const currentlyInSchool = education.studiesHighSchool.value === 'studying';
+    const professionalUpdate = this.isProfessionalUpdate();
+
+    const isHighSchoolYearRequired =
+      currentlyInSchool && this.options.schoolYearOptions().length > 0;
+    education.highSchoolYear.setValidators([
+      ...(isHighSchoolYearRequired ? [Validators.required] : []),
+      disallowedHighSchoolYearForUniversity(() => this.isUniversityDegreeProgram()),
+    ]);
+    education.highSchoolYear.updateValueAndValidity({ emitEvent: false });
+    this.setRequired(education.orientation, this.shouldAskHighSchoolOrientation());
+    this.setRequired(education.highSchoolYearRepeatCount, this.shouldAskHighSchoolRepeatCount(), [
+      Validators.required,
+      Validators.min(1),
+    ]);
+    this.setRequired(
+      education.state,
+      this.isNationalSchoolPlace() && this.options.departmentOptions().length > 0
+    );
+    this.setRequired(
+      education.educationalInstitution,
+      (this.isNationalSchoolPlace() && this.options.institutionOptions().length > 0) ||
+        this.isForeignSchoolPlace()
+    );
+    this.setRequired(
+      education.higherEducationUniversities,
+      this.shouldAskHigherEducationUniversities() &&
+        this.options.higherEducationUniversityOptions().length > 0
+    );
+    this.setRequired(
+      education.otherHigherEducationUniversity,
+      this.shouldAskHigherEducationOtherUniversity()
+    );
+    this.setRequired(education.motherOrtDegree, this.shouldAskMotherOrtDegree());
+    this.setRequired(education.fatherOrtDegree, this.shouldAskFatherOrtDegree());
+
+    this.setRequired(
+      decision.researchedUniversities,
+      decision.otherUniversities.value === 'yes' && this.options.universityOptions().length > 0
+    );
+    this.setRequired(decision.otherResearchedUniversity, this.shouldAskInformedOtherUniversity());
+
+    this.setRequired(experience.advisingRating, experience.advisingMeeting.value === 'yes');
+    this.setRequired(experience.websiteRating, experience.visitedWebsite.value === 'yes');
+    this.setRequired(experience.campusRating, experience.visitedCampus.value === 'yes');
+    this.setRequired(
+      experience.advertisingChannels,
+      experience.recallsAdvertising.value === 'yes' && this.options.advertisingOptions().length > 0
+    );
+
+    this.setRequired(work.isCorporate, professionalUpdate);
+  }
+
+  private setRequired(
+    control: AbstractControl,
+    required: boolean,
+    validators: ValidatorFn | ValidatorFn[] = Validators.required
+  ): void {
+    control.setValidators(required ? validators : null);
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // Carga diferida del reglamento estudiantil (último subpaso del paso 2): se pide
+  // recién al acercarse la sección de identidad/reglamento y una sola vez (el flag
+  // evita repetir la consulta ante navegación atrás/adelante o re-render).
+  private deferStudentRegulationAcceptance(): void {
+    effect(() => {
+      const nearRegulation =
+        this.process.flow.currentStep() === 'survey' &&
+        (this.activeSection() === 'identity' || this.activeSection() === 'regulation');
+      if (this.regulationAcceptanceRequested || !nearRegulation) return;
+      this.regulationAcceptanceRequested = true;
+      this.loadStudentRegulationAcceptance();
+    });
+  }
+
+  private loadStudentRegulationAcceptance(): void {
+    this.enrollments
+      .getStudentRegulationAcceptance()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (acceptance: EnrollmentStudentRegulationAcceptance) => {
+          const accepted = acceptance.acceptedStudentRegulation === true;
+          this.hasAcceptedStudentRegulation.set(accepted);
+          if (!accepted) return;
+          this.submittedAcceptanceDate.set(parseDate(acceptance.acceptanceDate));
+          this.regulationForm.controls.acceptsRegulation.setValue(true);
+          this.patchProgress('regulation', { completed: true });
+        },
+        error: () => this.hasAcceptedStudentRegulation.set(false),
+      });
+  }
+
+  private applyBackendSurvey(
+    survey: EnrollmentInitialSurvey,
+    response: EnrollmentInitialSurveyResponse,
+    includeAcademicSelection: boolean
+  ): void {
+    const proposalType = patchBackendSurveyForms(survey, response, {
+      forms: this.formsStore.forms,
+      degreePrograms: this.proposal.degreePrograms(),
+      includeAcademicSelection,
+    });
+    // En una inscripción nueva la encuesta previa no debe pisar el Paso 1.
+    if (includeAcademicSelection) {
+      this.proposal.setProposalType(proposalType);
+      this.proposal.loadAcademicOptionsForSurvey(survey);
+    }
+    if (this.isNationalSchoolPlace()) this.options.loadInstitutionsForSelectedDepartment();
+    this.options.refreshOrientationOptions();
+    this.updateConditionalValidators();
+  }
+}
+
+// Solo lo indeterminado: 0 (red/timeout), 409 y 5xx. Un 400/403/404 es determinístico y
+// mantiene el error inline con reintento. Los fallos de identidad y de encuesta llegan como
+// `Error` sin `status`, así que no matchean.
+function isAmbiguousConfirmFailure(error: unknown): boolean {
+  const status = httpStatusOf(error);
+  return status === 0 || status === 409 || (status !== null && status >= 500);
+}
+
+function httpStatusOf(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null || !('status' in error)) return null;
+  const status = (error as { status: unknown }).status;
+  return typeof status === 'number' ? status : null;
+}

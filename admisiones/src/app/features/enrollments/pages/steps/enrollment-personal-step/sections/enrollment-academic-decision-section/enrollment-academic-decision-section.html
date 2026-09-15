@@ -1,0 +1,141 @@
+<!-- eslint-disable @angular-eslint/template/cyclomatic-complexity -- Campos condicionales (otras universidades) mas un @if de error por campo. -->
+<div class="enrollment-accordion__content" [formGroup]="facade.academicDecisionForm">
+  <ort-radio-group
+    class="enrollment-choice-list"
+    formControlName="degreeProgramDecisionYear"
+    legend="¿En qué año de secundaria decidiste qué carrera estudiar?"
+    name="decision-degree-program-year"
+    [aria-describedby]="
+                facade.academicDecisionForm.controls.degreeProgramDecisionYear.touched &&
+                facade.academicDecisionForm.controls.degreeProgramDecisionYear.hasError('required')
+                  ? 'decision-degree-program-year-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    @for (option of facade.options.decisionYearOptions(); track option.value) {
+    <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
+    }
+  </ort-radio-group>
+  @if (facade.academicDecisionForm.controls.degreeProgramDecisionYear.touched &&
+  facade.academicDecisionForm.controls.degreeProgramDecisionYear.hasError('required')) {
+  <p class="enrollment-field-error" id="decision-degree-program-year-error" role="alert">
+    Seleccioná una opción
+  </p>
+  }
+
+  <app-responsive-select
+    aria-label="Apoyo en la decisión"
+    formControlName="decisionSupport"
+    label="¿Quiénes te apoyaron en la decisión?"
+    [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+    [options]="facade.options.supportOptions()" />
+
+  <ort-radio-group
+    class="enrollment-choice-list"
+    formControlName="ortDecisionYear"
+    legend="¿En qué año decidiste estudiar en ORT?"
+    name="decision-ort-year"
+    [aria-describedby]="
+                facade.academicDecisionForm.controls.ortDecisionYear.touched &&
+                facade.academicDecisionForm.controls.ortDecisionYear.hasError('required')
+                  ? 'decision-ort-year-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    @for (option of facade.options.decisionYearOptions(); track option.value) {
+    <ort-radio-button [value]="option.value">{{ option.label }}</ort-radio-button>
+    }
+  </ort-radio-group>
+  @if (facade.academicDecisionForm.controls.ortDecisionYear.touched &&
+  facade.academicDecisionForm.controls.ortDecisionYear.hasError('required')) {
+  <p class="enrollment-field-error" id="decision-ort-year-error" role="alert">
+    Seleccioná una opción
+  </p>
+  }
+
+  <ort-radio-group
+    class="enrollment-choice-list"
+    formControlName="otherUniversities"
+    legend="¿Te informaste en otras universidades?"
+    name="other-universities"
+    [aria-describedby]="
+                facade.academicDecisionForm.controls.otherUniversities.touched &&
+                facade.academicDecisionForm.controls.otherUniversities.hasError('required')
+                  ? 'other-universities-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button value="yes">Sí</ort-radio-button>
+    <ort-radio-button value="no">No</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.academicDecisionForm.controls.otherUniversities.touched &&
+  facade.academicDecisionForm.controls.otherUniversities.hasError('required')) {
+  <p class="enrollment-field-error" id="other-universities-error" role="alert">
+    Seleccioná una opción
+  </p>
+  } @if (facade.academicDecisionForm.controls.otherUniversities.value === 'yes') {
+  <app-responsive-select
+    errorText="Seleccioná una o más opciones"
+    formControlName="researchedUniversities"
+    label="¿En qué universidades te informaste?"
+    placeholder="Seleccioná una o más..."
+    [disabled]="facade.options.universityOptions().length === 0"
+    [multiple]="true"
+    [options]="facade.options.universityOptions()"
+    [searchable]="true" />
+  @if (facade.shouldAskInformedOtherUniversity()) {
+  <ort-form-field>
+    <ort-label>¿Cuál?</ort-label>
+    <input formControlName="otherResearchedUniversity" ortInput type="text" />
+    @if (facade.academicDecisionForm.controls.otherResearchedUniversity.touched &&
+    facade.academicDecisionForm.controls.otherResearchedUniversity.hasError('required')) {
+    <ort-error>Ingresá la universidad</ort-error>
+    }
+  </ort-form-field>
+  } }
+
+  <ort-radio-group
+    class="enrollment-choice-list"
+    formControlName="decisionCertainty"
+    legend="Grado de decisión al momento de inscribirte a la carrera"
+    name="decision-certainty"
+    [aria-describedby]="
+                facade.academicDecisionForm.controls.decisionCertainty.touched &&
+                facade.academicDecisionForm.controls.decisionCertainty.hasError('required')
+                  ? 'decision-certainty-error'
+                  : null
+              "
+    [divider]="true"
+    [indicatorPosition]="orientation() === 'horizontal' ? 'left' : 'right'"
+    [orientation]="orientation()"
+    [required]="true">
+    <ort-radio-button value="1">Decidido/a</ort-radio-button>
+    <ort-radio-button value="2">Con dudas</ort-radio-button>
+  </ort-radio-group>
+  @if (facade.academicDecisionForm.controls.decisionCertainty.touched &&
+  facade.academicDecisionForm.controls.decisionCertainty.hasError('required')) {
+  <p class="enrollment-field-error" id="decision-certainty-error" role="alert">
+    Seleccioná una opción
+  </p>
+  }
+
+  <app-responsive-select
+    aria-label="Motivos para elegir ORT"
+    errorText="Seleccioná una o más opciones"
+    formControlName="ortReasons"
+    label="Motivos para elegir ORT"
+    placeholder="Seleccioná una o más..."
+    [disabled]="facade.options.loadingInitialSurveyCatalogs()"
+    [multiple]="true"
+    [options]="facade.options.motivesOptions()"
+    [searchable]="true" />
+</div>
