@@ -1,8 +1,7 @@
 control: v5.0.0-X.Y.Z
 reason: TODO
 risk: medium
-approved_by: null
-created_at: YYYY-MM-DD
-expires_at: YYYY-MM-DD
+approvedBy: TODO
+createdAt: YYYY-MM-DD
+expiresAt: YYYY-MM-DD
 ticket: TODO
-

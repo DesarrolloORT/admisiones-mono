@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Admisiones security findings",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "application",
+    "repository",
+    "commitSha",
+    "generatedAt",
+    "summary",
+    "findings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "application": { "const": "admisiones" },
+    "repository": { "const": "DesarrolloORT/admisiones-mono" },
+    "commitSha": { "type": "string", "pattern": "^[0-9a-fA-F]{7,40}$" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": {
+      "type": "object",
+      "required": ["pass", "fail", "pending", "needsReview", "acceptedRisk"],
+      "properties": {
+        "pass": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 },
+        "pending": { "type": "integer", "minimum": 0 },
+        "needsReview": { "type": "integer", "minimum": 0 },
+        "acceptedRisk": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "fingerprint",
+          "controlId",
+          "component",
+          "severity",
+          "status",
+          "title",
+          "description",
+          "environment",
+          "evidence"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "controlId": {
+            "type": "string",
+            "pattern": "^v5\\.0\\.0-[0-9]+\\.[0-9]+\\.[0-9]+$"
+          },
+          "component": {
+            "enum": ["frontend", "backend", "system", "infrastructure"]
+          },
+          "severity": { "enum": ["low", "medium", "high", "critical"] },
+          "status": {
+            "enum": ["FAIL", "PENDING", "NEEDS_REVIEW", "ACCEPTED_RISK"]
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "environment": {
+            "enum": ["development", "testing", "preproduction", "production"]
+          },
+          "evidence": { "type": "array" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

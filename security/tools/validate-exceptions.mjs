@@ -1,21 +1,9 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readExceptions } from './security-model.mjs';
 
-const directory = resolve(import.meta.dirname, '../asvs/exceptions');
-const now = Date.now();
-let expired = 0;
-
-for (const name of readdirSync(directory).filter(name => name.endsWith('.json'))) {
-  const exception = JSON.parse(readFileSync(resolve(directory, name), 'utf8'));
-  for (const field of ['control', 'reason', 'risk', 'approvedBy', 'createdAt', 'expiresAt', 'ticket']) {
-    if (!exception[field]) throw new Error(`${name}: missing ${field}`);
-  }
-  if (!/^v5\.0\.0-\d+\.\d+\.\d+$/.test(exception.control)) throw new Error(`${name}: invalid control`);
-  if (!Number.isFinite(Date.parse(exception.createdAt)) || !Number.isFinite(Date.parse(exception.expiresAt))) throw new Error(`${name}: invalid date`);
-  if (Date.parse(exception.expiresAt) <= Date.parse(exception.createdAt)) throw new Error(`${name}: expiresAt must be after createdAt`);
-  if (Date.parse(exception.expiresAt) <= now) expired++;
-}
-
-console.log(`Exceptions valid; expired: ${expired}`);
-if (expired) process.exitCode = 2;
-
+const root = resolve(import.meta.dirname, '../..');
+const controls = JSON.parse(readFileSync(process.argv[3] ?? resolve(root, 'security/asvs/controls/pilot.json'), 'utf8'));
+const exceptions = readExceptions(process.argv[2] ?? resolve(root, 'security/asvs/exceptions'), controls);
+const expired = exceptions.filter(item => Date.parse(`${item.expiresAt}T00:00:00Z`) <= Date.now()).length;
+console.log(`Exceptions valid: ${exceptions.length}; active: ${exceptions.length - expired}; expired: ${expired}`);

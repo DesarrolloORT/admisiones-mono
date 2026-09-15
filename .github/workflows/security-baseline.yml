@@ -4,6 +4,22 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Evaluation mode
+        required: true
+        type: choice
+        default: nightly
+        options: [nightly, release]
+      environment:
+        description: Evaluated environment
+        required: true
+        type: choice
+        default: testing
+        options: [development, testing, preproduction, production]
 
 permissions:
   contents: read
@@ -11,8 +27,11 @@ permissions:
 jobs:
   evaluate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -20,12 +39,28 @@ jobs:
         run: node --test security/tests/*.test.mjs
       - name: Validate exceptions
         run: node security/tools/validate-exceptions.mjs
+      - name: Detect affected controls
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          mapfile -t changed < <(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+          node security/tools/affected-controls.mjs "${changed[@]}" > security/affected-controls.txt
       - name: Evaluate ASVS baseline
-        run: node security/tools/evaluate.mjs
-      - name: Upload ASVS summary
+        shell: bash
+        env:
+          MODE: ${{ github.event_name == 'pull_request' && 'pr' || inputs.mode || 'nightly' }}
+          EVALUATED_ENVIRONMENT: ${{ inputs.environment || 'testing' }}
+        run: |
+          args=(--commit "${GITHUB_SHA}" --environment "${EVALUATED_ENVIRONMENT}")
+          if [[ "${MODE}" == "pr" ]]; then args+=(--control-ids-file security/affected-controls.txt); fi
+          node security/tools/evaluate.mjs "${args[@]}"
+      - name: Upload security reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: asvs-summary
-          path: security/reports/asvs-summary.md
-
+          name: security-baseline-${{ github.event_name }}-${{ github.sha }}
+          path: |
+            security/reports/asvs-summary.md
+            security/reports/findings.json
+            security/affected-controls.txt
+          if-no-files-found: ignore

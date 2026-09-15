@@ -1,0 +1,63 @@
+name: Security ZAP
+
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Authorized non-production environment
+        required: true
+        type: choice
+        default: testing
+        options: [development, testing, preproduction]
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    if: github.event_name == 'workflow_dispatch' || vars.ZAP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ZAP_ENVIRONMENT: ${{ inputs.environment || vars.ZAP_ENVIRONMENT || 'testing' }}
+      ZAP_TARGET_URL: ${{ secrets.ZAP_TARGET_URL }}
+      ZAP_AUTH_HEADER: ${{ vars.ZAP_AUTH_HEADER }}
+      ZAP_AUTH_HEADER_SITE: ${{ vars.ZAP_AUTH_HEADER_SITE }}
+      ZAP_AUTH_HEADER_VALUE: ${{ secrets.ZAP_AUTH_HEADER_VALUE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reject unsafe configuration
+        shell: bash
+        run: |
+          case "${ZAP_ENVIRONMENT}" in development|testing|preproduction) ;; *) echo "Production or invalid ZAP environment rejected"; exit 1;; esac
+          test -n "${ZAP_TARGET_URL}" || { echo "ZAP_TARGET_URL is not configured"; exit 1; }
+      - name: OWASP ZAP full scan
+        continue-on-error: true
+        uses: zaproxy/action-full-scan@v0.13.0
+        with:
+          target: ${{ env.ZAP_TARGET_URL }}
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-raw-${{ github.run_id }}
+          cmd_options: "-m 10 -j"
+      - name: Import ZAP evidence
+        run: node security/tools/import-zap.mjs report_json.json "${ZAP_ENVIRONMENT}"
+      - name: Evaluate imported evidence
+        run: node security/tools/evaluate.mjs --commit "${GITHUB_SHA}" --environment "${ZAP_ENVIRONMENT}"
+      - name: Upload normalized reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-normalized-${{ github.run_id }}
+          path: |
+            report_json.json
+            report_html.html
+            security/evidence/evidence.jsonl
+            security/reports/asvs-summary.md
+            security/reports/findings.json
+          if-no-files-found: warn

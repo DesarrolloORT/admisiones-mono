@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "1.0",
+  "application": "admisiones",
+  "repository": "DesarrolloORT/admisiones-mono",
+  "commitSha": "fbe7a8ee83a3542f8b021e25edd90eb0963fb491",
+  "generatedAt": "2026-09-15T18:29:14.743Z",
+  "summary": {
+    "pass": 2,
+    "fail": 0,
+    "pending": 6,
+    "needsReview": 0,
+    "acceptedRisk": 0
+  },
+  "findings": [
+    {
+      "id": "ASVS-026cc1827f96",
+      "fingerprint": "026cc1827f960f8a250869aab4135c6c5aa3c1889deb9394b6f0a9ac236748c8",
+      "controlId": "v5.0.0-13.3.1",
+      "component": "backend",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Secrets management",
+      "description": "Backend secrets are managed outside source and build artifacts by a secrets-management solution.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-2923b3bfc330",
+      "fingerprint": "2923b3bfc330e9e71c7e365c1ef3c5344e113643fac51b88216adbcc3334f3a0",
+      "controlId": "v5.0.0-7.2.1",
+      "component": "backend",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Trusted session verification",
+      "description": "All session-token verification is performed by a trusted backend service.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-3e1736311400",
+      "fingerprint": "3e1736311400827b9143b2645958460f2be1f72ca0629d90244b8df829efb12d",
+      "controlId": "v5.0.0-8.2.2",
+      "component": "backend",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Object-level authorization",
+      "description": "Data-specific access is limited to explicitly permitted items to mitigate IDOR and BOLA.",
+      "environment": "testing",
+      "evidence": [
+        {
+          "fingerprint": "69b2e9df01e2eaaba64922e77ac95643180cbbc555747dcec21dfa067e6bd1a8",
+          "source": "automated-test",
+          "tool": "dotnet test",
+          "file": "api-admisiones/WebApiAdmisiones/UnitTesting/AppLogic/Services/ScholarshipFundServiceTests.cs",
+          "test": "SubirArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden"
+        }
+      ]
+    },
+    {
+      "id": "ASVS-49966bbb81e8",
+      "fingerprint": "49966bbb81e82a53f15ccf1a49d7e136cce79f656834c125a149ab34a6d436f0",
+      "controlId": "v5.0.0-8.2.2",
+      "component": "system",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Object-level authorization",
+      "description": "Data-specific access is limited to explicitly permitted items to mitigate IDOR and BOLA.",
+      "environment": "testing",
+      "evidence": [
+        {
+          "fingerprint": "69b2e9df01e2eaaba64922e77ac95643180cbbc555747dcec21dfa067e6bd1a8",
+          "source": "automated-test",
+          "tool": "dotnet test",
+          "file": "api-admisiones/WebApiAdmisiones/UnitTesting/AppLogic/Services/ScholarshipFundServiceTests.cs",
+          "test": "SubirArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden"
+        }
+      ]
+    },
+    {
+      "id": "ASVS-709823762dcf",
+      "fingerprint": "709823762dcf8d618fb53f2f197aa593325ab7e6c5d9504cbf93bddbda413bc0",
+      "controlId": "v5.0.0-3.3.4",
+      "component": "system",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "HttpOnly session cookie",
+      "description": "Session cookies that scripts do not need use HttpOnly and are delivered only through Set-Cookie.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-7ade7db470a1",
+      "fingerprint": "7ade7db470a116b4e3246a3215cbe5ee58bbdf4718485fd0a4dcabb55c2b3629",
+      "controlId": "v5.0.0-13.4.2",
+      "component": "infrastructure",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "Production debug disabled",
+      "description": "Debug modes are disabled for all production components.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-85c0d00c7137",
+      "fingerprint": "85c0d00c7137db3b2efc42d22f9462205edbc4d16d20a15f94a0e514c22d0c3f",
+      "controlId": "v5.0.0-2.2.2",
+      "component": "backend",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "Server-side input validation",
+      "description": "Input validation is enforced at a trusted service layer and client validation is not treated as a security control.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-b21e72fe9639",
+      "fingerprint": "b21e72fe9639742db96eb6583e3f11058dcddce7324b5511ec992d462d4367b1",
+      "controlId": "v5.0.0-7.2.1",
+      "component": "system",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Trusted session verification",
+      "description": "All session-token verification is performed by a trusted backend service.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-c7764cca2249",
+      "fingerprint": "c7764cca2249d0916d0cfb4c9a52049ca337da5288918705a489967012080d85",
+      "controlId": "v5.0.0-13.3.1",
+      "component": "infrastructure",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Secrets management",
+      "description": "Backend secrets are managed outside source and build artifacts by a secrets-management solution.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-ea052f492441",
+      "fingerprint": "ea052f4924410b46133e9fdc2993d188b5ba197e9925776cdb587948bc63d1d9",
+      "controlId": "v5.0.0-13.4.2",
+      "component": "system",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "Production debug disabled",
+      "description": "Debug modes are disabled for all production components.",
+      "environment": "testing",
+      "evidence": []
+    }
+  ]
+}
