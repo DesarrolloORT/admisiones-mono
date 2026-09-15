@@ -47,23 +47,24 @@ traversal_correction: |
   no repo por repo. Esto es necesario para que el orden de publicación
   de ADR refleje la cronología real de decisiones, no el orden en que
   se recorrió cada árbol.
-last_batch: LOTE-05
+last_batch: LOTE-06
 last_commits_reviewed:
-  - 33ea7abc8a202559775b9d61d5d74a46dff5798a
-  - cda424956ccca8afae738a946534d9718cff3c5d
-  - 4af236ef04e0ff4fce13f80e536b7de4518ed89e
-  - 90ceb97f17de9b114da89287b44a0cabadf6c295
-  - 975e3d8ad26b55f9d4ab053401edacecd94b52b6
-  - ecea910056060d4dbc0ac4305ab72b24bdea0460
-window_reviewed: "2026-04-10 a 2026-05-19 (ambos repos; mayo revisado solo por titulo de commit, no por diff completo — ver nota)"
-next_candidate_id: ARCH-HIST-009
+  - cf9f380c0a695dd99f26992dbf8b1540c5ba4e3d
+  - 39190874deb0e61292ac15103e8dd8e5e2a1cb59
+  - 9f725f4c8ede1f1a75d5f6e99d43ab8aa69acf6f
+  - 5a2a83779a04d28538ccc0dc08afea9f15271ef3
+  - a11e9724
+window_reviewed: "2026-05-20 a 2026-05-29 (ambos repos, filtro economico por titulo — primer lote con el nuevo ritmo)"
+next_candidate_id: ARCH-HIST-011
 next_adr_id: ADR-005
 status: in-progress
 ```
 
+Nota `LOTE-06`: de ~90 commits de `api-admisiones` y ~50 de `admisiones` en esta ventana, el filtro por título descartó en bloque los de frontend (features de UI/accesibilidad/formularios de registro, sin disparador arquitectónico) y ~80 del backend (refactors, tests, merges de PR sin cambio propio, ajustes de DTO). Se investigaron en detalle 5 grupos de commits del backend que sí activaban disparadores de seguridad/autenticación, produciendo `ARCH-HIST-009` y `ARCH-HIST-010` (ambos `medium`, no promovidos).
+
 Nota de progreso: `LOTE-05` cerró los dos pendientes de `LOTE-04` (sandbox de reconocimiento de documentos → resultó ser el prototipo de `ARCH-HIST-008`/`ADR-004`; rename de `RECAPTCHA_ENTERPRISE_KEY`→`RECAPTCHA_KEY` → descartado como táctico, era solo preparación de nombre de variable, sin uso real todavía en ese commit). Además se investigó a fondo el cluster de integración Azure Document Intelligence/Face (`ARCH-HIST-008`/`ADR-004`) y se usó como evidencia extra del gap de gobernanza de BD el commit `ecea9100`.
 
-**Cambio de ritmo pendiente de decidir con el usuario**: al enumerar mayo completo aparecieron ~197 commits en un solo mes (90 backend + 107 frontend) — volumen que, al ritmo de revisión por diff completo usado hasta ahora, haría muy lento cubrir los ~6 meses y ~1300 commits restantes. `LOTE-05` solo llegó a revisar por diff completo hasta el 19 de mayo; el resto de mayo (~180 commits) fue escaneado únicamente por título de commit, sin abrir diffs, y no está clasificado todavía. Ver conversación para la decisión de alcance/profundidad a partir de aquí.
+**Decisión de ritmo (2026-09-15, confirmada por el usuario)**: a partir de `LOTE-06`, cada lote se filtra primero por título de commit y rutas tocadas (barrido económico, sin abrir diffs) contra los disparadores del protocolo (límites de componentes; auth/sesión/seguridad; persistencia; contratos/APIs/integraciones; config por ambiente; deployment/infra/observabilidad; manejo transversal de errores; dependencias que cambien responsabilidades). Solo los commits que activan un disparador se investigan en detalle (diff completo, mismo estándar de evidencia que antes). El resto se descarta en bloque, por lote, no commit por commit. Esto prioriza cobertura del volumen (~1300 commits restantes) sobre exhaustividad en lo rutinario.
 
 Total de ancestros de `history_boundary`: 1535 commits (incluyéndolo). Roots detectados en todo el DAG (`git rev-list --all --max-parents=0`): `2ec7478` (mono, hoy), `aa3b22c9` (repo `admisiones` frontend), `56c5536c` (repo `api-admisiones`, rama principal), `66a19be4` (repo `api-admisiones`, rama `develop`, histórico disjunto — ver gap en ARCH-HIST-002). Pendiente recorrer: historia completa de `admisiones` (root `aa3b22c9`) y de `api-admisiones` (roots `56c5536c`/`66a19be4`), ~1530 commits restantes.
 
@@ -120,6 +121,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-03 | `api-admisiones`: extracción desde `NewApi` hasta primer PR (2026-03-13 a 2026-03-26) | 5 (revisados en detalle; ~25 intermedios listados y descartados por rutina/no arquitectónicos) | 1 (`ARCH-HIST-005`) | 1 (`ADR-002`, confianza alta por mensaje de commit explícito) | completado (parcial) |
 | LOTE-04 | **Ventana combinada** `admisiones`+`api-admisiones`, 2026-03-24 a 2026-04-30 (primer lote tras `traversal_correction`) | 4 revisados en detalle de 51 listados (resto descartado por rutina) | 2 (`ARCH-HIST-006`, `ARCH-HIST-007`) | 1 (`ADR-003`) | completado (parcial: quedan 2 items sin revisar en la misma ventana — ver nota de progreso) |
 | LOTE-05 | Ventana combinada 2026-04-10 a 2026-05-19 (diff completo); resto de mayo (~180 commits) solo escaneado por título | 6 revisados en detalle | 1 (`ARCH-HIST-008`) | 1 (`ADR-004`) | completado (parcial: se detecta problema de volumen/ritmo, ver nota de progreso) |
+| LOTE-06 | Ventana combinada 2026-05-20 a 2026-05-29 (primer lote con filtro económico por título) | 5 revisados en detalle de ~140 listados (resto descartado en bloque por título) | 2 (`ARCH-HIST-009`, `ARCH-HIST-010`) | 0 (ambos `medium`, requieren validación) | completado |
 
 ## Registro de candidatos
 
@@ -448,6 +450,82 @@ Motivación explícita en los mensajes de commit (dar de alta reconocimiento de 
 - Confianza `high` en el **qué** (la integración y su configuración están documentadas en el propio código/config); confianza más baja en el **por qué** (elección de proveedor). Promovido a `ADR-004` igual, dado el alto impacto en datos personales — se prioriza dejarlo visible para revisión aunque falte esa parte de la motivación.
 
 **Nota adicional (refuerza gap de `ARCH-HIST-003`):** el commit `ecea9100` (2026-05-19, "added HASH_TOKEN_PASSWORD in t_persona") agrega una columna nueva (`HashTokenPassword`) directamente en el DTO/convertidor Devart de `Persona`, sin ninguna migración ni script SQL visible en el repo. Es evidencia concreta (no solo sospecha) de que el esquema de la base de datos se modifica **fuera** de este repositorio y el código simplemente se regenera/ajusta a mano para reflejarlo — confirma el gap de gobernanza de base de datos ya anotado en `ARCH-HIST-003`.
+
+### ARCH-HIST-009 — Endurecimiento de seguridad de API pública (rate limiting, CORS credentials, CAPTCHA condicional por ambiente) — con reversión de CORS en 2 días
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-05-19
+domain: seguridad-api
+commits: [cf9f380c0a695dd99f26992dbf8b1540c5ba4e3d, 39190874deb0e61292ac15103e8dd8e5e2a1cb59, 7208065d, 146174d7, ae1bffa8]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `cf9f380c` (2026-05-19): cambia CORS de `AllowCredentials()` a `DisallowCredentials()` "enhancing security". El propio mensaje aclara que el submódulo `Core` quedó en estado *dirty* (cambios sin commitear) al momento de este commit.
+- `39190874` (2026-05-21, **2 días después**): agrega rate limiting a `Login` (5 intentos/15min por IP) y `AnalizarAdjunto` (5 req/min), middleware `RateLimiter` global, métricas Prometheus de rechazos — y **revierte el cambio anterior**, volviendo a permitir credentials en CORS ("Updated CORS policy to allow credentials for token-based authentication").
+- `7208065d`/`146174d7`/`ae1bffa8` (mayo): CAPTCHA en endpoints de registro pasa por varios estados en pocos días (deshabilitado, luego exigido en producción con salto en dev).
+
+#### Decisión inferida
+
+Una serie de ajustes de endurecimiento de seguridad de la API pública (rate limiting en login y reconocimiento de documentos, CAPTCHA obligatorio en producción con bypass en desarrollo), aplicados de forma iterativa y, en el caso de CORS credentials, con una **reversión completa en 2 días** sin explicación de por qué la primera decisión no funcionaba.
+
+#### Motivación y alternativas
+
+Motivación general explícita (mensajes hablan de seguridad y monitoreo), pero el ida-y-vuelta de CORS credentials no está explicado — es una señal de iteración rápida bajo presión más que de una decisión estable. **Cosa extraña a señalar al equipo**: además de la reversión de 2 días, `cf9f380c` documenta explícitamente un submódulo `Core` dirty (buena práctica de transparencia en el mensaje, pero indica un flujo de trabajo con cambios de `Core` no siempre comiteados prolijamente antes de referenciarlos).
+
+#### Consecuencias observadas
+
+- La superficie pública de la API queda con rate limiting y CAPTCHA, medibles vía Prometheus.
+- El comportamiento final de CORS credentials es "permitir" (post-reversión) — confirmar que esta es efectivamente la configuración vigente hoy, no algo revertido de nuevo después.
+
+#### Gaps y validación requerida
+
+- Preguntar al equipo qué rompió `DisallowCredentials()` en esos 2 días (¿el frontend dependía de cookies cross-origin?).
+- Confianza `medium`: patrón y cambios claros, pero la motivación de la reversión es inferencia, no hecho confirmado.
+
+### ARCH-HIST-010 — Login pasa de `codigoPersona` a `tipoDocumento`+`documento`, con recuperación/activación de contraseña por link JWT (reemplaza reset directo vía LDAP)
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-05-19
+domain: autenticacion-autorizacion
+commits: [9f725f4c8ede1f1a75d5f6e99d43ab8aa69acf6f, 0b7ff878, 5a2a83779a04d28538ccc0dc08afea9f15271ef3, a11e9724, 902fd2d3]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `9f725f4c`/`0b7ff878` (2026-05-20): `AuthService`/`AuthController` dejan de requerir `codigoPersona` y pasan a requerir `tipoDocumento`+`documento` para autenticar.
+- `5a2a8377` (2026-05-20): `AuthService` usa `IPasswordActivationService` para enviar un link de recuperación de contraseña **basado en JWT por email**, "replacing direct LDAP resets" (cita textual del commit).
+- `a11e9724` (2026-05-19): agrega un flujo de activación de contraseña seguro para onboarding/reset.
+
+#### Decisión inferida
+
+El modelo de identidad de login se independiza de `codigoPersona` (identificador interno, probablemente ligado a LDAP/legacy) y pasa a usar el documento de identidad como credencial de login — consistente con la existencia de un flujo de auto-registro de postulantes que no necesariamente tienen un `codigoPersona` asignado de antemano. En paralelo, el reset de contraseña deja de depender de LDAP y pasa a un flujo propio (JWT + email).
+
+#### Motivación y alternativas
+
+Motivación explícita para el cambio de reset de contraseña (cita textual: "replacing direct LDAP resets"). Motivación del cambio de login (`codigoPersona`→documento) no explicada en el commit, pero consistente con el flujo de auto-registro de postulantes documentado en commits cercanos — inferencia razonable, no confirmada.
+
+#### Consecuencias observadas
+
+- El login ya no depende exclusivamente de tener un `codigoPersona` previo, habilitando auto-registro de postulantes nuevos.
+- El reset de contraseña deja de pasar por LDAP, reduciendo el acoplamiento con ese sistema para ese flujo puntual (aunque LDAP se sigue usando para autenticación, ver `ARCH-HIST-004`).
+
+#### Gaps y validación requerida
+
+- Falta de análisis funcional: no está documentado qué pasa con personas que sí tienen `codigoPersona` (staff/usuarios legacy) — ¿siguen pudiendo loguearse igual, o este cambio los afecta? Preguntar al equipo funcional.
+- Confianza `medium`: cambio y motivación parcial claros; falta confirmar impacto sobre usuarios existentes.
 
 ## Guardrails
 
