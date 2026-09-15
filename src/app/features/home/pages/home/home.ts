@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { OrtButtonModule, OrtIconModule, OrtStatusIconModule } from '@desarrolloort/components';
 
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { HomeData } from '../../models/home-data';
+import { HomeData, HomeResolved, isHomeLoadFailure } from '../../models/home-data';
 import { Dashboard } from '../dashboard/dashboard';
 
 interface HomeActionCard {
@@ -49,10 +49,20 @@ const ACTION_CARDS: HomeActionCard[] = [
 export class Home {
   private readonly authSession = inject(AuthSessionService);
 
-  readonly homeData = input.required<HomeData | null>();
+  readonly homeData = input.required<HomeResolved>();
+
+  protected readonly loadError = computed(() => {
+    const resolved = this.homeData();
+    return isHomeLoadFailure(resolved) ? resolved.loadError : null;
+  });
+
+  protected readonly data = computed<HomeData | null>(() => {
+    const resolved = this.homeData();
+    return isHomeLoadFailure(resolved) ? null : resolved;
+  });
 
   protected readonly hasActivity = computed(() => {
-    const data = this.homeData();
+    const data = this.data();
     return !!data && (data.enrollments.length > 0 || data.scholarships.length > 0);
   });
   protected readonly description = HOME_DESCRIPTION;

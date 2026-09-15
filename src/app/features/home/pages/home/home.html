@@ -1,16 +1,16 @@
-@if (homeData() === null) {
+@if (loadError(); as loadError) {
 <main class="home-status" id="main-content" role="alert">
   <div class="home-status__section">
     <ort-status-icon ariaLabel="Error" purpose="error" size="xl" type="gradient" />
     <h1>No pudimos cargar tu información</h1>
   </div>
   <div class="home-status__section">
-    <p>Hubo un error al cargar tu información.</p>
-    <p>Porfavor intente nuevamente en unos minutos.</p>
+    <p>{{ loadError }}</p>
+    <p>Por favor, intentá nuevamente en unos minutos.</p>
   </div>
 </main>
 } @else if (hasActivity()) {
-<app-dashboard [enrollments]="homeData()!.enrollments" [scholarships]="homeData()!.scholarships" />
+<app-dashboard [enrollments]="data()!.enrollments" [scholarships]="data()!.scholarships" />
 } @else {
 <main aria-labelledby="home-title" class="home-main" id="main-content" tabindex="-1">
   <header class="home-welcome">

@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { AuthSession } from '../../../auth/models/auth.interface';
 import { AuthSessionService } from '../../../auth/services/auth-session';
-import { HomeData } from '../../models/home-data';
+import { HomeResolved } from '../../models/home-data';
 import { Home } from './home';
 
 describe('Home', () => {
@@ -70,7 +70,7 @@ describe('Home', () => {
   });
 
   it('should keep request failures distinct from an empty account', async () => {
-    fixture = createComponent(null);
+    fixture = createComponent({ loadError: 'Hubo un error al cargar tu información.' });
     await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain('No pudimos cargar tu información');
@@ -78,7 +78,19 @@ describe('Home', () => {
     expect(fixture.nativeElement.querySelector('.home-actions')).toBeNull();
   });
 
-  function createComponent(homeData: HomeData | null): ComponentFixture<Home> {
+  it('should render the backend message when the load fails', async () => {
+    fixture = createComponent({ loadError: 'Tu usuario no tiene inscripciones habilitadas.' });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Tu usuario no tiene inscripciones habilitadas.'
+    );
+    expect(fixture.nativeElement.textContent).not.toContain(
+      'Hubo un error al cargar tu información.'
+    );
+  });
+
+  function createComponent(homeData: HomeResolved): ComponentFixture<Home> {
     const componentFixture = TestBed.createComponent(Home);
     componentFixture.componentRef.setInput('homeData', homeData);
     return componentFixture;
