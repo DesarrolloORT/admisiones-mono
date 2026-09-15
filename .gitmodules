@@ -1,0 +1,3 @@
+[submodule "api-admisiones/Core"]
+	path = api-admisiones/Core
+	url = https://github.com/DesarrolloORT/Core.git
