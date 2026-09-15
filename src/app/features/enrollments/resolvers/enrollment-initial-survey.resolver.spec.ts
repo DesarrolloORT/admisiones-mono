@@ -56,13 +56,39 @@ describe('enrollmentInitialSurveyResolver', () => {
   it('flags the load as failed on non-404 http errors', async () => {
     getInitialSurvey.mockReturnValue(throwError(() => ({ status: 500 })));
 
-    await expect(resolve()).resolves.toEqual({ initialSurvey: null, loadFailed: true });
+    await expect(resolve()).resolves.toEqual({
+      initialSurvey: null,
+      loadFailed: true,
+      loadFailedMessage: 'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.',
+    });
   });
 
   it('flags the load as failed on errors without a status', async () => {
     getInitialSurvey.mockReturnValue(throwError(() => new Error('network down')));
 
-    await expect(resolve()).resolves.toEqual({ initialSurvey: null, loadFailed: true });
+    await expect(resolve()).resolves.toEqual({
+      initialSurvey: null,
+      loadFailed: true,
+      loadFailedMessage: 'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.',
+    });
+  });
+
+  it('carries the backend message through the load failure', async () => {
+    getInitialSurvey.mockReturnValue(
+      throwError(() => ({
+        status: 503,
+        message: 'El servicio no está disponible.',
+        action: 'notify',
+        isOperationResult: true,
+        originalError: new Error('unavailable'),
+      }))
+    );
+
+    await expect(resolve()).resolves.toEqual({
+      initialSurvey: null,
+      loadFailed: true,
+      loadFailedMessage: 'El servicio no está disponible.',
+    });
   });
 
   function resolve(): Promise<EnrollmentInitialSurveyResolved> {

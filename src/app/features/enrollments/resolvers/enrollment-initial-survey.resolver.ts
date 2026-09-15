@@ -2,9 +2,11 @@ import { inject } from '@angular/core';
 import { ResolveFn } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { getApiErrorMessage } from 'src/app/shared/errors/api-error-message';
 
 import { EnrollmentsApi } from '../api/enrollments.api';
 import {
+  DEFAULT_SURVEY_LOAD_FAILED_MESSAGE,
   EMPTY_INITIAL_SURVEY_RESPONSE,
   type EnrollmentInitialSurveyResolved,
 } from '../models/enrollment-entry';
@@ -25,7 +27,11 @@ export function resolveInitialSurvey(
     catchError(error =>
       isNotFoundError(error)
         ? of({ initialSurvey: EMPTY_INITIAL_SURVEY_RESPONSE, loadFailed: false })
-        : of({ initialSurvey: null, loadFailed: true })
+        : of({
+            initialSurvey: null,
+            loadFailed: true,
+            loadFailedMessage: getApiErrorMessage(error, DEFAULT_SURVEY_LOAD_FAILED_MESSAGE),
+          })
     )
   );
 }
