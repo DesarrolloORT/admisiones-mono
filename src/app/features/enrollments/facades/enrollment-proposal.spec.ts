@@ -19,7 +19,7 @@ describe('EnrollmentProposalFacade', () => {
   let process: EnrollmentProcessState;
 
   beforeEach(() => {
-    registerProductInterest.mockReset().mockReturnValue(of(true));
+    registerProductInterest.mockReset().mockReturnValue(of(undefined));
     TestBed.configureTestingModule({
       providers: [
         AcademicProposalSelection,
@@ -113,16 +113,6 @@ describe('EnrollmentProposalFacade', () => {
         .map(error => error.message)
         .join(' ')
     ).toContain('Seminario');
-  });
-
-  it('stays on the proposal when registration fails', () => {
-    registerProductInterest.mockReturnValue(of(false));
-    setValidProposal(facade);
-
-    facade.continue();
-
-    expect(process.flow.currentStep()).toBe('proposal');
-    expect(facade.academicErrors()[0]?.message).toContain('No se pudo registrar');
   });
 
   it('keeps the resumed proposal disabled and skips product interest registration', () => {

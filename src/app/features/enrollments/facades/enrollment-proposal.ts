@@ -88,15 +88,7 @@ export class EnrollmentProposalFacade {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: registered => {
-          if (!registered) {
-            this.productInterestError.set(
-              'No se pudo registrar el interés por la propuesta seleccionada.'
-            );
-            return;
-          }
-          this.process.flow.next();
-        },
+        next: () => this.process.flow.next(),
         error: (error: unknown) =>
           this.productInterestError.set(
             getApiErrorMessage(
