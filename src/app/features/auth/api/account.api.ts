@@ -50,7 +50,7 @@ export class AccountApi {
     );
   }
 
-  public updatePersonalData(payload: UpdateAccountPersonalDataPayload): Observable<boolean> {
+  public updatePersonalData(payload: UpdateAccountPersonalDataPayload): Observable<void> {
     return this.api
       .request(putPersonDetailsEndpoint, {
         body: {
@@ -66,7 +66,7 @@ export class AccountApi {
           emailConfirmation: payload.emailVerification,
         },
       })
-      .pipe(map(result => result === true));
+      .pipe(map(() => undefined));
   }
 
   public changePassword(payload: AccountChangePasswordPayload): Observable<void> {

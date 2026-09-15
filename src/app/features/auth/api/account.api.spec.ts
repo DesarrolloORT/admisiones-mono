@@ -177,7 +177,7 @@ describe('AccountApi', () => {
         email: 'gabrielaortiz@gmail.com',
         emailVerification: 'gabrielaortiz@gmail.com',
       })
-      .subscribe(result => expect(result).toBe(true));
+      .subscribe(result => expect(result).toBeUndefined());
 
     const req = httpController.expectOne(
       r => r.url.includes('/person/details') && r.method === 'PUT'
@@ -198,26 +198,6 @@ describe('AccountApi', () => {
     expect(req.request.withCredentials).toBe(true);
 
     req.flush({ success: true, httpCode: 200, data: true });
-  });
-
-  it('should return false when the personal data update is rejected', () => {
-    endpoint
-      .updatePersonalData({
-        countryCode: 1,
-        stateCode: 10,
-        cityCode: 100,
-        address: 'Av. 18 de Julio 1360',
-        phone: { nationalNumber: '99123456', iso2: 'UY' },
-        email: 'gabrielaortiz@gmail.com',
-        emailVerification: 'gabrielaortiz@gmail.com',
-      })
-      .subscribe(result => expect(result).toBe(false));
-
-    const req = httpController.expectOne(
-      r => r.url.includes('/person/details') && r.method === 'PUT'
-    );
-
-    req.flush({ success: true, httpCode: 200, data: false });
   });
 
   it('should propagate normalized API failures when updating personal data', () => {
