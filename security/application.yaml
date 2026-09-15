@@ -1,0 +1,29 @@
+application:
+  name: admisiones
+  type: web-application
+asvs:
+  version: 5.0.0
+  target_level: L2
+components:
+  frontend:
+    type: angular
+    path: admisiones
+  backend:
+    type: dotnet-api
+    path: api-admisiones/WebApiAdmisiones
+environments: [development, testing, preproduction, production]
+security_tools:
+  sonar:
+    enabled: true
+    configuration: admisiones/sonar-project.properties
+  zap:
+    enabled: true
+    target_url_environment_variable: ZAP_TARGET_URL
+features:
+  authentication: true
+  authorization: true
+  recaptcha: true
+  csp: true
+configuration:
+  azure_app_configuration: true
+

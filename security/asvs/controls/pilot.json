@@ -1,0 +1,99 @@
+[
+  {
+    "id": "v5.0.0-2.2.2",
+    "title": "Server-side input validation",
+    "asvsRequirement": "Input validation is enforced at a trusted service layer and client validation is not treated as a security control.",
+    "level": 1,
+    "scope": ["backend"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "static-rule", "agent-review"] },
+    "status": "PENDING",
+    "risk": { "severity": "high" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-3.3.4",
+    "title": "HttpOnly session cookie",
+    "asvsRequirement": "Session cookies that scripts do not need use HttpOnly and are delivered only through Set-Cookie.",
+    "level": 2,
+    "scope": ["system"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "zap", "configuration"] },
+    "status": "PENDING",
+    "risk": { "severity": "high" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-6.8.2",
+    "title": "Authentication assertion signatures",
+    "asvsRequirement": "Authentication assertions are rejected when unsigned or signed with an invalid signature.",
+    "level": 2,
+    "scope": ["backend"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "configuration"] },
+    "status": "PENDING",
+    "risk": { "severity": "critical" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-7.2.1",
+    "title": "Trusted session verification",
+    "asvsRequirement": "All session-token verification is performed by a trusted backend service.",
+    "level": 1,
+    "scope": ["backend", "system"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "configuration"] },
+    "status": "PENDING",
+    "risk": { "severity": "critical" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-8.2.2",
+    "title": "Object-level authorization",
+    "asvsRequirement": "Data-specific access is limited to explicitly permitted items to mitigate IDOR and BOLA.",
+    "level": 1,
+    "scope": ["backend", "system"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "agent-review", "human-review"] },
+    "status": "PENDING",
+    "risk": { "severity": "critical" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-13.3.1",
+    "title": "Secrets management",
+    "asvsRequirement": "Backend secrets are managed outside source and build artifacts by a secrets-management solution.",
+    "level": 2,
+    "scope": ["infrastructure", "backend"],
+    "applicable": true,
+    "verification": { "methods": ["configuration", "sonar", "human-review"] },
+    "status": "PENDING",
+    "risk": { "severity": "critical" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-13.4.2",
+    "title": "Production debug disabled",
+    "asvsRequirement": "Debug modes are disabled for all production components.",
+    "level": 2,
+    "scope": ["infrastructure", "system"],
+    "applicable": true,
+    "verification": { "methods": ["configuration", "zap"] },
+    "status": "PENDING",
+    "risk": { "severity": "high" },
+    "owner": "security"
+  },
+  {
+    "id": "v5.0.0-16.5.1",
+    "title": "Generic error responses",
+    "asvsRequirement": "Unexpected or security-sensitive errors return generic messages without sensitive internal data.",
+    "level": 2,
+    "scope": ["backend", "system"],
+    "applicable": true,
+    "verification": { "methods": ["automated-test", "zap", "agent-review"] },
+    "status": "PENDING",
+    "risk": { "severity": "high" },
+    "owner": "security"
+  }
+]
+

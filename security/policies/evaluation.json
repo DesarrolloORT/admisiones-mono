@@ -1,0 +1,9 @@
+{
+  "statuses": ["PASS", "FAIL", "PENDING", "NEEDS_REVIEW", "NOT_APPLICABLE", "ACCEPTED_RISK"],
+  "passTrustSources": ["automated-test", "static-rule", "configuration", "zap", "sonar"],
+  "scannerEvidenceIsPartial": true,
+  "evidenceMaxAgeDays": 90,
+  "acceptedRiskRequires": ["reason", "approvedBy", "createdAt", "expiresAt", "ticket"],
+  "notApplicableRequires": ["justification"]
+}
+

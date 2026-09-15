@@ -1,0 +1,7 @@
+[
+  { "pathPrefix": "admisiones/src/app/features/auth/", "domains": ["authentication", "session"], "controls": ["v5.0.0-3.3.4", "v5.0.0-7.2.1"] },
+  { "pathPrefix": "api-admisiones/WebApiAdmisiones/WebApiAdmisiones/Security/Authentication/", "domains": ["authentication", "session"], "controls": ["v5.0.0-6.8.2", "v5.0.0-7.2.1"] },
+  { "pathPrefix": "api-admisiones/WebApiAdmisiones/WebApiAdmisiones/Controllers/", "domains": ["authorization", "input-validation"], "controls": ["v5.0.0-2.2.2", "v5.0.0-8.2.2"] },
+  { "pathPrefix": "api-admisiones/WebApiAdmisiones/WebApiAdmisiones/appsettings", "domains": ["configuration"], "controls": ["v5.0.0-13.3.1", "v5.0.0-13.4.2"] }
+]
+
