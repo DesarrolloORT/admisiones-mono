@@ -23,6 +23,7 @@ import type { EnrollmentStep } from './enrollment-process';
 export interface EnrollmentInitialSurveyResolved {
   initialSurvey: EnrollmentInitialSurveyResponse | null;
   loadFailed: boolean;
+  loadFailedMessage?: string | null;
 }
 
 /** Respuesta de encuesta "vacía pero con derecho": persona sin encuesta previa. */
@@ -84,8 +85,11 @@ export interface EnrollmentEntryContext {
   survey: EnrollmentInitialSurveyResolved;
 }
 
+export const DEFAULT_SURVEY_LOAD_FAILED_MESSAGE =
+  'No se pudo consultar el estado de tu encuesta. Intentá nuevamente.';
+
 export type EnrollmentSurveyInit =
-  | { kind: 'load-failed' }
+  | { kind: 'load-failed'; message: string }
   | { kind: 'identity-only' }
   | { kind: 'fresh' }
   | {
@@ -268,7 +272,12 @@ function deriveSurvey(
   ctx: EnrollmentEntryContext,
   includeAcademicSelection: boolean
 ): EnrollmentSurveyInit {
-  if (ctx.survey.loadFailed) return { kind: 'load-failed' };
+  if (ctx.survey.loadFailed) {
+    return {
+      kind: 'load-failed',
+      message: ctx.survey.loadFailedMessage ?? DEFAULT_SURVEY_LOAD_FAILED_MESSAGE,
+    };
+  }
 
   const response = ctx.survey.initialSurvey ?? EMPTY_INITIAL_SURVEY_RESPONSE;
   if (response.isEligibleForSurvey === false) return { kind: 'identity-only' };
