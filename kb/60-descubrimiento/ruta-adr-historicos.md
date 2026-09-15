@@ -47,20 +47,22 @@ traversal_correction: |
   no repo por repo. Esto es necesario para que el orden de publicación
   de ADR refleje la cronología real de decisiones, no el orden en que
   se recorrió cada árbol.
-last_batch: LOTE-06
+last_batch: LOTE-07
 last_commits_reviewed:
-  - cf9f380c0a695dd99f26992dbf8b1540c5ba4e3d
-  - 39190874deb0e61292ac15103e8dd8e5e2a1cb59
-  - 9f725f4c8ede1f1a75d5f6e99d43ab8aa69acf6f
-  - 5a2a83779a04d28538ccc0dc08afea9f15271ef3
-  - a11e9724
-window_reviewed: "2026-05-20 a 2026-05-29 (ambos repos, filtro economico por titulo — primer lote con el nuevo ritmo)"
-next_candidate_id: ARCH-HIST-011
-next_adr_id: ADR-005
+  - 858b455fee5f237675e47df6ed6ad68cb7f1afc4
+  - e3a320e629854e889450f5ab47182617133d5e08
+  - f78213bbcf9d98b809f943293c259b4f3d38ada9
+  - 86eba1319fe9cbd569a58e21f2536fdea2b0444c
+  - dda3561977b5fe28ca4f17b91939251620882570
+window_reviewed: "2026-06-01 a 2026-06-30 (ambos repos, filtro economico por titulo)"
+next_candidate_id: ARCH-HIST-014
+next_adr_id: ADR-006
 status: in-progress
 ```
 
 Nota `LOTE-06`: de ~90 commits de `api-admisiones` y ~50 de `admisiones` en esta ventana, el filtro por título descartó en bloque los de frontend (features de UI/accesibilidad/formularios de registro, sin disparador arquitectónico) y ~80 del backend (refactors, tests, merges de PR sin cambio propio, ajustes de DTO). Se investigaron en detalle 5 grupos de commits del backend que sí activaban disparadores de seguridad/autenticación, produciendo `ARCH-HIST-009` y `ARCH-HIST-010` (ambos `medium`, no promovidos).
+
+Nota `LOTE-07`: junio fue el mes de mayor volumen hasta ahora: **~144 commits de `api-admisiones` + ~306 de `admisiones` = ~450 en un solo mes** (se suma una segunda desarrolladora frontend, `puentesol`/Sol Puente Real, con features de "becas"/scholarships). El filtro económico descartó en bloque el enorme volumen de features de UI (inscripciones, becas, dashboard, accesibilidad) y refactors de backend sin disparador. Se investigaron en detalle 4 clusters: Redis (`ARCH-HIST-011`→`ADR-005`), 2FA por email (`ARCH-HIST-012`), reCAPTCHA v3 (nota, no candidato propio — evolución de `ARCH-HIST-009`), y Azure App Configuration en frontend (`ARCH-HIST-013`, confianza `low`, un solo commit visto, pendiente de ver su evolución). **No se leyó cada uno de los ~450 commits individualmente** — el filtro fue por título/mensaje; si el equipo conoce alguna decisión de junio que no aparece aquí, avisar para revisarla puntualmente.
 
 Nota de progreso: `LOTE-05` cerró los dos pendientes de `LOTE-04` (sandbox de reconocimiento de documentos → resultó ser el prototipo de `ARCH-HIST-008`/`ADR-004`; rename de `RECAPTCHA_ENTERPRISE_KEY`→`RECAPTCHA_KEY` → descartado como táctico, era solo preparación de nombre de variable, sin uso real todavía en ese commit). Además se investigó a fondo el cluster de integración Azure Document Intelligence/Face (`ARCH-HIST-008`/`ADR-004`) y se usó como evidencia extra del gap de gobernanza de BD el commit `ecea9100`.
 
@@ -122,6 +124,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-04 | **Ventana combinada** `admisiones`+`api-admisiones`, 2026-03-24 a 2026-04-30 (primer lote tras `traversal_correction`) | 4 revisados en detalle de 51 listados (resto descartado por rutina) | 2 (`ARCH-HIST-006`, `ARCH-HIST-007`) | 1 (`ADR-003`) | completado (parcial: quedan 2 items sin revisar en la misma ventana — ver nota de progreso) |
 | LOTE-05 | Ventana combinada 2026-04-10 a 2026-05-19 (diff completo); resto de mayo (~180 commits) solo escaneado por título | 6 revisados en detalle | 1 (`ARCH-HIST-008`) | 1 (`ADR-004`) | completado (parcial: se detecta problema de volumen/ritmo, ver nota de progreso) |
 | LOTE-06 | Ventana combinada 2026-05-20 a 2026-05-29 (primer lote con filtro económico por título) | 5 revisados en detalle de ~140 listados (resto descartado en bloque por título) | 2 (`ARCH-HIST-009`, `ARCH-HIST-010`) | 0 (ambos `medium`, requieren validación) | completado |
+| LOTE-07 | Ventana combinada, junio completo 2026-06-01 a 2026-06-30 (mes de mayor volumen: ~450 commits) | 5 revisados en detalle de ~450 listados (resto descartado en bloque por título) | 3 (`ARCH-HIST-011`, `ARCH-HIST-012`, `ARCH-HIST-013`) | 1 (`ADR-005`) | completado (filtro por título únicamente, no lectura exhaustiva — ver nota) |
 
 ## Registro de candidatos
 
@@ -526,6 +529,113 @@ Motivación explícita para el cambio de reset de contraseña (cita textual: "re
 
 - Falta de análisis funcional: no está documentado qué pasa con personas que sí tienen `codigoPersona` (staff/usuarios legacy) — ¿siguen pudiendo loguearse igual, o este cambio los afecta? Preguntar al equipo funcional.
 - Confianza `medium`: cambio y motivación parcial claros; falta confirmar impacto sobre usuarios existentes.
+
+### ARCH-HIST-011 — Adopción de Redis como caché distribuida y almacén de estado (rate limiting, flujos de registro pendientes, 2FA)
+
+```yaml
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
+decision_date: 2026-06-02
+domain: infraestructura-persistencia
+commits: [858b455fee5f237675e47df6ed6ad68cb7f1afc4, e3a320e629854e889450f5ab47182617133d5e08, ed5b86b2, 4eb11863, f78213bbcf9d98b809f943293c259b4f3d38ada9]
+pull_requests: []
+issues: []
+files: []
+adr: ADR-005
+```
+
+#### Hechos verificados
+
+- `858b455f` (2026-06-02, `luchomila`): introduce **Redis** en `api-admisiones` para rate limiting distribuido (login, sliding window, "OWASP-aligned defaults", HTTP 429) y caché de endpoints de catálogo (TTL 24h). Mensaje detalla explícitamente diseño y alineación con OWASP.
+- `e3a320e6` (2026-06-04): usa Redis para indexar registros pendientes por documento (`registro:pending-doc:{TipoDocumento}:{Documento}`), evitando duplicados de flujo de registro — Redis pasa de ser solo caché a **almacenar estado de negocio transitorio**.
+- `ed5b86b2` (2026-06-05): caché y persistencia de imágenes de documentos de onboarding, también sobre Redis.
+- `f78213bb` (2026-06-03): el flujo de 2FA por email (`ARCH-HIST-012`) usa Redis para gestión de sesión de 2FA.
+
+#### Decisión inferida
+
+Incorporar Redis como pieza de infraestructura compartida para tres usos distintos: (1) rate limiting distribuido con algoritmo OWASP, (2) caché de catálogos de solo lectura, y (3) almacenamiento de estado transitorio de flujos (registro pendiente, sesión de 2FA, caché de imágenes). Es una dependencia de infraestructura nueva y central, no solo una optimización puntual.
+
+#### Motivación y alternativas
+
+Motivación explícita para el rate limiting (documentación "detallada" según el propio commit, alineación con OWASP). No hay evidencia de alternativas evaluadas (p. ej. rate limiting en memoria por instancia, otra store como memcached, o una tabla SQL para el índice de registros pendientes).
+
+#### Consecuencias observadas
+
+- Nueva dependencia de infraestructura crítica: si Redis no está disponible, hay que confirmar qué pasa con login (rate limiting), catálogos (caché) y registro/2FA (estado transitorio) — no verificado en este lote si hay fallback.
+- Uso de Redis para **estado de negocio** (no solo caché) genera una dependencia de durabilidad/backup sobre un store que típicamente se trata como efímero — vale la pena confirmar la política de persistencia de Redis en producción.
+
+#### Gaps y validación requerida
+
+- Confirmar política de disponibilidad/backup de Redis en producción (¿cluster, persistencia RDB/AOF, o instancia efímera?).
+- Confirmar comportamiento de la app si Redis cae (fail-open vs fail-closed en rate limiting y en flujos de registro/2FA).
+- Confianza `high`: la decisión y su diseño están documentados extensamente en los propios commits. Promovido a `ADR-005`.
+
+### ARCH-HIST-012 — Autenticación de dos factores (2FA) por email agregada al login
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-06-03
+domain: autenticacion-autorizacion
+commits: [f78213bbcf9d98b809f943293c259b4f3d38ada9, 8af035cd, b17ae88d, 5347aa4d]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `f78213bb` (2026-06-03): agrega 2FA vía email, con `ILoginFlowService` orquestando reCAPTCHA + rate limiting + LDAP + 2FA en un solo flujo, y `IDosFactoresAuthService` usando Redis para la sesión de 2FA.
+- `8af035cd`/`b17ae88d`/`5347aa4d` (2026-06-10/09): agregan reenvío de código, respuestas HTTP 202 para el estado intermedio, y email enmascarado en la respuesta.
+
+#### Decisión inferida
+
+Agregar un segundo factor de autenticación (código por email) al login existente (LDAP/JWT de `ARCH-HIST-004`, ya evolucionado en `ARCH-HIST-010`), orquestado junto con CAPTCHA y rate limiting en un único flujo de login.
+
+#### Motivación y alternativas
+
+No hay PR/issue con motivación explícita (más allá de "mejorar seguridad" implícito en el propio nombre de la feature). No hay evidencia de por qué email y no un authenticator app (TOTP) u otro canal (SMS).
+
+#### Consecuencias observadas
+
+- El login pasa a depender de la entrega de email en tiempo real como parte del flujo crítico de autenticación.
+- Mayor superficie de configuración de seguridad concentrada en `ILoginFlowService` (reCAPTCHA + rate limiting + LDAP + 2FA), lo cual es positivo para auditar en un solo lugar.
+
+#### Gaps y validación requerida
+
+- Confirmar con el equipo por qué se eligió email sobre otros factores (TOTP, SMS) y si es obligatorio para todos los usuarios o condicional.
+- Confianza `medium`: cambio bien documentado técnicamente; motivación de la elección de canal no confirmada.
+
+### ARCH-HIST-013 — Azure App Configuration adoptado en el frontend para gestión de configuración por ambiente
+
+```yaml
+status: discovered # discovered | investigating | validated | rejected | promoted
+confidence: low
+decision_date: 2026-06-16
+domain: infraestructura-configuracion
+commits: [dda3561977b5fe28ca4f17b91939251620882570]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+`dda35619` (2026-06-16, frontend): agrega un script `sync-azure-environment.mjs` (258 líneas) que sincroniza `Azure App Configuration` con `src/environments/environment.ts`, en vez de mantener archivos de entorno estáticos por ambiente.
+
+#### Decisión inferida
+
+Centralizar la configuración de ambiente del frontend en Azure App Configuration en vez de (o además de) archivos de entorno estáticos versionados en el repo.
+
+#### Motivación y alternativas
+
+Sin PR/issue ni documentación adicional revisada todavía. Solo un commit; falta ver su evolución (¿reemplaza completamente los `environment.*.ts`, o convive?).
+
+#### Gaps y validación requerida
+
+- Confianza `low`: solo se observó implementación puntual, sin contexto de por qué ni alcance completo. Queda como investigación; revisar en un lote posterior si reaparece o se consolida (por ejemplo, si los templates de entorno del `ARCH-HIST-006` terminan deprecados por esto).
 
 ## Guardrails
 
