@@ -37,21 +37,19 @@ baseline_commit: 8354b7af905917007e27be150c5b30dad7fa242c
 history_boundary: 4bb986030f9efe8b0e24d33a79366d0593e97716
 traversal: all-reachable-topological
 publication_order: oldest-first
-last_batch: LOTE-02
+last_batch: LOTE-03
 last_commits_reviewed:
-  - 56c5536c7544fdac5327c22604c145fd49e635e0
-  - 66a19be4bc6f9207d5348c4a2cbbd8e956221424
-  - 564ae0a24c4b25cfcaae027a80a67ec1dcb2f82c
-  - a209d44c27dcb09899b8a1fd6a554bc8266f414b
-  - a255e12e1d0ea5455c64f1d1b1ed29e2a5f8ae1b
-  - f1dd554a13f9aad12919cfb40f725e3ec29967ce
-  - 825fd59a47f66e31da32ce4f7710043540d8d47a
-next_candidate_id: ARCH-HIST-005
-next_adr_id: ADR-002
+  - 0324a3b4fed6852ec89e19640be6113e2f2d0f68
+  - 5341b92be485bcbc84f477cd44808032be1a20e0
+  - 9966521ba5f8e2590437635ee3ee7b6489262433
+  - fbdc249a003e8b30eba4ed657e4ee837682965f8
+  - 7e90fccebfcffe5894af6819a82e1807d3c40c71
+next_candidate_id: ARCH-HIST-006
+next_adr_id: ADR-003
 status: in-progress
 ```
 
-Nota de progreso: `LOTE-02` cubrió solo el arranque de `api-admisiones` (roots hasta el primer merge `develop`←`main`, 7 commits de los ~540 pre-merge de esa rama). Quedan pendientes: el resto de `api-admisiones` hasta `e772ab60` (~533 commits) y toda la historia de `admisiones` (~990 commits desde `aa3b22c9` hasta `888ecfc8`, arranca 2026-04-08 renombrando un `angular-template` interno). Dado el volumen (~1516 commits restantes), este trabajo continúa en lotes sucesivos; no se agotó en esta sesión.
+Nota de progreso: entre `LOTE-02` y `LOTE-03` se revisaron ~30 de los ~540 commits pre-merge de `api-admisiones` (hasta `7e90fcce`, 2026-03-26). Quedan pendientes: el resto de `api-admisiones` hasta `e772ab60` (~510 commits, incluye PRs desde el #1 en adelante) y toda la historia de `admisiones` (~990 commits desde `aa3b22c9` hasta `888ecfc8`, arranca 2026-04-08 renombrando un `angular-template` interno). Dado el volumen (~1500 commits restantes), este trabajo continúa en lotes sucesivos; no se agotó en esta sesión.
 
 Total de ancestros de `history_boundary`: 1535 commits (incluyéndolo). Roots detectados en todo el DAG (`git rev-list --all --max-parents=0`): `2ec7478` (mono, hoy), `aa3b22c9` (repo `admisiones` frontend), `56c5536c` (repo `api-admisiones`, rama principal), `66a19be4` (repo `api-admisiones`, rama `develop`, histórico disjunto — ver gap en ARCH-HIST-002). Pendiente recorrer: historia completa de `admisiones` (root `aa3b22c9`) y de `api-admisiones` (roots `56c5536c`/`66a19be4`), ~1530 commits restantes.
 
@@ -105,6 +103,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 |---|---|---:|---:|---:|---|
 | LOTE-01 | `4bb98603`, `06142d7d`, `0dbd9a10`, `2ec7478` (los 4 commits entre `history_boundary` y los roots de `admisiones`/`api-admisiones`) | 4 | 2 | 1 (`ADR-001`, vía testimonio directo del autor el 2026-09-15, no solo evidencia de commits) | completado |
 | LOTE-02 | Arranque de `api-admisiones`: roots `56c5536c`/`66a19be4` hasta el merge `825fd59a` (2026-03-02 a 2026-03-11) | 7 | 3 (`ARCH-HIST-002` resuelto/descartado, `ARCH-HIST-003`, `ARCH-HIST-004`) | 0 (candidatos `medium`, requieren validación del equipo antes de redactar ADR) | completado (parcial: resto de `api-admisiones` y toda `admisiones` pendientes) |
+| LOTE-03 | `api-admisiones`: extracción desde `NewApi` hasta primer PR (2026-03-13 a 2026-03-26) | 5 (revisados en detalle; ~25 intermedios listados y descartados por rutina/no arquitectónicos) | 1 (`ARCH-HIST-005`) | 1 (`ADR-002`, confianza alta por mensaje de commit explícito) | completado (parcial) |
 
 ## Registro de candidatos
 
@@ -272,6 +271,47 @@ No hay PR/issue ni documentación contemporánea. Es plausible (no confirmado) q
 - Confirmar con el equipo qué endpoints/consumidores usa cada mecanismo, y si hay plan de deprecar uno en favor del otro.
 - Mismo gap de base de datos que `ARCH-HIST-003` (tabla `RefreshToken` sin migración visible).
 - Confianza `medium`: cambio y alcance de código claros; motivación y separación de responsabilidades entre ambos mecanismos, inferida.
+
+### ARCH-HIST-005 — Extracción de `api-admisiones` (`WebApiAdmisiones`) desde una plantilla genérica multi-sistema (`NewApi`, compartida con Empleos/Funcionarios/Gestión)
+
+```yaml
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
+decision_date: 2026-03-13
+domain: estructura-backend
+commits: [0324a3b4fed6852ec89e19640be6113e2f2d0f68, 5341b92be485bcbc84f477cd44808032be1a20e0, 9966521ba5f8e2590437635ee3ee7b6489262433, 7e90fccebfcffe5894af6819a82e1807d3c40c71]
+pull_requests: []
+issues: []
+files: []
+adr: ADR-002
+```
+
+#### Hechos verificados
+
+- El commit inicial (`56c5536c`) ya tenía código bajo `NewApi/` y lógica consciente de "sistema origen" (source-system) para CORS, logging y manejo de excepciones — el backend arrancó como una plantilla genérica pensada para servir a **más de un sistema de ORT** (Admisiones, Empleos, Funcionarios, Gestión, FichaDePersona aparecen nombrados en distintos commits: CI, Dockerfile, labeler).
+- `0324a3b4` (2026-03-13, autor `luchomila`): mensaje explícito — *"Removed support for Funcionarios and Gestion systems. Updated CORS origins to only allow Admisiones domains. Refactored source system logic and logging to exclusively reference Admisiones, simplifying related code and documentation."*
+- `5341b92b` y `9966521b` (2026-03-24, mismo autor): renombran Dockerfile, CI/CD, labeler y documentación de `Empleos`/`FichaDePersona` a `WebApiAdmisiones`/`api-admisiones`.
+- `7e90fcce` (2026-03-26): elimina por completo la carpeta `NewApi/` (scaffold genérico original), dejando el repo con una sola estructura `WebApiAdmisiones`.
+
+#### Decisión inferida
+
+Extraer y especializar un backend dedicado a Admisiones (`api-admisiones`/`WebApiAdmisiones`) a partir de una plantilla/backend genérico multi-sistema compartido (`NewApi`), en lugar de mantener un único código base sirviendo a varios sistemas de ORT (Admisiones, Empleos, Funcionarios, Gestión) distinguidos en runtime por "sistema origen".
+
+#### Motivación y alternativas
+
+**Motivación explícita en el propio mensaje de commit** (no inferida): reducir el alcance y la complejidad del código y la documentación, sirviendo un único sistema (Admisiones) en vez de cuatro. Alternativa implícita descartada: seguir manteniendo el backend multi-sistema y agregar Admisiones como un "sistema origen" más — se optó por lo opuesto, achicar el alcance.
+
+#### Consecuencias observadas
+
+- Superficie de seguridad reducida: CORS y CurrentUserService ya no distinguen ni permiten otros sistemas de origen, solo Admisiones.
+- Se pierde (para este repo) el posible beneficio de un backend compartido entre varios sistemas ORT — si Empleos/Funcionarios/Gestión necesitaban su propio backend, no queda evidencia en este repo de si se les extrajo un repo equivalente o si `NewApi` (o su origen) sigue viviendo en otro lado.
+- CI/CD, Dockerfile y documentación quedan alineados a un solo propósito (`WebApiAdmisiones`), simplificando pipelines.
+
+#### Gaps y validación requerida
+
+- No verificable desde este repo: si `Empleos`/`Funcionarios`/`Gestión` obtuvieron cada uno su propio repo extraído de la misma plantilla `NewApi`, o si esos sistemas siguen viviendo en el repo/plantilla original. Preguntar al equipo si existe un repo `NewApi` (o similar) del que este código haya sido "forkeado".
+- Sin gap de base de datos ni de análisis funcional específico en este candidato (es alcance/estructura de API, no esquema ni reglas de negocio).
+- Confianza `high`: motivación y decisión están explícitas en el propio mensaje de commit de `0324a3b4`. Candidato para ADR retrospectivo `draft`.
 
 ## Guardrails
 
