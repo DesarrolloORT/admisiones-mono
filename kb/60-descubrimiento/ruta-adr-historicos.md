@@ -37,19 +37,29 @@ baseline_commit: 8354b7af905917007e27be150c5b30dad7fa242c
 history_boundary: 4bb986030f9efe8b0e24d33a79366d0593e97716
 traversal: all-reachable-topological
 publication_order: oldest-first
-last_batch: LOTE-03
+traversal_correction: |
+  LOTE-02 y LOTE-03 procesaron api-admisiones de punta a punta antes de
+  tocar admisiones. Esto viola publication_order: los rangos de fecha se
+  solapan fuertemente (api-admisiones restante: 2026-03-24 a 2026-08-27;
+  admisiones completo: 2026-04-08 a 2026-09-15). A partir de LOTE-04, los
+  lotes se arman por VENTANA DE FECHA combinada entre ambos repos (todos
+  los commits de ambos, dentro de esa ventana, se investigan juntos),
+  no repo por repo. Esto es necesario para que el orden de publicación
+  de ADR refleje la cronología real de decisiones, no el orden en que
+  se recorrió cada árbol.
+last_batch: LOTE-04
 last_commits_reviewed:
-  - 0324a3b4fed6852ec89e19640be6113e2f2d0f68
-  - 5341b92be485bcbc84f477cd44808032be1a20e0
-  - 9966521ba5f8e2590437635ee3ee7b6489262433
-  - fbdc249a003e8b30eba4ed657e4ee837682965f8
-  - 7e90fccebfcffe5894af6819a82e1807d3c40c71
-next_candidate_id: ARCH-HIST-006
-next_adr_id: ADR-003
+  - aa3b22c9ed4b8f457d96fdc9f2d4b4bb4406f61d
+  - 5df9ec371fcbeee8723c6a7ca73ef614bb41753d
+  - e802a607db1e4be31f46d1074f568de0f853c95b
+  - d8f8816207d4c9354cf7a7965b884a4651c3f207
+window_reviewed: "2026-03-24 a 2026-04-30 (ambos repos, combinado)"
+next_candidate_id: ARCH-HIST-008
+next_adr_id: ADR-004
 status: in-progress
 ```
 
-Nota de progreso: entre `LOTE-02` y `LOTE-03` se revisaron ~30 de los ~540 commits pre-merge de `api-admisiones` (hasta `7e90fcce`, 2026-03-26). Quedan pendientes: el resto de `api-admisiones` hasta `e772ab60` (~510 commits, incluye PRs desde el #1 en adelante) y toda la historia de `admisiones` (~990 commits desde `aa3b22c9` hasta `888ecfc8`, arranca 2026-04-08 renombrando un `angular-template` interno). Dado el volumen (~1500 commits restantes), este trabajo continúa en lotes sucesivos; no se agotó en esta sesión.
+Nota de progreso: `LOTE-04` fue el primero en aplicar `traversal_correction` — se tomó la ventana de fecha 2026-03-24 a 2026-04-30 con los commits de **ambos** repos juntos (39 de `api-admisiones` + 12 de `admisiones`, 51 en total), se descartaron por rutina/mecánicos los merges de PR sin cambio propio y los refactors sin consecuencia arquitectónica, y se investigaron en detalle los que sí calificaban (bootstrap de `admisiones`, integración Inscripciones y Pagos). **No revisados aún dentro de esta misma ventana** (quedan para el próximo lote, mismo rango de fechas): `feat: add sandbox feature with authentication and document recognition capabilities` (33ea7abc, frontend, reconocimiento de documentos — posible dato personal/PII, requiere revisión funcional y de seguridad) y el cambio de `RECAPTCHA_ENTERPRISE_KEY` a `RECAPTCHA_KEY` (cda42495, downgrade de reCAPTCHA Enterprise a estándar, motivo no confirmado). Además de todo lo posterior a 2026-04-30 en ambos repos (~1450 commits).
 
 Total de ancestros de `history_boundary`: 1535 commits (incluyéndolo). Roots detectados en todo el DAG (`git rev-list --all --max-parents=0`): `2ec7478` (mono, hoy), `aa3b22c9` (repo `admisiones` frontend), `56c5536c` (repo `api-admisiones`, rama principal), `66a19be4` (repo `api-admisiones`, rama `develop`, histórico disjunto — ver gap en ARCH-HIST-002). Pendiente recorrer: historia completa de `admisiones` (root `aa3b22c9`) y de `api-admisiones` (roots `56c5536c`/`66a19be4`), ~1530 commits restantes.
 
@@ -104,6 +114,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-01 | `4bb98603`, `06142d7d`, `0dbd9a10`, `2ec7478` (los 4 commits entre `history_boundary` y los roots de `admisiones`/`api-admisiones`) | 4 | 2 | 1 (`ADR-001`, vía testimonio directo del autor el 2026-09-15, no solo evidencia de commits) | completado |
 | LOTE-02 | Arranque de `api-admisiones`: roots `56c5536c`/`66a19be4` hasta el merge `825fd59a` (2026-03-02 a 2026-03-11) | 7 | 3 (`ARCH-HIST-002` resuelto/descartado, `ARCH-HIST-003`, `ARCH-HIST-004`) | 0 (candidatos `medium`, requieren validación del equipo antes de redactar ADR) | completado (parcial: resto de `api-admisiones` y toda `admisiones` pendientes) |
 | LOTE-03 | `api-admisiones`: extracción desde `NewApi` hasta primer PR (2026-03-13 a 2026-03-26) | 5 (revisados en detalle; ~25 intermedios listados y descartados por rutina/no arquitectónicos) | 1 (`ARCH-HIST-005`) | 1 (`ADR-002`, confianza alta por mensaje de commit explícito) | completado (parcial) |
+| LOTE-04 | **Ventana combinada** `admisiones`+`api-admisiones`, 2026-03-24 a 2026-04-30 (primer lote tras `traversal_correction`) | 4 revisados en detalle de 51 listados (resto descartado por rutina) | 2 (`ARCH-HIST-006`, `ARCH-HIST-007`) | 1 (`ADR-003`) | completado (parcial: quedan 2 items sin revisar en la misma ventana — ver nota de progreso) |
 
 ## Registro de candidatos
 
@@ -312,6 +323,83 @@ Extraer y especializar un backend dedicado a Admisiones (`api-admisiones`/`WebAp
 - No verificable desde este repo: si `Empleos`/`Funcionarios`/`Gestión` obtuvieron cada uno su propio repo extraído de la misma plantilla `NewApi`, o si esos sistemas siguen viviendo en el repo/plantilla original. Preguntar al equipo si existe un repo `NewApi` (o similar) del que este código haya sido "forkeado".
 - Sin gap de base de datos ni de análisis funcional específico en este candidato (es alcance/estructura de API, no esquema ni reglas de negocio).
 - Confianza `high`: motivación y decisión están explícitas en el propio mensaje de commit de `0324a3b4`. Candidato para ADR retrospectivo `draft`.
+
+### ARCH-HIST-006 — Frontend `admisiones` bootstrapped desde un starter interno `angular-template`
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: medium
+decision_date: 2026-04-08
+domain: estructura-frontend
+commits: [aa3b22c9ed4b8f457d96fdc9f2d4b4bb4406f61d, 5df9ec371fcbeee8723c6a7ca73ef614bb41753d, 7ce3b0bd, 5f5535e7]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- El commit inicial de `admisiones` (`aa3b22c9`, 2026-04-08) trae ya scaffolding completo (devcontainer, CI/CD, labeler, issue templates) idéntico en forma al de un starter reusable, no un `ng new` vacío.
+- `5df9ec37` (mismo día, 11 minutos después): *"Rename project from 'angular-template' to 'admisiones' in configuration files"* — confirma explícitamente que el punto de partida fue un repo/starter interno llamado `angular-template`.
+- `7ce3b0bd`/`5f5535e7` (mismo día): ajustan README y notificaciones de CI para reflejar el nuevo nombre.
+
+#### Decisión inferida
+
+Igual que en el backend (`ARCH-HIST-005`, plantilla `NewApi`), el frontend se bootstrapeó desde un **starter interno reutilizable de ORT** (`angular-template`) con CI/CD, labeler y convenciones ya resueltas, en vez de arrancar desde cero o desde el CLI de Angular sin plantilla propia.
+
+#### Motivación y alternativas
+
+No hay PR/issue. La motivación (reuso de convenciones/CI ya resueltas entre proyectos ORT) es plausible y consistente con el patrón visto en el backend, pero no está declarada explícitamente como en `ARCH-HIST-005` — es inferencia por patrón repetido, no testimonio ni mensaje explícito.
+
+#### Consecuencias observadas
+
+Ninguna negativa aparente; siguiente commits del mismo día ajustan referencias de nombre sin fricción.
+
+#### Gaps y validación requerida
+
+- Confirmar con el equipo si `angular-template` es un starter mantenido centralmente (análogo a `NewApi` en backend) y si sigue en uso para nuevos frontends.
+- Confianza `medium`: conservar candidato, no promover a ADR sin validación (la decisión de reusar un starter interno es de bajo impacto por sí sola; se agrupa aquí solo para dejar registro del patrón organizacional, no amerita ADR salvo que el equipo confirme que es una convención formal a documentar).
+
+### ARCH-HIST-007 — Integración service-to-service con la API interna "Inscripciones y Pagos" vía JWT de servicio
+
+```yaml
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
+decision_date: 2026-04-22
+domain: integraciones-servicios-internos
+commits: [e802a607db1e4be31f46d1074f568de0f853c95b, 25309f8e, 8853eee8, d8f8816207d4c9354cf7a7965b884a4651c3f207]
+pull_requests: []
+issues: []
+files: []
+adr: ADR-003
+```
+
+#### Hechos verificados
+
+- `e802a607` (2026-04-22, `luchomila`): agrega `InscripcionesApiClient`, un `TokenServiceInternalApi` para generar **JWT de servicio a servicio** (no de usuario), un `ServiceAuthenticationHandler` que inyecta tokens de usuario + servicio + headers de trace en cada request saliente, y documentación extensa sobre diseño, códigos de error, escalabilidad y pasos de integración (mensaje de commit detalla explícitamente estas decisiones).
+- `d8f88162` (2026-04-27): integra endpoints reales bajo prefijo `ORTSecure/...`, agrega `OfertasInscripcionService`, un controller de ejemplo (`EjemploOfertasController`) y un documento `EJEMPLO_INTEGRACION_API_INTERNA.md` (375 líneas) con el flujo de integración documentado dentro del propio repo.
+- El diseño es explícitamente **atómico y sin reintentos** ("atomic (no-retry) methods"), con manejo de errores vía `OperationResult`, según el propio mensaje de commit.
+
+#### Decisión inferida
+
+`api-admisiones` consume una API interna separada ("Inscripciones y Pagos", que maneja inscripciones y pagos de postulantes) mediante llamadas HTTP autenticadas con **JWT de servicio a servicio** generado internamente (no reutiliza el JWT de usuario de `ARCH-HIST-004`), con validación delegada a la API destino, timeouts de 30s, y una política deliberada de no reintentos automáticos.
+
+#### Motivación y alternativas
+
+**Motivación y diseño explícitos en los mensajes de commit y en `EJEMPLO_INTEGRACION_API_INTERNA.md`** (documentación contemporánea al cambio, no inferida): separar la autenticación de servicio de la de usuario, delegar validación al destino, documentar el patrón para que otras integraciones internas lo repliquen. No hay evidencia de alternativas descartadas (p. ej. mTLS, API keys estáticas, cola de mensajes en vez de HTTP síncrono).
+
+#### Consecuencias observadas
+
+- Nueva superficie de integración crítica: pagos e inscripciones dependen de disponibilidad síncrona de una API externa al repo, sin reintentos automáticos (falla visible al usuario si la API destino no responde en 30s).
+- Nuevo secreto de configuración (`SECRET_KEY_API_INSCR_PAGOS`) para firmar/validar el JWT de servicio — relevante para el baseline de seguridad (gestión de secretos).
+- Sienta un patrón documentado (`EJEMPLO_INTEGRACION_API_INTERNA.md`) para futuras integraciones internas — vale la pena confirmar si se reutilizó en integraciones posteriores.
+
+#### Gaps y validación requerida
+
+- **Falta contexto funcional**: qué reglas de negocio rigen "Inscripciones y Pagos" (motor de pagos, pasarela, moneda, reversibilidad) no está documentado en este repo — es una API externa a este monorepo. Preguntar al equipo funcional/de pagos.
+- **Falta contexto de base de datos**: si "Inscripciones y Pagos" tiene su propia base de datos (separada de la de `api-admisiones`/Devart de `ARCH-HIST-003`), no es verificable desde aquí.
+- Confianza `high`: diseño y motivación están documentados explícitamente por el propio equipo en el momento del cambio. Promovido a `ADR-003` (`draft`, pendiente de validación del equipo antes de `accepted`).
 
 ## Guardrails
 
