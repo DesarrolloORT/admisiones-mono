@@ -47,19 +47,23 @@ traversal_correction: |
   no repo por repo. Esto es necesario para que el orden de publicación
   de ADR refleje la cronología real de decisiones, no el orden en que
   se recorrió cada árbol.
-last_batch: LOTE-04
+last_batch: LOTE-05
 last_commits_reviewed:
-  - aa3b22c9ed4b8f457d96fdc9f2d4b4bb4406f61d
-  - 5df9ec371fcbeee8723c6a7ca73ef614bb41753d
-  - e802a607db1e4be31f46d1074f568de0f853c95b
-  - d8f8816207d4c9354cf7a7965b884a4651c3f207
-window_reviewed: "2026-03-24 a 2026-04-30 (ambos repos, combinado)"
-next_candidate_id: ARCH-HIST-008
-next_adr_id: ADR-004
+  - 33ea7abc8a202559775b9d61d5d74a46dff5798a
+  - cda424956ccca8afae738a946534d9718cff3c5d
+  - 4af236ef04e0ff4fce13f80e536b7de4518ed89e
+  - 90ceb97f17de9b114da89287b44a0cabadf6c295
+  - 975e3d8ad26b55f9d4ab053401edacecd94b52b6
+  - ecea910056060d4dbc0ac4305ab72b24bdea0460
+window_reviewed: "2026-04-10 a 2026-05-19 (ambos repos; mayo revisado solo por titulo de commit, no por diff completo — ver nota)"
+next_candidate_id: ARCH-HIST-009
+next_adr_id: ADR-005
 status: in-progress
 ```
 
-Nota de progreso: `LOTE-04` fue el primero en aplicar `traversal_correction` — se tomó la ventana de fecha 2026-03-24 a 2026-04-30 con los commits de **ambos** repos juntos (39 de `api-admisiones` + 12 de `admisiones`, 51 en total), se descartaron por rutina/mecánicos los merges de PR sin cambio propio y los refactors sin consecuencia arquitectónica, y se investigaron en detalle los que sí calificaban (bootstrap de `admisiones`, integración Inscripciones y Pagos). **No revisados aún dentro de esta misma ventana** (quedan para el próximo lote, mismo rango de fechas): `feat: add sandbox feature with authentication and document recognition capabilities` (33ea7abc, frontend, reconocimiento de documentos — posible dato personal/PII, requiere revisión funcional y de seguridad) y el cambio de `RECAPTCHA_ENTERPRISE_KEY` a `RECAPTCHA_KEY` (cda42495, downgrade de reCAPTCHA Enterprise a estándar, motivo no confirmado). Además de todo lo posterior a 2026-04-30 en ambos repos (~1450 commits).
+Nota de progreso: `LOTE-05` cerró los dos pendientes de `LOTE-04` (sandbox de reconocimiento de documentos → resultó ser el prototipo de `ARCH-HIST-008`/`ADR-004`; rename de `RECAPTCHA_ENTERPRISE_KEY`→`RECAPTCHA_KEY` → descartado como táctico, era solo preparación de nombre de variable, sin uso real todavía en ese commit). Además se investigó a fondo el cluster de integración Azure Document Intelligence/Face (`ARCH-HIST-008`/`ADR-004`) y se usó como evidencia extra del gap de gobernanza de BD el commit `ecea9100`.
+
+**Cambio de ritmo pendiente de decidir con el usuario**: al enumerar mayo completo aparecieron ~197 commits en un solo mes (90 backend + 107 frontend) — volumen que, al ritmo de revisión por diff completo usado hasta ahora, haría muy lento cubrir los ~6 meses y ~1300 commits restantes. `LOTE-05` solo llegó a revisar por diff completo hasta el 19 de mayo; el resto de mayo (~180 commits) fue escaneado únicamente por título de commit, sin abrir diffs, y no está clasificado todavía. Ver conversación para la decisión de alcance/profundidad a partir de aquí.
 
 Total de ancestros de `history_boundary`: 1535 commits (incluyéndolo). Roots detectados en todo el DAG (`git rev-list --all --max-parents=0`): `2ec7478` (mono, hoy), `aa3b22c9` (repo `admisiones` frontend), `56c5536c` (repo `api-admisiones`, rama principal), `66a19be4` (repo `api-admisiones`, rama `develop`, histórico disjunto — ver gap en ARCH-HIST-002). Pendiente recorrer: historia completa de `admisiones` (root `aa3b22c9`) y de `api-admisiones` (roots `56c5536c`/`66a19be4`), ~1530 commits restantes.
 
@@ -115,6 +119,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-02 | Arranque de `api-admisiones`: roots `56c5536c`/`66a19be4` hasta el merge `825fd59a` (2026-03-02 a 2026-03-11) | 7 | 3 (`ARCH-HIST-002` resuelto/descartado, `ARCH-HIST-003`, `ARCH-HIST-004`) | 0 (candidatos `medium`, requieren validación del equipo antes de redactar ADR) | completado (parcial: resto de `api-admisiones` y toda `admisiones` pendientes) |
 | LOTE-03 | `api-admisiones`: extracción desde `NewApi` hasta primer PR (2026-03-13 a 2026-03-26) | 5 (revisados en detalle; ~25 intermedios listados y descartados por rutina/no arquitectónicos) | 1 (`ARCH-HIST-005`) | 1 (`ADR-002`, confianza alta por mensaje de commit explícito) | completado (parcial) |
 | LOTE-04 | **Ventana combinada** `admisiones`+`api-admisiones`, 2026-03-24 a 2026-04-30 (primer lote tras `traversal_correction`) | 4 revisados en detalle de 51 listados (resto descartado por rutina) | 2 (`ARCH-HIST-006`, `ARCH-HIST-007`) | 1 (`ADR-003`) | completado (parcial: quedan 2 items sin revisar en la misma ventana — ver nota de progreso) |
+| LOTE-05 | Ventana combinada 2026-04-10 a 2026-05-19 (diff completo); resto de mayo (~180 commits) solo escaneado por título | 6 revisados en detalle | 1 (`ARCH-HIST-008`) | 1 (`ADR-004`) | completado (parcial: se detecta problema de volumen/ritmo, ver nota de progreso) |
 
 ## Registro de candidatos
 
@@ -400,6 +405,49 @@ adr: ADR-003
 - **Falta contexto funcional**: qué reglas de negocio rigen "Inscripciones y Pagos" (motor de pagos, pasarela, moneda, reversibilidad) no está documentado en este repo — es una API externa a este monorepo. Preguntar al equipo funcional/de pagos.
 - **Falta contexto de base de datos**: si "Inscripciones y Pagos" tiene su propia base de datos (separada de la de `api-admisiones`/Devart de `ARCH-HIST-003`), no es verificable desde aquí.
 - Confianza `high`: diseño y motivación están documentados explícitamente por el propio equipo en el momento del cambio. Promovido a `ADR-003` (`draft`, pendiente de validación del equipo antes de `accepted`).
+
+### ARCH-HIST-008 — Reconocimiento de documentos de identidad vía Azure Document Intelligence + Azure Face (prototipado en sandbox frontend, productivizado en backend)
+
+```yaml
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
+decision_date: 2026-05-18
+domain: tratamiento-datos-personales
+commits: [33ea7abc8a202559775b9d61d5d74a46dff5798a, 4af236ef04e0ff4fce13f80e536b7de4518ed89e, 90ceb97f17de9b114da89287b44a0cabadf6c295, 975e3d8ad26b55f9d4ab053401edacecd94b52b6, 56f45263]
+pull_requests: []
+issues: []
+files: []
+adr: ADR-004
+```
+
+#### Hechos verificados
+
+- `33ea7abc` (2026-04-10, frontend): feature "sandbox" que sube un archivo de documento de identidad (cédula, pasaporte, etc.) y muestra campos reconocidos (`campos`) y una bandera `requiereRevision` — prototipo exploratorio, sin backend real todavía (llamaba a un servicio no confirmado en ese momento).
+- `4af236ef` (2026-05-18, backend, `rubino-f`): agrega `AzureService` (vía submódulo `Core`) y el endpoint `POST /AnalizarAdjunto` en `RegistroController`, explícitamente para "reconocimiento de documentos con Azure Document Intelligence".
+- `90ceb97f` (mismo día): configuración explícita de **Azure Document Intelligence** (modelo `prebuilt-idDocument` + `prebuilt-read`) y **Azure Face** (`detection_03`), con `DeleteAnalyzeResult: true` (no retiene el resultado del análisis en Azure).
+- `975e3d8a` (mismo día): rate limiting específico para el endpoint de reconocimiento (5 req/min, máx. 2MB por archivo).
+
+#### Decisión inferida
+
+Usar los servicios cognitivos de **Azure (Document Intelligence + Face)** como motor de reconocimiento automático de documentos de identidad y verificación facial de postulantes, integrados desde `api-admisiones` (vía el submódulo `Core` compartido), reemplazando el prototipo exploratorio que existía en el frontend (`sandbox`, `ARCH-HIST-008` inicial).
+
+#### Motivación y alternativas
+
+Motivación explícita en los mensajes de commit (dar de alta reconocimiento de documentos como parte del flujo de registro) pero **sin justificar la elección de Azure** sobre otros proveedores (AWS Textract/Rekognition, Google Document AI, OCR propio). No hay evidencia de alternativas evaluadas.
+
+#### Consecuencias observadas
+
+- Se envían **documentos de identidad y datos biométricos faciales de postulantes a un servicio cloud de terceros (Microsoft Azure)** — alto impacto en privacidad/protección de datos personales. `DeleteAnalyzeResult: true` sugiere una decisión consciente de minimizar retención en Azure, lo cual es una buena señal, pero no está documentado como tal.
+- Rate limiting y límite de tamaño de archivo aplicados desde el día 1 de la integración — buena práctica de la propia decisión.
+- Reemplaza al prototipo "sandbox" del frontend; habría que confirmar si ese sandbox sigue vivo como herramienta de prueba interna o si se retiró.
+
+#### Gaps y validación requerida
+
+- **Falta contexto funcional y de cumplimiento normativo**: no hay documentación en el repo sobre base legal para procesar datos biométricos/documentos de identidad (relevante bajo normativa de protección de datos de Uruguay), tiempo de retención real, ni si hubo una evaluación de impacto de privacidad (DPIA). Esto es exactamente el tipo de "análisis funcional faltante" que señaló el autor — escalar al equipo legal/DPO, no asumir.
+- Confirmar por qué se eligió Azure (contrato marco de ORT con Microsoft, costo, u otra razón) — no inventar.
+- Confianza `high` en el **qué** (la integración y su configuración están documentadas en el propio código/config); confianza más baja en el **por qué** (elección de proveedor). Promovido a `ADR-004` igual, dado el alto impacto en datos personales — se prioriza dejarlo visible para revisión aunque falte esa parte de la motivación.
+
+**Nota adicional (refuerza gap de `ARCH-HIST-003`):** el commit `ecea9100` (2026-05-19, "added HASH_TOKEN_PASSWORD in t_persona") agrega una columna nueva (`HashTokenPassword`) directamente en el DTO/convertidor Devart de `Persona`, sin ninguna migración ni script SQL visible en el repo. Es evidencia concreta (no solo sospecha) de que el esquema de la base de datos se modifica **fuera** de este repositorio y el código simplemente se regenera/ajusta a mano para reflejarlo — confirma el gap de gobernanza de base de datos ya anotado en `ARCH-HIST-003`.
 
 ## Guardrails
 
