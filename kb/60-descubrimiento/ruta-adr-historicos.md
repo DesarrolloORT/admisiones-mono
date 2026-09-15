@@ -47,18 +47,26 @@ traversal_correction: |
   no repo por repo. Esto es necesario para que el orden de publicación
   de ADR refleje la cronología real de decisiones, no el orden en que
   se recorrió cada árbol.
-last_batch: LOTE-07
+last_batch: LOTE-07-REVISADO
 last_commits_reviewed:
-  - 858b455fee5f237675e47df6ed6ad68cb7f1afc4
-  - e3a320e629854e889450f5ab47182617133d5e08
-  - f78213bbcf9d98b809f943293c259b4f3d38ada9
-  - 86eba1319fe9cbd569a58e21f2536fdea2b0444c
-  - dda3561977b5fe28ca4f17b91939251620882570
-window_reviewed: "2026-06-01 a 2026-06-30 (ambos repos, filtro economico por titulo)"
-next_candidate_id: ARCH-HIST-014
+  - 0d49f9d07de599c74161916c26f2111da9d2fe59
+  - b1da67d0
+  - 6464b26b
+  - 9e0d78d1
+  - ca031593
+window_reviewed: "2026-06-01 a 2026-06-30 (ambos repos) — RE-REVISADO con mensajes completos de los 450 commits (no solo titulo), tras pedido explicito del usuario de bajar el ritmo"
+next_candidate_id: ARCH-HIST-015
 next_adr_id: ADR-006
 status: in-progress
 ```
+
+Nota `LOTE-07-REVISADO`: se releyeron los 450 mensajes completos (subject+body) de junio (144 backend + 306 frontend) que en `LOTE-07` solo se habían filtrado por título. El frontend confirmó no tener nada adicional relevante (puro trabajo de UI/features de inscripciones y becas). El backend sí tenía señales que el filtro por título había pasado por alto:
+- `ARCH-HIST-014` (nuevo, `low`): integración con sistema externo **"Tivenos"** — el backend empieza a enviarle datos personales de postulantes (interés académico, datos de bachillerato) de forma incondicional. Gap funcional crítico: no se sabe qué es Tivenos ni con qué base legal se envían esos datos.
+- Refuerzo de `ARCH-HIST-003`: motor de base de datos confirmado como **Oracle** (evidencia: fixes de `ORA-00904`).
+- Refuerzo de `ARCH-HIST-004`: `api-admisiones` tiene permisos de **escritura en LDAP** (crea usuarios, no solo autentica) y el JWT se entrega exclusivamente vía cookies HttpOnly (no bearer header).
+- Refuerzo de `ARCH-HIST-009`: el patrón de inestabilidad no fue solo el CORS de 2 días — CAPTCHA se prendió/apagó varias veces durante mayo-junio y `SameSite` de cookies cambió repetidamente "para desarrollo", sin garantía verificada de diferenciación por ambiente. Se recomienda confirmar el estado **actual** en producción, no fiarse del historial.
+
+Esto confirma que el pedido del usuario de no apurar el ritmo tenía fundamento: el filtro por título solo (`LOTE-06`/`LOTE-07` originales) se perdió 3 hallazgos con relevancia real (uno de ellos, Tivenos, tocando directamente el gap de datos personales que el usuario pidió vigilar desde el principio).
 
 Nota `LOTE-06`: de ~90 commits de `api-admisiones` y ~50 de `admisiones` en esta ventana, el filtro por título descartó en bloque los de frontend (features de UI/accesibilidad/formularios de registro, sin disparador arquitectónico) y ~80 del backend (refactors, tests, merges de PR sin cambio propio, ajustes de DTO). Se investigaron en detalle 5 grupos de commits del backend que sí activaban disparadores de seguridad/autenticación, produciendo `ARCH-HIST-009` y `ARCH-HIST-010` (ambos `medium`, no promovidos).
 
@@ -128,6 +136,7 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-05 | Ventana combinada 2026-04-10 a 2026-05-19 (diff completo); resto de mayo (~180 commits) solo escaneado por título | 6 revisados en detalle | 1 (`ARCH-HIST-008`) | 1 (`ADR-004`) | completado (parcial: se detecta problema de volumen/ritmo, ver nota de progreso) |
 | LOTE-06 | Ventana combinada 2026-05-20 a 2026-05-29 (primer lote con filtro económico por título) | 5 revisados en detalle de ~140 listados (resto descartado en bloque por título) | 2 (`ARCH-HIST-009`, `ARCH-HIST-010`) | 0 (ambos `medium`, requieren validación) | completado |
 | LOTE-07 | Ventana combinada, junio completo 2026-06-01 a 2026-06-30 (mes de mayor volumen: ~450 commits) | 5 revisados en detalle de ~450 listados (resto descartado en bloque por título) | 3 (`ARCH-HIST-011`, `ARCH-HIST-012`, `ARCH-HIST-013`) | 1 (`ADR-005`) | completado (filtro por título únicamente, no lectura exhaustiva — ver nota) |
+| LOTE-07-REVISADO | Re-revisión de junio completo con mensajes completos (subject+body) de los 450 commits, tras pedido del usuario de bajar el ritmo | 450 mensajes completos leídos (no solo título); diffs abiertos en ~10 adicionales | 1 nuevo (`ARCH-HIST-014`) + refuerzos de evidencia en `ARCH-HIST-003`, `ARCH-HIST-004`, `ARCH-HIST-009` | 0 | completado |
 
 ## Registro de candidatos
 
@@ -296,6 +305,10 @@ No hay PR/issue ni documentación contemporánea. Es plausible (no confirmado) q
 - Mismo gap de base de datos que `ARCH-HIST-003` (tabla `RefreshToken` sin migración visible).
 - Confianza `medium`: cambio y alcance de código claros; motivación y separación de responsabilidades entre ambos mecanismos, inferida.
 
+**Nota adicional (releída en junio):** dos hechos confirmados que aclaran (parcialmente) la pregunta de "qué protege qué":
+1. `b1da67d0` (2026-06-04, "Refactor registration: remove product/process selection") confirma explícitamente que **el propio backend crea usuarios en LDAP** durante el registro de postulantes ("Identity verification now creates LDAP user and sends activation email") — LDAP no es solo para staff interno, `api-admisiones` tiene permisos de **escritura** sobre el directorio LDAP para dar de alta postulantes. Esto es más sensible que un simple bind de autenticación y vale la pena que seguridad lo revise (alcance de permisos de la cuenta de servicio LDAP usada por la API).
+2. `6464b26b`/`9e0d78d1` (2026-06-12, "Enhance Swagger UI with auth requirement annotations" / "Enhance Swagger docs: auth badges & cookie-based info") confirman que el JWT se entrega **exclusivamente vía cookies HttpOnly**, no como bearer token en header ("Removed explicit JWT bearer scheme from Swagger config; updated to reflect cookie-based authentication"). Es una buena práctica de seguridad (mitiga robo de token vía XSS) y aclara la arquitectura de sesión del lado del frontend.
+
 ### ARCH-HIST-005 — Extracción de `api-admisiones` (`WebApiAdmisiones`) desde una plantilla genérica multi-sistema (`NewApi`, compartida con Empleos/Funcionarios/Gestión)
 
 ```yaml
@@ -457,6 +470,8 @@ Motivación explícita en los mensajes de commit (dar de alta reconocimiento de 
 
 **Nota adicional (refuerza gap de `ARCH-HIST-003`):** el commit `ecea9100` (2026-05-19, "added HASH_TOKEN_PASSWORD in t_persona") agrega una columna nueva (`HashTokenPassword`) directamente en el DTO/convertidor Devart de `Persona`, sin ninguna migración ni script SQL visible en el repo. Es evidencia concreta (no solo sospecha) de que el esquema de la base de datos se modifica **fuera** de este repositorio y el código simplemente se regenera/ajusta a mano para reflejarlo — confirma el gap de gobernanza de base de datos ya anotado en `ARCH-HIST-003`.
 
+**Nota adicional 2 (releída en junio, motor de base de datos confirmado):** los commits `82c2008c` y `d373c7d5` (2026-06-25, "Materialize LINQ queries with ToList() before usage" / "Refactor LINQ queries to avoid Oracle boolean issues... to prevent Oracle ORA-00904 errors") confirman explícitamente que el motor de base de datos detrás de Devart/EF Core es **Oracle**, no SQL Server como podría asumirse por defecto. Esto es un hecho verificado, no inferencia — actualiza el gap de `ARCH-HIST-003` con el dato concreto de motor.
+
 ### ARCH-HIST-009 — Endurecimiento de seguridad de API pública (rate limiting, CORS credentials, CAPTCHA condicional por ambiente) — con reversión de CORS en 2 días
 
 ```yaml
@@ -494,6 +509,8 @@ Motivación general explícita (mensajes hablan de seguridad y monitoreo), pero 
 
 - Preguntar al equipo qué rompió `DisallowCredentials()` en esos 2 días (¿el frontend dependía de cookies cross-origin?).
 - Confianza `medium`: patrón y cambios claros, pero la motivación de la reversión es inferencia, no hecho confirmado.
+
+**Nota adicional (releída en junio, refuerza el patrón de inestabilidad):** el CAPTCHA se prendió y apagó repetidamente durante todo junio, no fue un ajuste puntual: `19910223` (06-22, comenta `[RequireCaptcha]` y usa score hardcodeado), `38d761d2` (06-12, "Commented out RequireCaptcha and reCAPTCHA validation in AuthController Login"), `8d662b06` (06-16, "Enable and validate reCAPTCHA in AuthController login flow"), `ca031593` (06-09, reescribe todo el módulo para "always validates captcha"), `86eba131` (06-08, "Enforced captcha validation in all environments by disabling localhost bypass"). En paralelo, `SameSite` de las cookies de auth cambió de `Strict` a `None` "para desarrollo local" en al menos 2 commits distintos (`e3a22f11`, `c27228e4`, ambos 06-10/06-09) con comentarios explícitos de que en producción debería ser `Strict` — sin una forma automática/probada de garantizar que ese valor efectivamente difiera por ambiente. Esto refuerza que la superficie de seguridad pública estuvo en iteración activa e inestable durante mayo-junio, no es un hallazgo aislado de CORS. Vale la pena que el equipo confirme el estado **actual** (no solo histórico) de CAPTCHA, CORS credentials y SameSite en producción antes de dar por buena cualquier configuración vista en el historial.
 
 ### ARCH-HIST-010 — Login pasa de `codigoPersona` a `tipoDocumento`+`documento`, con recuperación/activación de contraseña por link JWT (reemplaza reset directo vía LDAP)
 
@@ -639,6 +656,44 @@ Sin PR/issue ni documentación adicional revisada todavía. Solo un commit; falt
 #### Gaps y validación requerida
 
 - Confianza `low`: solo se observó implementación puntual, sin contexto de por qué ni alcance completo. Queda como investigación; revisar en un lote posterior si reaparece o se consolida (por ejemplo, si los templates de entorno del `ARCH-HIST-006` terminan deprecados por esto).
+
+### ARCH-HIST-014 — Integración de envío de datos de postulantes a sistema externo "Tivenos" (marketing/seguimiento, vía cola)
+
+```yaml
+status: investigating # discovered | investigating | validated | rejected | promoted
+confidence: low
+decision_date: 2026-06-19
+domain: integraciones-externas
+commits: [0d49f9d07de599c74161916c26f2111da9d2fe59, 0428441e, c59e88fc]
+pull_requests: []
+issues: []
+files: []
+adr: null
+```
+
+#### Hechos verificados
+
+- `0d49f9d0` (2026-06-19): implementa `TivenosEnvioService`/`ITivenosEnvioService`, que persiste registros en una entidad ya existente en la base de datos (`EnvioParaTiveno`, generada por Devart, ver `ARCH-HIST-003`) para encolar datos de interés de productos (`TivenosAltaInteresOperacion`) hacia un sistema externo llamado **"Tivenos"**.
+- `0428441e` (mismo día): sincroniza datos de bachillerato del postulante con Tivenos.
+- `c59e88fc` (2026-06-25): elimina lógica condicional de encolado ("SeLiberoTivenos"); a partir de este commit **siempre** se encola el envío, sin flag de feature.
+
+#### Decisión inferida
+
+`api-admisiones` envía datos personales de postulantes (interés en productos/carreras, datos de bachillerato) a un sistema externo de terceros, "Tivenos" — por el nombre y el patrón (cola de eventos de interés/seguimiento académico), es consistente con una plataforma de marketing/CRM educativo, pero esto **no está confirmado**, solo inferido del nombre y del tipo de datos enviados.
+
+#### Motivación y alternativas
+
+Sin PR/issue. La tabla `EnvioParaTiveno` ya existía en el modelo de datos antes de este commit (parte del legado Devart), sugiriendo que la integración con Tivenos es preexistente al monorepo (posiblemente ya usada por otro sistema de ORT) y este commit es la primera vez que `api-admisiones` específicamente empieza a alimentarla.
+
+#### Consecuencias observadas
+
+Datos personales de postulantes (interés académico, datos de bachillerato) salen de este sistema hacia una plataforma externa de forma incondicional desde el 25 de junio.
+
+#### Gaps y validación requerida
+
+- **Falta contexto funcional crítico**: qué es exactamente "Tivenos", qué datos recibe, con qué finalidad (marketing, seguimiento comercial, admisión), y si postulantes fueron informados/dieron consentimiento para ese envío (relevante para protección de datos personales, igual que `ARCH-HIST-008`). No inventar la respuesta — preguntar al equipo funcional/comercial.
+- Confirmar si `EnvioParaTiveno` es una tabla de cola gestionada por un proceso batch externo o un webhook/API directa.
+- Confianza `low`: solo se observó implementación; el propósito y alcance de "Tivenos" como sistema no se pudo determinar desde el código.
 
 ## Guardrails
 
