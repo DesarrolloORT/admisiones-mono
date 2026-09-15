@@ -47,18 +47,35 @@ traversal_correction: |
   no repo por repo. Esto es necesario para que el orden de publicación
   de ADR refleje la cronología real de decisiones, no el orden en que
   se recorrió cada árbol.
-last_batch: LOTE-07-REVISADO
+last_batch: LOTE-10
 last_commits_reviewed:
-  - 0d49f9d07de599c74161916c26f2111da9d2fe59
-  - b1da67d0
-  - 6464b26b
-  - 9e0d78d1
-  - ca031593
-window_reviewed: "2026-06-01 a 2026-06-30 (ambos repos) — RE-REVISADO con mensajes completos de los 450 commits (no solo titulo), tras pedido explicito del usuario de bajar el ritmo"
-next_candidate_id: ARCH-HIST-015
-next_adr_id: ADR-006
-status: in-progress
+  - 9e7cb92a
+  - 888ecfc8
+next_candidate_id: ARCH-HIST-016
+next_adr_id: ADR-015
+status: complete-pending-validation
 ```
+
+**Nota post-recorrido (2026-09-15): redacción masiva de borradores.** El usuario pidió avanzar redactando ADR también para los candidatos `medium`/`low` que quedaban solo como investigación, en vez de esperar validación previa (esto se aparta del paso 4 del protocolo, que reserva la redacción a confianza `high`). Se crearon `ADR-007` a `ADR-014` para `ARCH-HIST-003`, `004`, `006`, `009`, `010`, `012`, `013` y `014`. **Ninguno de estos está validado**: cada uno lleva una advertencia explícita en el propio archivo de que no debe pasar a `accepted` sin revisión, y `ADR-013` (Tivenos) es una excepción declarada al criterio de `low` porque la falta de información sobre una integración de datos personales es en sí misma el riesgo a comunicar. `ARCH-HIST-002` (rechazado, no es decisión de arquitectura) sigue sin ADR, correctamente.
+
+Nota `LOTE-10` (septiembre, 2026-09-01 a 2026-09-15 — **último tramo antes del baseline**): sin commits de backend (`api-admisiones` ya había terminado en agosto). 24 commits de frontend, revisados solo por título (mismo criterio que agosto, confirmado por el usuario: "lo mismo"). Contenido: validación de longitud de teléfono uruguayo (consecuencia menor del cambio de `PhoneNumber` estructurado de `ADR-006`) y una política unificada de mensajes de error de backend en el frontend (`9e7cb92a`) — es un patrón de UI, no una decisión de infraestructura/seguridad/persistencia, no amerita candidato propio.
+
+**Con esto se completa el recorrido histórico completo desde `history_boundary` (commit `2ec7478`, exclusive del lado viejo) hasta el commit inmediatamente anterior al `baseline_commit`.** `888ecfc8` es la punta de la historia de `admisiones` justo antes del merge subtree (`0dbd9a10`), y `e772ab60` es la punta de `api-admisiones` justo antes de su propio merge (`06142d7d`) — ambos ya cubiertos. No queda historia pre-baseline sin revisar.
+
+Nota `LOTE-09` (agosto, hasta `e772ab60` — **fin de la historia pre-merge de `api-admisiones`**): backend con volumen bajo (54 commits, mensajes completos leídos) porque el grueso del mes ya había quedado cubierto por `ADR-006` (la modularización, documentada por su propia fuente, llega hasta el 27/08). Frontend (211 commits) revisado **solo por título**, a pedido del usuario de no darle tanto peso a UI — se buscaron señales de arquitectura con keywords (infra, integraciones, auth, build) y no aparecieron; el único hallazgo relevante fue que el frontend migró su vocabulario interno a inglés el 14/08, en espejo del backend — se anotó como nota en `ADR-006`, no candidato propio.
+
+Hallazgos del backend (ambos como refuerzo de candidatos existentes, no nuevos):
+- `ARCH-HIST-007`: se removió la dependencia de la API "Inscripciones y Pagos" para leer ofertas/turnos de niveles 1-2, reemplazada por una vista de base de datos directa — reduce (no elimina) el acoplamiento externo.
+- `ARCH-HIST-009`: el endurecimiento de seguridad pública maduró a un diseño anti-enumeración de cuentas unificado (rate limiting + respuestas genéricas), ya no parece reactivo/inestable como en mayo-junio.
+
+**`api-admisiones` (backend) queda completamente recorrido hasta el punto de merge con el monorepo.** El frontend (`admisiones`, desde su bootstrap el 2026-04-08) se cubrió en paralelo dentro de cada ventana de fecha combinada (LOTE-04 a LOTE-09), con distinto nivel de detalle: mensajes completos en abril-julio, solo título en agosto (a pedido del usuario). Queda pendiente: setiembre completo en ambos repos, hasta el `history_boundary` (`4bb98603`) / baseline de seguridad (`8354b7af905917007e27be150c5b30dad7fa242c`).
+
+Nota `LOTE-08` (julio, con el ritmo corregido: mensajes completos + diff cuando hace falta, sin filtro de título únicamente): este fue el lote más rico hasta ahora.
+- `ARCH-HIST-015` / `ADR-006` (**high**, el mejor documentado de toda la serie): el equipo hizo una auditoría técnica formal (`6aec48c8`, 07-06) y arrancó una modularización completa de `AppLogic` (monolito → 12 módulos sin ciclos) + traducción de toda la API a inglés, documentada de primera mano en `api-admisiones/docs/MATRIZ-TRAZABILIDAD.md` y `README-MODULOS.md` (el trabajo sigue hasta agosto, se incluyó completo por venir de la misma fuente documental). De ahí salieron dos hechos duros para el gap de base de datos: `T_PERSONA` es una tabla compartida entre `api-admisiones` y otro sistema, **"FDP"**, con un bug real de inconsistencia de datos (teléfono) ya corregido; y existe un proceso legacy externo, **"LogicaORT"**, que sigue siendo dueño de parte del ciclo de vida de `T_ENCUESTA_INI`.
+- Refuerzo de `ARCH-HIST-011` (Redis): el `HASH_TOKEN_PASSWORD` que en mayo se agregó como columna Oracle se retiró dos meses después y se movió completamente a Redis (`IHashTokenStore`) — confirma que Redis desplazó a la base relacional para datos transitorios de seguridad; gap sobre durabilidad sigue abierto.
+- Refuerzo de `ARCH-HIST-009` (releído: `88f35a82`, 07-13): finalmente se resolvió la inestabilidad de `SameSite`/JWT que venía de mayo-junio — `SameSite` ahora es dinámico por ambiente (`Strict` en prod), JWT restringido a HS256 con secreto mínimo de 32 bytes. Cierra ese gap, ya no es una configuración inestable.
+- `ARCH-HIST-013` (Azure App Configuration frontend): confirmado que escaló de script ad-hoc a paquete npm interno publicado (`@desarrolloort/azure-env-sync`), subiendo su confianza a `medium`.
+- Nota funcional (`38090b7c`, 07-14): identidad y emisión de tokens ahora están desacopladas (LDAP solo identifica, los tokens se emiten recién post-2FA); dos fixes de seguridad rotulados `SRV-01`/`SRV-02` sugieren un sistema de tracking de hallazgos de seguridad externo a este repo (no identificado todavía).
 
 Nota `LOTE-07-REVISADO`: se releyeron los 450 mensajes completos (subject+body) de junio (144 backend + 306 frontend) que en `LOTE-07` solo se habían filtrado por título. El frontend confirmó no tener nada adicional relevante (puro trabajo de UI/features de inscripciones y becas). El backend sí tenía señales que el filtro por título había pasado por alto:
 - `ARCH-HIST-014` (nuevo, `low`): integración con sistema externo **"Tivenos"** — el backend empieza a enviarle datos personales de postulantes (interés académico, datos de bachillerato) de forma incondicional. Gap funcional crítico: no se sabe qué es Tivenos ni con qué base legal se envían esos datos.
@@ -137,6 +154,9 @@ Reunir SHA, fecha, autor, mensaje, diff, rutas, padres, commits relacionados, PR
 | LOTE-06 | Ventana combinada 2026-05-20 a 2026-05-29 (primer lote con filtro económico por título) | 5 revisados en detalle de ~140 listados (resto descartado en bloque por título) | 2 (`ARCH-HIST-009`, `ARCH-HIST-010`) | 0 (ambos `medium`, requieren validación) | completado |
 | LOTE-07 | Ventana combinada, junio completo 2026-06-01 a 2026-06-30 (mes de mayor volumen: ~450 commits) | 5 revisados en detalle de ~450 listados (resto descartado en bloque por título) | 3 (`ARCH-HIST-011`, `ARCH-HIST-012`, `ARCH-HIST-013`) | 1 (`ADR-005`) | completado (filtro por título únicamente, no lectura exhaustiva — ver nota) |
 | LOTE-07-REVISADO | Re-revisión de junio completo con mensajes completos (subject+body) de los 450 commits, tras pedido del usuario de bajar el ritmo | 450 mensajes completos leídos (no solo título); diffs abiertos en ~10 adicionales | 1 nuevo (`ARCH-HIST-014`) + refuerzos de evidencia en `ARCH-HIST-003`, `ARCH-HIST-004`, `ARCH-HIST-009` | 0 | completado |
+| LOTE-08 | Julio completo 2026-07-01 a 2026-07-31, ambos repos, ritmo corregido (mensajes completos + diff cuando hacía falta) | 497 mensajes completos leídos (166 backend + 331 frontend); se leyeron además 5 documentos internos del backend (`docs/README-MODULOS.md`, `MATRIZ-TRAZABILIDAD.md`, etc.) | 1 nuevo (`ARCH-HIST-015`, el mejor documentado de la serie) + refuerzos en `ARCH-HIST-009`, `ARCH-HIST-011`, `ARCH-HIST-013` | 1 (`ADR-006`) | completado |
+| LOTE-09 | Agosto completo 2026-08-01 a 2026-08-31, hasta `e772ab60` (fin de la historia pre-merge de `api-admisiones`) | 54 mensajes completos del backend; 211 títulos del frontend (sin diff, a pedido del usuario de bajar prioridad de UI) | 0 nuevos + refuerzos en `ARCH-HIST-007`, `ARCH-HIST-009`, nota en `ADR-006` | 0 | completado — `api-admisiones` queda 100% recorrido |
+| LOTE-10 | Septiembre 2026-09-01 a 2026-09-15, solo frontend (backend ya terminado), hasta `888ecfc8` (punta de `admisiones` pre-merge) | 24 títulos revisados, sin diff | 0 (patrón de UI, no arquitectónico) | 0 | completado — **recorrido histórico completo, no queda historia pre-baseline sin revisar** |
 
 ## Registro de candidatos
 
@@ -237,7 +257,7 @@ commits: [56c5536c7544fdac5327c22604c145fd49e635e0, 564ae0a24c4b25cfcaae027a80a6
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-007 # redactado a pedido del usuario pese a confianza medium; no accepted sin validación
 ```
 
 #### Hechos verificados
@@ -277,7 +297,7 @@ commits: [a255e12e1d0ea5455c64f1d1b1ed29e2a5f8ae1b, f1dd554a13f9aad12919cfb40f72
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-014 # redactado a pedido del usuario pese a confianza medium; no accepted sin validación
 ```
 
 #### Hechos verificados
@@ -353,15 +373,15 @@ Extraer y especializar un backend dedicado a Admisiones (`api-admisiones`/`WebAp
 ### ARCH-HIST-006 — Frontend `admisiones` bootstrapped desde un starter interno `angular-template`
 
 ```yaml
-status: investigating # discovered | investigating | validated | rejected | promoted
-confidence: medium
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
 decision_date: 2026-04-08
 domain: estructura-frontend
 commits: [aa3b22c9ed4b8f457d96fdc9f2d4b4bb4406f61d, 5df9ec371fcbeee8723c6a7ca73ef614bb41753d, 7ce3b0bd, 5f5535e7]
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-008 # ACEPTADO 2026-09-15, testimonio directo del autor
 ```
 
 #### Hechos verificados
@@ -374,18 +394,19 @@ adr: null
 
 Igual que en el backend (`ARCH-HIST-005`, plantilla `NewApi`), el frontend se bootstrapeó desde un **starter interno reutilizable de ORT** (`angular-template`) con CI/CD, labeler y convenciones ya resueltas, en vez de arrancar desde cero o desde el CLI de Angular sin plantilla propia.
 
-#### Motivación y alternativas
+#### Motivación (confirmada por el autor, 2026-09-15)
 
-No hay PR/issue. La motivación (reuso de convenciones/CI ya resueltas entre proyectos ORT) es plausible y consistente con el patrón visto en el backend, pero no está declarada explícitamente como en `ARCH-HIST-005` — es inferencia por patrón repetido, no testimonio ni mensaje explícito.
+> "`angular-template` es el starter que usamos en ORT, es un repo de la organización en el que empiezan todos los repos. Es constantemente actualizado para futuros inicios de proyectos."
+
+Es decir: no es una elección puntual de este proyecto, sino la convención organizacional vigente de ORT para arrancar frontends Angular, mantenida activamente.
 
 #### Consecuencias observadas
 
-Ninguna negativa aparente; siguiente commits del mismo día ajustan referencias de nombre sin fricción.
+Ninguna negativa aparente; siguiente commits del mismo día ajustan referencias de nombre sin fricción. Al ser un starter que sigue actualizándose de forma independiente, las mejoras posteriores a `angular-template` no llegan automáticamente a `admisiones` tras la bifurcación.
 
-#### Gaps y validación requerida
+#### Estado
 
-- Confirmar con el equipo si `angular-template` es un starter mantenido centralmente (análogo a `NewApi` en backend) y si sigue en uso para nuevos frontends.
-- Confianza `medium`: conservar candidato, no promover a ADR sin validación (la decisión de reusar un starter interno es de bajo impacto por sí sola; se agrupa aquí solo para dejar registro del patrón organizacional, no amerita ADR salvo que el equipo confirme que es una convención formal a documentar).
+**Promovido y `ADR-008` aceptado el 2026-09-15**, con motivación confirmada por testimonio directo del autor — ya no es inferencia.
 
 ### ARCH-HIST-007 — Integración service-to-service con la API interna "Inscripciones y Pagos" vía JWT de servicio
 
@@ -420,6 +441,8 @@ adr: ADR-003
 - Nueva superficie de integración crítica: pagos e inscripciones dependen de disponibilidad síncrona de una API externa al repo, sin reintentos automáticos (falla visible al usuario si la API destino no responde en 30s).
 - Nuevo secreto de configuración (`SECRET_KEY_API_INSCR_PAGOS`) para firmar/validar el JWT de servicio — relevante para el baseline de seguridad (gestión de secretos).
 - Sienta un patrón documentado (`EJEMPLO_INTEGRACION_API_INTERNA.md`) para futuras integraciones internas — vale la pena confirmar si se reutilizó en integraciones posteriores.
+
+**Nota adicional (agosto, evolución/reversión parcial):** `b98349dd` (2026-08-21) elimina la dependencia de la API "Inscripciones y Pagos" específicamente para el catálogo de ofertas/turnos de niveles 1 y 2, reemplazándola por una consulta directa a una vista de base de datos (`VdOfertasDisponibles1y2`) ya existente vía Devart. El mensaje de commit lo llama explícitamente "remove API dep". No es un abandono completo de la integración (pagos y otras operaciones siguen usando la API externa), pero sí achica su superficie: donde antes se llamaba a la API interna para leer datos que ya vivían en la base compartida, ahora se lee directo. Consistente con el patrón general del proyecto (agosto) de reducir acoplamiento entre sistemas cuando el dato ya está disponible localmente.
 
 #### Gaps y validación requerida
 
@@ -483,7 +506,7 @@ commits: [cf9f380c0a695dd99f26992dbf8b1540c5ba4e3d, 39190874deb0e61292ac15103e8d
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-009 # redactado a pedido del usuario pese a confianza medium; no accepted sin confirmar config vigente en producción
 ```
 
 #### Hechos verificados
@@ -512,6 +535,8 @@ Motivación general explícita (mensajes hablan de seguridad y monitoreo), pero 
 
 **Nota adicional (releída en junio, refuerza el patrón de inestabilidad):** el CAPTCHA se prendió y apagó repetidamente durante todo junio, no fue un ajuste puntual: `19910223` (06-22, comenta `[RequireCaptcha]` y usa score hardcodeado), `38d761d2` (06-12, "Commented out RequireCaptcha and reCAPTCHA validation in AuthController Login"), `8d662b06` (06-16, "Enable and validate reCAPTCHA in AuthController login flow"), `ca031593` (06-09, reescribe todo el módulo para "always validates captcha"), `86eba131` (06-08, "Enforced captcha validation in all environments by disabling localhost bypass"). En paralelo, `SameSite` de las cookies de auth cambió de `Strict` a `None` "para desarrollo local" en al menos 2 commits distintos (`e3a22f11`, `c27228e4`, ambos 06-10/06-09) con comentarios explícitos de que en producción debería ser `Strict` — sin una forma automática/probada de garantizar que ese valor efectivamente difiera por ambiente. Esto refuerza que la superficie de seguridad pública estuvo en iteración activa e inestable durante mayo-junio, no es un hallazgo aislado de CORS. Vale la pena que el equipo confirme el estado **actual** (no solo histórico) de CAPTCHA, CORS credentials y SameSite en producción antes de dar por buena cualquier configuración vista en el historial.
 
+**Nota adicional (agosto, cierre del ciclo):** `4ef193e5` (2026-08-26) parece ser la maduración definitiva de este endurecimiento, ya no iterativo/inestable sino diseñado como una sola pieza: rate limiting unificado vía Redis para login, registro y recuperación de contraseña (30 req/15min por IP, bucket compartido) específicamente para **prevenir enumeración de cuentas**, con todas las respuestas de fallo vueltas genéricas/indistinguibles ("closing enumeration oracles", cita del commit) y métricas Prometheus de rechazos. Esto es un patrón de seguridad reconocible y bien fundamentado (anti-enumeration), a diferencia de los cambios previos que parecían reactivos. Confianza `high` para este commit puntual — sube la confianza general de que el estado *actual* (agosto en adelante) de la superficie pública es más maduro que lo que sugiere el historial de mayo-junio, aunque sigue sin confirmarse con el equipo si esto es efectivamente lo desplegado hoy en producción.
+
 ### ARCH-HIST-010 — Login pasa de `codigoPersona` a `tipoDocumento`+`documento`, con recuperación/activación de contraseña por link JWT (reemplaza reset directo vía LDAP)
 
 ```yaml
@@ -523,7 +548,7 @@ commits: [9f725f4c8ede1f1a75d5f6e99d43ab8aa69acf6f, 0b7ff878, 5a2a83779a04d28538
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-010 # redactado a pedido del usuario pese a confianza medium; no accepted sin validación
 ```
 
 #### Hechos verificados
@@ -584,6 +609,8 @@ Motivación explícita para el rate limiting (documentación "detallada" según 
 - Nueva dependencia de infraestructura crítica: si Redis no está disponible, hay que confirmar qué pasa con login (rate limiting), catálogos (caché) y registro/2FA (estado transitorio) — no verificado en este lote si hay fallback.
 - Uso de Redis para **estado de negocio** (no solo caché) genera una dependencia de durabilidad/backup sobre un store que típicamente se trata como efímero — vale la pena confirmar la política de persistencia de Redis en producción.
 
+**Nota adicional (releída en julio):** el hash del token de password, que en mayo se había agregado como columna SQL (`HASH_TOKEN_PASSWORD` en `t_persona`, ver nota en `ARCH-HIST-003`/`008`), se **retiró de la base de datos y se movió completamente a Redis** dos meses después: `9ab8a4fa` (07-16) introduce `IPendingPersonaStore`/`IHashTokenStore` como abstracción sobre Redis, y `5ff37b07` (07-24) elimina `HASH_TOKEN_PASSWORD` del modelo Devart. Confirma que Redis pasó a ser, en la práctica, el almacén preferido para datos transitorios de autenticación por sobre la base de datos relacional — refuerza (no contradice) el gap ya anotado sobre política de durabilidad de Redis: si antes este dato vivía en Oracle (persistente) y ahora vive en Redis (típicamente efímero), vale la pena confirmar explícitamente que no se perdió garantía de durabilidad para un dato de seguridad (token de recuperación de contraseña).
+
 #### Gaps y validación requerida
 
 - Confirmar política de disponibilidad/backup de Redis en producción (¿cluster, persistencia RDB/AOF, o instancia efímera?).
@@ -601,7 +628,7 @@ commits: [f78213bbcf9d98b809f943293c259b4f3d38ada9, 8af035cd, b17ae88d, 5347aa4d
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-011 # redactado a pedido del usuario pese a confianza medium; no accepted sin validación
 ```
 
 #### Hechos verificados
@@ -630,32 +657,39 @@ No hay PR/issue con motivación explícita (más allá de "mejorar seguridad" im
 ### ARCH-HIST-013 — Azure App Configuration adoptado en el frontend para gestión de configuración por ambiente
 
 ```yaml
-status: discovered # discovered | investigating | validated | rejected | promoted
-confidence: low
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
 decision_date: 2026-06-16
 domain: infraestructura-configuracion
-commits: [dda3561977b5fe28ca4f17b91939251620882570]
+commits: [dda3561977b5fe28ca4f17b91939251620882570, c1701b03, 0dc3f61e, 37679bdd]
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-012 # ACEPTADO 2026-09-15, testimonio directo del autor
 ```
 
 #### Hechos verificados
 
-`dda35619` (2026-06-16, frontend): agrega un script `sync-azure-environment.mjs` (258 líneas) que sincroniza `Azure App Configuration` con `src/environments/environment.ts`, en vez de mantener archivos de entorno estáticos por ambiente.
+- `dda35619` (2026-06-16, frontend): agrega un script `sync-azure-environment.mjs` (258 líneas) que sincroniza `Azure App Configuration` con `src/environments/environment.ts`, en vez de mantener archivos de entorno estáticos por ambiente.
+- **Releído en julio**: el script interno se **publicó como paquete npm propio de la organización**, `@desarrolloort/azure-env-sync` (`0dc3f61e` 07-27, `37679bdd` 07-23: "remove deprecated Azure packages"), reemplazando el script ad-hoc. `c1701b03`/`058bc5a4` (07-23/07-15) retiran el script original y agregan una plantilla `web.config` para integrar `CSP_POLICY` vía este mecanismo.
 
 #### Decisión inferida
 
-Centralizar la configuración de ambiente del frontend en Azure App Configuration en vez de (o además de) archivos de entorno estáticos versionados en el repo.
+Centralizar la configuración de ambiente del frontend en Azure App Configuration, y luego institucionalizar ese patrón como paquete interno reusable (`@desarrolloort/azure-env-sync`) en vez de un script copiado por proyecto — es decir, subió de "solución puntual" a "herramienta de plataforma para el resto de los frontends de ORT".
 
-#### Motivación y alternativas
+#### Motivación (confirmada por el autor, 2026-09-15)
 
-Sin PR/issue ni documentación adicional revisada todavía. Solo un commit; falta ver su evolución (¿reemplaza completamente los `environment.*.ts`, o convive?).
+> "ORT usa todo Microsoft y Azure. La idea de usar esto fue porque siempre teníamos los archivos de configuración locales sin commitear y en cada descarga de un repo teníamos que enviarle a la persona el archivo de configuración para compilar porque estaba ignorado por git. Con esto podemos ya tenerlo todos y actualizado siempre, Azure App Configuration es la fuente de la verdad."
+>
+> "Deberían quedar reemplazados siempre" (los `environment.*.ts` estáticos, no un fallback).
+>
+> "Sí, se terminó institucionalizando y este fue el primero, los repos de frontend están migrando hacia él."
 
-#### Gaps y validación requerida
+No fue evaluación de alternativas: fue la opción natural dado el ecosistema Microsoft/Azure ya adoptado por ORT, resolviendo un problema operativo concreto (onboarding manual de configuración local ignorada por git). `admisiones` fue el primer repo en adoptarlo; el resto de los frontends de ORT están migrando hacia el mismo paquete.
 
-- Confianza `low`: solo se observó implementación puntual, sin contexto de por qué ni alcance completo. Queda como investigación; revisar en un lote posterior si reaparece o se consolida (por ejemplo, si los templates de entorno del `ARCH-HIST-006` terminan deprecados por esto).
+#### Estado
+
+**Promovido y `ADR-012` aceptado el 2026-09-15**, con motivación y alcance organizacional confirmados por testimonio directo del autor.
 
 ### ARCH-HIST-014 — Integración de envío de datos de postulantes a sistema externo "Tivenos" (marketing/seguimiento, vía cola)
 
@@ -668,7 +702,7 @@ commits: [0d49f9d07de599c74161916c26f2111da9d2fe59, 0428441e, c59e88fc]
 pull_requests: []
 issues: []
 files: []
-adr: null
+adr: ADR-013 # excepción: redactado pese a confianza LOW porque la falta de información es en sí el riesgo a señalar. No accepted bajo ninguna circunstancia sin definición legal/funcional
 ```
 
 #### Hechos verificados
@@ -694,6 +728,50 @@ Datos personales de postulantes (interés académico, datos de bachillerato) sal
 - **Falta contexto funcional crítico**: qué es exactamente "Tivenos", qué datos recibe, con qué finalidad (marketing, seguimiento comercial, admisión), y si postulantes fueron informados/dieron consentimiento para ese envío (relevante para protección de datos personales, igual que `ARCH-HIST-008`). No inventar la respuesta — preguntar al equipo funcional/comercial.
 - Confirmar si `EnvioParaTiveno` es una tabla de cola gestionada por un proceso batch externo o un webhook/API directa.
 - Confianza `low`: solo se observó implementación; el propósito y alcance de "Tivenos" como sistema no se pudo determinar desde el código.
+
+### ARCH-HIST-015 — Modularización completa de `AppLogic` (monolito → 12 módulos sin ciclos) y traducción de toda la API a inglés (breaking change coordinado con el frontend)
+
+```yaml
+status: promoted # discovered | investigating | validated | rejected | promoted
+confidence: high
+decision_date: 2026-07-06
+domain: estructura-backend
+commits: [6aec48c8, 6ec42f6b, 70cf6192, 75038255, c8f33a69]
+pull_requests: []
+issues: []
+files: [api-admisiones/docs/README-MODULOS.md, api-admisiones/docs/MATRIZ-TRAZABILIDAD.md, api-admisiones/docs/GLOSARIO-DOMINIO.md, api-admisiones/docs/GUIA-ESTILO-CODIGO.md]
+adr: ADR-006
+```
+
+#### Hechos verificados (con fuente documental de primera mano, no inferencia)
+
+Este es el candidato mejor documentado de todos los revisados hasta ahora: el propio equipo dejó por escrito, en `docs/` del backend, el diagnóstico, el plan y el resultado.
+
+- **Origen** (`6aec48c8`, 2026-07-06): auditoría técnica formal de `WebApiAdmisiones` + `Core`, con matrices de controllers/services, métodos sin referencias, dependencias, DI y cobertura de tests, y un plan de refactor multi-fase. Identifica riesgos: falta de atomicidad en refresh tokens, fuga de mensajes de excepción, código muerto.
+- **Piloto** (`refactor/estructura-tivenos-piloto`, ver `api-admisiones/docs/11-estructura-tivenos-piloto.md`): valida el patrón `module-first` (`Interfaces/`, `Services/`, `Dtos/`) en el módulo más chico (Tivenos) antes de aplicarlo a los módulos grandes.
+- **Refactor completo** (rama `refactor/modular-app-logic`, arranca `70cf6192` 2026-08-05, sigue activo al menos hasta `c8f33a69` 2026-08-27): el proyecto monolítico `AppLogic` se elimina y se reemplaza por **12 módulos independientes en 6 niveles de dependencia sin ciclos** (`Contracts`/`DevartDtos` → `Platform`/`Integrations.*` → `Identity` → `People`/`Authentication`/`Scholarships` → `Registration`/`Enrollments` → `Catalogs`). Documentado exhaustivamente en `MATRIZ-TRAZABILIDAD.md`: 4 ciclos de dependencia identificados y rotos (con la técnica usada en cada uno, incluida inversión de dependencia), servicios monolíticos (`InscripcionesService`, `PersonService`, `RegistrationService`, `AuthService`) divididos en **casos de uso** individuales (patrón `UseCases/`), `OperationResult<T>` retirado de reglas/validadores/mappers en favor de enums de negocio + catálogos de error.
+- **Traducción a inglés de toda la superficie de API** (fase 4d en adelante): tipos, propiedades de DTO, nombres de rutas HTTP (`Auth/Login` → `auth/login`, `Becas/Inscripciones` → `scholarships/enrollments`, etc.) y **el payload JSON completo** pasan de español a inglés. Es un **breaking change explícito que requiere despliegue coordinado con el frontend** (tabla completa de antes/después en `MATRIZ-TRAZABILIDAD.md`). Los mensajes de error y los DTOs de `Integrations.*` (que deserializan formatos de sistemas ajenos) quedan deliberadamente en español — documentado como excepción, no descuido.
+
+#### Decisión inferida
+
+No es inferencia: el propio equipo documentó la decisión, el porqué de cada elección de diseño (incluyendo por qué NO convertir ciertos métodos a enum, por qué una interfaz con un solo implementador está justificada como "límite arquitectónico", por qué el teléfono pasa a ser un objeto estructurado) y el estado de avance fase por fase.
+
+#### Motivación
+
+Explícita: reducir deuda técnica identificada en la auditoría (servicios de cientos de líneas con decenas de responsabilidades, ciclos de dependencia, manejo de errores inconsistente, código muerto, mensajes de excepción filtrados al cliente) y dejar una arquitectura modular verificable (sin ciclos, con superficie pública trazada método por método).
+
+#### Consecuencias observadas
+
+- Bug real encontrado y corregido durante el refactor: **inconsistencia de datos entre `api-admisiones` y otro sistema, "FDP" (Ficha de Persona)**, que comparten la tabla `T_PERSONA`. FDP siempre guardó el teléfono en formato E.164; admisiones guardaba el string crudo y dejaba `ID_CARACTERISTICA_PAIS_TEL1` en un valor por defecto, causando que FDP renderizara mal los datos escritos por admisiones. **Esto confirma como hecho — no como sospecha — que `T_PERSONA` es una tabla compartida entre al menos dos sistemas de ORT con caminos de escritura independientes que no estaban coordinados.**
+- Referencia a un tercer sistema legacy, **"LogicaORT"** (archivo `AdmAdmisiones.cs`), que hace una migración diferida de datos hacia `T_ENCUESTA_INI` basada en la columna `FECHA_PROCESADO_ENCUESTA_INI`, la cual "sigue siendo la puerta de la migración diferida de LogicaORT" — es decir, **hay un proceso batch legacy, fuera de este repo, que sigue siendo dueño de parte del ciclo de vida de datos de encuesta inicial**, y la API tuvo que diseñar su propia máquina de estados (`TEMPORAL`→`CONFIRMADO`→`DEFINITIVO`) para no chocar con él. Requirió **migración de datos** (filas `DEFINITIVO` sin procesar pasan a `CONFIRMADO`).
+- Deuda conocida documentada explícitamente (no oculta): el módulo `Scholarships`/fondo de becas está implementado y testeado pero **ningún controller lo consume todavía** — espera una decisión de producto pendiente.
+
+#### Gaps y validación requerida
+
+- **Gap de base de datos confirmado con nombre propio**: existen al menos tres sistemas (`api-admisiones`, `FDP`, `LogicaORT`) leyendo/escribiendo la misma base Oracle sin un dueño único de esquema ni contrato formal entre ellos. Esto no es hipotético — es un hecho documentado por el propio equipo tras encontrar un bug de inconsistencia real. Recomendación fuerte para el equipo: inventariar todos los sistemas que tocan las tablas compartidas (`T_PERSONA`, `T_ENCUESTA_INI`, etc.) antes de futuros cambios de esquema.
+- Confirmar el estado actual (fecha de esta sesión, 2026-09-15) de la migración de datos del cambio de estado de encuesta inicial — si ya se ejecutó y si hay verificación posterior.
+- Confirmar con producto la decisión pendiente sobre `Scholarships`/fondo de becas.
+- Confianza `high`: motivación, diseño y consecuencias documentados de primera mano por el propio equipo. Promovido a `ADR-006`.
 
 ## Guardrails
 

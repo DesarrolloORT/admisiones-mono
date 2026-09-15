@@ -79,3 +79,76 @@ test('Sonar rejects malformed reports and invalid environments', () => {
   const invalid = { ...env, SONAR_ENVIRONMENT: 'invalid' };
   assert.notEqual(spawnSync(process.execPath, ['security/tools/import-sonar.mjs', input, sonarMapping, output], { cwd: root, env: invalid }).status, 0);
 });
+
+const digestFixture = {
+  '@programName': 'ZAP', '@generated': 'Fri, 5 Sep 2025 10:27:42',
+  site: [{ '@name': 'http://host:4200', alerts: [
+    { pluginid: '10038', alert: 'Content Security Policy (CSP) Header Not Set', riskdesc: 'Medium (High)', count: 4, instances: [{ uri: 'http://host:4200' }] },
+    { pluginid: '10021', alert: 'X-Content-Type-Options Header Missing', riskdesc: 'Low (Medium)', count: 7, instances: [{ uri: 'http://host:4200/main.js' }] },
+    { pluginid: '90034', alert: 'Cloud Metadata Potentially Exposed', riskdesc: 'High (Low)', count: 1, instances: [{ uri: 'http://host:4200/latest/meta-data/' }] },
+    { pluginid: '10109', alert: 'Modern Web Application', riskdesc: 'Informational (Medium)', count: 4, instances: [{ uri: 'http://host:4200' }] },
+    { pluginid: '40012', alert: 'Cross Site Scripting (Reflected)', riskdesc: 'High (Medium)', count: 2, instances: [{ uri: 'http://host:4200/buscar' }] }
+  ] }]
+};
+
+test('ZAP digest groups fixes by action and separates false positives, noise and unknown alerts', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'admisiones-digest-'));
+  const input = join(dir, 'zap.json');
+  writeFileSync(input, JSON.stringify(digestFixture));
+  const digest = run(process.execPath, ['security/tools/zap-digest.mjs', input], { cwd: root, env, encoding: 'utf8' });
+
+  const actions = digest.slice(digest.indexOf('## Qué hay que hacer'), digest.indexOf('## Sin clasificar'));
+  assert.match(actions, /### 1\. Agregar headers de seguridad de respuesta/);
+  assert.match(actions, /\*\*Resuelve 2 alertas \/ 11 instancias:\*\*/);
+  assert.equal(actions.match(/^### /gm).length, 1, 'alertas con la misma acción colapsan en un solo paso');
+
+  assert.match(digest, /## Sin clasificar[\s\S]*Cross Site Scripting \(Reflected\)\*\* — High \(2\) · pluginid `40012`/);
+  assert.ok(digest.indexOf('## Sin clasificar') < digest.indexOf('## Ruido e informativos'), 'lo desconocido va antes del ruido');
+  assert.match(digest, /## Probables falsos positivos[\s\S]*Cloud Metadata Potentially Exposed — High \/ confianza Low/);
+  assert.match(digest, /## Ruido e informativos[\s\S]*Modern Web Application/);
+  assert.match(digest, /alertas en \*\*4 URLs\*\*/);
+  assert.match(digest, /no recorrió la aplicación/);
+  assert.match(digest, /Ninguna alerta de este reporte está mapeada/);
+
+  const target = join(dir, 'digest.md');
+  run(process.execPath, ['security/tools/zap-digest.mjs', input, '--out', target], { cwd: root, env });
+  assert.equal(readFileSync(target, 'utf8'), digest);
+});
+
+test('ZAP digest reads the HTML report and reports unmapped ASVS evidence', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'admisiones-digest-html-'));
+  const input = join(dir, 'zap.html');
+  writeFileSync(input, [
+    '<html><head><title>FDP</title></head><body>',
+    '<p><span>on Fri 5 Sept 2025, at 10:27:42</span></p>',
+    '<ul class="sites-list"><li>http://host:4200</li></ul>',
+    '<table class="alert-type-counts-table"><tr><th>Alert type</th><th>Risk</th><th>Count</th></tr>',
+    '<tr><td>Server Leaks Version Information via &quot;Server&quot; HTTP Response Header Field</td><td><span>Low</span></td><td>7 <span>(100.0%)</span></td></tr>',
+    '<tr><td>Modern Web Application</td><td><span>Informational</span></td><td>4 <span>(57.1%)</span></td></tr>',
+    '<tr><th>Total</th><th></th><th>2</th></tr></table>',
+    '<p class="request-method-n-url">GET http://host:4200</p>',
+    '</body></html>'
+  ].join(''));
+  const digest = run(process.execPath, ['security/tools/zap-digest.mjs', input], { cwd: root, env, encoding: 'utf8' });
+
+  assert.match(digest, /\*\*Escaneo:\*\* FDP · Fri 5 Sept 2025, at 10:27:42/);
+  assert.match(digest, /\*\*Objetivo:\*\* http:\/\/host:4200/);
+  assert.match(digest, /- `http:\/\/host:4200`/, 'la URL se extrae sin el atributo HTML');
+  assert.doesNotMatch(digest, /request-method-n-url/);
+  assert.match(digest, /### 1\. Ocultar la versión del servidor/, 'el pluginid se resuelve por nombre');
+  assert.match(digest, /registrará evidencia FAIL para:\n- Server Leaks Version Information[\s\S]*v5\.0\.0-16\.5\.1/);
+  assert.doesNotMatch(digest, /Total/, 'la fila de totales no se toma como alerta');
+});
+
+test('ZAP digest rejects malformed reports and unrecognised HTML', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'admisiones-digest-bad-'));
+  const json = join(dir, 'zap.json');
+  const html = join(dir, 'zap.html');
+  writeFileSync(json, '{');
+  assert.match(spawnSync(process.execPath, ['security/tools/zap-digest.mjs', json], { cwd: root, env, encoding: 'utf8' }).stderr, /malformado/);
+  writeFileSync(json, JSON.stringify({ site: {} }));
+  assert.match(spawnSync(process.execPath, ['security/tools/zap-digest.mjs', json], { cwd: root, env, encoding: 'utf8' }).stderr, /"site" debe ser un arreglo/);
+  writeFileSync(html, '<html><body>sin tabla</body></html>');
+  assert.match(spawnSync(process.execPath, ['security/tools/zap-digest.mjs', html], { cwd: root, env, encoding: 'utf8' }).stderr, /Exporte el reporte en formato JSON/);
+  assert.notEqual(spawnSync(process.execPath, ['security/tools/zap-digest.mjs'], { cwd: root, env }).status, 0);
+});

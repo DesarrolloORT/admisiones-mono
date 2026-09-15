@@ -67,6 +67,20 @@ node security/tools/import-zap.mjs zap-report.json testing
 
 El mapping vive en `asvs/applicability/zap-mapping.json`. La autenticación por header está soportada; login interactivo, MFA o scripts de sesión requieren una configuración ZAP externa y revisión humana. Nunca se debe guardar el target o la autenticación en el repositorio.
 
+### Informe para desarrollo
+
+`import-zap.mjs` alimenta el baseline; no produce algo legible para quien tiene que corregir. `zap-digest.mjs` traduce el mismo reporte a un informe en Markdown:
+
+```sh
+node security/tools/zap-digest.mjs report_json.json --out security/reports/zap-digest.md
+```
+
+Agrupa las alertas por **acción** en lugar de por regla, de modo que varias alertas que se resuelven con el mismo cambio aparecen como un solo paso. Separa cuatro bloques: qué hay que hacer, alertas sin clasificar, probables falsos positivos y ruido informativo. Encabeza el informe con la cobertura real del escaneo, porque un reporte limpio sobre tres URLs no dice nada sobre la aplicación.
+
+El criterio por alerta vive en `asvs/applicability/zap-actions.json`, indexado por `pluginid`: `verdict` (`fix`, `likely-false-positive`, `informational`), `action` para agrupar, `where` y `fix`. Una alerta ausente del catálogo se reporta en «Sin clasificar» y exige decisión humana antes de agregarla: el catálogo registra criterio ya revisado, no adivina.
+
+Acepta también el HTML del reporte, que resuelve el `pluginid` por nombre de alerta. Es un respaldo para cuando solo existe ese archivo; el export JSON es la entrada correcta y la única que habilita el mapeo ASVS.
+
 ## Excepciones y estados
 
 `NOT_APPLICABLE` exige justificación. Las instancias `.json` en `asvs/exceptions/` exigen control existente, motivo, riesgo, aprobador, creación, vencimiento y ticket. Una excepción activa produce `ACCEPTED_RISK`, una vencida se reporta pero no cambia el estado y ninguna excepción produce `PASS`.

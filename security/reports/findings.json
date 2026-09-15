@@ -2,12 +2,12 @@
   "schemaVersion": "1.0",
   "application": "admisiones",
   "repository": "DesarrolloORT/admisiones-mono",
-  "commitSha": "fbe7a8ee83a3542f8b021e25edd90eb0963fb491",
-  "generatedAt": "2026-09-15T18:29:14.743Z",
+  "commitSha": "afe4fde406420c7b95be825feddb7164985a9a3c",
+  "generatedAt": "2026-09-15T18:46:04.432Z",
   "summary": {
-    "pass": 2,
+    "pass": 0,
     "fail": 0,
-    "pending": 6,
+    "pending": 8,
     "needsReview": 0,
     "acceptedRisk": 0
   },
@@ -37,6 +37,18 @@
       "evidence": []
     },
     {
+      "id": "ASVS-3a59ff5d978b",
+      "fingerprint": "3a59ff5d978b69bf8407c26af39756eb7d7570f41988889a490c88321332d59e",
+      "controlId": "v5.0.0-16.5.1",
+      "component": "backend",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "Generic error responses",
+      "description": "Unexpected or security-sensitive errors return generic messages without sensitive internal data.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
       "id": "ASVS-3e1736311400",
       "fingerprint": "3e1736311400827b9143b2645958460f2be1f72ca0629d90244b8df829efb12d",
       "controlId": "v5.0.0-8.2.2",
@@ -46,15 +58,7 @@
       "title": "Object-level authorization",
       "description": "Data-specific access is limited to explicitly permitted items to mitigate IDOR and BOLA.",
       "environment": "testing",
-      "evidence": [
-        {
-          "fingerprint": "69b2e9df01e2eaaba64922e77ac95643180cbbc555747dcec21dfa067e6bd1a8",
-          "source": "automated-test",
-          "tool": "dotnet test",
-          "file": "api-admisiones/WebApiAdmisiones/UnitTesting/AppLogic/Services/ScholarshipFundServiceTests.cs",
-          "test": "SubirArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden"
-        }
-      ]
+      "evidence": []
     },
     {
       "id": "ASVS-49966bbb81e8",
@@ -66,15 +70,7 @@
       "title": "Object-level authorization",
       "description": "Data-specific access is limited to explicitly permitted items to mitigate IDOR and BOLA.",
       "environment": "testing",
-      "evidence": [
-        {
-          "fingerprint": "69b2e9df01e2eaaba64922e77ac95643180cbbc555747dcec21dfa067e6bd1a8",
-          "source": "automated-test",
-          "tool": "dotnet test",
-          "file": "api-admisiones/WebApiAdmisiones/UnitTesting/AppLogic/Services/ScholarshipFundServiceTests.cs",
-          "test": "SubirArchivoIngreso_CuandoNoPerteneceALaPersona_ReturnsForbidden"
-        }
-      ]
+      "evidence": []
     },
     {
       "id": "ASVS-709823762dcf",
@@ -113,6 +109,18 @@
       "evidence": []
     },
     {
+      "id": "ASVS-87fb9ae3dd58",
+      "fingerprint": "87fb9ae3dd581b345a853528ab97c6049653be89048a3e63d1e58c54762f5ecf",
+      "controlId": "v5.0.0-16.5.1",
+      "component": "system",
+      "severity": "high",
+      "status": "PENDING",
+      "title": "Generic error responses",
+      "description": "Unexpected or security-sensitive errors return generic messages without sensitive internal data.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
       "id": "ASVS-b21e72fe9639",
       "fingerprint": "b21e72fe9639742db96eb6583e3f11058dcddce7324b5511ec992d462d4367b1",
       "controlId": "v5.0.0-7.2.1",
@@ -121,6 +129,18 @@
       "status": "PENDING",
       "title": "Trusted session verification",
       "description": "All session-token verification is performed by a trusted backend service.",
+      "environment": "testing",
+      "evidence": []
+    },
+    {
+      "id": "ASVS-b35301b59180",
+      "fingerprint": "b35301b59180663824ff3cc343e63a08a8ec3fde60c21213e72bb2e1bab74e3c",
+      "controlId": "v5.0.0-6.8.2",
+      "component": "backend",
+      "severity": "critical",
+      "status": "PENDING",
+      "title": "Authentication assertion signatures",
+      "description": "Authentication assertions are rejected when unsigned or signed with an invalid signature.",
       "environment": "testing",
       "evidence": []
     },

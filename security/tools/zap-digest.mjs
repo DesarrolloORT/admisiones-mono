@@ -57,12 +57,12 @@ function fromHtml(raw) {
       confidence: '', count: Number(cells[2].match(/\d+/)?.[0]) || 0
     });
   }
-  const urls = [...new Set((raw.match(/class="request-method-n-url"[\s\S]*?<\//g) ?? [])
-    .map(strip).map(value => value.replace(/^[A-Z]+\s+/, '')).filter(Boolean))];
+  const urls = [...new Set([...raw.matchAll(/class="request-method-n-url"[^>]*>([\s\S]*?)<\//g)]
+    .map(match => strip(match[1]).replace(/^[A-Z]+\s+/, '')).filter(Boolean))];
   return {
     format: 'HTML', title: strip(raw.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? 'Reporte ZAP'),
     generatedAt: strip(raw.match(/<span>on ([\s\S]*?)<\/span>/)?.[1] ?? ''),
-    sites: [...new Set((raw.match(/<ul class="sites-list"[\s\S]*?<\/ul>/)?.[0]?.match(/<li[\s\S]*?<\/li>/g) ?? []).map(strip).filter(Boolean))],
+    sites: [...new Set((raw.match(/<(\w+) class="sites-list"[\s\S]*?<\/\1>/)?.[0]?.match(/<li[\s\S]*?<\/li>/g) ?? []).map(strip).filter(Boolean))],
     alerts, urls
   };
 }
@@ -118,6 +118,15 @@ for (const [action, group] of grouped) {
   );
 }
 
+if (unknown.length) {
+  write('## Sin clasificar');
+  write(
+    'Estas alertas no están en `security/asvs/applicability/zap-actions.json`. Requieren una decisión humana y luego una entrada en el catálogo.',
+    '',
+    ...unknown.sort(byRisk).map(alert => `- **${alert.name}** — ${alert.risk} (${alert.count})${alert.pluginid ? ` · pluginid \`${alert.pluginid}\`` : ''}`)
+  );
+}
+
 for (const [verdict, heading, intro] of [
   ['likely-false-positive', 'Probables falsos positivos', 'Verificar antes de escalar. No abrir ticket sin confirmar.'],
   ['informational', 'Ruido e informativos', 'No requieren cambios en la aplicación.']
@@ -130,15 +139,6 @@ for (const [verdict, heading, intro] of [
     write(`### ${alert.name} — ${alert.risk}${alert.confidence ? ` / confianza ${alert.confidence}` : ''} (${alert.count})`);
     write(catalog[alert.pluginid].fix);
   }
-}
-
-if (unknown.length) {
-  write('## Sin clasificar');
-  write(
-    'Estas alertas no están en `security/asvs/applicability/zap-actions.json`. Requieren una decisión humana y luego una entrada en el catálogo.',
-    '',
-    ...unknown.sort(byRisk).map(alert => `- **${alert.name}** — ${alert.risk} (${alert.count})${alert.pluginid ? ` · pluginid \`${alert.pluginid}\`` : ''}`)
-  );
 }
 
 write('## Impacto en el baseline ASVS');
