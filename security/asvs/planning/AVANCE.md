@@ -5,14 +5,14 @@ Actualizado: 2026-09-16. Fase: análisis y documentación exclusivamente L1; fix
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-1.2.5 (L1).
-- Último requisito documentado: v5.0.0-1.2.4 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-1.3.1 (L1).
+- Último requisito documentado: v5.0.0-1.2.5 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 4 DOCUMENTADO, 0 EN_CURSO, 66 POR_REVISAR (total 70).
+- Progreso L1: 5 DOCUMENTADO, 0 EN_CURSO, 65 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 6 DOCUMENTADO, 0 EN_CURSO, 247 POR_REVISAR.
+- Progreso general L1/L2 conservado: 7 DOCUMENTADO, 0 EN_CURSO, 246 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.2.5; verificar Git/fuente, fijar refs y abrir su ficha.
+- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.3.1; verificar Git/fuente, fijar refs y abrir su ficha.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
 
 - v5.0.0-1.1.2 documentado por revisión estática: codificación/serialización observada en DOM, HTTP/JSON y correo; pendientes receptor de pagos, correo entregado, runtime y cobertura de otros sinks. Ver ficha; no hay cumplimiento global demostrado.
@@ -25,6 +25,8 @@ Actualizado: 2026-09-16. Fase: análisis y documentación exclusivamente L1; fix
 - v5.0.0-1.2.3 documentado: serialización JavaScript/JSON en frontend/API/Core; pendientes bytes/round trip, parser externo de pagos, consumidores de SerializeJsonLog y visor de logs. Resultado NEEDS_REVIEW. HEAD evaluado f41cba032b800ba3cd17525e6608274644ea7e55; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Checkpoint sin commit por instrucción del usuario: AVANCE.md, ficha 1.2.3 y dos copias Markdown en worktrees API/Core fix/owasp (rutas/refs en ficha). Staging vacío preservado. Sin fixes, builds, tests, commits ni pushs. Para inspeccionar: `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.2.3.md`.
 
 - v5.0.0-1.2.4 documentado por revisión estática de consultas EF/LINQ, secuencias SQL y Redis API/Core; callers string encontrados usan constantes, pero las variantes genéricas no validan localmente el identificador. Resultado NEEDS_REVIEW; pendientes binding Devart, esquema/procedimientos/triggers Oracle, otros consumidores Core y persistencia externa de pagos. HEAD evaluado 7fea09ee286b932b579ff720d90726e9e0de72d2; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Archivos sin commit: AVANCE.md, revisiones/v5.0.0-1.2.4.md y dos propuestas docs/security/ASVS-v5.0.0-1.2.4-propuesta.md en worktrees API/Core fix/owasp (rutas/refs en ficha). Sin fixes/builds/tests/scans/commits/pushs; staging vacío y cambios ajenos preservados. Inspeccionar: `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.2.4.md`. Continuar solo con un nuevo pedido: «Seguí security/asvs/planning/ITERACION.md y revisá únicamente v5.0.0-1.2.5». No hacer commits ni pushs.
+
+- v5.0.0-1.2.5 DOCUMENTADO / NEEDS_REVIEW: no se localizaron sinks OS directos en C# API/Core; herramientas frontend leídas pasan arrays sin shell. Pendientes wrappers externos, selección de agentes con claves heredadas, runtime/hosting y servicios externos. HEAD evaluado 6c7c865482f1d5f1f401d6c5f23d43b1c1a036c1; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Sin commit: AVANCE.md, revisiones/v5.0.0-1.2.5.md y propuesta frontend temporal fix/owasp (ruta/ref en ficha). Sin fixes/builds/tests/scans/commits/pushs; staging vacío y graph.json ajeno preservados. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.2.5.md`. Continuación solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-1.3.1». No hacer commits ni pushs.
 
 ## Contexto que debe preservarse
 
@@ -49,7 +51,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-1.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.2.md) |
 | v5.0.0-1.2.3 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.3.md) |
 | v5.0.0-1.2.4 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.4.md) |
-| v5.0.0-1.2.5 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-1.2.5 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.5.md) |
 | v5.0.0-1.2.6 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.7 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.8 | L2 | POR_REVISAR | PENDING | — |
