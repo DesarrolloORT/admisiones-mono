@@ -4,6 +4,8 @@ Preparación documental solicitada el 2026-09-16. No se aplican fixes.
 
 Catálogo completo: 345 requisitos; 253 de L1/L2 para el objetivo L2 y 92 de L3 fuera del objetivo. Todos PENDING; la aplicabilidad y el cumplimiento requieren evidencia.
 
+- [Plan para iterar un requisito por sesión y retomar contexto](./ITERACION.md).
+- [Checkpoint y cola completa de avance](./AVANCE.md).
 - [Catálogo oficial trasladado a Markdown y reparto preliminar](./catalogo.md).
 - [Frontend admisiones](./admisiones.md).
 - [Backend api-admisiones](./api-admisiones.md).
