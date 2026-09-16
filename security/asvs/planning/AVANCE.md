@@ -5,12 +5,12 @@ Actualizado: 2026-09-16. Fase: análisis y documentación; fixes no autorizados.
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-1.1.1 (L2).
-- Último requisito documentado: ninguno.
-- Progreso L1/L2: 0 DOCUMENTADO, 0 EN_CURSO, 253 POR_REVISAR.
+- Siguiente requisito: v5.0.0-1.1.2 (L2).
+- Último requisito documentado: v5.0.0-1.1.1 (L2), NEEDS_REVIEW.
+- Progreso L1/L2: 1 DOCUMENTADO, 0 EN_CURSO, 252 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: leer ITERACION.md y el texto oficial de v5.0.0-1.1.1; fijar refs y abrir su ficha. Revisar decodificación/canonicalización y su orden respecto a validación en los componentes aplicables.
-- No se ha revisado todavía ningún requisito. Esta sesión solo dejó el protocolo de continuación.
+- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.1.2; verificar Git/fuente, fijar refs y abrir su ficha.
+- v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
 
 ## Contexto que debe preservarse
 
@@ -29,7 +29,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Mantener los punte
 
 | ID | Nivel | Avance documental | Resultado de seguridad | Ficha |
 | --- | --- | --- | --- | --- |
-| v5.0.0-1.1.1 | L2 | POR_REVISAR | PENDING | — |
+| v5.0.0-1.1.1 | L2 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.1.1.md) |
 | v5.0.0-1.1.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.1 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.2 | L1 | POR_REVISAR | PENDING | — |
