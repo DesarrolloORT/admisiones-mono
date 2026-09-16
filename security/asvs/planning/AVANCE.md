@@ -5,21 +5,23 @@ Actualizado: 2026-09-16. Fase: análisis y documentación; fixes no autorizados.
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-1.2.1 (L1).
-- Último requisito documentado: v5.0.0-1.1.2 (L2), NEEDS_REVIEW.
-- Progreso L1/L2: 2 DOCUMENTADO, 0 EN_CURSO, 251 POR_REVISAR.
+- Siguiente requisito: v5.0.0-1.2.2 (L1).
+- Último requisito documentado: v5.0.0-1.2.1 (L1), NEEDS_REVIEW.
+- Progreso L1/L2: 3 DOCUMENTADO, 0 EN_CURSO, 250 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.2.1; verificar Git/fuente, fijar refs y abrir su ficha.
+- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.2.2; verificar Git/fuente, fijar refs y abrir su ficha.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
 
 - v5.0.0-1.1.2 documentado por revisión estática: codificación/serialización observada en DOM, HTTP/JSON y correo; pendientes receptor de pagos, correo entregado, runtime y cobertura de otros sinks. Ver ficha; no hay cumplimiento global demostrado.
-- Checkpoint sin commit por instrucción del usuario: únicamente AVANCE.md y revisiones/v5.0.0-1.1.2.md modificados/creados en esta iteración. No hacer commits ni pushs; preservar staging ajeno. Para inspeccionar: `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.1.2.md`.
+- Checkpoint sin commit por instrucción del usuario: únicamente AVANCE.md y revisiones/v5.0.0-1.2.1.md modificados/creados en esta iteración. No hacer commits ni pushs; preservar staging ajeno. Para inspeccionar: `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.2.1.md`.
+
+- v5.0.0-1.2.1 documentado por revisión estática de contextos HTML/HTTP y proxy SOAP/XML. Pendientes: DOM y librería SVG, correo entregado, envelope SOAP, headers efectivos y otros consumidores Core; ver ficha. HEAD evaluado: 75b80a958b3a57d94625cd93461a72b90fa9fff8; Core consumido verificado: 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Estado inicial: solo graph.json sin seguimiento, staging vacío; cambios de esta iteración limitados a dos Markdown, sin fixes/commits/pushs.
 
 ## Contexto que debe preservarse
 
 - Rama del monorepo: fix/owasp. Commit de preparación documental: 0c46d660 (usar git para obtener SHA completo y HEAD vigente).
 - La fuente JSON tiene SHA-256 BCDBEC214D70ABCFAD9284A31D4F9E5134305831D628AAD3AA85D7E26626CB35; estaba sin commit al preparar el plan.
-- Estado observado al inicio de esta sesión: JSON fuente y source/README.md en staging, kb/.obsidian/graph.json sin seguimiento. En la verificación final, Git solo muestra los Markdown de esta iteración y graph.json; HEAD verificado: 490bf64f63cefe7b79bcd5322b5dd56e04a996ab. El agente no alteró staging ni ejecutó commits; comprobar siempre el estado real.
+- Estado histórico de la sesión de v5.0.0-1.1.2: JSON fuente y source/README.md en staging, kb/.obsidian/graph.json sin seguimiento. En la verificación final, Git solo muestra los Markdown de esta iteración y graph.json; HEAD verificado: 490bf64f63cefe7b79bcd5322b5dd56e04a996ab. El agente no alteró staging ni ejecutó commits; comprobar siempre el estado real.
 - Los clones originales contienen cambios locales y tienen refs distintas de los subtrees. Por defecto se evalúa el monorepo; los planes por clone no son evidencia de esa ref.
 - Core consumido inicialmente: 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Verificar el gitlink vigente antes de inspeccionarlo.
 - Los resultados del piloto existente y las revisiones OWASP Top 10 no se importaron como resultados de esta revisión punto por punto.
@@ -34,7 +36,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Mantener los punte
 | --- | --- | --- | --- | --- |
 | v5.0.0-1.1.1 | L2 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.1.1.md) |
 | v5.0.0-1.1.2 | L2 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.1.2.md) |
-| v5.0.0-1.2.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-1.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.1.md) |
 | v5.0.0-1.2.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.3 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.4 | L1 | POR_REVISAR | PENDING | — |
