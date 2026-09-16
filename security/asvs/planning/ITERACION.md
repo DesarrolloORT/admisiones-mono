@@ -2,7 +2,7 @@
 
 ## Objetivo y límites
 
-Revisar OWASP ASVS 5.0.0 punto por punto, dejando contexto persistente en este monorepo. Cada pedido de «seguir» procesa **un único requisito L1/L2**, o retoma el que quedó en curso. El objetivo actual comprende 253 requisitos; los 92 L3 se conservan en la cola como FUERA_L2.
+Revisar OWASP ASVS 5.0.0 punto por punto, dejando contexto persistente en este monorepo. La fase actual revisa **solo requisitos L1**: 70 requisitos. Cada pedido de «seguir» procesa **un único requisito L1**, o retoma un L1 que quedó en curso. El objetivo general L2 conserva sus 253 requisitos L1/L2, pero los 183 L2 quedan reservados para una fase posterior, que requiere un pedido explícito del usuario. Las revisiones L2 ya documentadas se conservan; los 92 L3 permanecen en la cola como FUERA_L2.
 
 Esta fase autoriza lectura, análisis y Markdown. No implementar fixes, modificar tests/código/configuración/dependencias, regenerar contratos o Devart, actualizar submódulos, publicar ramas ni ejecutar scans activos. Las propuestas de remediación se escriben para una fase posterior. No comenzar la revisión al cargar este plan sin un pedido de continuar.
 
@@ -24,9 +24,9 @@ El chat anterior no es la fuente de avance. Si el puntero, la cola y las fichas 
 
 ## Orden y selección del punto
 
-Seguir el orden original del JSON: capítulo, sección y requisito según sus Ordinal. No ordenar los IDs como strings: 1.2.10 no antecede a 1.2.2.
+Entre los requisitos L1 seleccionables, seguir el orden original del JSON: capítulo, sección y requisito según sus Ordinal. No ordenar los IDs como strings: 1.2.10 no antecede a 1.2.2.
 
-La cola completa vive en AVANCE.md. Elegir primero el requisito EN_CURSO; si no hay uno, el primer POR_REVISAR de L1/L2. Los L3 permanecen FUERA_L2, lo que no significa NOT_APPLICABLE. El orden canónico reemplaza, para esta fase, el orden sugerido por riesgo en los planes por componente. Una observación urgente de otro punto se anota como dependencia o pendiente sin abrir una segunda revisión.
+La cola completa vive en AVANCE.md y conserva todas sus filas en el orden canónico. Para seleccionar, filtrar solo L1: elegir primero un L1 EN_CURSO; si no hay uno, el primer L1 POR_REVISAR. Saltar todos los L2 sin cambiar sus estados, resultados o fichas. Si existiera un L2 EN_CURSO, conservar su checkpoint para la fase posterior sin retomarlo en esta fase. Al agotar los L1, detenerse y registrar que la revisión documental L1 está completa; no comenzar L2 automáticamente. Los L3 permanecen FUERA_L2, lo que no significa NOT_APPLICABLE. El orden canónico entre los L1 reemplaza, para esta fase, el orden sugerido por riesgo en los planes por componente. Una observación urgente de otro punto se anota como dependencia o pendiente sin abrir una segunda revisión.
 
 Un requisito puede abarcar varios componentes: tratar sus partes en la misma ficha y sesión. Si no alcanza el contexto, guardar lo alcanzado y dejarlo EN_CURSO, con una instrucción exacta para retomar.
 
@@ -38,7 +38,7 @@ Un requisito puede abarcar varios componentes: tratar sus partes en la misma fic
 4. **Localizar implementación.** Usar CodeGraph antes de búsquedas/lecturas de código en cada componente que tenga .codegraph/. Si no está indexado, usar rg. Seguir el flujo pertinente y sus llamadas; no inferir seguridad únicamente de nombres, frameworks o documentación histórica.
 5. **Reunir evidencia acotada.** Enlazar archivos y líneas, símbolos, callers y tests existentes. Distinguir código leído, pruebas existentes no ejecutadas y resultados reproducibles realmente obtenidos. Evitar ejecutar builds que regeneren Devart o cambien archivos. Si hace falta runtime, infraestructura, credenciales o un scan, documentar la evidencia faltante y el método propuesto, sin ejecutarlo en esta fase.
 6. **Escribir la ficha.** Registrar observaciones por componente, contradicciones, dependencias, límites de cobertura y resultado sustentado. Si hay una posible remediación, describirla en Markdown en el repo responsable cuando su rama fix/owasp esté disponible; la ficha central debe enlazar esa copia y fijar su ref. Si el worktree no existe, conservar la propuesta central y registrar distribución pendiente, sin recrear repos ni cambiar checkouts por suposición.
-7. **Cerrar el checkpoint.** Validar IDs, enlaces locales, consistencia de cola/ficha/punteros y git diff --check. Guardar exclusivamente los Markdown de esta iteración en un commit local en fix/owasp, preservando cualquier cambio o staging ajeno. Si el commit no es posible, dejar archivos y comando de continuación explícitos en AVANCE.md.
+7. **Cerrar el checkpoint.** Validar IDs, enlaces locales, consistencia de cola/ficha/punteros y git diff --check. Dejar los Markdown de esta iteración sin commit, preservando cualquier cambio o staging ajeno, y registrar archivos y comando de continuación explícitos en AVANCE.md. Por instrucción vigente del usuario, no hacer commits ni pushs salvo una autorización posterior explícita.
 8. **Entregar y detenerse.** Informar ID revisado, resultado, evidencia/gaps y próximo ID. No empezar el siguiente requisito hasta un nuevo «seguir».
 
 No cargar capítulos enteros ni reauditar todo el proyecto en cada sesión. Una referencia previa solo se reutiliza si se conserva su commit/ambiente y demuestra lo exigido por el requisito actual.

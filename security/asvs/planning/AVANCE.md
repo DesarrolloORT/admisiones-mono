@@ -1,15 +1,18 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-16. Fase: análisis y documentación; fixes no autorizados.
+Actualizado: 2026-09-16. Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-1.2.3 (L1).
-- Último requisito documentado: v5.0.0-1.2.2 (L1), NEEDS_REVIEW.
-- Progreso L1/L2: 4 DOCUMENTADO, 0 EN_CURSO, 249 POR_REVISAR.
+- Siguiente requisito: v5.0.0-1.2.4 (L1).
+- Último requisito documentado: v5.0.0-1.2.3 (L1), NEEDS_REVIEW.
+- Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
+- Progreso L1: 3 DOCUMENTADO, 0 EN_CURSO, 67 POR_REVISAR (total 70).
+- L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
+- Progreso general L1/L2 conservado: 5 DOCUMENTADO, 0 EN_CURSO, 248 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.2.3; verificar Git/fuente, fijar refs y abrir su ficha.
+- Próxima acción: con un nuevo pedido de seguir, leer ITERACION.md y el texto oficial de v5.0.0-1.2.4; verificar Git/fuente, fijar refs y abrir su ficha.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
 
 - v5.0.0-1.1.2 documentado por revisión estática: codificación/serialización observada en DOM, HTTP/JSON y correo; pendientes receptor de pagos, correo entregado, runtime y cobertura de otros sinks. Ver ficha; no hay cumplimiento global demostrado.
@@ -18,6 +21,8 @@ Actualizado: 2026-09-16. Fase: análisis y documentación; fixes no autorizados.
 - v5.0.0-1.2.1 documentado por revisión estática de contextos HTML/HTTP y proxy SOAP/XML. Pendientes: DOM y librería SVG, correo entregado, envelope SOAP, headers efectivos y otros consumidores Core; ver ficha. HEAD evaluado: 75b80a958b3a57d94625cd93461a72b90fa9fff8; Core consumido verificado: 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Estado inicial: solo graph.json sin seguimiento, staging vacío; cambios de esta iteración limitados a dos Markdown, sin fixes/commits/pushs.
 
 - v5.0.0-1.2.2 documentado por revisión estática de URLs en frontend/API/Core: paths/query con escape y formulario de pago limitado a http/https. Pendientes: configuración de activación/fragmentos, proveedor de pagos, mailto, router/framework y protocolos/polling Azure. Resultado NEEDS_REVIEW; evidencia, límites y propuesta distribuida API en ficha. Sin fixes ni ejecución de tests/runtime.
+
+- v5.0.0-1.2.3 documentado: serialización JavaScript/JSON en frontend/API/Core; pendientes bytes/round trip, parser externo de pagos, consumidores de SerializeJsonLog y visor de logs. Resultado NEEDS_REVIEW. HEAD evaluado f41cba032b800ba3cd17525e6608274644ea7e55; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7. Checkpoint sin commit por instrucción del usuario: AVANCE.md, ficha 1.2.3 y dos copias Markdown en worktrees API/Core fix/owasp (rutas/refs en ficha). Staging vacío preservado. Sin fixes, builds, tests, commits ni pushs. Para inspeccionar: `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.2.3.md`.
 
 ## Contexto que debe preservarse
 
@@ -30,7 +35,7 @@ Actualizado: 2026-09-16. Fase: análisis y documentación; fixes no autorizados.
 
 ## Reglas para actualizar este archivo
 
-Una fila por ID oficial; no eliminar ni reordenar requisitos. Mantener los punteros y contadores consistentes con la cola y las fichas. Cuando un punto esté DOCUMENTADO, completar resultado y enlace de ficha; si queda EN_CURSO, documentar la próxima acción exacta arriba y en su ficha. Los gaps de puntos documentados se conservan en sus fichas para revisión posterior.
+Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L1 EN_CURSO o el primer L1 POR_REVISAR según ITERACION.md; saltar L2 conservando sus estados y fichas. Al agotar L1, detenerse sin iniciar L2 automáticamente. Mantener los contadores L1 y L2 separados, además del total general. Mantener los punteros y contadores consistentes con la cola y las fichas. Cuando un punto esté DOCUMENTADO, completar resultado y enlace de ficha; si queda EN_CURSO, documentar la próxima acción exacta arriba y en su ficha. Los gaps de puntos documentados se conservan en sus fichas para revisión posterior.
 
 ## Cola canónica
 
@@ -40,7 +45,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Mantener los punte
 | v5.0.0-1.1.2 | L2 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.1.2.md) |
 | v5.0.0-1.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.1.md) |
 | v5.0.0-1.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.2.md) |
-| v5.0.0-1.2.3 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-1.2.3 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-1.2.3.md) |
 | v5.0.0-1.2.4 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.5 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-1.2.6 | L2 | POR_REVISAR | PENDING | — |
