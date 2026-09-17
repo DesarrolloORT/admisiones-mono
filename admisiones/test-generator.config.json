@@ -1,4 +1,0 @@
-{
-  "excludeFilePatterns": ["*.interface.ts", "app.config.ts", "*.routes.ts"],
-  "excludePaths": ["core/storage/keys.ts", "shared/api/generated/"]
-}

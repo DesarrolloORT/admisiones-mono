@@ -1,6 +1,0 @@
-feature: ['feature/*', 'feat/*', 'v*.*.*/feature/*', 'v*.*.*/feat/*']
-fix: ['fix/*', 'hotfix/*', 'v*.*.*/fix/*']
-release: 'release/*'
-dependencies: 'dependabot/*'
-docs: 'v*.*.*/docs/*'
-style: 'v*.*.*/style/*'
