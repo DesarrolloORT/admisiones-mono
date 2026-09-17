@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-009 — Endurecimiento iterativo de seguridad de la API pública (rate limiting, CORS, CAPTCHA, SameSite) hasta un diseño anti-enumeración maduro
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de validación. **Antes de aceptar, el equipo debe confirmar la configuración vigente hoy en producción** (CORS credentials, CAPTCHA, SameSite) — el historial muestra iteración inestable, no un estado final confiable por sí solo.
+`draft` — **se mantiene deliberadamente en `draft` tras la revisión del 2026-09-17.** El estado vigente se verificó en código (ver sección siguiente) y aparecieron tres hallazgos que contradicen la premisa de "diseño maduro" del ADR. No se acepta hasta resolverlos o asumirlos explícitamente.
 
 ## Contexto
 
@@ -32,10 +32,32 @@ El estado final (agosto en adelante) es un diseño de seguridad deliberado y mad
 - La superficie pública queda con rate limiting, CAPTCHA y protección anti-enumeración, medibles vía Prometheus.
 - **Cosa extraña señalada al equipo**: la reversión de CORS de 2 días (mayo) y las alternancias de CAPTCHA/SameSite no tienen explicación documentada — señal de iteración bajo presión, no de un proceso de cambio revisado.
 
-## Gaps
+## Estado vigente verificado en código (2026-09-17)
 
-- Confirmar con el equipo qué rompió `DisallowCredentials()` en mayo.
-- **Confirmar el estado actual (no solo histórico) de CORS credentials, CAPTCHA y SameSite en producción** antes de dar por buena cualquier configuración vista en el historial.
+| Control | Estado | Ubicación |
+|---|---|---|
+| CORS | `AllowCredentials()`, sin `AllowAnyOrigin`, lista de orígenes hardcodeada | `Extensions/ServiceCollectionExtensions.cs:154-184` |
+| SameSite | `Strict` si el ambiente es production-like, `None` en caso contrario | `Security/Authentication/CookieAuthenticationHelper.cs:40-47` |
+| Cookies | `Secure = true` y `HttpOnly = true` fijos, no dependen de ambiente | idem, `:59-61, 81-83, 121-122` |
+| CAPTCHA | Activo en 7 endpoints, sin flag de bypass; falla cerrado si falta el secreto | `Security/Captcha/RequireCaptchaAttribute.cs`, `RecaptchaService.cs:33-44` |
+| JWT | Restringido a HS256, secreto mínimo de 32 bytes validado | `Security/Authentication/AuthenticationExtensions.cs:68, 116-120` |
+
+El punto 3 de la cronología (julio, `88f35a82`) se confirma: JWT y el `SameSite` dinámico están tal como el ADR describe.
+
+## Hallazgos que impiden aceptar este ADR (2026-09-17)
+
+1. **`SameSite=None` es el default por omisión.** `CookieAuthenticationHelper.cs:42-46` lee `ASPNETCORE_ENVIRONMENT` crudo del proceso y compara por string contra `"Production"`/`"Preproduction"`. Si la variable falta, está vacía o dice otra cosa (`"Prod"`, `"PRODUCTION-01"`), el resultado es `SameSiteMode.None` — el modo más permisivo, con la cookie de sesión viajando cross-site. Es un control de seguridad que se desactiva solo ante una configuración ausente, que es exactamente el modo de falla que no se quiere. Agrava el problema que el proyecto **ya tiene** el helper `EnvironmentExtensions.IsProductionLike` (`Extensions/EnvironmentExtensions.cs:15`), usado en el resto de la app: acá la lógica está duplicada a mano en vez de reutilizarlo.
+
+2. **CORS acepta credenciales desde `localhost` en producción.** La lista de orígenes (`ServiceCollectionExtensions.cs:156-167`) es única para todos los ambientes e incluye `http://localhost:4200` y `http://localhost:5001` (HTTP plano), más todos los subdominios no productivos (`admisionesdesa`, `admisionestesting`, `admisionespreprod`). Combinado con `AllowCredentials()`, en producción se admiten requests con cookies desde esos orígenes. Debería segmentarse por ambiente.
+
+3. **El umbral de reCAPTCHA no bloquea ningún endpoint.** Los 7 usos de `[RequireCaptcha]` (`AuthController.cs:72, 382`; `RegistrationController.cs:74, 111, 163, 256, 284`) usan `CaptchaValidationMode.ScoreOnly`. La rama que compara contra `RECAPTCHA_SCORE` (`RequireCaptchaAttribute.cs:88-97`) solo corre con `RequireMinimumScore` y hoy es **código muerto**. En la práctica reCAPTCHA valida que el token sea legítimo, pero un score bajo no rechaza la request: solo dispara el 2FA adaptativo del login (ver `ADR-011`). Además el default `0.5` está duplicado en `RequireCaptchaAttribute.cs:89` y `LoginFlowService.cs:131`, y `RECAPTCHA_SCORE` no figura en ningún `appsettings*.json` — vive solo como variable de entorno con fallback silencioso.
+
+Punto relacionado: `JWT_SECRET_KEY` y `RECAPTCHA_SECRET_KEY` no están en `RequiredConfigurationExtensions.RequiredKeys` (`:20-24`), así que la app levanta sin ellos y falla recién en el primer login. Falla cerrado, pero tarde.
+
+## Gaps abiertos
+
+- Qué rompió `DisallowCredentials()` en mayo — no es verificable en código, requiere memoria del equipo.
+- Decidir sobre los tres hallazgos de arriba: corregir, o asumirlos explícitamente como riesgo aceptado con su justificación.
 
 ## Referencias
 

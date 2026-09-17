@@ -1,7 +1,7 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-014 — Autenticación combinada: LDAP + JWT/refresh-token con cookies seguras
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de validación del equipo, en particular sobre qué endpoints usa cada mecanismo hoy.
+`accepted` (2026-09-17). Los gaps sobre reparto de responsabilidades y alcance de la cuenta LDAP se cerraron con confirmación del equipo el 2026-09-17.
 
 ## Contexto
 
@@ -23,14 +23,14 @@ updated: 2026-09-15
 
 ## Consecuencias
 
-- Dos superficies de autenticación para auditar en seguridad.
+- Una sola superficie de autenticación expuesta (JWT en cookie), con LDAP detrás como almacén de credenciales — ver gaps cerrados más abajo.
 - La entidad `RefreshToken` se agregó al modelo de datos sin migración versionada visible (ver `ADR-007`, gap de gobernanza de base de datos).
 - **Evolución confirmada más adelante**: el JWT termina entregándose exclusivamente vía cookies HttpOnly (no bearer header, ver julio/`ADR-006`); `api-admisiones` además tiene permisos de **escritura** en LDAP (crea usuarios durante el registro, no solo autentica) — hecho confirmado en junio, más sensible que un simple bind de autenticación.
 
-## Gaps
+## Gaps cerrados (2026-09-17, confirmación del equipo)
 
-- Confirmar qué endpoints/consumidores usa cada mecanismo (LDAP vs. JWT) y si hay plan de deprecar uno en favor del otro.
-- Confirmar el alcance de permisos de la cuenta de servicio LDAP usada por la API (dado que puede crear usuarios, no solo autenticar).
+- **Reparto de responsabilidades:** LDAP se usa exclusivamente dentro del flujo de login (bind de credenciales y alta de usuario durante el registro). Ningún endpoint protegido autentica contra LDAP: toda la autorización de la API va por JWT en cookie HttpOnly. No hay dos superficies de autenticación expuestas, sino una sola (JWT) apoyada en LDAP como almacén de credenciales.
+- **Alcance de la cuenta de servicio LDAP:** limitada a bind y creación de usuarios dentro de una OU acotada (rama de postulantes). No tiene permisos de escritura sobre el resto del directorio.
 
 ## Referencias
 

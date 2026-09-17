@@ -1,7 +1,7 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-006 — Modularización completa de `AppLogic` y traducción de la API a inglés
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de revisión y validación por el equipo. No marcar `accepted` sin esa revisión explícita.
+`accepted` (2026-09-17). Nota: la decisión arquitectónica está aceptada, pero **queda una acción pendiente en producción** — ver "Pendiente de ejecución" más abajo.
 
 ## Contexto
 
@@ -40,14 +40,18 @@ Una auditoría técnica formal de `WebApiAdmisiones` (2026-07-06, `docs/auditori
 
 - **Bug real de integración descubierto y corregido**: `T_PERSONA` es una tabla Oracle compartida entre `api-admisiones` y otro sistema de ORT, **"FDP" (Ficha de Persona)**, con caminos de escritura de teléfono independientes y no coordinados (FDP guardaba E.164, admisiones guardaba string crudo). Se corrigió normalizando en los tres puntos de escritura de admisiones, con el teléfono pasando a viajar como objeto estructurado — otro breaking change coordinado con el front.
 - Se documentó la existencia de **"LogicaORT"**, un proceso legacy fuera de este repo que migra datos de forma diferida hacia `T_ENCUESTA_INI`. La API tuvo que diseñar su propia máquina de estados (`TEMPORAL`→`CONFIRMADO`→`DEFINITIVO`) para coexistir con ese proceso sin pisarlo, y requirió una migración de datos puntual.
-- Deuda conocida y documentada explícitamente: el módulo `Scholarships` (fondo de becas) está implementado y testeado pero ningún controller lo consume — decisión de producto pendiente.
+- El módulo `Scholarships` (fondo de becas) está implementado y testeado pero ningún controller lo consume todavía. **Confirmado el 2026-09-17: no es código muerto — hay intención de exponerlo próximamente**, por lo que se mantiene en vez de eliminarse.
 - El frontend (`admisiones`) hizo el mismo movimiento en paralelo: el 2026-08-14 migró su vocabulario interno (dashboard, enrollments, scholarships, auth, catalogs) de español a inglés, en coordinación con los contratos JSON en inglés que expone este ADR.
 
-## Gaps
+## Pendiente de ejecución (confirmado el 2026-09-17)
 
-- **Gobernanza de base de datos**: confirmado con nombre propio que al menos tres sistemas (`api-admisiones`, `FDP`, `LogicaORT`) comparten tablas Oracle sin un dueño único de esquema ni contrato formal. Se recomienda un inventario completo de sistemas que tocan `T_PERSONA`, `T_ENCUESTA_INI` y tablas relacionadas antes de futuros cambios de esquema — esto ya no es una sospecha inferida, es un hecho documentado tras un incidente real.
-- Confirmar si la migración de datos del cambio de estado de encuesta inicial ya se ejecutó en producción.
-- Confirmar con producto el destino de `Scholarships`/fondo de becas.
+**La migración de datos del cambio de estado de encuesta inicial todavía NO se ejecutó en producción.** El código de la máquina de estados (`TEMPORAL`→`CONFIRMADO`→`DEFINITIVO`) está desplegado, pero los datos preexistentes aún no fueron migrados a ese esquema de estados.
+
+Es un riesgo activo, no una tarea administrativa: hasta que la migración corra, conviven registros con el modelo de estados nuevo y registros sin migrar, sobre una tabla (`T_ENCUESTA_INI`) que además escribe el proceso legacy `LogicaORT` de forma diferida. Debe planificarse la ejecución y verificarse que `LogicaORT` no reintroduzca registros en el formato viejo después de migrar.
+
+## Gaps abiertos
+
+- **Gobernanza de base de datos**: confirmado con nombre propio que al menos tres sistemas (`api-admisiones`, `FDP`, `LogicaORT`) comparten tablas Oracle sin un dueño único de esquema ni contrato formal — y, por `ADR-003`, también "Inscripciones y Pagos" corre sobre la misma base. Se recomienda un inventario completo de sistemas que tocan `T_PERSONA`, `T_ENCUESTA_INI` y tablas relacionadas antes de futuros cambios de esquema. Esto ya no es una sospecha inferida: es un hecho documentado tras un incidente real.
 
 ## Referencias
 

@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-013 — Integración de envío de datos de postulantes al sistema externo "Tivenos"
@@ -11,6 +11,8 @@ updated: 2026-09-15
 ## Estado
 
 `draft` — **no promover a `accepted`**. Este documento existe para dejar visible una integración de datos personales cuyo propósito no se pudo determinar desde el código, no para documentar una decisión entendida.
+
+Revisado el 2026-09-17: el equipo confirmó qué es Tivenos (ver abajo). **Eso no desbloquea el ADR: lo agrava.** Saber que es un proveedor externo usado con fines de marketing convierte el gap de "no sabemos a dónde van estos datos" en "sabemos que hay una transferencia de datos personales a un tercero con finalidad comercial, sin base legal documentada". Sigue bloqueado a la espera de legal/DPO.
 
 ## Contexto
 
@@ -24,22 +26,35 @@ updated: 2026-09-15
 - `2eb02a5b` (2026-08-10): se agrega un mensaje adicional, "site registration", cuando una persona registra su primer interés en un producto.
 - Documentado técnicamente en `api-admisiones/docs/11-estructura-tivenos-piloto.md`: es una integración por **tabla/cola, no HTTP**; los DTOs no se exponen en ningún endpoint público.
 
-## Lo que no se sabe (y no se debe inventar)
+## Qué es Tivenos (confirmado por el equipo, 2026-09-17)
 
-- Qué es "Tivenos" — nombre consistente con una plataforma de marketing/CRM educativo, pero **no confirmado**.
-- Qué datos exactos recibe, con qué finalidad, y si hay retención o hay un proceso de baja.
+**Un proveedor externo a ORT, usado con fines de marketing / seguimiento comercial de postulantes.** Es decir: los datos no quedan dentro de la organización, hay una transferencia a un tercero que actúa como encargado del tratamiento.
+
+Esto confirma la hipótesis que el ADR marcaba como no verificada, y sube el nivel de riesgo en dos sentidos:
+
+1. **Es una transferencia a un tercero**, no un movimiento interno de datos. Requiere contrato de encargo de tratamiento, y garantías sobre retención, subencargados y ubicación de los datos.
+2. **La finalidad es comercial, no la prestación del servicio de admisión.** Un postulante que se registra para inscribirse no está, por ese solo hecho, consintiendo el uso de sus datos para marketing. La base legal del envío no puede darse por cubierta con la del registro.
+
+Agravante ya registrado: desde `c59e88fc` (2026-06-25) **el envío es incondicional** — no hay opt-in, opt-out ni condición que lo module. Todo postulante que registra interés genera envío.
+
+## Lo que sigue sin saberse
+
+- Qué datos exactos recibe el proveedor, con qué finalidad específica, y si hay política de retención o proceso de baja.
 - Si los postulantes fueron informados o dieron consentimiento para este envío.
-- Si `EnvioParaTiveno` es leída por un proceso batch propio de ORT o por un tercero externo.
+- Cómo llega la cola `EnvioParaTiveno` al proveedor: qué proceso la lee, con qué credenciales y por qué canal. Dado que el destino es externo, esto es parte de la superficie de exposición de datos y debería estar documentado.
 
 ## Por qué esto importa
 
 Los datos enviados (interés académico, datos de bachillerato) son datos personales de postulantes, muchos de ellos menores de edad o recién egresados de secundaria. Enviarlos de forma incondicional a un sistema cuyo propósito no está documentado en este repositorio es, como mínimo, un gap de trazabilidad que el equipo de seguridad/privacidad debería cerrar antes de asumir que el flujo actual es conforme a normativa de protección de datos.
 
-## Gaps y próximos pasos
+## Próximos pasos para desbloquear
 
-- Preguntar al equipo funcional/comercial qué es Tivenos y su propósito de negocio.
-- Confirmar con legal/DPO la base legal del envío (interés legítimo, consentimiento, u otro) — igual que el gap ya señalado en `ADR-004` para el reconocimiento de documentos.
-- Si Tivenos resulta ser, por ejemplo, una herramienta de seguimiento comercial de admisiones, documentar el acuerdo/contrato con ese proveedor si existe.
+1. **Base legal del envío** (legal/DPO): consentimiento específico para fines comerciales, o interés legítimo con su balancing test documentado. No alcanza con la base legal del registro de admisión — la finalidad es distinta. Mismo bloqueo que `ADR-004`.
+2. **Contrato de encargo de tratamiento con el proveedor**: confirmar si existe y dónde vive, con sus cláusulas de retención, subencargados y ubicación de los datos.
+3. **Revisar la incondicionalidad del envío**: si la base legal termina siendo el consentimiento, el envío incondicional de `c59e88fc` es incompatible y hay que reintroducir una condición.
+4. **Documentar el canal de salida**: qué proceso lee `EnvioParaTiveno` y cómo llega al proveedor.
+
+Mientras tanto, este ADR permanece en `draft` como registro visible del riesgo.
 
 ## Referencias
 

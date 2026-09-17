@@ -1,7 +1,7 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-002 — Extracción de `api-admisiones` (`WebApiAdmisiones`) desde la plantilla genérica multi-sistema `NewApi`
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de revisión y validación por el equipo. No marcar `accepted` sin esa revisión explícita.
+`accepted` (2026-09-17).
 
 ## Contexto
 

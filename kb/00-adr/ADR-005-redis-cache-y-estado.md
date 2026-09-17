@@ -1,7 +1,7 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-005 — Adopción de Redis como caché distribuida y almacén de estado transitorio
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de revisión y validación por el equipo. No marcar `accepted` sin esa revisión explícita.
+`accepted` (2026-09-17). El gap de fail-open/fail-closed se cerró verificándolo en código el 2026-09-17 (ver abajo); el de durabilidad en producción sigue abierto.
 
 ## Contexto
 
@@ -37,10 +37,29 @@ Adoptar **Redis** como pieza de infraestructura compartida para tres usos:
 - Redis se vuelve una dependencia de infraestructura crítica: login (rate limiting), catálogos (caché) y registro/2FA (estado transitorio) dependen de su disponibilidad.
 - Al usarse también para estado de negocio (no solo caché efímera), corresponde definir una política de durabilidad/backup — no confirmada en el código revisado.
 
-## Gaps
+## Comportamiento ante Redis caído (verificado en código, 2026-09-17)
 
-- Confirmar política de disponibilidad y persistencia de Redis en producción (cluster, RDB/AOF, o instancia efímera).
-- Confirmar comportamiento de fail-open vs fail-closed si Redis no responde, tanto para rate limiting como para flujos de registro/2FA.
+`AbortOnConnectFail = false`, `ConnectTimeout`/`SyncTimeout` 5000 ms, `ExponentialRetry(5000)`, connection string por variable de entorno `RedisConnectionStringAdmisiones` — todo en `Extensions/ServiceCollectionExtensions.cs:80-149`. No hay health check de Redis ni circuit breaker; los handlers de `ConnectionFailed`/`ConnectionRestored` solo loguean.
+
+No hay una política única: el comportamiento depende del consumidor.
+
+| Flujo | Con Redis caído | Ubicación |
+|---|---|---|
+| Rate limit login (middleware por IP) | **fail-open** (sin límite) | `RedisRateLimiterService.cs:94-109` |
+| Rate limit registro/recuperación (`PublicAuth`) | **fail-open** | idem, vía `ServiceCollectionExtensions.cs:356` |
+| Rate limit reenvío 2FA | **fail-open** | `TwoFactorAuthService.cs:300` |
+| Registro pendiente | excepción propaga → HTTP 500 | `RedisPendingPersonStore.cs` (sin `catch`) |
+| Sesión 2FA | excepción propaga → HTTP 500 (`AUTH_2FA_*_99`) | `RedisTwoFactorSessionStore.cs` + `TwoFactorAuthService.cs:138,248,363` |
+| Caché de imágenes de documento | degrada a cache miss | `RedisIdentityDocumentImageCache.cs:78` |
+
+El fail-open del rate limiting es deliberado y está comentado como tal en el código, con la alternativa señalada en el propio comentario.
+
+**Inconsistencia detectada (a resolver, no es una decisión tomada):** `RedisRateLimiterService` decide fail-**open** en `IsAllowedAsync` pero fail-**closed** en `GetRemainingAsync`, que ante cualquier excepción devuelve `0` (`:132-136`). `LoginFlowService.cs:86-110` interpreta `remaining == 0` como bloqueo, de modo que **con Redis caído todo login devuelve 429 con un mensaje de "múltiples intentos fallidos" que no corresponde a lo que pasó**. El efecto neto contradice la intención fail-open del middleware. No es una decisión de este ADR: es un comportamiento emergente a corregir.
+
+## Gaps abiertos
+
+- Política de disponibilidad y persistencia de Redis en producción (cluster, réplica, RDB/AOF o instancia efímera). Relevante porque Redis guarda estado de negocio: si es efímero, un reinicio pierde registros pendientes y sesiones de 2FA en curso.
+- Decidir explícitamente la postura fail-open vs. fail-closed y unificarla, cerrando la inconsistencia de arriba.
 
 ## Referencias
 

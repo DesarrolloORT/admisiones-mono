@@ -1,7 +1,7 @@
 ---
 status: draft
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-004 — Reconocimiento de documentos de identidad vía Azure Document Intelligence + Azure Face
@@ -10,7 +10,11 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de revisión y validación por el equipo, **en particular por legal/DPO dado el tratamiento de datos personales/biométricos**. No marcar `accepted` sin esa revisión explícita.
+`draft` — **bloqueado**. Revisado el 2026-09-17: la decisión técnica se considera entendida y no controvertida, pero el ADR **no se acepta a la espera de revisión de legal/DPO** por el tratamiento de datos biométricos y documentos de identidad.
+
+El bloqueo es deliberado. Aceptar este ADR sin esa revisión dejaría registrado, para quien lo lea después, que alguien validó la base legal del procesamiento biométrico — y nadie lo hizo. La aprobación técnica y la habilitación legal son dos cosas distintas y este documento no puede confundirlas.
+
+**Para desbloquear:** base legal del tratamiento (consentimiento u otra), DPIA o evaluación de impacto, y política de retención acordada con Microsoft como encargado del tratamiento. Con eso, se cita la fuente acá y se promueve a `accepted`.
 
 ## Contexto
 

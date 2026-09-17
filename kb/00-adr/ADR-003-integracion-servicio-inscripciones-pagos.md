@@ -1,7 +1,7 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-003 — Integración service-to-service con la API interna "Inscripciones y Pagos" vía JWT de servicio
@@ -10,7 +10,7 @@ updated: 2026-09-15
 
 ## Estado
 
-`draft` — pendiente de revisión y validación por el equipo. No marcar `accepted` sin esa revisión explícita.
+`accepted` (2026-09-17). Gaps funcional y de base de datos cerrados con confirmación del equipo el 2026-09-17.
 
 ## Contexto
 
@@ -34,8 +34,8 @@ No hay evidencia de alternativas formalmente evaluadas (p. ej. mTLS, API keys es
 - Pagos e inscripciones dependen de la disponibilidad síncrona de una API externa a este repo, sin reintentos automáticos: una falla de esa API es visible directamente al usuario final.
 - Nuevo secreto de configuración (`SECRET_KEY_API_INSCR_PAGOS`) que firma/valida el JWT de servicio — a incluir en el inventario de secretos del baseline de seguridad.
 - Se documenta un patrón reusable (`EJEMPLO_INTEGRACION_API_INTERNA.md`) para integraciones internas futuras.
-- **Gap funcional:** las reglas de negocio de "Inscripciones y Pagos" (pasarela de pago, moneda, reversibilidad de transacciones) no están documentadas en este repo — es un sistema externo. Requiere contexto del equipo funcional/de pagos.
-- **Gap de base de datos:** no es verificable desde este repo si "Inscripciones y Pagos" tiene su propia base de datos separada de la de `api-admisiones` (ver `ARCH-HIST-003`/gap de persistencia).
+- **Confirmado (2026-09-17): "Inscripciones y Pagos" comparte la misma base Oracle que `api-admisiones`.** La separación es a nivel de aplicación (otra API, otro repo), no de datos. Consecuencia a tener presente: el JWT de servicio autentica la llamada HTTP, pero no impide que ambos sistemas toquen las mismas tablas por fuera de ese contrato — se suma al gap de tablas compartidas sin contrato formal de `ADR-007`/`ADR-006` (`FDP`, `LogicaORT`).
+- **Confirmado (2026-09-17): el dueño funcional es el mismo equipo de Admisiones**, en otro repositorio. Las reglas de negocio de pago (pasarela, moneda, reversibilidad de transacciones) siguen sin estar documentadas en la KB, pero son incorporables sin depender de un tercero.
 
 ## Referencias
 

@@ -1,16 +1,16 @@
 ---
-status: draft
+status: accepted
 owner: rubino-f
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
 # ADR-007 — Acceso a datos generado por Devart Entity Developer sobre base de datos Oracle preexistente
 
-> **Retrospectivo, confianza `medium`.** A diferencia de otros ADR de esta serie, la motivación (por qué Devart y no otra alternativa) no está confirmada — solo el cambio y sus consecuencias. **No promover a `accepted` sin validación explícita del equipo de datos/backend.** Ver [`kb/60-descubrimiento/ruta-adr-historicos.md`](../60-descubrimiento/ruta-adr-historicos.md#arch-hist-003--acceso-a-datos-generado-por-devart-entity-developer-sobre-base-de-datos-preexistente-db-first-sin-migraciones-ef-en-el-repo) — candidato `ARCH-HIST-003`.
+> **Retrospectivo.** El cambio y sus consecuencias se reconstruyeron del historial; la motivación (por qué Devart) no surgía del código y fue **confirmada por el equipo el 2026-09-17**, elevando la confianza de `medium` a `alta`. Ver [`kb/60-descubrimiento/ruta-adr-historicos.md`](../60-descubrimiento/ruta-adr-historicos.md#arch-hist-003--acceso-a-datos-generado-por-devart-entity-developer-sobre-base-de-datos-preexistente-db-first-sin-migraciones-ef-en-el-repo) — candidato `ARCH-HIST-003`.
 
 ## Estado
 
-`draft` — pendiente de validación. Confianza `medium`: el qué y las consecuencias están claros; el porqué es inferido, no confirmado.
+`accepted` (2026-09-17). La motivación quedó confirmada por el equipo el 2026-09-17: ya no es inferencia.
 
 ## Contexto
 
@@ -20,16 +20,24 @@ updated: 2026-09-15
 
 Usar Devart Entity Developer como generador *database-first* del modelo de acceso a datos, reverse-engineering desde el esquema Oracle existente, en lugar de Entity Framework Core Code-First con migraciones versionadas en el repositorio.
 
+**Motivación (confirmada por el equipo, 2026-09-17):** la base Oracle ya existía y está compartida con otros sistemas de ORT, por lo que Code-First con migraciones desde este repo no era una opción viable — `api-admisiones` no es dueño del esquema. Devart es la herramienta estándar de la organización para ese escenario database-first.
+
 ## Consecuencias
 
 - El esquema de base de datos es una dependencia externa e implícita: los cambios de esquema (agregar una columna, una tabla) se hacen fuera del flujo normal de commits y luego se regenera/ajusta a mano el modelo Devart. Evidencia directa: el commit `ecea9100` (mayo) agrega una columna (`HashTokenPassword`) sin ninguna migración visible.
 - **Confirmado en agosto/`ADR-006`**: al menos otros dos sistemas (`FDP`, `LogicaORT`) comparten tablas de esta misma base Oracle (`T_PERSONA`, `T_ENCUESTA_INI`) sin un contrato formal entre ellos — esto ya causó un bug real de inconsistencia de datos (ver `ADR-006`).
 
-## Gaps
+## Gaps cerrados (2026-09-17, confirmación del equipo)
 
-- **Falta contexto de base de datos**: motor Oracle confirmado, pero no su versión, quién administra el esquema formalmente, ni si existe un proceso de versionado de cambios de esquema fuera de este repo.
+- **Por qué Devart:** la base es preexistente y compartida; el repo no es dueño del esquema (ver Motivación).
+- **Quién administra el esquema:** el DBA / equipo de infraestructura de ORT, fuera de este repositorio. Los cambios de esquema se solicitan y se aplican por ese canal, no por un commit de `api-admisiones`.
+
+## Gaps abiertos
+
+- Versión concreta del motor Oracle.
+- Si existe un versionado formal de cambios de esquema del lado del DBA (y dónde vive), para poder correlacionar un cambio de modelo Devart con el cambio de esquema que lo motivó.
 - Falta de análisis funcional documentado sobre las reglas de negocio detrás de las tablas mapeadas.
-- No se confirmó por qué se eligió Devart sobre otras alternativas (Code-First, Dapper, otro ORM).
+- Ausencia de contrato formal con los otros sistemas que comparten tablas (`FDP`, `LogicaORT`) — riesgo ya materializado, ver `ADR-006`.
 
 ## Referencias
 
