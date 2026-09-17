@@ -1,3 +1,8 @@
-[submodule "api-admisiones/Core"]
-	path = api-admisiones/Core
-	url = https://github.com/DesarrolloORT/Core.git
+[submodule "admisiones"]
+	path = admisiones
+	url = https://github.com/DesarrolloORT/admisiones.git
+	branch = v1.0.0/fix/apiMessages
+[submodule "api-admisiones"]
+	path = api-admisiones
+	url = https://github.com/DesarrolloORT/api-admisiones.git
+	branch = testing
