@@ -1,18 +1,20 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-16. Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17. Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-2.2.1 (L1).
-- Último requisito documentado: v5.0.0-2.1.1 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-2.2.2 (L1).
+- Último requisito documentado: v5.0.0-2.2.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 9 DOCUMENTADO, 0 EN_CURSO, 61 POR_REVISAR (total 70).
+- Progreso L1: 10 DOCUMENTADO, 0 EN_CURSO, 60 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 11 DOCUMENTADO, 0 EN_CURSO, 242 POR_REVISAR.
+- Progreso general L1/L2 conservado: 12 DOCUMENTADO, 0 EN_CURSO, 241 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-2.2.1 (L1), verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-2.2.2 (L1), verificar Git/fuente y fijar refs antes de investigar.
+- Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
+- Aviso de ubicación: `security/asvs/planning/` sólo existe en la rama `fix/owasp`; en `main` no está. Verificar la rama antes de retomar.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
 
 - v5.0.0-1.1.2 documentado por revisión estática: codificación/serialización observada en DOM, HTTP/JSON y correo; pendientes receptor de pagos, correo entregado, runtime y cobertura de otros sinks. Ver ficha; no hay cumplimiento global demostrado.
@@ -35,6 +37,8 @@ Actualizado: 2026-09-16. Fase: análisis y documentación exclusivamente L1; fix
 - v5.0.0-1.5.1 DOCUMENTADO / NEEDS_REVIEW: XML SOAP en LDAP/correo Core; callers pasan bindings propios, sin atribuirles las cuotas máximas de factories generadas. Pendientes parser/assemblies efectivos, pruebas aisladas de DTD/entidades sin acceso externo, formatters API, SVG privado y otros consumidores/servicios. HEAD 448932a10d93cdcc1929839a32ae634dcd5508ee; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado. Sin commit: AVANCE.md y revisiones/v5.0.0-1.5.1.md; no hay fix concreto para distribuir. Sin fixes/builds/tests/scans/commits/pushs; staging vacío y graph.json ajeno preservados. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-1.5.1.md`. Continuación solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-2.1.1. No apliques fixes, commits ni pushs».
 
 - v5.0.0-2.1.1 DOCUMENTADO / NEEDS_REVIEW: reglas concretas de teléfono/registro/imágenes documentadas; drift de referencias históricas de registro y allowlist XML docs/contrato/regla. Pendientes inventario completo de estructuras, formatos DE/PS/CC, semántica email, OpenAPI del commit, ejemplos ejecutados e integraciones. HEAD 3362acec955936eb39e10a0c20e2facb9857420d; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado. Sin commit: AVANCE.md, revisiones/v5.0.0-2.1.1.md y propuesta API temporal fix/owasp (ruta/ref en ficha); distribución frontend/Core pendiente. Sin fixes/builds/tests/scans/commits/pushs; staging vacío y graph.json ajeno preservados. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-2.1.1.md`. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-2.2.1. No apliques fixes, commits ni pushs».
+
+- v5.0.0-2.2.1 DOCUMENTADO / NEEDS_REVIEW: allowlist cerrada de tipo de documento aplicada en los siete casos de uso que deciden autenticación, recuperación de password y rama del registro; patrón/rango en el alta de persona; validación de archivos por magic bytes y tamaño ignorando la extensión declarada. Dos hallazgos: (1) `InMemoryJsonSchemaRegistry` sólo registra `POST /api/datospersonales`, ruta inexistente en esta ref, por lo que la validación estructural por esquema no cubre ningún endpoint y el filtro global aporta sólo `Accept`/`Content-Type`; (2) el número de documento no tiene estructura ni longitud definidas para DE/PS/CC pese a decidir la creación del usuario LDAP y componer claves de caché/rate limiting. Pendientes: ruteo efectivo, decisión de poblar o retirar el registry, formatos DE/PS/CC, llamadores reales de `FileValidator` y ejecución de los tests existentes. HEAD evaluado 01c073b87227a9eccdb30be1f92ffb21c559f167; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado sobre el blob (ver aviso de método). Sin commit: AVANCE.md y revisiones/v5.0.0-2.2.1.md; distribución de propuestas a API pendiente, no se verificaron los worktrees temporales. Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. La sesión comenzó en `main` y se hizo `git checkout fix/owasp` desde árbol limpio. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-2.2.1.md`. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-2.2.2. No apliques fixes, commits ni pushs».
 
 ## Contexto que debe preservarse
 
@@ -86,7 +90,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-2.1.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-2.1.1.md) |
 | v5.0.0-2.1.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-2.1.3 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-2.2.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-2.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-2.2.1.md) |
 | v5.0.0-2.2.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-2.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-2.3.1 | L1 | POR_REVISAR | PENDING | — |
