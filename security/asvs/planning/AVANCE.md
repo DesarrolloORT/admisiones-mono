@@ -1,18 +1,18 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-17 (v5.0.0-3.4.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17 (v5.0.0-3.5.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-3.5.1 (L1); V3.4.3-3.4.6 son L2 (fuera de esta fase) y V3.4.7-3.4.8 son L3/FUERA_L2, se saltan sin cambiar sus estados.
-- Último requisito documentado: v5.0.0-3.4.2 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-3.5.2 (L1).
+- Último requisito documentado: v5.0.0-3.5.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 17 DOCUMENTADO, 0 EN_CURSO, 53 POR_REVISAR (total 70).
+- Progreso L1: 18 DOCUMENTADO, 0 EN_CURSO, 52 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 19 DOCUMENTADO, 0 EN_CURSO, 234 POR_REVISAR.
+- Progreso general L1/L2 conservado: 20 DOCUMENTADO, 0 EN_CURSO, 233 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-3.4.2 (L1), verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-3.5.2 (L1), verificar Git/fuente y fijar refs antes de investigar.
 - Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
 - Aviso de ubicación: `security/asvs/planning/` sólo existe en la rama `fix/owasp`; en `main` no está. Verificar la rama antes de retomar.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
@@ -53,6 +53,8 @@ Actualizado: 2026-09-17 (v5.0.0-3.4.2). Fase: análisis y documentación exclusi
 - v5.0.0-3.4.1 DOCUMENTADO / NEEDS_REVIEW: en API, `UseSecurityHeaders` fija `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` de forma incondicional (cumple 1 año + subdominios), pero coexiste con el `UseHsts()` estándar de ASP.NET Core (sin `AddHsts` explícito, default 30 días sin subdominios) registrado antes en el pipeline y antes de `UseForwardedHeaders`. Hallazgo: el callback tardío (`OnStarting`) de `HstsMiddleware` puede sobrescribir el valor correcto con el default de 30 días si la app ve `IsHttps=true` en ese punto (TLS terminado en la propia app); si está detrás de un proxy que reenvía esquema después, el callback no llega a registrarse y prevalece el valor correcto — depende de topología de despliegue no versionada en el repo, indeterminable por lectura estática. Frontend y docs-site fijan el header vía `web.config`/IIS con el valor correcto, sin el mismo riesgo de sobrescritura en código. Pendientes: confirmar topología real de TLS/proxy por ambiente, test de integración de pipeline completo, verificación del `web.config` generado. HEAD evaluado 437564bfdbf4e96bd9466d348496ba620593913a; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.4.1.md; sin propuesta distribuida a worktree de API (no se verificó su existencia). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.4.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.4.2. No apliques fixes, commits ni pushs».
 
 - v5.0.0-3.4.2 DOCUMENTADO / NEEDS_REVIEW: única política CORS de `api-admisiones` (`ServiceCollectionExtensions.AddCorsPolicy`) usa `WithOrigins` sobre un array fijo de 8 orígenes hardcodeados (2 localhost dev + 6 `admisiones*.ort.edu.uy`), aplicada globalmente vía `UseCors("AllowAngularApp")`; sin `AllowAnyOrigin()`/`SetIsOriginAllowed` productivo (único uso está en un test unitario con su propio host de prueba) y sin construcción manual del header `Access-Control-Allow-Origin`. Cumple en código fuente la cláusula de allowlist fija del requisito. Dos hallazgos, ninguno defecto confirmado: (1) los tests `AddCorsPolicy_Includes*Origins` declaran orígenes esperados que no coinciden con la allowlist real (`gestion.ort.edu.uy` vs `admisiones*.ort.edu.uy`) y solo verifican `Assert.NotEmpty(services)`, por lo que no detectarían una regresión a `AllowAnyOrigin()`; (2) ADR-009 (draft) documenta una reversión sin explicar de `DisallowCredentials()` a `AllowCredentials()` en mayo 2026 y pide confirmar el estado vigente en producción, contexto de gobernanza sin evidencia de defecto en el código actual. Pendientes: verificación runtime del header efectivo por entorno, confirmación de que el binario desplegado coincide con el código, cierre del gap de tests y seguimiento externo de ADR-009. HEAD evaluado 01d8c9c93f03825433ec487b47b70778b40a8790; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.4.2.md; sin propuesta distribuida a worktree de API (no se verificó su existencia). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar salvo el propio AVANCE.md. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.4.2.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.5.1. No apliques fixes, commits ni pushs».
+
+- v5.0.0-3.5.1 DOCUMENTADO / NEEDS_REVIEW: la autenticación JWT lee el token prioritariamente desde cookie HttpOnly (`AuthenticationExtensions.HandleOnMessageReceived`), es decir, la credencial viaja automáticamente en cualquier request cross-origin con `withCredentials`; la única defensa CSRF diseñada es la combinación CORS con allowlist fija + `AllowCredentials()` (comentario explícito en el código) más el hecho de que todas las mutaciones del SPA usan JSON/métodos no-simples (disparan preflight) y no se encontró `FormData`/`multipart` en frontend ni `IFormFile`/`[FromForm]` en la API que abrieran una vía de "simple request". No se localizó ningún token anti-forgery ni header custom exigido de forma consistente (sólo un header de CAPTCHA condicional en algunos endpoints). Como el requisito 3.5.1 sólo exige esa capa alternativa cuando la app *no* depende del preflight, y aquí sí depende de él por diseño, la evaluación correcta pasa a v5.0.0-3.5.2 (siguiente en cola), del cual esta ficha queda dependiente antes de poder cerrarse en PASS/NOT_APPLICABLE. Hallazgo de deuda (no defecto confirmado): la defensa CSRF entera depende de una única capa (CORS+credentials) sin capa independiente, frágil ante cambios futuros (nuevo endpoint multipart, relajación de CORS) y sin test que la proteja (ya señalado en la ficha 3.4.2). No se reabre el hallazgo de `analyze-attachment`/`X-Flow-Id` de la ficha 2.3.1 (revisado y descartado como caso CSRF porque el endpoint es `[AllowAnonymous]`). HEAD evaluado 23f2a90949c8011edad03c093e61f9dcc9816370; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 (gitlink verificado); hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.5.1.md; sin propuesta distribuida a worktree de API (no se verificó su existencia). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.5.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.5.2. No apliques fixes, commits ni pushs».
 
 ## Contexto que debe preservarse
 
@@ -131,7 +133,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-3.4.6 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.4.7 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-3.4.8 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-3.5.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-3.5.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-3.5.1.md) |
 | v5.0.0-3.5.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.5.3 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.5.4 | L2 | POR_REVISAR | PENDING | — |
