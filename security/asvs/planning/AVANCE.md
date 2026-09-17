@@ -1,18 +1,18 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-17 (v5.0.0-5.2.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17 (v5.0.0-5.3.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-5.3.1 (L1).
-- Último requisito documentado: v5.0.0-5.2.2 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-5.3.2 (L1).
+- Último requisito documentado: v5.0.0-5.3.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 24 DOCUMENTADO, 0 EN_CURSO, 46 POR_REVISAR (total 70).
+- Progreso L1: 25 DOCUMENTADO, 0 EN_CURSO, 45 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 26 DOCUMENTADO, 0 EN_CURSO, 227 POR_REVISAR.
+- Progreso general L1/L2 conservado: 27 DOCUMENTADO, 0 EN_CURSO, 226 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-5.3.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-5.3.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
 - Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
 - Aviso de ubicación: `security/asvs/planning/` sólo existe en la rama `fix/owasp`; en `main` no está. Verificar la rama antes de retomar.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
@@ -67,6 +67,8 @@ Actualizado: 2026-09-17 (v5.0.0-5.2.2). Fase: análisis y documentación exclusi
 - v5.0.0-5.2.1 DOCUMENTADO / NEEDS_REVIEW: Kestrel limita el JSON a 16 MiB; Core limita imágenes a 5 MiB y PDF/documentos a 10 MiB antes de persistencia o análisis Azure; reconocimiento agrega un tope configurable. Pendientes: límite efectivo del hosting, rechazo HTTP y capacidad de memoria/latencia bajo concurrencia, valor de configuración en producción y ejecución de tests. HEAD 01b373ffca7841c9cd78892552cb5a6ccb0b6979; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash JSON oficial validado. Sin fixes/builds/tests/scans/commits/pushs. Archivos de esta iteración sin commit: AVANCE.md y revisiones/v5.0.0-5.2.1.md. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-5.2.2. No apliques fixes, commits ni pushs».
 
 - v5.0.0-5.2.2 DOCUMENTADO / NEEDS_REVIEW: FileValidator en Core identifica el tipo por magic bytes permitidos pero no coteja la extensión del nombre; un test existente espera éxito con bytes PNG y nombres .jpg, .exe o sin extensión. Afecta rutas L1 de reconocimiento de registro y foto/identidad: el primero usa el archivo para extraer datos y los demás pueden persistir nombre/tipo discordantes; frente/dorso se nombran .jpg aun al aceptar PNG. Adjuntos de becas sanitizan extensión pero no la correlacionan con bytes; no se localizó caller HTTP activo. Pendientes: prueba negativa reproducible en endpoints y Core, comportamiento de Azure, consumidores de nombres/BLOB y contenido malformado. HEAD evaluado c0c75b0f2866bf9f95ebc4324bf81b8cd155fccc; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash JSON oficial validado. Sin fixes/builds/tests/scans/commits/pushs. Archivos de esta iteración sin commit: AVANCE.md y revisiones/v5.0.0-5.2.2.md; propuesta sólo central, sin worktree fix/owasp disponible en clones originales. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-5.3.1. No apliques fixes, commits ni pushs».
+
+- v5.0.0-5.3.1 DOCUMENTADO / NEEDS_REVIEW: no se halló camino de archivos no confiables a carpeta pública en los flujos revisados; foto/identidad/becas usan BLOB, reconocimiento temporal Redis, Core genera imagen en memoria. API sirve `/contracts` desde JSON versionados en ambientes no productivos; frontend publica assets del build. Falta mapa de montaje/permisos/handlers y artefacto desplegado para excluir otros caminos o probar ejecución HTTP. HEAD 4de0815537e19f4fe7d4ea5e10c31c7dda21ada5; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial verificado sobre blob. Sin tests, runtime, scans, fixes, commits ni pushs. Archivos sin commit: AVANCE.md y revisiones/v5.0.0-5.3.1.md. Sin propuesta distribuida al no haber fix confirmado ni worktree externo vigente. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-5.3.2. No apliques fixes, commits ni pushs».
 
 ## Contexto que debe preservarse
 
@@ -182,7 +184,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-5.2.4 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-5.2.5 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-5.2.6 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-5.3.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-5.3.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-5.3.1.md) |
 | v5.0.0-5.3.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-5.3.3 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-5.4.1 | L2 | POR_REVISAR | PENDING | — |
