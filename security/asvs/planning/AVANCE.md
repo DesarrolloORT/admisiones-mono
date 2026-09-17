@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-17 (v5.0.0-3.3.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17 (v5.0.0-3.4.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
+- Corrección de puntero: el checkpoint previo indicaba «siguiente v5.0.0-3.3.4 (L1)», pero la cola canónica y catalogo.md marcan 3.3.4 como L2 (V3.3.2/V3.3.3/V3.3.4 son L2, V3.3.5 es L3). Se reconstruyó el estado desde la cola/catálogo, no desde el puntero: el siguiente L1 en orden oficial tras 3.3.1 era v5.0.0-3.4.1, ya documentado en esta sesión.
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-3.3.4 (L1; V3.3.2/V3.3.3 son L2 y se saltan en esta fase).
-- Último requisito documentado: v5.0.0-3.3.1 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-3.4.2 (L1).
+- Último requisito documentado: v5.0.0-3.4.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 15 DOCUMENTADO, 0 EN_CURSO, 55 POR_REVISAR (total 70).
+- Progreso L1: 16 DOCUMENTADO, 0 EN_CURSO, 54 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 17 DOCUMENTADO, 0 EN_CURSO, 236 POR_REVISAR.
+- Progreso general L1/L2 conservado: 18 DOCUMENTADO, 0 EN_CURSO, 235 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-3.3.4 (L1), verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-3.4.2 (L1), verificar Git/fuente y fijar refs antes de investigar.
 - Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
 - Aviso de ubicación: `security/asvs/planning/` sólo existe en la rama `fix/owasp`; en `main` no está. Verificar la rama antes de retomar.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
@@ -49,6 +50,8 @@ Actualizado: 2026-09-17 (v5.0.0-3.3.1). Fase: análisis y documentación exclusi
 - v5.0.0-3.2.2 DOCUMENTADO / NEEDS_REVIEW: sin sinks de interpretación HTML localizados en `admisiones/src` (sin `[innerHTML]`, `dangerouslySetInnerHTML`, `bypassSecurityTrust*`, `document.write`, `insertAdjacentHTML`; la interpolación `{{ }}` de Angular es la vía por defecto y equivale a `textContent`). En API/Core, el único generador de HTML relevante es `MailORT.EnvioMail` (plantillas de correo); sus métodos de plantilla no codifican internamente, pero el único consumidor con dato de usuario real (`PasswordMailTemplate.BuildActivationMail`/`BuildRecoveryMail`) codifica `Persona.PrimerNombre` y el link con `HtmlEncoder.Default.Encode` antes de interpolar; `TwoFactorAuthService` sólo interpola un código OTP generado por el servidor. No se hallaron vistas Razor ni otros motores de plantillas HTML en `api-admisiones`. Sin hallazgo de defecto confirmado; una observación de deuda de diseño: los helpers de `EnvioMail` no fuerzan codificación, por lo que un futuro consumidor podría omitirla sin aviso del compilador. Pendientes: ejecución de tests existentes, verificación en runtime del renderizado en cliente de correo/navegador, cobertura de otros consumidores futuros de `EnvioMail`/`IEmailSender` y del bundle Angular compilado (más allá del código fuente). HEAD evaluado f78829e4a367191f02752bd70f8f19e6031f2a68; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.2.2.md; sin propuesta distribuida a otro repo porque no hay fix concreto sobre código actual defectuoso, sólo una recomendación preventiva documentada en la ficha. Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.2.2.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.3.1. No apliques fixes, commits ni pushs».
 
 - v5.0.0-3.3.1 DOCUMENTADO / NEEDS_REVIEW: único emisor de cookies del sistema es `CookieAuthenticationHelper` (API), usado por `AuthController` para tres cookies de autenticación (`X-Access-Token`, `X-Refresh-Token`, `X-Password-Activation`); Core (534 archivos .cs, negativo) y frontend (sin `document.cookie`/librerías, solo `withCredentials`) no emiten cookies. Cumple la primera cláusula del requisito: `Secure = true` está hardcodeado sin condicional de entorno en las cinco operaciones de alta/baja, a pesar de un comentario de código engañoso que sugiere lo contrario (hallazgo 2, deuda). No cumple la segunda cláusula: ninguna de las tres cookies usa prefijo `__Host-` ni `__Secure-` en el nombre (hallazgo 1); `Domain` configurable por `AUTH_COOKIE_DOMAIN` descarta `__Host-` como opción mientras exista esa configuración, dejando `__Secure-` como único prefijo viable. Pendientes: verificación en runtime del comportamiento real del navegador por entorno, configuración de hosting/proxy no versionada, bundle Angular compilado. HEAD evaluado f10c072220428a1fb743083fe9e1363e00c511d0; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.3.1.md; sin propuesta distribuida a un worktree de API porque no se verificó la existencia de worktrees temporales vigentes (queda pendiente explícito en la ficha). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.3.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.3.4. No apliques fixes, commits ni pushs».
+
+- v5.0.0-3.4.1 DOCUMENTADO / NEEDS_REVIEW: en API, `UseSecurityHeaders` fija `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` de forma incondicional (cumple 1 año + subdominios), pero coexiste con el `UseHsts()` estándar de ASP.NET Core (sin `AddHsts` explícito, default 30 días sin subdominios) registrado antes en el pipeline y antes de `UseForwardedHeaders`. Hallazgo: el callback tardío (`OnStarting`) de `HstsMiddleware` puede sobrescribir el valor correcto con el default de 30 días si la app ve `IsHttps=true` en ese punto (TLS terminado en la propia app); si está detrás de un proxy que reenvía esquema después, el callback no llega a registrarse y prevalece el valor correcto — depende de topología de despliegue no versionada en el repo, indeterminable por lectura estática. Frontend y docs-site fijan el header vía `web.config`/IIS con el valor correcto, sin el mismo riesgo de sobrescritura en código. Pendientes: confirmar topología real de TLS/proxy por ambiente, test de integración de pipeline completo, verificación del `web.config` generado. HEAD evaluado 437564bfdbf4e96bd9466d348496ba620593913a; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-3.4.1.md; sin propuesta distribuida a worktree de API (no se verificó su existencia). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-3.4.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-3.4.2. No apliques fixes, commits ni pushs».
 
 ## Contexto que debe preservarse
 
@@ -119,7 +122,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-3.3.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.3.4 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.3.5 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-3.4.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-3.4.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-3.4.1.md) |
 | v5.0.0-3.4.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-3.4.4 | L2 | POR_REVISAR | PENDING | — |
