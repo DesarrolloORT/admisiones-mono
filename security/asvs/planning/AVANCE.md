@@ -1,18 +1,18 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-17 (v5.0.0-4.4.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17 (v5.0.0-5.2.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-5.2.1 (L1).
-- Último requisito documentado: v5.0.0-4.4.1 (L1), NOT_APPLICABLE.
+- Siguiente requisito: v5.0.0-5.2.2 (L1).
+- Último requisito documentado: v5.0.0-5.2.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 22 DOCUMENTADO, 0 EN_CURSO, 48 POR_REVISAR (total 70).
+- Progreso L1: 23 DOCUMENTADO, 0 EN_CURSO, 47 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 24 DOCUMENTADO, 0 EN_CURSO, 229 POR_REVISAR.
+- Progreso general L1/L2 conservado: 25 DOCUMENTADO, 0 EN_CURSO, 228 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-5.2.1 (L1) — v5.0.0-4.4.2/4.4.3/4.4.4 son L2 y v5.0.0-4.1.4/4.1.5 son L3, ya saltados; v5.0.0-4.2.1/4.3.1/4.3.2 y v5.0.0-5.1.1 son L2 y se saltan; verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-5.2.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
 - Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
 - Aviso de ubicación: `security/asvs/planning/` sólo existe en la rama `fix/owasp`; en `main` no está. Verificar la rama antes de retomar.
 - v5.0.0-1.1.1 documentado por revisión estática de frontend/API/Core; faltan equivalencia esquema/binding/sanitización, runtime y contrato de pagos. Evidencia y métodos pendientes en su ficha. No se aplicaron fixes.
@@ -63,6 +63,8 @@ Actualizado: 2026-09-17 (v5.0.0-4.4.1). Fase: análisis y documentación exclusi
 - v5.0.0-4.1.1 DOCUMENTADO / NEEDS_REVIEW: el camino estándar de respuestas (`ObjectResult`/`ActionResult<T>` vía `[ApiController]` + `ProducesAttribute("application/json")` global en `AddApiControllers`) queda con `Content-Type` + `charset` garantizado por el formateador JSON por defecto de ASP.NET Core; único sink de bytes top-level es `PersonController.GetPersonPhoto` (`image/jpeg` fijo). Hallazgo concreto: `ModelBindingErrorLoggingMiddleware.HandleBadRequestProductionLikeAsync`/`HandleBadRequestDevelopmentAsync` reemplazan el **cuerpo** de toda respuesta 400 que no sea ya un `OperationResult` por un nuevo JSON, pero nunca fijan `context.Response.ContentType`, dejando potencialmente colgado el header `application/problem+json; charset=utf-8` (default de `[ApiController]` sin `AddProblemDetails` custom) sobre un cuerpo que ya no es Problem Details; ninguno de los 7 tests existentes que ejercitan ese branch verifica el header, sólo el body. `ExceptionHandlingMiddleware` fija `ContentType` sin charset pero su propio test documenta que `WriteAsJsonAsync` lo corrige a `application/json; charset=utf-8` (comportamiento de framework, no verificado en runtime por este agente). Pendientes: confirmación runtime del header heredado real en 400, ejecución de tests existentes, configuración IIS/`mimeMap` no versionada para el hosting estático del frontend, y resolución de la deuda ya documentada en 3.2.1 sobre `GetPersonPhoto` (referenciada, no reabierta). HEAD evaluado 873e861df7d5c2abd1cc71bee1b16d7dcb6f600e; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-4.1.1.md; sin propuesta distribuida a worktree de API porque `git worktree list` confirma que no existe ninguno vigente (único worktree es el propio monorepo). Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar salvo el propio AVANCE.md. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-4.1.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-4.4.1. No apliques fixes, commits ni pushs» (v5.0.0-4.1.2/4.1.3 son L2 y se saltan).
 
 - v5.0.0-4.4.1 DOCUMENTADO / NOT_APPLICABLE: inventario negativo explícito de WebSocket en los tres componentes. Sin `new WebSocket(`/`ClientWebSocket`/`socket.io`/`SignalR` en código fuente propio de `admisiones`, `api-admisiones` ni `Core`; sin paquete SignalR/WebSocket en ningún `.csproj`; sin dependencia WebSocket productiva en `admisiones/package.json` (los únicos hits del repo — `websocket-driver`/`faye-websocket`/`websocket-extensions`/`@nestjs/websockets` — son transitivos de `package-lock.json` para tooling de build/dev, no del runtime de producción); sin configuración de infraestructura versionada (`.yml`/`.yaml`/`.bicep`/`.tf`/`web.config`/`*.conf`) que declare un servicio o proxy WebSocket. El requisito exige TLS (`wss://`) para conexiones WebSocket que no existen en este sistema, por lo que no aplica un control sobre un mecanismo ausente; se registra NOT_APPLICABLE en vez de PASS porque no hay nada que verificar positivamente. Límite: configuración de hosting/proxy de producción fuera del repo no auditable estáticamente; si se introduce WebSocket en el futuro, debe reabrirse esta ficha. HEAD evaluado 9c6db81078b22eaa9ae01c704b6dce2abe9f0f16; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash oficial validado sobre el blob. Sin commit: AVANCE.md y revisiones/v5.0.0-4.4.1.md; sin propuesta distribuida porque no hay hallazgo de defecto ni código a remediar. Sin fixes/builds/tests/scans/commits/pushs; árbol limpio al iniciar. Inspeccionar `git diff -- security/asvs/planning/AVANCE.md` y `Get-Content security/asvs/planning/revisiones/v5.0.0-4.4.1.md`. Continuar solo con un nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-5.2.1. No apliques fixes, commits ni pushs» (v5.0.0-4.4.2/4.4.3/4.4.4, v5.0.0-4.2.1/4.3.1/4.3.2 y v5.0.0-5.1.1 son L2 y se saltan; v5.0.0-4.1.4/4.1.5 son L3).
+
+- v5.0.0-5.2.1 DOCUMENTADO / NEEDS_REVIEW: Kestrel limita el JSON a 16 MiB; Core limita imágenes a 5 MiB y PDF/documentos a 10 MiB antes de persistencia o análisis Azure; reconocimiento agrega un tope configurable. Pendientes: límite efectivo del hosting, rechazo HTTP y capacidad de memoria/latencia bajo concurrencia, valor de configuración en producción y ejecución de tests. HEAD 01b373ffca7841c9cd78892552cb5a6ccb0b6979; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7 limpio; hash JSON oficial validado. Sin fixes/builds/tests/scans/commits/pushs. Archivos de esta iteración sin commit: AVANCE.md y revisiones/v5.0.0-5.2.1.md. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-5.2.2. No apliques fixes, commits ni pushs».
 
 ## Contexto que debe preservarse
 
@@ -172,7 +174,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-4.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-4.4.4 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-5.1.1 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-5.2.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-5.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-5.2.1.md) |
 | v5.0.0-5.2.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-5.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-5.2.4 | L3 | FUERA_L2 | PENDING | — |
