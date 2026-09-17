@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-17 (v5.0.0-6.2.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-17 (v5.0.0-6.2.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-6.2.2 (L1).
-- Último requisito documentado: v5.0.0-6.2.1 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-6.2.3 (L1).
+- Último requisito documentado: v5.0.0-6.2.2 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 28 DOCUMENTADO, 0 EN_CURSO, 42 POR_REVISAR (total 70).
+- Progreso L1: 29 DOCUMENTADO, 0 EN_CURSO, 41 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 30 DOCUMENTADO, 0 EN_CURSO, 223 POR_REVISAR.
+- Progreso general L1/L2 conservado: 31 DOCUMENTADO, 0 EN_CURSO, 222 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.2.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.2.3 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-6.2.2 DOCUMENTADO / NEEDS_REVIEW: menú y ruta de cambio en frontend; POST autenticado /person/change-password toma identidad del token, valida y llama a Core; Core envía la operación SOAP y sólo reporta éxito si el proveedor devuelve true. Tests existentes leídos, no ejecutados; falta comprobar el cambio y login posterior contra LDAP en el ambiente desplegado. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.2.2.md). HEAD 313b57929eaa6eea438e543850a4f27f7f54ca9a; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.2. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.3».
 - v5.0.0-6.2.1 DOCUMENTADO / NEEDS_REVIEW: Core exige 12-20 caracteres mediante ValidarPasswordNueva y los tres caminos de contraseña de API lo invocan antes de LDAP. El mínimo obligatorio de 8 está cubierto por el código propio para contraseñas ASCII; no se verificó el servidor LDAP ni runtime. El mínimo recomendado de 15 no se alcanza. Tests existentes leídos, no ejecutados. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.2.1.md). HEAD 06e0a7912e06ad5abc46a250d6c0469bc82a8211; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.1. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.2».
 - v5.0.0-6.1.1 DOCUMENTADO / NEEDS_REVIEW: guía de dos límites de login, pero código usa además contadores de fallos, uno global por documento que podría causar bloqueo temporal dirigido; 2FA adaptativo y política ante falla Redis tampoco están documentados por completo. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.1.1.md). HEAD b4362cede0a3a4f38bdc8c8691838cc716da9b23; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.1.1. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.1».
 - Aviso de método: en checkouts Windows con `core.autocrlf=true`, el hash del JSON fuente sobre el archivo en disco NO coincide con el oficial. Verificar sobre el blob: `git cat-file -p HEAD:security/asvs/source/OWASP_Application_Security_Verification_Standard_5.0.0_en.json | sha256sum`. Ver hallazgo 3 de la ficha 2.2.1.
@@ -198,7 +199,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-6.1.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.1.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.1.md) |
-| v5.0.0-6.2.2 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-6.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.2.md) |
 | v5.0.0-6.2.3 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.4 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.5 | L1 | POR_REVISAR | PENDING | — |
