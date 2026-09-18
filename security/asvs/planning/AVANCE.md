@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-18 (v5.0.0-7.2.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-18 (v5.0.0-7.2.3). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-7.2.3 (L1).
-- Último requisito documentado: v5.0.0-7.2.2 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-7.2.4 (L1).
+- Último requisito documentado: v5.0.0-7.2.3 (L1), FAIL.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 41 DOCUMENTADO, 0 EN_CURSO, 29 POR_REVISAR (total 70).
+- Progreso L1: 42 DOCUMENTADO, 0 EN_CURSO, 28 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 43 DOCUMENTADO, 0 EN_CURSO, 210 POR_REVISAR.
+- Progreso general L1/L2 conservado: 44 DOCUMENTADO, 0 EN_CURSO, 209 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-7.2.3 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-7.2.4 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-7.2.3 DOCUMENTADO / FAIL: el refresh token usa 64 bytes de CSPRNG; el identificador de la sesión temporal 2FA usa GUID v4, con máximo 122 bits de entropía frente al mínimo de 128. La API exige además el código para completar el login. Quedan inventario y validación de runtime/Oracle/Redis; evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-7.2.3.md). HEAD 52c284f852daa4d02ca26e3d4c44486b5f7daf12; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests ejecutados, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.3. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.4».
 - v5.0.0-7.2.2 DOCUMENTADO / NEEDS_REVIEW: los flujos leídos emiten JWT autocontenidos de acceso y sesión temporal, y refresh de referencia generado con 64 bytes aleatorios; el identificador previo al 2FA se crea por flujo y se guarda en Redis. La clave JWT firma el token y no se entrega como credencial. Falta probar si emisiones cercanas de access token para la misma persona pueden coincidir, además de inventario y runtime. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-7.2.2.md). HEAD aa195824781e079db7d1bf32306f8d55158d9001; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.2. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.3».
 - v5.0.0-7.2.1 DOCUMENTADO / NEEDS_REVIEW: JWT de acceso verificado en middleware backend; refresh cotejado en Oracle; sesión temporal de contraseña y sesión previa al 2FA verificadas en API. Faltan inventario completo y pruebas integradas en ambiente representativo. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-7.2.1.md). HEAD 84c8226f43b160f1a3aff1eba2f679825ace7c89; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob (checkout CRLF). Sin fixes, tests, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.1. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.2».
 - v5.0.0-6.4.2 DOCUMENTADO / FAIL: el recupero pide primer apellido y la API lo compara con el padrón antes de enviar el enlace. Es una comprobación basada en conocimiento dentro del proceso, aunque el correo registrado sigue siendo necesario para completar el cambio. No se hallaron pistas de contraseña propias. Faltan inventario de SOAP/LDAP y otros consumidores, verificación en runtime y diseño futuro sin ese cotejo. Evidencia y propuesta en [ficha](./revisiones/v5.0.0-6.4.2.md). HEAD 3d65ffba5d38311c2b47b48ebf5563186f023d99; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 6.4.2. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.1».
@@ -259,7 +260,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-7.1.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.2.1.md) |
 | v5.0.0-7.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.2.2.md) |
-| v5.0.0-7.2.3 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-7.2.3 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.2.3.md) |
 | v5.0.0-7.2.4 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.3.1 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.3.2 | L2 | POR_REVISAR | PENDING | — |
