@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-18 (v5.0.0-7.2.4). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-18 (v5.0.0-7.4.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-7.4.1 (L1).
-- Último requisito documentado: v5.0.0-7.2.4 (L1), FAIL.
+- Siguiente requisito: v5.0.0-7.4.2 (L1).
+- Último requisito documentado: v5.0.0-7.4.1 (L1), FAIL.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 43 DOCUMENTADO, 0 EN_CURSO, 27 POR_REVISAR (total 70).
+- Progreso L1: 44 DOCUMENTADO, 0 EN_CURSO, 26 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 45 DOCUMENTADO, 0 EN_CURSO, 208 POR_REVISAR.
+- Progreso general L1/L2 conservado: 46 DOCUMENTADO, 0 EN_CURSO, 207 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-7.4.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-7.4.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-7.4.1 DOCUMENTADO / FAIL: logout sólo elimina cookies; no revoca el refresh activo en Oracle y el validador JWT acepta access tokens firmados y vigentes sin comprobar terminación. El frontend limpia estado local incluso ante falla de logout. Faltan pruebas integradas con tokens retenidos, configuración efectiva y consumidores externos; evidencia y propuestas en [ficha](./revisiones/v5.0.0-7.4.1.md). HEAD 4e602c603b7a53e9d9447e6fd230b80da89f850e; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests ejecutados, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.4.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.4.2».
 - v5.0.0-7.2.4 DOCUMENTADO / FAIL: el refresh persistido se reemplaza por persona/sistema al emitir un par nuevo, pero los JWT de acceso anteriores siguen validándose por firma y vigencia, sin consulta de revocación. El generador tampoco incluye un identificador único explícito para garantizar diferencia entre emisiones próximas. Faltan pruebas de integración de login, 2FA y refresh con dos clientes, configuración efectiva e inventario de gateways. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-7.2.4.md). HEAD 948fc63079864bb835153f732b0631d5c2b21126; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests ejecutados, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.4. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.4.1».
 - v5.0.0-7.2.3 DOCUMENTADO / FAIL: el refresh token usa 64 bytes de CSPRNG; el identificador de la sesión temporal 2FA usa GUID v4, con máximo 122 bits de entropía frente al mínimo de 128. La API exige además el código para completar el login. Quedan inventario y validación de runtime/Oracle/Redis; evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-7.2.3.md). HEAD 52c284f852daa4d02ca26e3d4c44486b5f7daf12; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests ejecutados, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.3. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.4».
 - v5.0.0-7.2.2 DOCUMENTADO / NEEDS_REVIEW: los flujos leídos emiten JWT autocontenidos de acceso y sesión temporal, y refresh de referencia generado con 64 bytes aleatorios; el identificador previo al 2FA se crea por flujo y se guarda en Redis. La clave JWT firma el token y no se entrega como credencial. Falta probar si emisiones cercanas de access token para la misma persona pueden coincidir, además de inventario y runtime. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-7.2.2.md). HEAD aa195824781e079db7d1bf32306f8d55158d9001; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.2.2. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-7.2.3».
@@ -265,7 +266,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-7.2.4 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.2.4.md) |
 | v5.0.0-7.3.1 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.3.2 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-7.4.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-7.4.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.4.1.md) |
 | v5.0.0-7.4.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.4.4 | L2 | POR_REVISAR | PENDING | — |
