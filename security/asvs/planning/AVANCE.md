@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-18 (v5.0.0-6.3.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-18 (v5.0.0-6.4.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-6.4.1 (L1).
-- Último requisito documentado: v5.0.0-6.3.2 (L1), NEEDS_REVIEW.
+- Siguiente requisito: v5.0.0-6.4.2 (L1).
+- Último requisito documentado: v5.0.0-6.4.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 37 DOCUMENTADO, 0 EN_CURSO, 33 POR_REVISAR (total 70).
+- Progreso L1: 38 DOCUMENTADO, 0 EN_CURSO, 32 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 39 DOCUMENTADO, 0 EN_CURSO, 214 POR_REVISAR.
+- Progreso general L1/L2 conservado: 40 DOCUMENTADO, 0 EN_CURSO, 213 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.4.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.4.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-6.4.1 DOCUMENTADO / NEEDS_REVIEW: enlaces de activación firmados con JWT y hash en Redis, TTL versionado de 24 h, sesión temporal de 15 min y contraseña elegida por la persona. Los dos caminos de alta invocan `CrearUsuarioAsync` de SOAP/LDAP con password vacío; no se conoce el estado o contraseña que el proveedor asigna antes del cambio forzado. Faltan contrato LDAP, configuración y pruebas de expiración/canje en runtime. Evidencia y propuestas en [ficha](./revisiones/v5.0.0-6.4.1.md). HEAD 42894ee0e5df94b16ac1c3167f2722f4413ed5f7; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin fixes, tests, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 6.4.1. Continuar solo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.4.2».
 - v5.0.0-6.3.2 DOCUMENTADO / NEEDS_REVIEW: login propio exige persona en Oracle por tipo/número de documento y autentica con su código en SOAP/LDAP; altas leídas crean usuario desde ese código. No se localizó seed ni bypass propio de cuentas predeterminadas, pero faltan inventarios y estados efectivos en LDAP, Oracle, infraestructura y sistemas integrados; la ausencia en código no acredita ausencia en el despliegue. Evidencia y métodos pendientes en [ficha](./revisiones/v5.0.0-6.3.2.md). HEAD 49ecb6af6fd96644056564a5386643e1c7b96554; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. La revisión se hizo sobre HEAD 49ecb6af6fd96644056564a5386643e1c7b96554. Durante la validación, otro proceso creó los commits fbd45c5799858158534edb904949e47e2078d31d y 28795ad393dc6952932d598dd7f920ecbe212cba, que incluyen AVANCE.md y esta ficha; no cambiaron código de frontend/API/Core. Este agente no ejecutó commits ni pushs, ni fixes, tests, builds o scans. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.4.1».
 - v5.0.0-6.3.1 DOCUMENTADO / NEEDS_REVIEW: el login aplica cuatro controles (IP, IP+documento y fallos por documento/IP) y CAPTCHA con 2FA adaptativo; la guía de seguridad describe sólo dos límites. El contador global por documento podría bloquear un login legítimo desde otra IP; errores Redis tienen rutas de admisión y bloqueo distintas. Faltan configuración y pruebas de runtime/Redis/LDAP/proxy, por lo que no se acredita eficacia global. Evidencia y propuestas en [ficha](./revisiones/v5.0.0-6.3.1.md). HEAD 368c3e33f888633516f0a24b9e9921d5fe47bc49; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.3.1. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.3.2».
 - v5.0.0-6.2.8 DOCUMENTADO / FAIL: el filtro MVC global sanitiza propiedades string de los DTO de contraseña antes de login, cambio y establecimiento; hay un test existente que confirma modificación de algunas cadenas, sin ejecución en esta iteración. Falta verificar DTOs reales en runtime y comparación exacta del proveedor SOAP/LDAP. Evidencia, alcance y propuesta en [ficha](./revisiones/v5.0.0-6.2.8.md). HEAD 5ca33fd0ac79347c6330f8ad3f3557c10de7c372; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.8. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.3.1».
@@ -226,7 +227,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-6.3.6 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-6.3.7 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-6.3.8 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-6.4.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-6.4.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [ficha](./revisiones/v5.0.0-6.4.1.md) |
 | v5.0.0-6.4.2 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.4.4 | L2 | POR_REVISAR | PENDING | — |
