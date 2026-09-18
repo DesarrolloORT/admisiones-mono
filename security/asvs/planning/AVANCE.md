@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-18 (v5.0.0-6.2.5). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-18 (v5.0.0-6.2.6). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-6.2.6 (L1).
-- Último requisito documentado: v5.0.0-6.2.5 (L1), FAIL.
+- Siguiente requisito: v5.0.0-6.2.7 (L1).
+- Último requisito documentado: v5.0.0-6.2.6 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 32 DOCUMENTADO, 0 EN_CURSO, 38 POR_REVISAR (total 70).
+- Progreso L1: 33 DOCUMENTADO, 0 EN_CURSO, 37 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 34 DOCUMENTADO, 0 EN_CURSO, 219 POR_REVISAR.
+- Progreso general L1/L2 conservado: 35 DOCUMENTADO, 0 EN_CURSO, 218 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.2.6 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-6.2.7 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-6.2.6 DOCUMENTADO / NEEDS_REVIEW: seis campos en login, establecimiento y cambio enlazan el tipo al helper, que inicia en `password` y sólo pasa a `text` por botón explícito. Tests existentes leídos, no ejecutados; falta validar el `input.type` final de cada flujo en navegador y confirmar pantallas externas. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.2.6.md). HEAD fdd9f8d9fe23412f65185587dbb8c91bafb980ed; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.6. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.7».
 - v5.0.0-6.2.5 DOCUMENTADO / FAIL: Core exige mayúscula, minúscula, dígito y especial de una lista cerrada; alta, activación y cambio en API llaman ese validador antes de LDAP. El frontend también muestra esas categorías. La contradicción con el texto oficial es explícita en el código propio. Pendientes: política efectiva SOAP/LDAP, dependencia de validación frontend, pruebas de runtime y distribución documental. Evidencia en [ficha](./revisiones/v5.0.0-6.2.5.md). HEAD 5430b2e6cfc29fea8bf0ceebfb00c3dfcf4e2393; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.5. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.6».
 - v5.0.0-6.2.4 DOCUMENTADO / NEEDS_REVIEW: alta de persona nueva, activación de existente y cambio voluntario usan validación propia de longitud/composición antes de Core/LDAP; no se localizó un cotejo propio contra 3000 contraseñas comunes. Falta política e implementación del proveedor SOAP/LDAP, inventario de lista y pruebas negativas controladas. Tests existentes leídos, no ejecutados. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.2.4.md). HEAD 66b1e57b7247330ed644d5f92a4492eaed644234; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.4. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.5».
 - v5.0.0-6.2.3 DOCUMENTADO / NEEDS_REVIEW: frontend y API exigen y transmiten contraseña actual y nueva; Core las envía al método SOAP CambiarPasswordAsync y sólo propaga éxito declarado por el proveedor. Falta comprobar que LDAP rechaza una contraseña actual incorrecta y mantiene la anterior sin cambios; tests existentes leídos, no ejecutados. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-6.2.3.md). HEAD 13847f304e4a5675649a54d7e21270879883076c; Core 01239cdf6054dc5a450dcdaa3a867ae3204b61e7; hash oficial validado sobre blob. Sin commit: AVANCE.md y ficha 6.2.3. Sin fixes, tests, builds, scans, commits ni pushs. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-6.2.4».
@@ -206,7 +207,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-6.2.3 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.3.md) |
 | v5.0.0-6.2.4 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.4.md) |
 | v5.0.0-6.2.5 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-6.2.5.md) |
-| v5.0.0-6.2.6 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-6.2.6 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.6.md) |
 | v5.0.0-6.2.7 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.8 | L1 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.9 | L2 | POR_REVISAR | PENDING | — |
