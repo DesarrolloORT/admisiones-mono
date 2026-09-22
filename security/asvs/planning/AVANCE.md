@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-22 (v5.0.0-8.2.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-22 (v5.0.0-8.2.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-8.2.2 (L1).
-- Último requisito documentado: v5.0.0-8.2.1 (L1), FAIL.
+- Siguiente requisito: v5.0.0-8.3.1 (L1).
+- Último requisito documentado: v5.0.0-8.2.2 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 47 DOCUMENTADO, 0 EN_CURSO, 23 POR_REVISAR (total 70).
+- Progreso L1: 48 DOCUMENTADO, 0 EN_CURSO, 22 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 49 DOCUMENTADO, 0 EN_CURSO, 204 POR_REVISAR.
+- Progreso general L1/L2 conservado: 50 DOCUMENTADO, 0 EN_CURSO, 203 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-8.2.2 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-8.3.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-8.2.2 DOCUMENTADO / NEEDS_REVIEW: el `personId` se deriva del JWT y no llega de la request; las rutas que reciben IDs de inscripción los consultan junto a ese `personId` antes de reactivar, devolver detalle o iniciar pagos. La evidencia es estática y los tests existentes sólo prueban delegación con mocks: faltan pruebas A/B de runtime, consultas Oracle y contrato de API interna. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-8.2.2.md). HEAD `c6e4230c25029c7d60b2db9a50bcc590455fa3a8`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. Evidencia API fijada con hashes por cambios ajenos amplios. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 8.2.2. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-8.3.1».
 - v5.0.0-8.2.1 DOCUMENTADO / FAIL: las 38 acciones HTTP de negocio están clasificadas (23 heredan `[Authorize]` y 15 tienen `[AllowAnonymous]`), pero el host publica `/metrics` en todos los ambientes mediante `MapMetrics()` sin `RequireAuthorization`, policy ni fallback global. Swagger y contratos sólo se limitan por ambiente, no por consumidor. No se encontró una ACL de infraestructura versionada ni una prueba exhaustiva que cubra endpoints mínimos. Evidencia, límites y propuestas en [ficha](./revisiones/v5.0.0-8.2.1.md). HEAD `c6e4230c25029c7d60b2db9a50bcc590455fa3a8`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado. Evidencia fijada con hashes porque frontend y API tienen cambios ajenos amplios. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 8.2.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-8.2.2».
 - v5.0.0-8.1.1 DOCUMENTADO / NEEDS_REVIEW: hay reglas generales de `[Authorize]`/`[AllowAnonymous]`, identidad desde token, clasificación pública/privada en Swagger y reglas parciales por módulo para ownership y estado de recursos. No existe una matriz completa y consistente para consumidores, 38 funciones y atributos de recurso; el README declara 39 endpoints y la página de becas describe rutas ausentes del controller actual. Faltan inventario aprobado, consumidores externos, OpenAPI generado y pruebas multi-identidad por recurso. Evidencia y propuestas en [ficha](./revisiones/v5.0.0-8.1.1.md). HEAD al iniciar `b28dae2d94b7094faf21bfd7d4f6f1a820b71423`; durante la revisión otro proceso creó `c6e4230c25029c7d60b2db9a50bcc590455fa3a8`, sólo con AVANCE.md y fichas 7.4.2/8.1.1; no cambió código y este agente no lo ejecutó. Frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; hash oficial validado sobre blob. La evidencia fija hashes de documentos/controllers modificados. Sin fixes, tests ejecutados, generación OpenAPI, builds, scans, commits propios ni pushs. Archivos de esta iteración modificados sin commit al cierre: AVANCE.md y ficha 8.1.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-8.2.1».
 - v5.0.0-7.4.2 DOCUMENTADO / FAIL: el access JWT se valida por firma y vigencia sin consultar LDAP, Oracle ni estado de cuenta; una baja externa no termina tokens ya emitidos. El refresh comprueba token activo y existencia de persona en Oracle, pero no estado LDAP ni `CodigoVigencia`, por lo que puede renovar si la persona permanece. El borrado Oracle corta refresh con 404 pero no invalida el access vigente. Faltan procedimiento operativo de baja, contrato LDAP, prueba integrada, configuración efectiva e inventario de gateways/consumidores. Evidencia y propuestas en [ficha](./revisiones/v5.0.0-7.4.2.md). HEAD `b28dae2d94b7094faf21bfd7d4f6f1a820b71423`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; hash oficial validado sobre blob. La evidencia API fija hashes del working tree ampliamente modificado. Sin fixes, tests ejecutados, builds, scans, commits ni pushs. Archivos de esta iteración sin commit: AVANCE.md y ficha 7.4.2. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-8.1.1».
@@ -284,7 +285,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-8.1.3 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-8.1.4 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-8.2.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-8.2.1.md) |
-| v5.0.0-8.2.2 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-8.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-8.2.2.md) |
 | v5.0.0-8.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-8.2.4 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-8.3.1 | L1 | POR_REVISAR | PENDING | — |
