@@ -1,18 +1,19 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-23 (v5.0.0-10.4.4). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-23 (v5.0.0-10.4.5). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-10.4.5 (L1).
-- Último requisito documentado: v5.0.0-10.4.4 (L1), NOT_APPLICABLE.
+- Siguiente requisito: v5.0.0-11.3.1 (L1).
+- Último requisito documentado: v5.0.0-10.4.5 (L1), NOT_APPLICABLE.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 57 DOCUMENTADO, 0 EN_CURSO, 13 POR_REVISAR (total 70).
+- Progreso L1: 58 DOCUMENTADO, 0 EN_CURSO, 12 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 59 DOCUMENTADO, 0 EN_CURSO, 194 POR_REVISAR.
+- Progreso general L1/L2 conservado: 60 DOCUMENTADO, 0 EN_CURSO, 193 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-10.4.5 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-11.3.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- v5.0.0-10.4.5 DOCUMENTADO / NOT_APPLICABLE: el requisito aplica al authorization server OAuth que emite refresh tokens para clientes públicos. No se localizó tal servidor, clientes OAuth registrados ni token endpoint en el monorepo. La API sí rota un refresh token propietario por cookie y reemplaza su hash persistido, pero no es evidencia de OAuth: faltan rol OAuth, detección de reuse y prueba de concurrencia. Evidencia, límites y pendientes de inventario externo y validación separada de sesión en [ficha](./revisiones/v5.0.0-10.4.5.md). HEAD `73cc7c44385b98b1bfd3ed8ac4d8dceb34a1d21e`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; evidencia fijada con hashes de archivos inspeccionados. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 10.4.5. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-11.3.1».
 - v5.0.0-10.4.4 DOCUMENTADO / NOT_APPLICABLE: el requisito es propio de un authorization server OAuth que limita grants por cliente. El monorepo no expone ese servidor, registro de clientes ni metadata de grants: API y frontend realizan autenticación propia con LDAP, 2FA, cookies y JWT. El endpoint propietario de login no es el grant OAuth ROPC sólo porque recibe una contraseña; tampoco se observó implicit flow. Evidencia, límites y pendientes de inventario externo en [ficha](./revisiones/v5.0.0-10.4.4.md). HEAD `73cc7c44385b98b1bfd3ed8ac4d8dceb34a1d21e`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; evidencia fijada con hashes de archivos inspeccionados. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 10.4.4. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-10.4.5».
 - v5.0.0-10.4.3 DOCUMENTADO / NOT_APPLICABLE: el requisito es condicional a un authorization server OAuth que emite authorization codes. El monorepo no expone ese servidor ni un flujo `authorization_code`: API y frontend realizan autenticación propia con LDAP, 2FA, cookies y JWT; el JWT de servicio saliente, aunque dura cinco minutos, se genera directamente y no es un código OAuth. Evidencia, límites y pendientes de inventario externo en [ficha](./revisiones/v5.0.0-10.4.3.md). HEAD `73cc7c44385b98b1bfd3ed8ac4d8dceb34a1d21e`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; evidencia fijada con hashes de archivos inspeccionados. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 10.4.3. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-10.4.4».
 - v5.0.0-10.4.2 DOCUMENTADO / NOT_APPLICABLE: el monorepo no expone un authorization server OAuth ni un flujo de authorization code. API y frontend implementan autenticación propia por LDAP, JWT y cookies; el JWT de servicio saliente sólo autentica a una API externa. Los códigos 2FA y enlaces de contraseña pertenecen a flujos propietarios y no son códigos OAuth. Evidencia, límites y pendiente de inventario externo en [ficha](./revisiones/v5.0.0-10.4.2.md). HEAD `73cc7c44385b98b1bfd3ed8ac4d8dceb34a1d21e`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; evidencia fijada con hashes de archivos inspeccionados. Sin fixes, tests ejecutados, runtime, builds, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 10.4.2. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-10.4.3».
@@ -323,7 +324,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-10.4.2 | L1 | DOCUMENTADO | NOT_APPLICABLE | [Ficha](./revisiones/v5.0.0-10.4.2.md) |
 | v5.0.0-10.4.3 | L1 | DOCUMENTADO | NOT_APPLICABLE | [Ficha](./revisiones/v5.0.0-10.4.3.md) |
 | v5.0.0-10.4.4 | L1 | DOCUMENTADO | NOT_APPLICABLE | [Ficha](./revisiones/v5.0.0-10.4.4.md) |
-| v5.0.0-10.4.5 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-10.4.5 | L1 | DOCUMENTADO | NOT_APPLICABLE | [Ficha](./revisiones/v5.0.0-10.4.5.md) |
 | v5.0.0-10.4.6 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-10.4.7 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-10.4.8 | L2 | POR_REVISAR | PENDING | — |
