@@ -1,18 +1,24 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-09-23 (v5.0.0-12.2.2). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-09-24 (v5.0.0-15.3.1). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
 - Requisito en curso: ninguno.
-- Siguiente requisito: v5.0.0-13.4.1 (L1).
-- Último requisito documentado: v5.0.0-12.2.2 (L1), NEEDS_REVIEW.
+- Siguiente requisito: ninguno; revisión documental L1 completa.
+- Último requisito documentado: v5.0.0-15.3.1 (L1), NEEDS_REVIEW.
 - Selección vigente: solo L1, en orden oficial; L2 reservado para una fase posterior con pedido explícito del usuario.
-- Progreso L1: 64 DOCUMENTADO, 0 EN_CURSO, 6 POR_REVISAR (total 70).
+- Progreso L1: 70 DOCUMENTADO, 0 EN_CURSO, 0 POR_REVISAR (total 70).
 - L2 reservado: 2 DOCUMENTADO y 181 POR_REVISAR (total 183); se preservan sus estados y fichas.
-- Progreso general L1/L2 conservado: 66 DOCUMENTADO, 0 EN_CURSO, 187 POR_REVISAR.
+- Progreso general L1/L2 conservado: 72 DOCUMENTADO, 0 EN_CURSO, 181 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
-- Próxima acción: con un nuevo pedido de seguir, revisar únicamente v5.0.0-13.4.1 (L1); verificar Git/fuente y fijar refs antes de investigar.
+- Próxima acción: detener la revisión documental L1. Sólo con un pedido explícito para fase L2, retomar el primer L2 en orden oficial sin alterar sus estados antes de ese pedido.
+- v5.0.0-15.3.1 DOCUMENTADO / NEEDS_REVIEW: la muestra de persona e inscripciones devuelve DTOs construidos mediante mapeos explícitos, no entidades ni filas de vista completas; los adaptadores Angular inspeccionados vuelven a seleccionar campos para sus modelos de pantalla. Falta inventario/matriz de necesidad por endpoint, estado, consumidor y rol, cobertura de todos los controladores, Core e integraciones, y pruebas de contrato con respuestas efectivas. Por ello no se puede demostrar el subconjunto mínimo global. Evidencia, propuesta documental y pendientes en [ficha](./revisiones/v5.0.0-15.3.1.md). HEAD `a599528b61412784a99bab1a6ade82be82f462a1`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. Frontend y API contienen cambios ajenos; no se modificó código. Sin fixes, tests ejecutados, runtime, builds, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 15.3.1. La fase L1 concluyó; no iniciar L2 sin autorización explícita.
+- v5.0.0-15.2.1 DOCUMENTADO / FAIL: el frontend declara dependencias npm y el lockfile fija el árbol; la API declara paquetes NuGet y consume Core fijado. Los únicos controles versionados son `npm audit --omit=dev --audit-level=high` en PR y tres overrides transitorios para CVEs de Core. Falta una política de plazos y no se ejecutó una auditoría/SBOM contra los artefactos de estas refs; por tanto no se puede demostrar que ningún componente haya excedido su plazo y el requisito falla sobre la documentación/evidencia evaluada. Evidencia, propuesta documental y pendientes en [ficha](./revisiones/v5.0.0-15.2.1.md). HEAD `a599528b61412784a99bab1a6ade82be82f462a1`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. Frontend y API tienen cambios ajenos amplios; la ficha fija hashes de los manifiestos modificados inspeccionados. Sin fixes, tests ejecutados, runtime, builds, auditorías, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 15.2.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-15.3.1».
+- v5.0.0-15.1.1 DOCUMENTADO / FAIL: no se encontró documentación versionada que fije plazos de remediación basados en riesgo para CVEs de terceros ni plazos generales de actualización de librerías. El workflow del frontend ejecuta `npm audit --omit=dev --audit-level=high` en PR y la API fija tres versiones transitorias que cubren CVEs de Core, pero ambos mecanismos carecen de plazos, responsables, excepciones/vencimientos y alcance de dependencias. Evidencia, propuesta documental y pendientes en [ficha](./revisiones/v5.0.0-15.1.1.md). HEAD `a599528b61412784a99bab1a6ade82be82f462a1`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. Frontend y API tienen cambios ajenos amplios; los archivos inspeccionados modificados fijan hash en la ficha. Sin fixes, tests ejecutados, runtime, builds, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 15.1.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-15.2.1».
+- v5.0.0-14.3.1 DOCUMENTADO / FAIL: el logout del backend borra las cookies y el frontend limpia su estado de autenticación en memoria incluso si falla la red, pero no borra `sessionStorage["inscription-resume-context"]`. Ese valor contiene IDs de proceso, ofertas e inscripciones obtenidos durante el flujo autenticado y sobrevive al cierre de sesión. No hay `Clear-Site-Data` ni prueba ejecutada que invalide la observación. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-14.3.1.md). HEAD `a599528b61412784a99bab1a6ade82be82f462a1`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes de los archivos inspeccionados, incluidos los modificados. Sin fixes, tests ejecutados, runtime, builds, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 14.3.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-15.1.1».
+- v5.0.0-14.2.1 DOCUMENTADO / FAIL: el backend genera enlaces de activación y recuperación con el JWT en `?token=…`; el frontend lo lee desde query antes de canjearlo en cuerpo y limpiar la URL. La redacción de telemetría y el `POST` de parámetros de pago son mitigaciones parciales y no eliminan el secreto del enlace inicial. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-14.2.1.md). HEAD `a599528b61412784a99bab1a6ade82be82f462a1`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes de cada archivo inspeccionado. Sin fixes, tests ejecutados, runtime, capturas HTTP, builds, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 14.2.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-14.3.1».
+- v5.0.0-13.4.1 DOCUMENTADO / NEEDS_REVIEW: los workflows versionados del frontend publican sólo `dist/admisiones/browser` y la imagen final de la API recibe sólo `/app/publish`, por lo que las rutas habituales no incluyen `.git`/`.svn`. Faltan los artefactos e imágenes efectivos, configuración IIS/proxy/CDN/orquestación, volúmenes y pruebas controladas de acceso HTTP y del proceso en cada ambiente. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-13.4.1.md). HEAD `25ee63c90740bb9b8b73349c85a71bbce579b446`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes de cada archivo inspeccionado y del archivo API modificado. Sin fixes, tests ejecutados, runtime, builds, descargas de artefactos, scans, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 13.4.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-14.2.1».
 - v5.0.0-12.2.2 DOCUMENTADO / NEEDS_REVIEW: frontend e IIS versionan HSTS y la API limita TLS/usa redirección HTTPS, pero ninguno prueba el certificado realmente presentado por los hostnames públicos. Las URLs de pago se resuelven dinámicamente y no hay inventario ni evidencia de los certificados de sus pasarelas. Faltan bindings/proxy, cadena, SAN, vigencia y handshakes controlados por ambiente. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-12.2.2.md). HEAD `25ee63c90740bb9b8b73349c85a71bbce579b446`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes y el archivo API modificado inspeccionado. Sin fixes, tests ejecutados, runtime, builds, handshakes, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 12.2.2. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-13.4.1».
 - v5.0.0-12.2.1 DOCUMENTADO / FAIL: el frontend permite que la URL externa de pago use `http:` y publica a esa URL el formulario con `parametrosEncriptados`; la API devuelve esa URL sin validar el esquema. Aunque el origen de API observado es HTTPS y Kestrel/pipeline configuran TLS, HSTS y redirección, eso no elimina el fallback de la pasarela. Evidencia, propuesta y pendientes en [ficha](./revisiones/v5.0.0-12.2.1.md). HEAD `25ee63c90740bb9b8b73349c85a71bbce579b446`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes de archivos inspeccionados. Sin fixes, tests ejecutados, runtime, builds, handshakes, scans, regeneración OpenAPI, commits ni pushs. La reconstrucción de la cola desde la tabla corrigió los contadores L1 que estaban desfasados. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 12.2.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-12.2.2».
 - v5.0.0-12.1.1 DOCUMENTADO / NEEDS_REVIEW: Kestrel restringe sus endpoints HTTPS a TLS 1.2/TLS 1.3 y el frontend usa un origen API HTTPS, pero el monorepo no versiona la terminación TLS de hosting/proxy ni una prueba de negociación. No se puede acreditar que TLS 1.3 sea preferido ni que todas las superficies rechacen TLS 1.0/1.1. Evidencia y pendientes en [ficha](./revisiones/v5.0.0-12.1.1.md). HEAD `25ee63c90740bb9b8b73349c85a71bbce579b446`; frontend `86979de2bbe049fdeddeae3dbb263508403dd5d8`; API `260667f6025167dcdbe80452443a1a43ca631a65`; Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`; blob oficial validado sobre LF normalizado. API y frontend tienen cambios ajenos amplios; la ficha fija hashes de los archivos modificados que fueron inspeccionados. Sin fixes, tests ejecutados, runtime, builds, handshakes, scans, regeneración OpenAPI, commits ni pushs. Archivos propios de esta iteración sin commit: AVANCE.md y ficha 12.1.1. Continuar sólo con nuevo pedido: «Seguí ITERACION.md y revisá únicamente v5.0.0-12.2.1».
@@ -402,7 +408,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-13.3.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-13.3.3 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-13.3.4 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-13.4.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-13.4.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-13.4.1.md) |
 | v5.0.0-13.4.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-13.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-13.4.4 | L2 | POR_REVISAR | PENDING | — |
@@ -411,7 +417,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-13.4.7 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-14.1.1 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-14.1.2 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-14.2.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-14.2.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-14.2.1.md) |
 | v5.0.0-14.2.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-14.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-14.2.4 | L2 | POR_REVISAR | PENDING | — |
@@ -419,20 +425,20 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-14.2.6 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-14.2.7 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-14.2.8 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-14.3.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-14.3.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-14.3.1.md) |
 | v5.0.0-14.3.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-14.3.3 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-15.1.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-15.1.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-15.1.1.md) |
 | v5.0.0-15.1.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.1.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.1.4 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-15.1.5 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-15.2.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-15.2.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-15.2.1.md) |
 | v5.0.0-15.2.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.2.4 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-15.2.5 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-15.3.1 | L1 | POR_REVISAR | PENDING | — |
+| v5.0.0-15.3.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-15.3.1.md) |
 | v5.0.0-15.3.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.3.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.3.4 | L2 | POR_REVISAR | PENDING | — |
