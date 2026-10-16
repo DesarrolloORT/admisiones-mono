@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-015`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
+Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-029`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
 
 ## Índice
 
@@ -24,4 +24,25 @@ Todos los ADR listados abajo son **retrospectivos**: reconstruidos por arqueolog
 | [014](ADR-014-autenticacion-ldap-jwt-combinada.md) | Autenticación LDAP + JWT combinada | **media** | autenticacion-autorizacion | Sin validar |
 
 Los de confianza **alta** (001-006, 008, 012) tienen motivación y consecuencias respaldadas por evidencia directa (commit, documentación contemporánea o testimonio) — `008` y `012` ya fueron revisados y **aceptados** por el autor. El resto (007, 009, 010, 011, 013, 014) sigue en `medium`/`low`, redactado para facilitar la revisión en equipo, pero necesita validación antes de pasar a `accepted` — cada uno lo aclara en su propio encabezado.
+
+## Decisiones posteriores al baseline
+
+No son retrospectivos: salen de [`api-admisiones/docs/DECISIONES-IMPLEMENTACION.md`](../../api-admisiones/docs/DECISIONES-IMPLEMENTACION.md), donde cada decisión quedó registrada con fecha y con quién la tomó.
+
+| ADR | Título | Dominio |
+|---|---|---|
+| [015](ADR-015-secretos-iconfiguration-key-vault.md) | Secretos por `IConfiguration` y Azure Key Vault | infraestructura-configuracion |
+| [016](ADR-016-mensajes-usuario-resx.md) | Mensajes al usuario en `.resx` | estructura-backend |
+| [017](ADR-017-result-t-formato-unico-error.md) | `Result<T>` y un único formato de error HTTP | contratos-api |
+| [018](ADR-018-mails-service-bus-contratos-tipados.md) | Mails por Service Bus con contratos tipados | integraciones-servicios-internos |
+| [019](ADR-019-uploads-multipart.md) | Subida de archivos por `multipart/form-data` | contratos-api |
+| [020](ADR-020-core-a-packages-ort.md) | Infraestructura de `Core` a packages `ORT.*` | estructura-backend |
+| [021](ADR-021-becas-paridad-escrituras-legacy.md) | Becas: escrituras iguales al legacy | integraciones-legacy |
+| [022](ADR-022-imagenes-documento-redis-cifradas.md) | Imágenes de documento cifradas en Redis | tratamiento-datos-personales |
+| [023](ADR-023-endpoints-anonimos-defaults-seguros.md) | Endpoints anónimos: defaults seguros y rate limit | seguridad-api |
+| [024](ADR-024-mis-becas-estado-desde-vista.md) | "Mis becas": estado desde la vista | contratos-api |
+| [025](ADR-025-becas-inscripcion-obligatoria.md) | Becas: para postular hay que estar inscripto | dominio-becas |
+| [026](ADR-026-becas-dj-por-fondo.md) | Becas: la DJ pregunta según el fondo; lo no preguntado queda NULL | dominio-becas |
+| [027](ADR-027-becas-pdf-dj.md) | Becas: PDF de la DJ con la plantilla del legacy | integraciones-legacy |
+| [028](ADR-028-becas-flujo-postulacion.md) | Becas: alta por el legacy, DJ/resumen/aceptación por la API | integraciones-legacy |
 
