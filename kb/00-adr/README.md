@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-029`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
+Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-031`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
 
 ## Índice
 
@@ -45,4 +45,6 @@ No son retrospectivos: salen de [`api-admisiones/docs/DECISIONES-IMPLEMENTACION.
 | [026](ADR-026-becas-dj-por-fondo.md) | Becas: la DJ pregunta según el fondo; lo no preguntado queda NULL | dominio-becas |
 | [027](ADR-027-becas-pdf-dj.md) | Becas: PDF de la DJ con la plantilla del legacy | integraciones-legacy |
 | [028](ADR-028-becas-flujo-postulacion.md) | Becas: alta por el legacy, DJ/resumen/aceptación por la API | integraciones-legacy |
+| [029](ADR-029-registro-datos-no-coinciden-solicitud-alta.md) | Registro: datos que no coinciden con el padrón → solicitud de alta | autenticacion-autorizacion |
+| [030](ADR-030-link-backoffice-persona-de-la-solicitud.md) | Link del backoffice: `codigoPersona` igual al de la solicitud | seguridad-api |
 
