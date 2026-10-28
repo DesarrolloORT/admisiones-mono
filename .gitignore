@@ -2,3 +2,6 @@
 kb/.obsidian/workspace.json
 kb/.obsidian/workspace-mobile.json
 kb/.obsidian/cache
+
+# Claude Code local worktrees
+.claude/worktrees/
