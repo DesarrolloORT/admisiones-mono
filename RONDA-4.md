@@ -31,9 +31,9 @@ rondas 1-3 está implementado tal como se declara**:
 | ---- | ---------------------------------------------------- | ------------ |
 | 1    | Remapeos que descartan un mensaje disponible del backend | ✅ hecho |
 | 2    | Bug de flujo: fallo de `savePartial` clasificado como confirmación ambigua | ✅ hecho |
-| 3    | Degradaciones que fabrican datos o estado de negocio | ⬜ pendiente |
-| 4    | Menores (etiquetado, duplicación de copy)            | ⬜ pendiente |
-| 5    | Actualizar `AUDITORIA-ERRORES.md` con la ronda 4     | ⬜ pendiente |
+| 3    | Degradaciones que fabrican datos o estado de negocio | ✅ hecho     |
+| 4    | Menores (etiquetado, duplicación de copy)            | ✅ hecho     |
+| 5    | Actualizar `AUDITORIA-ERRORES.md` con la ronda 4     | ✅ hecho     |
 
 ---
 
@@ -233,3 +233,21 @@ de clasificación no se tocó.
 **Verificación**: `npm test` → **972/972 verdes** (144 archivos, +10 tests).
 `tsc --noEmit` limpio en `tsconfig.app.json` y `tsconfig.spec.json`.
 `prettier --check`, `eslint` y `check-comment-noise` limpios en las áreas tocadas.
+
+### Lotes 3 y 4 — verificados en el código el 2026-11-04
+
+Se aplicaron en commits posteriores (`894f6596`, `5fb23fc3`, `04740b57`) y ya están en
+`v1.0.0/fix/errores-af` (working tree limpio). Esta bitácora no los había registrado; se
+verificaron leyendo el código actual, **sin correr la suite del frontend**.
+
+| Punto | Antes | Ahora |
+| ----- | ----- | ----- |
+| 3.1 bancos | `FALLBACK_BANK_OPTIONS` hardcodeado ante error | `bankOptions` queda `[]` y `bankError` muestra `getApiErrorMessage(error, payment.banksLoad)` (`enrollment-payment.ts:216-220`). La constante ya no existe. |
+| 3.2 reglamento | error → `hasAcceptedStudentRegulation.set(false)` | error → `regulationAcceptanceError` con el mensaje del backend; el estado de aceptación no se toca (`enrollment-survey.ts:679-682`). |
+| 4.1 etiquetado | error de paso 1 bajo "Hubo un problema al cargar la encuesta" | `EnrollmentProcessFacade.catalogError` une ambos orígenes sin duplicar y se muestra bajo el título neutro "No pudimos cargar algunos datos" (`enrollment-process.ts:53-57`). |
+| 4.2 copy de teléfono | `<ort-error>` fijo y con dos textos distintos | ambos `<ort-error>` renderizan `getError('phoneValidation')` (el mensaje del backend); el fallback único vive en `shared/forms/phone-es.json`. |
+
+### Lote 5 — 2026-11-04
+
+`AUDITORIA-ERRORES.md` actualizado: nueva entrada "Ronda 4" y "Verificación backend" en la
+bitácora, estado de los CRITICAL corregido y Cleanup Candidates re-priorizado.

@@ -1,12 +1,45 @@
 # Auditoría de errores — Sistema de Admisiones
 
-> Estado: relevamiento **COMPLETO** (Fases 1-7 + entregables) + **rondas 1, 2 y 3 de correcciones de frontend aplicadas** (ver Bitácora). El relevamiento original fue de solo lectura, salvo la inicialización del submódulo git `Core` en `api-admisiones` (clonado desde el remoto configurado, sin cambios de contenido).
+> Estado: relevamiento **COMPLETO** (Fases 1-7 + entregables) + **rondas 1 a 4 de correcciones de frontend aplicadas** + **backend re-verificado el 2026-11-04** (ver Bitácora). **Las secciones de hallazgos de backend (Fase 2/3) describen el código del relevamiento original**: lo que sigue vigente está en "Verificación backend 2026-11-04". El relevamiento original fue de solo lectura, salvo la inicialización del submódulo git `Core` en `api-admisiones` (clonado desde el remoto configurado, sin cambios de contenido).
 >
 > **Objetivo de las rondas de corrección**: bajar la cantidad de mensajes remapeados o inventados en el frontend, para que cuando se reporten errores a Análisis Funcional el texto que ve el usuario provenga ~99% del backend. Cada remapeo que sobreviva en el frontend debe ser, o una decisión deliberada documentada, o un hueco del contrato del backend — y por eso se listan aparte en "Remapeos de frontend restantes".
 
 ---
 
 ## Bitácora de cambios
+
+### Verificación backend — 2026-11-04
+
+Repo `api-admisiones`, rama `rubino-f/fix/errores-af-v2`. El backend **sí cambió** desde el relevamiento: pasó de `OperationResult` a `Result<T>`/`Error` con mensajes en `.resx` por módulo, y el commit `b5f07ea8` (2026-10-28) localizó los mensajes restantes y agregó `ErrorMessageLiteralsGuardTests`, que falla si un constructor de error recibe un texto literal. Se re-verificó cada hallazgo CRITICAL/HIGH de backend contra el código actual:
+
+| Hallazgo | Estado | Evidencia |
+| -------- | ------ | --------- |
+| BE-LDAP-007, BE-LDAP-016/017 (CRITICAL) y patrón `ex.Message` en `Ldap.cs` | **Cerrado** | Ningún `.csproj` referencia `Core/LdapService`: LDAP llega por el paquete `ORT.Ldap.Abstraction`. Los 4 consumidores (`AuthenticateWithLdap`, `ChangePassword`, `CompletePasswordFlow`, `VerifyIdentity`) loguean `Error.Code`/`Error.Message` y devuelven una clave localizada. |
+| BE-AZR-013/023 (CRITICAL), BE-AZR-005/006/007/016/018/020 | **Cerrado** | Ningún `.csproj` referencia `Core/AzureService`; el reconocimiento vive en `AppLogic.Identity/Recognition`, con tests que afirman que el mensaje no contiene "Azure" ni el detalle técnico. |
+| BE-MAIL-001/002 | **Cerrado** | `Core/MailORT` se sacó de la solución (`Directory.Build.props`). |
+| BE-ENR-090/091 (`SendAsync` con `errorContent` crudo) | **Cerrado** | El body y el status del proveedor van solo al log; al cliente sale `_localizer[code]` y un `ErrorType` propio (`EnrollmentsAndPaymentsApiClient.cs:222-260`). |
+| BE-CAP-003/004/008 (reCAPTCHA) | **Cerrado** | Los `error-codes` de Google van al log; al cliente sale `Captcha.Rejected`/`Captcha.ValidationFailed`. |
+| BE-MW-001 (`HttpCode:500` fijo en el body) | **Cerrado** | El status y el mensaje salen del mismo `Error.Type` (`ErrorResponseWriter.ToStatusCode`); el detalle de la excepción solo va al log. |
+| Códigos duplicados (`GEN_IP_07`, `INS_CPI_17/08`, `REG_PERSONA_99`, `GEN_FA_*`, `GEN_SFA_*`, `FLOW_04`) | **Cerrado** | Los códigos viejos ya no existen en el código productivo (solo quedan como datos de fixture en 2 tests); los reemplazan claves semánticas (`Registration.UserAlreadyRegistered`, etc.). |
+| **Detalle en inglés de `ORT.Utilities.Phone` en el mensaje de teléfono** | **Cerrado en esta verificación** | `People.InvalidPrimaryPhone` y `Registration.InvalidPrimaryPhone` interpolaban `PhoneValidationResult.Error`, que el paquete devuelve en inglés ("The number is not valid or is not a mobile line.") o como `Message` de libphonenumber. Se sacó el `{0}` de ambos `.resx` y la interpolación de `UpdatePersonDetails`/`RegistrationValidation`; los tests de recursos ahora afirman el texto exacto. Suite backend: 1997 verdes, 0 fallos. |
+| BE-ENR-093 (`ToPaymentMessages`) | **Abierto** | Sigue copiando `Key`/`Value` del proveedor tal cual (`EnrollmentMapper.cs:321-323`). Son mensajes de negocio en español, no errores técnicos, pero su texto no lo controla este backend: a definir con Análisis Funcional. |
+
+| **Redacción de los mensajes propios** | **Parcial (2026-11-04)** | La redacción para usuario final se hizo en `df025a20` (rama `rubino-f/fix/errores-af`, nunca mergeada) sobre los códigos viejos, y la v2 no la había portado. **Portadas 27 claves** (pagos, reactivación, preinscripción, encuesta, teléfono, tipo de documento, `Authentication.UserNotFound`); no se portaron las 5 donde la v2 ya tenía una redacción posterior (`EnrollmentsApi.*Rejected`, `People.NewPasswordLength`, `ProductInterest.AlreadyEnrolledInProduct`). Además se corrigieron **tildes y ortografía en 36 mensajes** que la v1 tampoco había tocado (`InitialSurvey.*`, `ProductInterest.*`, `PreEnrollment.*`, `Enrollment.AlreadyReactivated`), sin cambiar la redacción. **Queda**: varios de esos siguen en tono técnico o en tercera persona ("Instrucción madre inválida.", "Debe indicar…") y ~16 `Error al …` salen como 500, así que el front los tapa con texto genérico. |
+| Motivos de cédula inválida | **Abierto** | `CedulaUruguaya.Validate` devuelve 5 literales fijos en C#, fuera de `.resx`; `ErrorMessageLiteralsGuardTests` no los ve porque no son constructores de `Error`. |
+| Estados "resultado incierto" de Pagos | **Abierto (contrato)** | `EnrollmentsApi.*Uncertain` salen como `Unexpected` → 500, y el normalizador del front reemplaza todo `5xx` por texto genérico: esos mensajes no llegan nunca al usuario. |
+
+**Consecuencia para el reporte a Análisis Funcional**: ya no quedan fugas conocidas de texto técnico de proveedores, pero el texto propio del backend todavía necesita revisión de redacción (ver filas abiertas). La barrera de `5xx` deja de ser la única protección, así que la decisión de la ronda 1 de no mostrar mensajes en `5xx` puede revisarse.
+
+### Ronda 4 — 2026-09-15 / 2026-11-04 · re-auditoría del frontend
+
+Detalle por lote en `RONDA-4.md`. Repo `admisiones`, hoy en `v1.0.0/fix/errores-af`.
+
+1. **Lote 1**: catálogos de encuesta inicial con `getApiErrorMessage`; `IdentitySaveError` transporta la causa y el mensaje del backend llega al usuario; FE-HOME-001 cerrado (el resolver devuelve `{ loadError }`; antes era un **falso negativo** de la lista "Remapeos de frontend restantes").
+2. **Lote 2 (bug de flujo)**: un fallo de `savePartial` ya no se clasifica como confirmación ambigua; se envuelve en `SurveySaveError` y el usuario sigue en la encuesta en vez de ir a "Inscripción en proceso" sin que exista inscripción.
+3. **Lote 3**: el catálogo de bancos ya no cae a `FALLBACK_BANK_OPTIONS` y un fallo al consultar el reglamento ya no se lee como "no aceptado"; los dos muestran el mensaje del backend.
+4. **Lote 4**: el error de catálogos de paso 1 y paso 2 se muestra bajo un título neutro; el texto inline de `phoneValidation` es el del backend, con un fallback único en `phone-es.json`.
+
+**Verificación**: lotes 1-2 → 972/972 tests verdes (2026-09-15). Lotes 3-4 verificados leyendo el código el 2026-11-04, sin correr la suite.
 
 ### Ronda 3 — 2026-09-15 · hallazgos HIGH/MEDIUM de frontend fuera de los "10 puntos"
 
@@ -261,7 +294,7 @@ Leyenda de campos: ver `plan.md` Fase 5. `hardcoded`: Front/Back/Ambos/No. `conf
 **Hallazgos — home/catalogs/scholarships (frontend)**
 
 - **RESUELTO en ronda 1**: FE-HOME-004 (cambio de contraseña ya no asume "contraseña incorrecta"); FE-HOME-010 (se eliminó el único mapeo `errorCode`→texto del frontend, `PER_ADP_07`); FE-HOME-011 (carga de datos personales muestra el mensaje del backend). **RESUELTOS en ronda 2**: FE-HOME-007/009 y FE-CAT-001.
-- **HIGH**: FE-HOME-001 (resolver de home colapsa cualquier error a `of(null)`), 002, 009 (ver abajo); FE-SCH-001, 003, 004, 006, 007, 008. **Resueltos en ronda 3**: FE-HOME-006 (reactivar inscripción ahora muestra el mensaje del backend); FE-CAT-002 (los 5 puntos de carga en cascada ahora reportan al `catalogError`).
+- **HIGH**: ~~FE-HOME-001~~ (**resuelto en ronda 4**: el resolver devuelve `{ loadError }` con el mensaje del backend), 002, 009 (ver abajo); FE-SCH-001, 003, 004, 006, 007, 008. **Resueltos en ronda 3**: FE-HOME-006 (reactivar inscripción ahora muestra el mensaje del backend); FE-CAT-002 (los 5 puntos de carga en cascada ahora reportan al `catalogError`).
 - **MEDIUM**: FE-HOME-003, 005, 007, 008, 012, 013; FE-CAT-003, 004; FE-SCH-002, 005.
 - **Patrón transversal más relevante** (sin cambios): múltiples endpoints **stubbeados en frontend** porque el backend los removió (`getMyScholarships`, `getAvailableScholarships`, `getAcademicStepData`, `createApplication`) — disfrazan fallos/ausencias de backend como estados vacíos legítimos, y en el caso de `createApplication` la UI comunica éxito sin persistir nada. Nada de esto se toca con política de mensajes: requiere decisión de producto.
 - **Patrón identificado en la ronda 1 — adaptadores que reducen la respuesta a `boolean`**: FE-HOME-009 se cerró en ronda 2 al comprobar que `UpdatePersonDetails` nunca emite un éxito con `data:false`. `validatePhone` conserva el booleano porque `false` es un resultado esperado de validación, no un error con mensaje descartado.
@@ -542,30 +575,30 @@ Ver detalle completo en cada sub-sección de este documento. Resumen cuantitativ
 
 | Severidad | Relevamiento original | Tras ronda 2 | Nota                                                                              |
 | --------- | --------------------- | ------------ | --------------------------------------------------------------------------------- |
-| CRITICAL  | 3                     | 3            | Los 3 son de backend (BE-LDAP-007, BE-LDAP-016/017, BE-AZR-013/023). Sin cambios. |
+| CRITICAL  | 3                     | 3 → **0** (2026-11-04) | Los 3 eran de backend (BE-LDAP-007, BE-LDAP-016/017, BE-AZR-013/023); el código que los producía ya no se compila en la API. Ver "Verificación backend 2026-11-04". |
 | HIGH      | ~55                   | ~42          | FE-HOME-009 y FE-CAT-001 se cerraron en ronda 2.                                  |
 | MEDIUM    | ~60                   | ~54          | FE-AUTH-007/020/021 y FE-HOME-007 se cerraron en ronda 2.                         |
 | LOW       | ~30                   | ~29          | FE-AUTH-010 se cerró en ronda 2.                                                  |
 
-La totalidad de la reducción es de frontend. **Ningún hallazgo de backend se cerró**: el backend no cambió respecto del relevamiento.
+~~La totalidad de la reducción es de frontend. Ningún hallazgo de backend se cerró.~~ **Desactualizado al 2026-11-04**: el backend se reescribió con `Result<T>` + `.resx` y los HIGH de exposición de mensajes técnicos (LDAP, Azure, Pagos, reCAPTCHA, middleware) también quedaron cerrados. Los conteos HIGH/MEDIUM/LOW de esta tabla no se recalcularon.
 
 ### 5. Cleanup Candidates (prioridad sugerida, NO implementar sin validación)
 
 Prioridad reordenada tras la ronda 1: los ítems de saneamiento de backend subieron, porque ahora su contenido llega al usuario en 4xx.
 
-1. **[SUBIÓ]** Sanear `Core/LdapService/Services/Ldap.cs` para que ningún método incluya `ex.Message` en el `Message` del `OperationResult` (6 puntos). Con la política de mensajes vigente, esto es prerrequisito, no higiene.
-2. **[SUBIÓ]** Sanear `ReconocimientoDocumentoAzureClient`/`ReconocimientoDocumento` para no incrustar `ex.Message` ni detalle crudo de Azure en el `OperationResult` (bypassa el gating por ambiente del middleware).
-3. **[SUBIÓ]** Sanear `EnrollmentsAndPaymentsApiClient.SendAsync` (BE-ENR-090/091) y `EnrollmentMapper.ToPaymentMessages` (BE-ENR-093): dejar de concatenar `errorContent` crudo del proveedor y de reenviar su `HttpStatusCode` como `HttpCode` propio.
-4. Revisar y unificar códigos de error duplicados con semánticas distintas (`GEN_IP_07`, `INS_CPI_17`, `INS_CPI_08`, `REG_PERSONA_99`, `GEN_FA_01`/`03`, `GEN_SFA_03`/`04`). Ahora también importa el **texto**: se muestra tal cual.
+1. ~~Sanear `Core/LdapService/Services/Ldap.cs`.~~ **CERRADO (2026-11-04)**: la API ya no compila `Core/LdapService`. Si otro sistema todavía lo consume, el `ex.Message` sigue ahí: avisar a quien lo mantenga.
+2. ~~Sanear `ReconocimientoDocumentoAzureClient`/`ReconocimientoDocumento`.~~ **CERRADO (2026-11-04)**: ídem, `Core/AzureService` fuera de la solución.
+3. ~~Sanear `EnrollmentsAndPaymentsApiClient.SendAsync` (BE-ENR-090/091).~~ **CERRADO**. `EnrollmentMapper.ToPaymentMessages` (BE-ENR-093) **sigue abierto**: copia el texto del proveedor tal cual.
+4. ~~Unificar códigos de error duplicados.~~ **CERRADO**: reemplazados por claves semánticas por módulo.
 5. ~~Reemplazar el stub de `src/app/core/services/api-error-policy.spec.ts`.~~ **HECHO en ronda 2**: cubre los siete status y el límite para `5xx`.
 6. Cerrar el hueco de contrato de `mailSent:false` del registro (FE-AUTH-028). ~~El supuesto hueco de `PUT /person/details`~~ se descartó en ronda 2: el backend ya falla con 400/404 + `message`.
 7. ~~Limpiar el código muerto que dejó la ronda 1: `enrollment-proposal.ts:92-97`.~~ **HECHO en ronda 3**: `registerProductInterest` pasó a `Observable<void>` y se eliminó la rama `if (!registered)`.
 8. ~~Cablear o eliminar `catalogError` en `academic-proposal-select` (FE-CAT-001).~~ **HECHO en ronda 2**: se renderiza con `role="alert"`.
-9. Corregir `ExceptionHandlingMiddleware.WriteErrorResponseAsync` para que el campo `HttpCode` del body coincida con el status HTTP real.
+9. ~~Corregir `ExceptionHandlingMiddleware.WriteErrorResponseAsync`.~~ **CERRADO**: status y mensaje salen del mismo `Error.Type`.
 10. ~~Corregir `EnrollmentsApi.pay()` (frontend) para que respete el `success`/`message`/`errorCode` real del backend en vez de forzar éxito en todo 2xx.~~ **HECHO en ronda 1 (9e7cb92)**.
 11. Decidir con Tech Lead si los catálogos sin consumidor (`PersonDataGap`, `AffidavitRejection`, `ScholarshipFundService`) se activan, se documentan como deuda, o se eliminan.
 12. Auditar puntualmente si los endpoints frontend stubbeados (becas) tienen fecha de reactivación o deben removerse de la UI mientras tanto.
-13. Uniformar el criterio de HTTP status en `Ldap.cs` (config faltante → 500, no 400). Relevante para la política: un error de configuración del backend clasificado como 400 muestra su mensaje al usuario; como 500 quedaría genérico.
+13. ~~Uniformar el criterio de HTTP status en `Ldap.cs`.~~ **Ya no aplica**: `Ldap.cs` fuera de la solución.
 14. Fijar por contrato con Análisis Funcional los dos remapeos deliberados que dependen de un status numérico (FE-ENR-011 y FE-HOME-003 usan 404 como número mágico), o migrarlos a `errorCode`.
 
 ### 6. Unknowns (no determinable con evidencia directa en esta auditoría)
