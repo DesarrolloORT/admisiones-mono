@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-031`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
+Decisiones técnicas y su justificación. Use [la plantilla](template-adr.md) y el próximo ID correlativo `ADR-NNN` (el que sigue es `ADR-050`). Una decisión aceptada se cambia mediante otro ADR, no reescribiendo la historia.
 
 ## Índice
 
@@ -47,4 +47,23 @@ No son retrospectivos: salen de [`api-admisiones/docs/DECISIONES-IMPLEMENTACION.
 | [028](ADR-028-becas-flujo-postulacion.md) | Becas: alta por el legacy, DJ/resumen/aceptación por la API | integraciones-legacy |
 | [029](ADR-029-registro-datos-no-coinciden-solicitud-alta.md) | Registro: datos que no coinciden con el padrón → solicitud de alta | autenticacion-autorizacion |
 | [030](ADR-030-link-backoffice-persona-de-la-solicitud.md) | Link del backoffice: `codigoPersona` igual al de la solicitud | seguridad-api |
+| [031](ADR-031-sesion-cookie-csrf-cors-samesite.md) | Sesión por cookie: CSRF por `Origin`, CORS y `SameSite` por ambiente, refresh host-only | seguridad-api |
+| [032](ADR-032-revocacion-sesiones.md) | Revocación de sesiones: access revocable y reuso del refresh | autenticacion-autorizacion |
+| [033](ADR-033-redis-fail-open.md) | Controles en Redis fallan abiertos; el 2FA cerrado (riesgo aceptado) | seguridad-api |
+| [034](ADR-034-login-2fa-contadores-atomicos.md) | Login y 2FA: intentos reservados atómicamente antes de validar | autenticacion-autorizacion |
+| [035](ADR-035-ip-cliente-proxies-confianza.md) | IP del cliente: proxies de confianza por ambiente | seguridad-api |
+| [036](ADR-036-candado-distribuido.md) | Candado distribuido en Redis para operaciones no repetibles | infraestructura-persistencia |
+| [037](ADR-037-cedula-forma-canonica.md) | Cédula en forma canónica; número único entre tipos | dominio-identidad |
+| [038](ADR-038-archivos-tipo-por-contenido.md) | Archivos subidos: tipo por contenido, estructura sin decodificar | seguridad-api |
+| [039](ADR-039-topes-entrada-columna-oracle.md) | Topes de entrada: largo de columna y filas antes de cargar | contratos-api |
+| [040](ADR-040-saneo-entrada-escape-salida.md) | Saneo en la entrada y escape del XML hacia otros sistemas | integraciones-legacy |
+| [041](ADR-041-datos-personales-en-logs.md) | Datos personales en logs: `[Redact]` y huella del documento | tratamiento-datos-personales |
+| [042](ADR-042-cadena-suministro-nuget.md) | Cadena de suministro NuGet; ImageSharp 3.1.11 (riesgo aceptado) | seguridad-dependencias |
+| [043](ADR-043-produccion-cerrado-por-defecto.md) | Cerrado por defecto, errores sin datos del servidor, arranque estricto | seguridad-api |
+| [044](ADR-044-salida-core-utilities-bandeja-genericbase.md) | Salida de `Core/Utilities`, ModBandeja y ModGenericBase | estructura-backend |
+| [045](ADR-045-capa-verificacion-agente.md) | Capa de verificación del agente, pentest interno y fuzzing | calidad-verificacion |
+| [046](ADR-046-becas-reconsideracion.md) | Becas: reconsideración por consulta y entrevista | dominio-becas |
+| [047](ADR-047-mis-becas-awaiting-resolution.md) | "Mis becas": `AwaitingResolution` en el mapper (excepción a 024) | contratos-api |
+| [048](ADR-048-inscripcion-pendiente-por-comienzo.md) | Inscripción pendiente por producto y comienzo (nivel 3 y 4) | integraciones-legacy |
+| [049](ADR-049-sync-catalogo-mensajes-docs-site.md) | Catálogo de mensajes sincronizado al docs-site del front | estructura-frontend |
 
