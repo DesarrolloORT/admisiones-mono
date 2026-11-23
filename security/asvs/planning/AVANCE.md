@@ -1,6 +1,6 @@
 # Avance ASVS 5.0.0
 
-Actualizado: 2026-10-23 (actualización de las 72 fichas contra API 912fc665). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
+Actualizado: 2026-11-23 (actualización de las 72 fichas contra API 0eafa0fa y frontend 24be2c6e). Fase: análisis y documentación exclusivamente L1; fixes no autorizados.
 
 ## Checkpoint actual
 
@@ -13,6 +13,15 @@ Actualizado: 2026-10-23 (actualización de las 72 fichas contra API 912fc665). F
 - Progreso general L1/L2 conservado: 72 DOCUMENTADO, 0 EN_CURSO, 181 POR_REVISAR.
 - L3: 92 FUERA_L2; no se consideran NOT_APPLICABLE.
 - Próxima acción: detener la revisión documental L1. Sólo con un pedido explícito para fase L2, retomar el primer L2 en orden oficial sin alterar sus estados antes de ese pedido.
+- **Remediación 2026-11-23.** Arreglos commiteados en API `ff1309c29fc236dbed4486eb2787e90082e80ea4` (rama `gabriele/fix/asvs-fails`) y frontend `525c0f49e39b39cf1b54dc879221714c79af55e7` (rama `v1.0.0/fix/asvs-logout`). Criterio de PASS: un test ejecutado en el commit evaluado para cada parte del requisito, que falla sin el arreglo y pasa con él ([ADR-002](../../adr/ADR-002-asvs-evidence-model.md): evidencia determinística). Resultado: 7.2.3 y 14.3.1 FAIL → **PASS**; 9.1.2, 6.2.8 y 7.2.4 FAIL → NEEDS_REVIEW (falta, respectivamente, el test de la allowlist del access, inspeccionar `ORT.Ldap.Soap` y la prueba de punta a punta login → login). Recuento en L1: 2 PASS, 9 FAIL, 54 NEEDS_REVIEW, 5 NOT_APPLICABLE (más 2 L2 en NEEDS_REVIEW). 12.2.1 queda sin tocar por decisión del usuario (falta confirmar que la URL de pago de producción sea https). Pruebas en vivo contra develop: no ejecutadas, las cuentas de prueba no existen tras el refresco de la base de desa; además, el alta de una persona nueva falla con ORA-00001 (`T_PERSONA_CLAVE_DUPLICADA_0107`), probablemente por la secuencia `TO_PERSONA` atrasada tras el refresco.
+- **Actualización 2026-11-23 (COMPLETA, las 72 fichas).** Refs: monorepo `2e7bde398b9b147e3fd739018a3e6903c67b9751` (rama `gabriele/update/asvs`), API `0eafa0fa533d5ca781c8a3762959286295c7545c` (`gabriele/security`, 72 commits después de `912fc665`), frontend `24be2c6e3ebbe191fb0fccf050f59f07652007f7` (`v1.0.0/main`, 213 commits después de `86979de2`, primera re-verificación del front), Core `2ab0254a`. JSON fuente: el blob conserva `BCDBEC21…`; el archivo del checkout difiere solo por CRLF. Autorizado por el usuario: ejecutar pruebas.
+  - Pruebas ejecutadas: `dotnet test --filter "Category!=AzureLive"` sobre `0eafa0fa`: 2122 correctas, 0 con error, 2 omitidas (V-03). Frontend: `ng test` fallaba con "Vitest failed to find the runner" al lanzarlo desde Git Bash, porque la ruta llega con la unidad en minúscula (`c:\`) y Vitest carga el módulo dos veces. Desde PowerShell en `C:\GIT\admisiones-mono\admisiones` corre: 171 archivos, 1475 tests, todos pasan (2026-11-23, rama `v1.0.0/main` + fix de 14.3.1). Las fichas de esta actualización citan la evidencia del front como estática porque se escribieron antes de descubrirlo. `loadtest/security-smoke.sh`: no ejecutado, falta `loadtest/.env.local` con las cuentas de prueba.
+  - Método: cada ficha conserva su evidencia anterior (anclas de `912fc665`) y suma la sección «Actualización 2026-11-23», que prevalece. La tabla de referencias se reemplaza con las refs nuevas. Impacto calculado cruzando los archivos citados con los diffs: casi todas las fichas citan archivos que cambiaron, así que se revisan las 72.
+  - Resultado global: 14 FAIL, 53 NEEDS_REVIEW, 5 NOT_APPLICABLE (antes 16 FAIL, 51 NEEDS_REVIEW, 5 NOT_APPLICABLE). Cambios de resultado: v5.0.0-7.4.1 FAIL → NEEDS_REVIEW y v5.0.0-8.3.1 FAIL → NEEDS_REVIEW. FAIL vigentes: 6.2.5, 6.2.8, 6.4.2, 7.2.3, 7.2.4, 7.4.2, 8.2.1, 9.1.2, 11.3.2, 12.2.1, 14.2.1, 14.3.1, 15.1.1, 15.2.1. La ficha 7.4.1 se reescribió entera; las otras 71 conservan su evidencia anterior y suman «Actualización 2026-11-23».
+  - Capítulos 10 a 15: los 17 resultados se mantienen. Nuevo en 15.2.1: `dotnet list package --vulnerable` (ejecutado) muestra 6 advisories de ImageSharp 3.1.11; GHSA-jjfr-hcj7-qf5w (alta) y GHSA-wmxv-xphr-5c9g (moderada) no están analizados en ADR-042. `npm audit --omit=dev` del front: 0 vulnerabilidades. 10.4.x siguen NOT_APPLICABLE (búsqueda de servidor OAuth sin resultados).
+  - Capítulos 8 y 9: 8.3.1 FAIL → NEEDS_REVIEW (el host decide la autorización de todos los endpoints con `FallbackPolicy`); siguen FAIL 8.2.1 (`/metrics` anónimo por decisión, restringido solo por red) y 9.1.2 (`PasswordActivationService.ValidateJwt` sin `ValidAlgorithms`, arreglo de una línea). Nueva evidencia de runtime: pentest interno con 0 de 26 cruces de IDOR (8.2.2), que no cubre los endpoints de entrevista. Capítulos 1, 2 y 5: Capítulos 1, 2 y 5: los 18 resultados se mantienen (NEEDS_REVIEW). Resueltos: saneo de listas (1.3.1), extensión y estructura de archivos según el contenido (5.2.2), límites de tamaño por endpoint y 413 (5.2.1), validación de documento y largos en `PUT person/details` (2.2.2), verificación del hash de la fuente en Windows (2.2.1, se corrigió ITERACION.md). Nuevo sink registrado y ya escapado: XML de la inscripción corporativa (1.2.1). Vigentes: JSON Schema sin aplicar (2.2.1), DE/PS/CC sin formato (2.1.1, 2.2.1), MIME a Azure según el nombre (5.2.2), `confirm-new-person` y `confirm-registration-request` repetibles (2.3.1), doc del front con nombres viejos del back (2.1.1). Capítulos 3 y 4: Capítulos 3 y 4: los 10 resultados se mantienen (NEEDS_REVIEW). Resueltos: foto PNG servida como JPEG (3.2.1, 4.1.1), adjuntos de la DJ con el tipo del nombre del cliente para datos nuevos (4.1.1), tests de CORS y CSRF ahora ejecutados (3.4.2, 3.5.1). Vigentes: cookies sin prefijo `__Secure-`/`__Host-` (3.3.1; `__Host-` ya viable para refresh y activación), `.html → text/html` para datos legacy (3.2.1), HSTS después de CORS/origin check (3.4.1), sin test que recorra las 34 acciones que escriben (3.5.1). Capítulo 6: Capítulo 6: los 13 resultados se mantienen (FAIL 6.2.5, 6.2.8, 6.4.2; el resto NEEDS_REVIEW). Resueltos: política de falla de Redis no uniforme y partición por IP en Development (6.3.1), topología no documentada (6.1.1). Vigentes: LDAP caído consume intentos (6.3.1), contraseñas saneadas antes de LDAP (6.2.8), guías de rate limiting desactualizadas (6.1.1). Capítulo 7: 7.4.1 FAIL → NEEDS_REVIEW (access revocable por `jti`/corte; queda el fail-open de Redis sin excepción formal). 7.2.4 FAIL (acotado: el login no revoca el access vigente). 7.4.2 FAIL (existe el corte por persona, falta el disparador desde la baja). 7.2.3 FAIL (sessionId del 2FA con Guid). 7.2.1 y 7.2.2 NEEDS_REVIEW.
+  - Próxima acción: ninguna en la fase L1. Para subir resultados a PASS falta, sobre todo, correr `loadtest/security-smoke.sh` contra develop (necesita `loadtest/.env.local`) y los tests del front (no arrancan en esta máquina). Los arreglos más baratos para salir de FAIL: 9.1.2 (`ValidAlgorithms` en `PasswordActivationService.ValidateJwt`), 6.2.8 (excluir contraseñas del saneo), 14.3.1 (limpiar el contexto de reanudación en el logout), 7.2.3 (`sessionId` del 2FA con `RandomNumberGenerator`).
+  - Riesgos aceptados sin excepción formal: AUTH-02, AUTH-15 y el fail-open de Redis no figuran como ACCEPTED_RISK hasta tener aprobador y vencimiento. ImageSharp 3.1.11: por decisión del usuario no lleva excepción (se va a arreglar).
 - **Actualización 2026-10-23 (las 72 fichas DOCUMENTADO).** Las fichas se habían evaluado contra API `260667f6025167dcdbe80452443a1a43ca631a65` con working tree modificado y Core `01239cdf6054dc5a450dcdaa3a867ae3204b61e7`. Se re-verificó la evidencia de API y Core de cada ficha contra API `912fc66573f3c2d944469e6b92046dfc4f07bfd5` (working tree limpio, 175 commits posteriores) y Core `2ab0254a6f12a3b7a57d3a7402e1bc9543a7cadd`; se quitaron los hashes de archivos modificados y cada ficha tiene una sección «Cambios respecto de la revisión anterior». El frontend no se re-verificó: el checkout local `888ecfc8` es anterior a `86979de2`, por lo que su evidencia se conserva con la ref original. Revisión estática; sin tests, builds, runtime, scans, fixes, commits ni pushs.
   - Único cambio de resultado: **v5.0.0-4.4.1 NOT_APPLICABLE → NEEDS_REVIEW**, porque la API abre WebSocket saliente con `ServiceBusClient`/`AmqpWebSockets` (`6f5f685b`). Los demás 71 resultados se mantienen (FAIL: 7.2.3, 7.2.4, 7.4.1, 7.4.2, 8.2.1, 8.3.1, 9.1.2, 11.3.2, 12.2.1, 14.2.1, 14.3.1, 15.1.1, 15.2.1, 6.2.5, 6.2.8, 6.4.2; NOT_APPLICABLE: 10.4.1–10.4.5).
   - Cambios transversales: la API sólo referencia `Core/DbConnectionContext` (`12248719`); MailORT, LdapService, AzureService y Utilities de Core quedan fuera del flujo, reemplazados por `AppLogic.*` y paquetes `ORT.*` (Ldap.Soap, Messaging.ServiceBus, DocumentIntelligence/Vision.Azure) sin fuente en el monorepo. El correo se renderiza en un worker externo (Razor). Subidas multipart (ADR-019) y `UseOriginCheck` (`73794742`) reescriben 3.5.x; inventario de 56 acciones HTTP (antes 38).
@@ -252,7 +261,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-6.2.5 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-6.2.5.md) |
 | v5.0.0-6.2.6 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.6.md) |
 | v5.0.0-6.2.7 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.7.md) |
-| v5.0.0-6.2.8 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-6.2.8.md) |
+| v5.0.0-6.2.8 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-6.2.8.md) |
 | v5.0.0-6.2.9 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.10 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-6.2.11 | L2 | POR_REVISAR | PENDING | — |
@@ -294,11 +303,11 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-7.1.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.2.1.md) |
 | v5.0.0-7.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.2.2.md) |
-| v5.0.0-7.2.3 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.2.3.md) |
-| v5.0.0-7.2.4 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.2.4.md) |
+| v5.0.0-7.2.3 | L1 | DOCUMENTADO | PASS | [Ficha](./revisiones/v5.0.0-7.2.3.md) |
+| v5.0.0-7.2.4 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.2.4.md) |
 | v5.0.0-7.3.1 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.3.2 | L2 | POR_REVISAR | PENDING | — |
-| v5.0.0-7.4.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.4.1.md) |
+| v5.0.0-7.4.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-7.4.1.md) |
 | v5.0.0-7.4.2 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-7.4.2.md) |
 | v5.0.0-7.4.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-7.4.4 | L2 | POR_REVISAR | PENDING | — |
@@ -316,13 +325,13 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-8.2.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-8.2.2.md) |
 | v5.0.0-8.2.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-8.2.4 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-8.3.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-8.3.1.md) |
+| v5.0.0-8.3.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-8.3.1.md) |
 | v5.0.0-8.3.2 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-8.3.3 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-8.4.1 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-8.4.2 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-9.1.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-9.1.1.md) |
-| v5.0.0-9.1.2 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-9.1.2.md) |
+| v5.0.0-9.1.2 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-9.1.2.md) |
 | v5.0.0-9.1.3 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-9.1.3.md) |
 | v5.0.0-9.2.1 | L1 | DOCUMENTADO | NEEDS_REVIEW | [Ficha](./revisiones/v5.0.0-9.2.1.md) |
 | v5.0.0-9.2.2 | L2 | POR_REVISAR | PENDING | — |
@@ -431,7 +440,7 @@ Una fila por ID oficial; no eliminar ni reordenar requisitos. Seleccionar solo L
 | v5.0.0-14.2.6 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-14.2.7 | L3 | FUERA_L2 | PENDING | — |
 | v5.0.0-14.2.8 | L3 | FUERA_L2 | PENDING | — |
-| v5.0.0-14.3.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-14.3.1.md) |
+| v5.0.0-14.3.1 | L1 | DOCUMENTADO | PASS | [Ficha](./revisiones/v5.0.0-14.3.1.md) |
 | v5.0.0-14.3.2 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-14.3.3 | L2 | POR_REVISAR | PENDING | — |
 | v5.0.0-15.1.1 | L1 | DOCUMENTADO | FAIL | [Ficha](./revisiones/v5.0.0-15.1.1.md) |
